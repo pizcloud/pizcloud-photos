@@ -88,6 +88,10 @@ dependencies:
   drift: ^2.23.1
   drift_flutter: ^0.2.4
 
+  # new
+  in_app_purchase: ^3.2.0
+  flutter_riverpod: ^2.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
