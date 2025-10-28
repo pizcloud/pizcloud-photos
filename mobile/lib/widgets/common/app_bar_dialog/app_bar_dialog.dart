@@ -167,6 +167,21 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                       'backup_controller_page_storage_format',
                     ).tr(namedArgs: {'used': usedDiskSpace, 'total': totalDiskSpace}),
                   ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.workspace_premium_rounded),
+                      label: const Text('Upgrade'),
+                      onPressed: () {
+                        final root = context.router.root;
+                        context.pop();
+                        Future.microtask(() {
+                          root.push(const BillingRoute());
+                        });
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),

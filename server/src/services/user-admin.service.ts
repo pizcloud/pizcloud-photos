@@ -56,9 +56,14 @@ export class UserAdminService extends BaseService {
       throw new BadRequestException('Admin status can only be changed by another admin');
     }
 
-    if (dto.quotaSizeInBytes && user.quotaSizeInBytes !== dto.quotaSizeInBytes) {
+    // New
+    if (dto.quotaSizeInBytes !== undefined && user.quotaSizeInBytes !== dto.quotaSizeInBytes) {
       await this.userRepository.syncUsage(id);
     }
+
+    // if (dto.quotaSizeInBytes && user.quotaSizeInBytes !== dto.quotaSizeInBytes) {
+    //   await this.userRepository.syncUsage(id);
+    // }
 
     if (dto.email) {
       const duplicate = await this.userRepository.getByEmail(dto.email);
@@ -150,4 +155,32 @@ export class UserAdminService extends BaseService {
     }
     return user;
   }
+
+  // New
+  /**
+   * Update quotaSizeInBytes for the user according to the Immich standard:
+   *  - null  => unlimited
+   *  - 0     => no-upload
+   *  - >0    => limit (bytes)
+   *
+   * Call syncUsage if the quota changes.
+   */
+  async updateUserQuota(id: string, quotaSizeInBytes: number | null): Promise<void> {
+
+    const user = await this.findOrFail(id, {});
+
+    const prev = user.quotaSizeInBytes ?? null;   // number | null
+    const next = quotaSizeInBytes;                // number | null
+    const changed = prev !== next;
+
+    if (changed) {
+      await this.userRepository.syncUsage(id);
+    }
+
+    await this.userRepository.update(id, {
+      quotaSizeInBytes: next,
+      updatedAt: new Date(),
+    });
+  }
+  // ============================
 }

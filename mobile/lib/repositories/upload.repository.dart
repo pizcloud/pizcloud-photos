@@ -24,21 +24,73 @@ class UploadRepository {
   void Function(TaskProgressUpdate)? onTaskProgress;
 
   UploadRepository() {
+    // New
     FileDownloader().registerCallbacks(
       group: kBackupGroup,
-      taskStatusCallback: (update) => onUploadStatus?.call(update),
+      taskStatusCallback: (update) {
+        final code = update.responseStatusCode;
+        if (code == 409) {
+          // Do not retry, mark failed
+          try {
+            onUploadStatus?.call(update.copyWith(status: TaskStatus.failed));
+          } catch (_) {
+            onUploadStatus?.call(update);
+          }
+          return;
+        }
+        onUploadStatus?.call(update);
+      },
       taskProgressCallback: (update) => onTaskProgress?.call(update),
     );
     FileDownloader().registerCallbacks(
       group: kBackupLivePhotoGroup,
-      taskStatusCallback: (update) => onUploadStatus?.call(update),
+      taskStatusCallback: (update) {
+        final code = update.responseStatusCode;
+        if (code == 409) {
+          try {
+            onUploadStatus?.call(update.copyWith(status: TaskStatus.failed));
+          } catch (_) {
+            onUploadStatus?.call(update);
+          }
+          return;
+        }
+        onUploadStatus?.call(update);
+      },
       taskProgressCallback: (update) => onTaskProgress?.call(update),
     );
     FileDownloader().registerCallbacks(
       group: kManualUploadGroup,
-      taskStatusCallback: (update) => onUploadStatus?.call(update),
+      taskStatusCallback: (update) {
+        final code = update.responseStatusCode;
+        if (code == 409) {
+          try {
+            onUploadStatus?.call(update.copyWith(status: TaskStatus.failed));
+          } catch (_) {
+            onUploadStatus?.call(update);
+          }
+          return;
+        }
+        onUploadStatus?.call(update);
+      },
       taskProgressCallback: (update) => onTaskProgress?.call(update),
     );
+    // ============================
+
+    // FileDownloader().registerCallbacks(
+    //   group: kBackupGroup,
+    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
+    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
+    // );
+    // FileDownloader().registerCallbacks(
+    //   group: kBackupLivePhotoGroup,
+    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
+    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
+    // );
+    // FileDownloader().registerCallbacks(
+    //   group: kManualUploadGroup,
+    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
+    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
+    // );
   }
 
   Future<void> enqueueBackground(UploadTask task) {

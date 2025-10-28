@@ -33,6 +33,11 @@ import { UserAdminController } from 'src/controllers/user-admin.controller';
 import { UserController } from 'src/controllers/user.controller';
 import { ViewController } from 'src/controllers/view.controller';
 
+// New
+import { BillingController } from 'src/controllers/billing.controller';
+export * from './billing.controller';
+// ==============================
+
 export const controllers = [
   ApiKeyController,
   ActivityController,
@@ -68,4 +73,5 @@ export const controllers = [
   UserAdminController,
   UserController,
   ViewController,
+  BillingController
 ];

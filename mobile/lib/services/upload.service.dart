@@ -59,6 +59,11 @@ class UploadService {
   final StreamController<TaskStatusUpdate> _taskStatusController = StreamController<TaskStatusUpdate>.broadcast();
   final StreamController<TaskProgressUpdate> _taskProgressController = StreamController<TaskProgressUpdate>.broadcast();
 
+  // New
+  final StreamController<void> _quotaExceededController = StreamController<void>.broadcast();
+  Stream<void> get quotaExceededStream => _quotaExceededController.stream;
+  // ============================
+
   Stream<TaskStatusUpdate> get taskStatusStream => _taskStatusController.stream;
   Stream<TaskProgressUpdate> get taskProgressStream => _taskProgressController.stream;
 
@@ -74,13 +79,50 @@ class UploadService {
     if (!_taskStatusController.isClosed) {
       _taskStatusController.add(update);
     }
+
+    // New
+    if (update.status == TaskStatus.failed && update.responseStatusCode == 409) {
+      _handleQuotaExceeded(update);
+      return;
+    }
+    // ============================
+
     _handleTaskStatusUpdate(update);
   }
 
   void dispose() {
     _taskStatusController.close();
     _taskProgressController.close();
+
+    // New
+    _quotaExceededController.close();
+    // ============================
   }
+
+  // New
+  Future<void> _handleQuotaExceeded(TaskStatusUpdate update) async {
+    _logger.severe('Upload blocked: quota exceeded (HTTP 409). Pausing backup queue.');
+
+    shouldAbortQueuingTasks = true;
+
+    try {
+      await _uploadRepository.reset(kBackupGroup);
+      await _uploadRepository.deleteDatabaseRecords(kBackupGroup);
+
+      await _uploadRepository.reset(kBackupLivePhotoGroup);
+      await _uploadRepository.deleteDatabaseRecords(kBackupLivePhotoGroup);
+
+      await _uploadRepository.reset(kManualUploadGroup);
+      await _uploadRepository.deleteDatabaseRecords(kManualUploadGroup);
+    } catch (e) {
+      _logger.warning('Error resetting backup queue after 409: $e');
+    }
+
+    if (!_quotaExceededController.isClosed) {
+      _quotaExceededController.add(null);
+    }
+  }
+  // ============================
 
   Future<List<bool>> enqueueTasks(List<UploadTask> tasks) {
     return _uploadRepository.enqueueBackgroundAll(tasks);
