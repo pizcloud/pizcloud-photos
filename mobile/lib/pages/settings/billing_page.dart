@@ -1,10 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:immich_mobile/features/billing/billing_controller.dart';
+// import 'package:immich_mobile/features/billing/billing_controller.dart';
 import 'package:immich_mobile/providers/billing.provider.dart';
 
-Color _bannerColor(String s) {
+/// ===============================================================
+///                FAKE MODE (UI DEMO WITHOUT IAP)
+/// ===============================================================
+const bool kUseFakeProducts = true;
+
+class FakeProduct {
+  final String id;
+  final String title;
+  final String description;
+  final String price;
+  const FakeProduct(this.id, this.title, this.description, this.price);
+}
+
+const List<FakeProduct> kFakeProducts = [
+  FakeProduct('storage_100g_monthly', 'Basic', '100 GB cloud storage billed monthly', '\$1.99'),
+  FakeProduct('storage_100g_yearly', 'Basic', '100 GB cloud storage billed yearly', '\$19.99'),
+  FakeProduct('storage_200g_monthly', 'Pro', '200 GB cloud storage billed monthly', '\$2.99'),
+  FakeProduct('storage_200g_yearly', 'Pro', '200 GB cloud storage billed yearly', '\$29.99'),
+  FakeProduct('storage_2tb_monthly', 'Premium', '2 TB cloud storage billed monthly', '\$9.99'),
+  FakeProduct('storage_2tb_yearly', 'Premium', '2 TB cloud storage billed yearly', '\$99.99'),
+];
+
+/// ===============================================================
+///                HELPERS & MODELS
+/// ===============================================================
+enum BillingPeriod { monthly, yearly }
+
+bool _looksMonthly(String s) => RegExp(r'(month|monthly|mo|_m$|_monthly$)', caseSensitive: false).hasMatch(s);
+bool _looksYearly(String s) =>
+    RegExp(r'(year|yearly|annual|annually|yr|_y$|_yearly$)', caseSensitive: false).hasMatch(s);
+
+Color _bannerColor(String s, BuildContext context) {
   switch (s) {
     case 'warn':
       return Colors.amber.shade200;
@@ -13,114 +45,621 @@ Color _bannerColor(String s) {
     case 'blocked':
       return Colors.red.shade300;
     default:
-      return Colors.green.shade200;
+      return Theme.of(context).colorScheme.secondaryContainer;
   }
 }
 
-class BillingPage extends HookConsumerWidget {
-  const BillingPage({super.key});
+void _snack(BuildContext c, String msg) => ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));
+
+List<String> _featuresFor(String idOrTitle) {
+  final s = idOrTitle.toLowerCase();
+  if (s.contains('2tb') || s.contains('premium')) {
+    return const ['2 TB Storage', 'Team Collaboration', '24/7 Premium Support', 'Advanced Security', 'Admin Controls'];
+  }
+  // if (s.contains('500') || s.contains('pro')) {
+  //   return const ['500 GB Storage', 'Advanced File Sharing', 'Priority Support', 'Version History'];
+  // }
+  if (s.contains('200') || s.contains('pro')) {
+    return const ['200 GB Storage', 'Multi-device Sync', 'Priority Support'];
+  }
+  return const ['100 GB Storage', 'File Sync Across Devices', 'Basic Support'];
+}
+
+bool _isMostPopular(String idOrTitle) {
+  final s = idOrTitle.toLowerCase();
+  return s.contains('200') || s.contains('pro') || s.contains('200g');
+}
+
+String _planShortTitle(String title, String id) {
+  final t = title.trim();
+  if (t.toLowerCase().contains('basic')) return 'Basic';
+  if (t.toLowerCase().contains('pro')) return 'Pro';
+  if (t.toLowerCase().contains('premium')) return 'Premium';
+  if (id.contains('2tb')) return 'Premium';
+  if (id.contains('200')) return 'Pro';
+  return 'Basic';
+}
+
+class PlanDisplay {
+  final String id;
+  final String title; // Basic / Pro / Premium
+  final String price; // "$9.99"
+  final bool isMonthly;
+  final List<String> features;
+  final bool highlighted; // Most Popular
+  final ProductDetails? raw; // null if fake
+
+  const PlanDisplay({
+    required this.id,
+    required this.title,
+    required this.price,
+    required this.isMonthly,
+    required this.features,
+    required this.highlighted,
+    required this.raw,
+  });
+}
+
+/// ===============================================================
+///                UI: PLAN CARD
+/// ===============================================================
+class _PlanCard extends StatelessWidget {
+  final PlanDisplay data;
+  final BillingPeriod period;
+  final bool selected;
+  final VoidCallback onSelect;
+
+  const _PlanCard({required this.data, required this.period, required this.selected, required this.onSelect});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(billingControllerProvider) as dynamic;
-    final ctl = ref.read(billingControllerProvider.notifier) as BillingController;
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    final usage = state.usage as Map<String, dynamic>?;
-    final products = (state.products as List<ProductDetails>? ?? const []);
+    final borderColor = data.highlighted
+        ? theme.colorScheme.primary
+        : (selected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant);
+    final cardBg = isDark ? theme.colorScheme.surface : Colors.white;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Billing & Storage')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: state.loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: data.highlighted || selected ? 1.6 : 1),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.06),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onSelect,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title + price row
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (usage != null) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _bannerColor(usage['state'] as String),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Usage: ${usage['used_gb']} / ${usage['limit_gb']} GB (${usage['percent']}%)',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 8),
-                          LinearProgressIndicator(value: ((usage['percent'] as num) / 100).clamp(0, 1).toDouble()),
-                          if (usage['state'] == 'warn')
-                            const Padding(
-                              padding: EdgeInsets.only(top: 6),
-                              child: Text('You have used > 80%. Consider upgrading your plan.'),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                        const SizedBox(width: 8),
+                        if (data.highlighted)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          if (usage['state'] == 'critical')
-                            const Padding(
-                              padding: EdgeInsets.only(top: 6),
-                              child: Text('You have used > 90%. Very close to the maximum!'),
-                            ),
-                          if (usage['state'] == 'blocked')
-                            const Padding(
-                              padding: EdgeInsets.only(top: 6),
-                              child: Text(
-                                'OUT OF STORAGE - Uploads will be blocked.',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                            child: Text(
+                              'Most Popular',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
+                          ),
+                        if (selected) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'Selected',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (state.error != null) Text(state.error!, style: const TextStyle(color: Colors.red)),
-                  if (state.entitlement != null) ...[
-                    Text('Current plan: ${state.entitlement!['plan_code']}'),
-                    Text('Storage: ${state.entitlement!['storage_limit_gb']} GB'),
-                    TextButton(onPressed: ctl.refreshUsage, child: const Text('Refresh usage')),
-                    const SizedBox(height: 12),
-                  ],
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: products.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (_, i) {
-                        final p = products[i];
-                        return ListTile(
-                          title: Text(p.title),
-                          subtitle: Text(p.description),
-                          trailing: ElevatedButton(onPressed: () => ctl.buy(p), child: Text(p.price)),
-                        );
-                      },
+                      ],
                     ),
                   ),
-                  Center(
-                    child: TextButton(onPressed: ctl.restore, child: const Text('Restore Purchases')),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(data.price, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                      Text(
+                        period == BillingPeriod.monthly ? '/month' : '/year',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              // Features
+              ...data.features.map(
+                (f) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle, size: 18, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(f, style: theme.textTheme.bodyMedium?.copyWith(height: 1.2))),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Select button
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: data.highlighted
+                    ? ElevatedButton(
+                        onPressed: onSelect,
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Select Plan'),
+                      )
+                    : OutlinedButton(
+                        onPressed: onSelect,
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Select Plan'),
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-// // lib/pages/common/upgrade.page.dart
-// import 'package:auto_route/auto_route.dart';
-// import 'package:flutter/material.dart';
+/// ===============================================================
+///                PAGE
+/// ===============================================================
+class BillingPage extends HookConsumerWidget {
+  const BillingPage({super.key});
 
-// @RoutePage()
-// class BillingPage extends StatelessWidget {
-//   const BillingPage({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Upgrade')),
-//       body: const Center(child: Text('Content')),
-//     );
-//   }
-// }
+    final state = ref.watch(billingControllerProvider) as dynamic;
+    final ctl = ref.read(billingControllerProvider.notifier);
+
+    final usage = state.usage as Map<String, dynamic>?;
+
+    // Toggle Monthly / Yearly (default: Monthly)
+    final period = useState(BillingPeriod.monthly);
+
+    // Selected plan (for sticky CTA)
+    final selectedPlan = useState<PlanDisplay?>(null);
+
+    // Real products if any
+    final List<ProductDetails> realProducts = (state.products as List<ProductDetails>? ?? const []);
+
+    // Decide fake mode
+    final bool isFakeMode = kUseFakeProducts && (realProducts.isEmpty || state.error != null);
+
+    // Build unified items
+    final List<PlanDisplay> items = [];
+    if (isFakeMode) {
+      for (final p in kFakeProducts) {
+        items.add(
+          PlanDisplay(
+            id: p.id,
+            title: _planShortTitle(p.title, p.id),
+            price: p.price,
+            isMonthly: _looksMonthly(p.id) || _looksMonthly(p.title),
+            features: _featuresFor('${p.id} ${p.title}'),
+            highlighted: _isMostPopular('${p.id} ${p.title}'),
+            raw: null,
+          ),
+        );
+      }
+    } else {
+      for (final p in realProducts) {
+        final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
+        final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
+        final resolvedMonthly = isM || (!isM && !isY); // default monthly if unknown
+        items.add(
+          PlanDisplay(
+            id: p.id,
+            title: _planShortTitle(p.title, p.id),
+            price: p.price,
+            isMonthly: resolvedMonthly,
+            features: _featuresFor('${p.id} ${p.title} ${p.description}'),
+            highlighted: _isMostPopular('${p.id} ${p.title}'),
+            raw: p,
+          ),
+        );
+      }
+    }
+
+    // Filter by current period
+    final filtered = items.where((e) => period.value == BillingPeriod.monthly ? e.isMonthly : !e.isMonthly).toList();
+
+    // Sort Basic → Pro → Premium
+    int rank(String t) {
+      final s = t.toLowerCase();
+      if (s.contains('premium') || s.contains('2tb')) return 3;
+      if (s.contains('pro') || s.contains('500')) return 2;
+      return 1;
+    }
+
+    filtered.sort((a, b) => rank(a.title).compareTo(rank(b.title)));
+
+    useEffect(() {
+      selectedPlan.value = null;
+      return null;
+    }, [period.value]);
+
+    final showCta = selectedPlan.value != null;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Choose Your Plan'), centerTitle: true),
+      // Sticky CTA
+      bottomNavigationBar: showCta
+          ? SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                      color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Summary line
+                    Text(
+                      'Continue with ${selectedPlan.value!.title} – ${selectedPlan.value!.price}'
+                      ' / ${period.value == BillingPeriod.monthly ? 'month' : 'year'}',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final plan = selectedPlan.value!;
+                          if (plan.raw != null) {
+                            // Real purchase
+                            ref.read(billingControllerProvider.notifier).buy(plan.raw!);
+                          } else {
+                            // Fake purchase
+                            _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Buy Now'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : null,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 120), // extra bottom for CTA
+          children: [
+            if (usage != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _bannerColor(usage['state'] as String, context),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Usage: ${usage['used_gb']} / ${usage['limit_gb']} GB (${usage['percent']}%)',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(value: ((usage['percent'] as num) / 100).clamp(0, 1).toDouble()),
+                    if (usage['state'] == 'warn')
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6),
+                        child: Text('You have used > 80%. Consider upgrading.'),
+                      ),
+                    if (usage['state'] == 'critical')
+                      const Padding(padding: EdgeInsets.only(top: 6), child: Text('You have used > 90%. Very close!')),
+                    if (usage['state'] == 'blocked')
+                      const Padding(
+                        padding: EdgeInsets.only(top: 6),
+                        child: Text(
+                          'OUT OF STORAGE - Uploads will be blocked.',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Header icon + title + sub
+            Column(
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.lock_outline, size: 28, color: theme.colorScheme.primary),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Upgrade Your Storage',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Get more space for your files, photos, and documents with our flexible storage plans.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Monthly / Yearly segmented control
+            Row(
+              children: [
+                Expanded(
+                  child: _PeriodTab(
+                    text: 'Monthly',
+                    selected: period.value == BillingPeriod.monthly,
+                    onTap: () => period.value = BillingPeriod.monthly,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _PeriodTab(
+                    text: 'Yearly',
+                    hintRight: 'Save 20%',
+                    selected: period.value == BillingPeriod.yearly,
+                    onTap: () => period.value = BillingPeriod.yearly,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            if (state.error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(state.error!, style: const TextStyle(color: Colors.red)),
+              ),
+
+            // Plan cards
+            for (final it in filtered)
+              _PlanCard(
+                data: it,
+                period: period.value,
+                selected: selectedPlan.value?.id == it.id,
+                onSelect: () => selectedPlan.value = it,
+              ),
+
+            const SizedBox(height: 8),
+
+            // Why choose box
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Why Choose Our Storage?',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 12),
+                  const _WhyRow(
+                    icon: Icons.verified_user_outlined,
+                    title: 'Secure & Encrypted',
+                    subtitle: 'Your files are protected with end-to-end encryption',
+                  ),
+                  const SizedBox(height: 10),
+                  const _WhyRow(
+                    icon: Icons.sync_outlined,
+                    title: 'Auto Sync',
+                    subtitle: 'Access your files from any device, anywhere',
+                  ),
+                  const SizedBox(height: 10),
+                  const _WhyRow(
+                    icon: Icons.history_outlined,
+                    title: 'Version History',
+                    subtitle: 'Restore previous versions of your files',
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(Icons.verified, size: 18, color: Colors.green[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        '30-day money-back guarantee',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Restore purchases
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  if (isFakeMode) {
+                    _snack(context, 'Pretend restore purchases');
+                  } else {
+                    ctl.restore();
+                  }
+                },
+                child: const Text('Restore Purchases'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ===============================================================
+///                SUB-WIDGETS
+/// ===============================================================
+class _PeriodTab extends StatelessWidget {
+  final String text;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? hintRight;
+  const _PeriodTab({required this.text, required this.selected, required this.onTap, this.hintRight});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        height: 42,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: selected ? theme.colorScheme.primary.withValues(alpha: 0.12) : theme.colorScheme.surface,
+          border: Border.all(
+            color: selected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+            width: selected ? 1.4 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              text,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: selected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+              ),
+            ),
+            if (hintRight != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  hintRight!,
+                  style: theme.textTheme.labelSmall?.copyWith(color: Colors.green[700], fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WhyRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  const _WhyRow({required this.icon, required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
