@@ -27,9 +27,8 @@ final iapServiceProvider = Provider<IapService>((ref) => IapService());
 final entitlementApiClientProvider = Provider<EntitlementApiClient>((ref) {
   final immichBaseUrl = Store.get(StoreKey.serverEndpoint);
   final cfg = ref.watch(billingConfigProvider);
-  final token = Store.tryGet(StoreKey.accessToken) ?? '';
 
-  return EntitlementApiClient(immichBaseUrl: immichBaseUrl, billingBaseUrl: cfg.billingBaseUrl, authToken: token);
+  return EntitlementApiClient(immichBaseUrl: immichBaseUrl, billingBaseUrl: cfg.billingBaseUrl);
 });
 
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {

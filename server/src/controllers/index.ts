@@ -35,7 +35,6 @@ import { ViewController } from 'src/controllers/view.controller';
 
 // New
 import { BillingController } from 'src/controllers/billing.controller';
-export * from './billing.controller';
 // ==============================
 
 export const controllers = [

@@ -5,7 +5,14 @@ class IapService {
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _sub;
 
-  static const productIds = <String>{'photos_100g_month', 'photos_200g_month', 'photos_2tb_month'};
+  static const productIds = <String>{
+    'storage_100g_monthly',
+    'storage_100g_yearly',
+    'storage_200g_monthly',
+    'storage_200g_yearly',
+    'storage_2tb_monthly',
+    'storage_2tb_yearly',
+  };
 
   Future<bool> isAvailable() => _iap.isAvailable();
 
@@ -14,7 +21,9 @@ class IapService {
   void listen(void Function(PurchaseDetails) onPurchase) {
     _sub?.cancel();
     _sub = _iap.purchaseStream.listen((events) {
-      for (final p in events) onPurchase(p);
+      for (final p in events) {
+        onPurchase(p);
+      }
     });
   }
 

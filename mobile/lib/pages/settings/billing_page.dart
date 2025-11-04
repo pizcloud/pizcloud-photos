@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 // import 'package:immich_mobile/features/billing/billing_controller.dart';
 import 'package:immich_mobile/providers/billing.provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// ===============================================================
 ///                FAKE MODE (UI DEMO WITHOUT IAP)
@@ -556,10 +557,61 @@ class BillingPage extends HookConsumerWidget {
                 child: const Text('Restore Purchases'),
               ),
             ),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final entitlement = state.entitlement as Map<String, dynamic>?;
+                  final activeProductId = entitlement?['productId'] as String?;
+                  await _openManageSubscription(context, ref, productId: activeProductId);
+                },
+                style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: const Text('Manage Subscription'),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _openManageSubscription(BuildContext context, WidgetRef ref, {String? productId}) async {
+    final cfg = ref.read(billingConfigProvider);
+
+    final isAndroid = Theme.of(context).platform == TargetPlatform.android;
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
+    Uri primary;
+    Uri? fallback;
+
+    if (isAndroid) {
+      if (productId != null && productId.isNotEmpty) {
+        primary = Uri.parse(
+          'https://play.google.com/store/account/subscriptions?sku=$productId&package=${cfg.androidPackageName}',
+        );
+        fallback = Uri.parse('https://play.google.com/store/account/subscriptions?package=${cfg.androidPackageName}');
+      } else {
+        primary = Uri.parse('https://play.google.com/store/account/subscriptions?package=${cfg.androidPackageName}');
+      }
+    } else if (isIOS) {
+      primary = Uri.parse('itms-apps://apps.apple.com/account/subscriptions');
+      fallback = Uri.parse('https://apps.apple.com/account/subscriptions');
+    } else {
+      primary = Uri.parse('https://play.google.com/store/account/subscriptions');
+    }
+
+    final ok = await launchUrl(primary, mode: LaunchMode.externalApplication);
+    if (!ok && fallback != null) {
+      final ok2 = await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      if (!ok2) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Could not open subscription manager.')));
+      }
+    } else if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open subscription manager.')));
+    }
   }
 }
 
