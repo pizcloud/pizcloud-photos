@@ -85,6 +85,14 @@ export class AuthGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // // New
+    // const request2nd = context.switchToHttp().getRequest<AuthRequest>();
+    // const url = request2nd.originalUrl || request2nd.url || '';
+    // if (url.startsWith('/api/billing/entitlements/webhook')) {
+    //   return true; // bypass guard cho webhook
+    // }
+    // // ========================
+
     const targets = [context.getHandler()];
 
     const options = this.reflector.getAllAndOverride<AuthenticatedOptions | undefined>(MetadataKey.AuthRoute, targets);

@@ -100,7 +100,8 @@
     }
   };
 
-  $effect(() => void handleRelease($release));
+  // New
+  // $effect(() => void handleRelease($release));
 </script>
 
 <svelte:head>

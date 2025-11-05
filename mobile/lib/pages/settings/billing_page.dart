@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -248,6 +249,7 @@ class _PlanCard extends StatelessWidget {
 /// ===============================================================
 ///                PAGE
 /// ===============================================================
+@RoutePage()
 class BillingPage extends HookConsumerWidget {
   const BillingPage({super.key});
 
