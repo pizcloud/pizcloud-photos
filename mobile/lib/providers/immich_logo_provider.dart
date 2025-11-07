@@ -8,7 +8,7 @@ part 'immich_logo_provider.g.dart';
 
 @riverpod
 Future<Uint8List> immichLogo(Ref _) async {
-  final json = await rootBundle.loadString('assets/immich-logo.json');
+  final json = await rootBundle.loadString('assets/pizcloud-logo.json');
   final j = jsonDecode(json);
   return base64Decode(j['content']);
 }

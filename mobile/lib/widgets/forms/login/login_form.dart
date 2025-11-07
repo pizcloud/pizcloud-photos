@@ -25,7 +25,8 @@ import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/utils/provider_utils.dart';
 import 'package:immich_mobile/utils/url_helper.dart';
 import 'package:immich_mobile/utils/version_compatibility.dart';
-import 'package:immich_mobile/widgets/common/immich_logo.dart';
+// import 'package:immich_mobile/widgets/common/immich_logo.dart';
+import 'package:immich_mobile/widgets/common/pizcloud_logo.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/forms/login/email_input.dart';
@@ -604,7 +605,7 @@ class LoginForm extends HookConsumerWidget {
                         onLongPress: () => populateTestLoginInfo1(),
                         child: RotationTransition(
                           turns: logoAnimationController,
-                          child: const ImmichLogo(heroTag: 'logo'),
+                          child: const PizCloudLogo(heroTag: 'logo'),
                         ),
                       ),
                       const Padding(padding: EdgeInsets.only(top: 8.0, bottom: 16), child: ImmichTitleText()),

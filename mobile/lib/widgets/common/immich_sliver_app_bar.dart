@@ -100,7 +100,9 @@ class _ImmichLogoWithText extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(top: 3.0),
                   child: SvgPicture.asset(
-                    context.isDarkTheme ? 'assets/immich-logo-inline-dark.svg' : 'assets/immich-logo-inline-light.svg',
+                    context.isDarkTheme
+                        ? 'assets/pizcloud-logo-inline-dark.svg'
+                        : 'assets/pizcloud-logo-inline-light.svg',
                     height: 40,
                   ),
                 );
