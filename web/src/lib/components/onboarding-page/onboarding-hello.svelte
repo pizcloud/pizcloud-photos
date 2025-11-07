@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ImmichLogo from '$lib/components/shared-components/immich-logo.svelte';
+  import PizcloduLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
   import { OnboardingRole } from '$lib/models/onboarding-role';
   import { serverConfig } from '$lib/stores/server-config.store';
   import { user } from '$lib/stores/user.store';
@@ -9,7 +9,7 @@
 </script>
 
 <div class="gap-4">
-  <ImmichLogo noText class="h-[100px] mb-2" />
+  <PizcloduLogo noText class="h-[100px] mb-2" />
   <p class="font-medium mb-6 text-6xl text-primary">
     {$t('onboarding_welcome_user', { values: { user: $user.name } })}
   </p>

@@ -2,7 +2,8 @@
   import AlbumViewer from '$lib/components/album-page/album-viewer.svelte';
   import IndividualSharedViewer from '$lib/components/share-page/individual-shared-viewer.svelte';
   import ControlAppBar from '$lib/components/shared-components/control-app-bar.svelte';
-  import ImmichLogoSmallLink from '$lib/components/shared-components/immich-logo-small-link.svelte';
+  // import ImmichLogoSmallLink from '$lib/components/shared-components/immich-logo-small-link.svelte';
+  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud-logo-small-link.svelte';
   import ThemeButton from '$lib/components/shared-components/theme-button.svelte';
   import { assetViewingStore } from '$lib/stores/asset-viewing.store';
   import { user } from '$lib/stores/user.store';
@@ -43,7 +44,7 @@
       sharedLink = await getMySharedLink({ password, key, slug });
       setSharedLink(sharedLink);
       passwordRequired = false;
-      title = (sharedLink.album ? sharedLink.album.albumName : $t('public_share')) + ' - Immich';
+      title = (sharedLink.album ? sharedLink.album.albumName : $t('public_share')) + ' - PizCloud';
       description =
         sharedLink.description ||
         $t('shared_photos_and_videos_count', { values: { assetCount: sharedLink.assets.length } });
@@ -87,7 +88,7 @@
   <header>
     <ControlAppBar showBackButton={false}>
       {#snippet leading()}
-        <ImmichLogoSmallLink />
+        <PizcloudLogoSmallLink />
       {/snippet}
 
       {#snippet trailing()}

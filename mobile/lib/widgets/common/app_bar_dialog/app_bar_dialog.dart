@@ -17,10 +17,10 @@ import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.da
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_profile_info.dart';
-import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_server_info.dart';
+// import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_server_info.dart';
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
-import 'package:immich_mobile/widgets/common/immich_logo.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+// import 'package:immich_mobile/widgets/common/immich_logo.dart';
+// import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ImmichAppBarDialog extends HookConsumerWidget {

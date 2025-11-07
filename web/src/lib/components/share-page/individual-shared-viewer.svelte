@@ -1,7 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import type { Action } from '$lib/components/asset-viewer/actions/action';
-  import ImmichLogoSmallLink from '$lib/components/shared-components/immich-logo-small-link.svelte';
+  // import ImmichLogoSmallLink from '$lib/components/shared-components/immich-logo-small-link.svelte';
+  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud-logo-small-link.svelte';
   import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
   import RemoveFromSharedLink from '$lib/components/timeline/actions/RemoveFromSharedLinkAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
@@ -113,7 +114,7 @@
     {:else}
       <ControlAppBar onClose={() => goto(AppRoute.PHOTOS)} backIcon={mdiArrowLeft} showBackButton={false}>
         {#snippet leading()}
-          <ImmichLogoSmallLink />
+          <PizcloudLogoSmallLink />
         {/snippet}
 
         {#snippet trailing()}

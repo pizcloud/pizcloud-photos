@@ -146,7 +146,7 @@
   };
 </script>
 
-<Modal title={shared ? $t('add_to_shared_album') : $t('add_to_album')} {onClose} size="small">
+<Modal icon={false} title={shared ? $t('add_to_shared_album') : $t('add_to_album')} {onClose} size="small">
   <ModalBody>
     <div class="mb-2 flex max-h-[400px] flex-col">
       {#if loading}

@@ -6,8 +6,8 @@
   import { page } from '$app/state';
   import { clickOutside } from '$lib/actions/click-outside';
   import CastButton from '$lib/cast/cast-button.svelte';
-  import ImmichLogo from '$lib/components/shared-components/immich-logo.svelte';
   import NotificationPanel from '$lib/components/shared-components/navigation-bar/notification-panel.svelte';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
   import SearchBar from '$lib/components/shared-components/search-bar/search-bar.svelte';
   import { AppRoute } from '$lib/constants';
   import SkipLink from '$lib/elements/SkipLink.svelte';
@@ -78,7 +78,8 @@
         class="sidebar:hidden"
       />
       <a data-sveltekit-preload-data="hover" href={AppRoute.PHOTOS}>
-        <ImmichLogo class="max-md:h-[48px] h-[50px]" noText={!mobileDevice.isFullSidebar} />
+        <!-- <ImmichLogo class="max-md:h-[48px] h-[50px]" noText={!mobileDevice.isFullSidebar} /> -->
+        <PizcloudLogo class="w-40 h-[50px]" noText={!mobileDevice.isFullSidebar} />
       </a>
     </div>
     <div class="flex justify-between gap-4 lg:gap-8 pe-6">

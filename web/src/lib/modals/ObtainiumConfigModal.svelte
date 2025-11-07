@@ -31,7 +31,7 @@
   let { onClose }: Props = $props();
 </script>
 
-<Modal title={$t('obtainium_configurator')} size="large" {onClose}>
+<Modal icon={false} title={$t('obtainium_configurator')} size="large" {onClose}>
   <ModalBody>
     <div class="flex flex-col sm:grid sm:grid-cols-2 gap-5 text-immich-primary dark:text-immich-dark-primary">
       <div>

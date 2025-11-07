@@ -102,7 +102,7 @@
   };
 </script>
 
-<Modal title={$t('options')} size="small" {onClose}>
+<Modal icon={false} title={$t('options')} size="small" {onClose}>
   <ModalBody>
     <section class="immich-scrollbar max-h-[400px] overflow-y-auto pb-4">
       {#each [{ user: album.owner, role: 'owner' }, ...album.albumUsers] as { user, role } (user.id)}

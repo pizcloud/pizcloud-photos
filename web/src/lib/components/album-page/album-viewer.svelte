@@ -19,7 +19,8 @@
   import { mdiDownload, mdiFileImagePlusOutline } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import ControlAppBar from '../shared-components/control-app-bar.svelte';
-  import ImmichLogoSmallLink from '../shared-components/immich-logo-small-link.svelte';
+  // import ImmichLogoSmallLink from '../shared-components/immich-logo-small-link.svelte';
+  import PizcloudLogoSmallLink from '../shared-components/pizcloud-logo-small-link.svelte';
   import ThemeButton from '../shared-components/theme-button.svelte';
   import AlbumSummary from './album-summary.svelte';
 
@@ -97,7 +98,7 @@
   {:else}
     <ControlAppBar showBackButton={false}>
       {#snippet leading()}
-        <ImmichLogoSmallLink />
+        <PizcloudLogoSmallLink />
       {/snippet}
 
       {#snippet trailing()}

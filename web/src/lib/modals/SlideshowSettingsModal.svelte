@@ -73,7 +73,7 @@
   };
 </script>
 
-<Modal size="small" title={$t('slideshow_settings')} onClose={() => onClose()}>
+<Modal icon={false} size="small" title={$t('slideshow_settings')} onClose={() => onClose()}>
   <ModalBody>
     <div class="flex flex-col gap-4 text-primary">
       <SettingDropdown

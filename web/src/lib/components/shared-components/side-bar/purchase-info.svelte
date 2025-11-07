@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import ImmichLogo from '$lib/components/shared-components/immich-logo.svelte';
+  // import ImmichLogo from '$lib/components/shared-components/immich-logo.svelte';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
   import SupporterBadge from '$lib/components/shared-components/side-bar/supporter-badge.svelte';
   import { AppRoute } from '$lib/constants';
   import Portal from '$lib/elements/Portal.svelte';
@@ -94,7 +95,7 @@
       <div class="flex justify-between w-full place-items-center place-content-center">
         <div class="flex place-items-center place-content-center gap-1">
           <div class="h-6 w-6">
-            <ImmichLogo noText class="h-[24px]" />
+            <PizcloudLogo noText class="h-[24px]" />
           </div>
           <p class="flex text-primary font-medium">
             {$t('purchase_button_buy_immich')}
@@ -122,7 +123,7 @@
     >
       <div class="flex justify-between place-items-center">
         <div class="h-10 w-10">
-          <ImmichLogo noText class="h-[32px]" />
+          <PizcloudLogo noText class="h-[32px]" />
         </div>
         <IconButton
           shape="round"

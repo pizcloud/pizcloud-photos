@@ -23,7 +23,7 @@
   };
 </script>
 
-<Modal title={$t('map_settings')} {onClose} size="small">
+<Modal icon={false} title={$t('map_settings')} {onClose} size="small">
   <ModalBody>
     <form {onsubmit} id="map-settings-form">
       <Stack gap={4}>

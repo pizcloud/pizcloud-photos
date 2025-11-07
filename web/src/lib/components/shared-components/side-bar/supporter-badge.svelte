@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
-  import ImmichLogo from '../immich-logo.svelte';
+  // import ImmichLogo from '../immich-logo.svelte';
+  import PizcloudLogo from '../pizcloud-logo.svelte';
 
   interface Props {
     centered?: boolean;
@@ -14,7 +15,7 @@
   class="flex gap-1 mt-2 place-items-center dark:bg-immich-dark-primary/10 bg-gray-200/50 p-2 rounded-lg bg-clip-padding border border-transparent relative supporter-effect"
   class:place-content-center={centered}
 >
-  <ImmichLogo class={logoSize === 'sm' ? 'h-6' : 'h-8'} noText />
+  <PizcloudLogo class={logoSize === 'sm' ? 'h-6' : 'h-8'} noText />
   <p class="dark:text-gray-100">{$t('purchase_account_info')}</p>
 </div>
 

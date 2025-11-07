@@ -10,7 +10,7 @@
   let { html, onClose }: Props = $props();
 </script>
 
-<Modal title={$t('admin.template_email_preview')} {onClose} size="giant">
+<Modal icon={false} title={$t('admin.template_email_preview')} {onClose} size="giant">
   <ModalBody>
     <div class="relative w-full h-240 overflow-hidden">
       <iframe

@@ -45,6 +45,7 @@
 </script>
 
 <ConfirmModal
+  icon={false}
   confirmColor="primary"
   title={$t('admin.create_job')}
   disabled={!selectedJob}

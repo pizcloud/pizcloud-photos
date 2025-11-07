@@ -37,6 +37,7 @@
 </script>
 
 <ConfirmModal
+  icon={false}
   title={$t('delete_user')}
   confirmText={forceDelete ? $t('permanently_delete') : $t('delete')}
   onClose={(confirmed) => (confirmed ? handleDeleteUser() : onClose())}

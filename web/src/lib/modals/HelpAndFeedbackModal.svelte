@@ -13,7 +13,7 @@
   let { onClose, info }: Props = $props();
 </script>
 
-<Modal title={$t('support_and_feedback')} {onClose} size="small">
+<Modal icon={false} title={$t('support_and_feedback')} {onClose} size="small">
   <ModalBody>
     <p>{$t('official_immich_resources')}</p>
     <div class="flex flex-col sm:grid sm:grid-cols-2 gap-2 mt-5">
