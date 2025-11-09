@@ -138,3 +138,10 @@ export const ORIENTATION_TO_SHARP_ROTATION: Record<ExifOrientation, SharpRotatio
   [ExifOrientation.MirrorHorizontalRotate90CW]: { angle: 90, flip: true },
   [ExifOrientation.Rotate270CW]: { angle: 270 },
 } as const;
+
+// NEW: default quota bytes for free-tier users (15 GiB)
+export const DEFAULT_FREE_TIER_QUOTA_BYTES = 15 * 1024 * 1024 * 1024;
+
+// NEW: User signup enabled flag
+// USER_SIGNUP_ENABLED=false  => disable user signups
+export const USER_SIGNUP_ENABLED = true;

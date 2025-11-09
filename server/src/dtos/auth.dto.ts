@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { AuthApiKey, AuthSession, AuthSharedLink, AuthUser, UserAdmin } from 'src/database';
 import { ImmichCookie, UserMetadataKey } from 'src/enum';
 import { UserMetadataItem } from 'src/types';
@@ -100,7 +100,7 @@ export class PinCodeResetDto {
   password?: string;
 }
 
-export class SessionUnlockDto extends PinCodeResetDto {}
+export class SessionUnlockDto extends PinCodeResetDto { }
 
 export class PinCodeChangeDto extends PinCodeResetDto {
   @PinCode()
@@ -150,4 +150,19 @@ export class AuthStatusResponseDto {
   isElevated!: boolean;
   expiresAt?: string;
   pinExpiresAt?: string;
+}
+
+// NEW: DTO for self-signup (public)
+export class AuthRegisterDto {
+  @IsEmail({ require_tld: false })
+  @Transform(toEmail)
+  email!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password!: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string; // default to email prefix if not provided
 }

@@ -18,6 +18,12 @@ import 'package:immich_mobile/services/network.service.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
 
+// UPDATE: added imports
+import 'dart:convert'; // NEW
+import 'dart:io'; // NEW
+import 'package:openapi/api.dart';
+import 'package:immich_mobile/entities/store.entity.dart';
+
 final authServiceProvider = Provider(
   (ref) => AuthService(
     ref.watch(authApiRepositoryProvider),
@@ -216,5 +222,55 @@ class AuthService {
 
   Future<void> setupPinCode(String pinCode) {
     return _authApiRepository.setupPinCode(pinCode);
+  }
+
+  // NEW: User registration method
+  Future<void> register(String email, String password, {String? name}) async {
+    final base = Store.get(StoreKey.serverEndpoint);
+    if (base.isEmpty) {
+      throw ApiException(500, 'Server endpoint is empty');
+    }
+
+    final uri = Uri.parse('$base/auth/register');
+    final payload = <String, dynamic>{
+      'email': email,
+      'password': password,
+      if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+    };
+
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
+    try {
+      final req = await client.postUrl(uri);
+      req.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8');
+      req.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      req.add(utf8.encode(jsonEncode(payload)));
+
+      final res = await req.close();
+      final body = await res.transform(utf8.decoder).join();
+
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        return;
+      }
+
+      String msg = body;
+      try {
+        final obj = jsonDecode(body);
+        if (obj is Map) {
+          final m = obj['message'];
+          if (m is String && m.isNotEmpty) msg = m;
+          if (m is List && m.isNotEmpty) msg = m.join(', ');
+        }
+      } catch (_) {
+        // ignore parse error
+      }
+
+      throw ApiException(res.statusCode, msg.isEmpty ? 'Registration failed' : msg);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(500, e.toString());
+    } finally {
+      client.close(force: true);
+    }
   }
 }
