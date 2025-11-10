@@ -178,6 +178,14 @@
         </Button>
       {/if}
 
+      <!-- // New -->
+      {#if $featureFlags.passwordLogin}
+        <div class="text-center text-sm mt-2">
+          {$t('no_account_yet')}
+          <a class="underline" href={AppRoute.AUTH_USER_REGISTER}>{$t('sign_up')}</a>
+        </div>
+      {/if}
+
       {#if !$featureFlags.passwordLogin && !$featureFlags.oauth}
         <Alert color="warning" title={$t('login_has_been_disabled')} />
       {/if}
