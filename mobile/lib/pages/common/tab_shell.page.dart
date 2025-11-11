@@ -17,6 +17,9 @@ import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 
+// New
+import 'package:immich_mobile/widgets/media_permissions/media_permission_banner.dart';
+
 @RoutePage()
 class TabShellPage extends ConsumerStatefulWidget {
   const TabShellPage({super.key});
@@ -92,10 +95,24 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                     children: [
                       navigationRail(tabsRouter),
                       const VerticalDivider(),
-                      Expanded(child: child),
+                      // NEW
+                      Expanded(
+                        child: Column(
+                          children: [
+                            const MediaPermissionBanner(),
+                            Expanded(child: child),
+                          ],
+                        ),
+                      ),
                     ],
                   )
-                : child,
+                // NEW
+                : Column(
+                    children: [
+                      const MediaPermissionBanner(),
+                      Expanded(child: child),
+                    ],
+                  ),
             bottomNavigationBar: _BottomNavigationBar(tabsRouter: tabsRouter, destinations: navigationDestinations),
           ),
         );
