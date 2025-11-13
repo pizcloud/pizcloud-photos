@@ -19,6 +19,7 @@ import 'package:immich_mobile/routing/router.dart';
 
 // New
 import 'package:immich_mobile/widgets/media_permissions/media_permission_banner.dart';
+import 'package:immich_mobile/widgets/media_permissions/media_permission_lifecycle_listener.dart';
 
 @RoutePage()
 class TabShellPage extends ConsumerStatefulWidget {
@@ -90,8 +91,10 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
           onPopInvokedWithResult: (didPop, _) => !didPop ? tabsRouter.setActiveIndex(0) : null,
           child: Scaffold(
             resizeToAvoidBottomInset: false,
-            body: isScreenLandscape
-                ? Row(
+            body: Stack(
+              children: [
+                if (isScreenLandscape)
+                  Row(
                     children: [
                       navigationRail(tabsRouter),
                       const VerticalDivider(),
@@ -106,13 +109,17 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                       ),
                     ],
                   )
-                // NEW
-                : Column(
+                else
+                  Column(
                     children: [
                       const MediaPermissionBanner(),
                       Expanded(child: child),
                     ],
                   ),
+
+                const MediaPermissionLifecycleListener(),
+              ],
+            ),
             bottomNavigationBar: _BottomNavigationBar(tabsRouter: tabsRouter, destinations: navigationDestinations),
           ),
         );

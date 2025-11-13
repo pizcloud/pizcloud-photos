@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/media_permission.provider.dart';
 import '../../services/media_permission_service.dart';
+import 'package:immich_mobile/utils/text_highlight_helper.dart';
 
 class MediaPermissionBanner extends ConsumerWidget {
   const MediaPermissionBanner({super.key});
@@ -39,10 +40,10 @@ class MediaPermissionBanner extends ConsumerWidget {
               const SizedBox(width: 12),
               FilledButton(
                 onPressed: () async {
-                  final (ok, permanentlyDenied) = await ref.read(mediaPermissionProvider.notifier).requestAndRefresh();
-
+                  final (ok, permanentlyDenied) = await ref
+                      .read(mediaPermissionProvider.notifier)
+                      .requestAndRefresh(preferFullOnAndroid: true);
                   if (ok) return;
-
                   if (permanentlyDenied) {
                     // The system has blocked the permission dialog → guide to open Settings
                     _showGoToSettingsDialog(context, ref);
@@ -64,18 +65,33 @@ class MediaPermissionBanner extends ConsumerWidget {
   void _showGoToSettingsDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('open_settings_to_grant_permission').tr(),
-        content: Text(
-          '${tr('you_have_denied_permission_multiple_times')}\n\n'
-          '${tr('please_open_the_app_settings_page_and_enable_photos_videos')}',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tr('you_have_denied_permission_multiple_times'), style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 12),
+            highlightText(context, key: 'no_dialog_appears', highlightKey: 'settings'),
+            const SizedBox(height: 4),
+            highlightText(context, key: 'select_permission', highlightKey: 'permission'),
+            const SizedBox(height: 4),
+            highlightText(context, key: 'select_photos_and_videos', highlightKey: 'photos_and_videos'),
+            const SizedBox(height: 4),
+            highlightText(context, key: 'select_allow_all', highlightKey: 'allow_all'),
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('do_it_later').tr()),
           FilledButton(
             onPressed: () async {
-              Navigator.of(context).pop();
-              await ref.read(mediaPermissionProvider.notifier).openSettings();
+              final ok = await ref.read(mediaPermissionProvider.notifier).openSettingsAndRefreshOnReturn();
+              if (ok && ctx.mounted) {
+                Navigator.of(ctx, rootNavigator: true).pop();
+              }
+              // Navigator.of(context).pop();
+              // await ref.read(mediaPermissionProvider.notifier).openSettings();
             },
             child: const Text('open_settings').tr(),
           ),
@@ -87,19 +103,39 @@ class MediaPermissionBanner extends ConsumerWidget {
   void _showUpgradeFromLimitedDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('allow_all_is_required').tr(),
-        content: Text(
-          '${tr('you_are_currently_on_allow_limited_access')}\n\n'
-          '${tr('to_automatically_back_up_your_entire_library')}\n\n'
-          '${tr('you_can_try_the_grant_permission_button_again')}',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            highlightText(
+              context,
+              key: 'you_are_currently_on_allow_limited_access',
+              highlightKey: 'allow_limited_access',
+            ),
+            const SizedBox(height: 12),
+            highlightText(context, key: 'to_automatically_back_up_your_entire_library', highlightKey: 'allow_all'),
+            const SizedBox(height: 12),
+            highlightText(context, key: 'you_can_try_the_grant_permission_button_again', highlightKey: 'settings'),
+            const SizedBox(height: 4),
+            highlightText(context, key: 'select_permission', highlightKey: 'permission'),
+            const SizedBox(height: 4),
+            highlightText(context, key: 'select_photos_and_videos', highlightKey: 'photos_and_videos'),
+            const SizedBox(height: 4),
+            highlightText(context, key: 'select_allow_all', highlightKey: 'allow_all'),
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('close').tr()),
           FilledButton(
             onPressed: () async {
-              Navigator.of(context).pop();
-              await ref.read(mediaPermissionProvider.notifier).openSettings();
+              final ok = await ref.read(mediaPermissionProvider.notifier).openSettingsAndRefreshOnReturn();
+              if (ok && ctx.mounted) {
+                Navigator.of(ctx, rootNavigator: true).pop();
+              }
+              // Navigator.of(context).pop();
+              // await ref.read(mediaPermissionProvider.notifier).openSettings();
             },
             child: const Text('open_settings').tr(),
           ),
