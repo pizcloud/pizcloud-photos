@@ -2179,6 +2179,7 @@
   "you_can_try_the_grant_permission_button_again": "You can try the Grant permission button again; if no dialog appears, open Settings.",
   "you_dont_have_any_shared_links": "You don't have any shared links",
   "you_have_denied_permission_multiple_times": "You have denied permission multiple times, so the system no longer shows the permission dialog.",
+  "you_have_granted_access_to_some_photos_and_videos": "You have granted PizCloud access to some photos and videos",
   "your_wifi_name": "Your Wi-Fi name",
   "zoom_image": "Zoom Image",
   "zoom_to_bounds": "Zoom to bounds"

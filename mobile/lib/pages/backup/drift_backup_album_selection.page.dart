@@ -19,6 +19,8 @@ import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/widgets/backup/drift_album_info_list_tile.dart';
 import 'package:immich_mobile/widgets/common/search_field.dart';
 import 'package:logging/logging.dart';
+// New
+import '../../providers/media_permission.provider.dart';
 
 @RoutePage()
 class DriftBackupAlbumSelectionPage extends ConsumerStatefulWidget {
@@ -175,6 +177,30 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ====== NEW BUTTON
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.photo_library_outlined),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'you_have_granted_access_to_some_photos_and_videos',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ).tr(),
+                            ),
+                            const SizedBox(width: 12),
+                            FilledButton.icon(
+                              // icon: const Icon(Icons.photo_library_outlined),
+                              label: const Text('edit').tr(),
+                              onPressed: () => ref.read(mediaPermissionProvider.notifier).requestAndRefreshNormal(),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ====== NEW BUTTON
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                         child: Text(

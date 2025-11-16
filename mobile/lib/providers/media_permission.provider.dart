@@ -5,15 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/media_permission_service.dart';
 
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:photo_manager/photo_manager.dart';
+
+import 'package:immich_mobile/providers/backup/backup.provider.dart';
+
 final mediaPermissionServiceProvider = Provider<MediaPermissionService>((ref) {
   return MediaPermissionService();
 });
 
 class MediaPermissionController extends StateNotifier<MediaPermState> {
-  MediaPermissionController(this._svc) : super(MediaPermState.none) {
+  MediaPermissionController(this._svc, this._ref) : super(MediaPermState.none) {
     refresh();
   }
   final MediaPermissionService _svc;
+  final Ref _ref;
 
   Future<void> refresh() async {
     state = await _svc.getState();
@@ -59,7 +65,42 @@ class MediaPermissionController extends StateNotifier<MediaPermState> {
     return (ok, outcome == RequestOutcome.permanentlyDenied);
   }
 
+  Future<(bool ok, bool permanentlyDenied)> requestAndRefreshNormal() async {
+    final outcome = await _svc.request();
+    await refresh();
+    final ok = (state == MediaPermState.full || state == MediaPermState.legacy);
+    return (ok, outcome == RequestOutcome.permanentlyDenied);
+  }
+
   Future<void> openSettings() => _svc.openSettings();
+
+  Future<bool> presentLimitedPhotosPickerAndRefresh() async {
+    if (state != MediaPermState.limited) {
+      await refresh();
+      return state == MediaPermState.full || state == MediaPermState.legacy || state == MediaPermState.limited;
+    }
+
+    final wasLimited = state;
+
+    try {
+      if (Platform.isIOS) {
+        await PhotoManager.presentLimited(type: RequestType.common);
+      } else if (Platform.isAndroid) {
+        await PhotoManager.requestPermissionExtend();
+      }
+    } catch (_) {}
+
+    await refresh();
+
+    unawaited(_ref.read(backupProvider.notifier).getBackupInfo());
+
+    if (Platform.isAndroid && wasLimited == MediaPermState.limited && state == MediaPermState.limited) {
+      await openSettingsAndRefreshOnReturn();
+      unawaited(_ref.read(backupProvider.notifier).getBackupInfo());
+    }
+
+    return state == MediaPermState.full || state == MediaPermState.legacy || state == MediaPermState.limited;
+  }
 }
 
 class _OneShotObserver with WidgetsBindingObserver {
@@ -72,5 +113,5 @@ class _OneShotObserver with WidgetsBindingObserver {
 }
 
 final mediaPermissionProvider = StateNotifierProvider<MediaPermissionController, MediaPermState>((ref) {
-  return MediaPermissionController(ref.read(mediaPermissionServiceProvider));
+  return MediaPermissionController(ref.read(mediaPermissionServiceProvider), ref);
 });
