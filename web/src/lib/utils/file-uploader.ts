@@ -13,9 +13,12 @@ import {
   AssetVisibility,
   checkBulkUpload,
   getAssetOriginalPath,
-  getBaseUrl,
+  // getBaseUrl, // pizcloud
   type AssetMediaResponseDto,
 } from '@immich/sdk';
+
+import { getBaseUrl } from '$lib/pizcloud'; // pizcloud
+
 import { tick } from 'svelte';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';

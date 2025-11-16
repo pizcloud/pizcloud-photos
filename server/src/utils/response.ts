@@ -1,5 +1,6 @@
 import { CookieOptions, Response } from 'express';
 import { Duration } from 'luxon';
+import { MAIN_DOMAIN } from 'src/constants'; // pizcloud
 import { CookieResponse } from 'src/dtos/auth.dto';
 import { ImmichCookie } from 'src/enum';
 
@@ -8,6 +9,7 @@ export const respondWithCookie = <T>(res: Response, body: T, { isSecure, values 
     path: '/',
     sameSite: 'lax',
     httpOnly: true,
+    domain: '.' + MAIN_DOMAIN, // pizcloud
     secure: isSecure,
     maxAge: Duration.fromObject({ days: 400 }).toMillis(),
   };

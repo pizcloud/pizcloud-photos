@@ -39,6 +39,7 @@ import {
   type UserPreferencesResponseDto,
   type UserResponseDto,
 } from '@immich/sdk';
+// import { getBaseUrl } from '$lib/pizcloud';
 import { toastManager } from '@immich/ui';
 import { DateTime } from 'luxon';
 import { t } from 'svelte-i18n';

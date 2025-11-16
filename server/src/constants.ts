@@ -4,6 +4,8 @@ import { dirname, join } from 'node:path';
 import { SemVer } from 'semver';
 import { DatabaseExtension, ExifOrientation, VectorIndex } from 'src/enum';
 
+export const MAIN_DOMAIN = process.env.MAIN_DOMAIN; // pizcloud
+
 export const POSTGRES_VERSION_RANGE = '>=14.0.0';
 export const VECTORCHORD_VERSION_RANGE = '>=0.3 <0.6';
 export const VECTORS_VERSION_RANGE = '>=0.2 <0.4';

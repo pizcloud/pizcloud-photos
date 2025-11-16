@@ -12,7 +12,7 @@ import {
   getAssetOriginalPath,
   getAssetPlaybackPath,
   getAssetThumbnailPath,
-  getBaseUrl,
+  // getBaseUrl, // pizcloud
   getPeopleThumbnailPath,
   getUserProfileImagePath,
   linkOAuthAccount,
@@ -24,6 +24,9 @@ import {
   type SharedLinkResponseDto,
   type UserResponseDto,
 } from '@immich/sdk';
+
+import { getBaseUrl } from '$lib/pizcloud'; // pizcloud
+
 import { toastManager } from '@immich/ui';
 import { mdiCogRefreshOutline, mdiDatabaseRefreshOutline, mdiHeadSyncOutline, mdiImageRefreshOutline } from '@mdi/js';
 import { init, register, t } from 'svelte-i18n';
@@ -84,7 +87,7 @@ export const uploadRequest = async <T>(options: UploadRequestOptions): Promise<{
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-
+    xhr.withCredentials = true; // pizcloud
     xhr.addEventListener('error', (error) => reject(error));
     xhr.addEventListener('load', () => {
       if (xhr.readyState === 4 && xhr.status >= 200 && xhr.status < 300) {
