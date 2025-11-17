@@ -21,6 +21,8 @@ import 'package:immich_mobile/widgets/common/search_field.dart';
 import 'package:logging/logging.dart';
 // New
 import '../../providers/media_permission.provider.dart';
+import 'package:immich_mobile/services/limited_picker_backup.service.dart';
+import 'package:immich_mobile/services/media_permission_service.dart';
 
 @RoutePage()
 class DriftBackupAlbumSelectionPage extends ConsumerStatefulWidget {
@@ -38,6 +40,11 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
   late TextEditingController _searchController;
   late FocusNode _searchFocusNode;
   Future? _handleLinkedAlbumFuture;
+
+  bool _shouldShow(MediaPermState s) {
+    // Chỉ hiển thị khi user chọn "Allow limited access"
+    return s == MediaPermState.limited;
+  }
 
   @override
   void initState() {
@@ -92,6 +99,10 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
 
     final selectedBackupAlbums = albums.where((album) => album.backupSelection == BackupSelection.selected).toList();
     final excludedBackupAlbums = albums.where((album) => album.backupSelection == BackupSelection.excluded).toList();
+
+    // New
+    final mediaPermState = ref.watch(mediaPermissionProvider);
+    final showLimitedBanner = _shouldShow(mediaPermState);
 
     return PopScope(
       canPop: false,
@@ -177,30 +188,31 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ====== NEW BUTTON
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.photo_library_outlined),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'you_have_granted_access_to_some_photos_and_videos',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ).tr(),
-                            ),
-                            const SizedBox(width: 12),
-                            FilledButton.icon(
-                              // icon: const Icon(Icons.photo_library_outlined),
-                              label: const Text('edit').tr(),
-                              onPressed: () => ref.read(mediaPermissionProvider.notifier).requestAndRefreshNormal(),
-                            ),
-                          ],
+                      // ====== New: LIMITED ACCESS BUTTON - Show only when permission = limited ======
+                      if (showLimitedBanner)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.photo_library_outlined),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'you_have_granted_access_to_some_photos_and_videos',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ).tr(),
+                              ),
+                              const SizedBox(width: 12),
+                              FilledButton.icon(
+                                // icon: const Icon(Icons.photo_library_outlined),
+                                label: const Text('edit').tr(),
+                                onPressed: () => ref.read(mediaPermissionProvider.notifier).requestAndRefreshNormal(),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      // ====== NEW BUTTON
+                      // ====== END LIMITED ACCESS BUTTON
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                         child: Text(
@@ -267,9 +279,39 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                           },
                         ),
                       ),
-
                       if (Platform.isAndroid)
                         _SelectAllButton(filteredAlbums: filteredAlbums, selectedBackupAlbums: selectedBackupAlbums),
+
+                      // ========== New Button - Add photos ==========
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.add_photo_alternate_outlined),
+                          onPressed: () async {
+                            final success = await ref
+                                .read(limitedPickerBackupServiceProvider)
+                                .pickAndUploadFromSystemPicker();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? 'uploaded_the_selected_photos_videos'.tr()
+                                      : 'no_photos_videos_selected'.tr(),
+                                ),
+                              ),
+                            );
+                          },
+                          label: Text(
+                            context.tr(
+                              'backup_album_selection_page_pick_individual_media',
+                              args: [],
+                              namedArgs: const {},
+                            ),
+                          ),
+                        ),
+                      ),
+                      // ================================================================
                     ],
                   ),
                 ),
