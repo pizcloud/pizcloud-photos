@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
   import { AppRoute } from '$lib/constants';
   import Portal from '$lib/elements/Portal.svelte';
   import PurchaseModal from '$lib/modals/PurchaseModal.svelte';
@@ -9,7 +10,7 @@
   import { handleError } from '$lib/utils/handle-error';
   import { getButtonVisibility } from '$lib/utils/purchase-utils';
   import { updateMyPreferences } from '@immich/sdk';
-  import { Button, Icon, IconButton, Logo, modalManager, SupporterBadge } from '@immich/ui';
+  import { Button, Icon, IconButton, modalManager, SupporterBadge } from '@immich/ui';
   import { mdiClose, mdiInformationOutline } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import { SvelteDate } from 'svelte/reactivity';
@@ -91,7 +92,10 @@
     >
       <div class="flex justify-between w-full place-items-center place-content-center">
         <div class="flex place-items-center place-content-center gap-1">
-          <Logo variant="icon" size="tiny" />
+          <!-- <Logo variant="icon" size="tiny" /> -->
+          <div class="h-6 w-6">
+            <PizcloudLogo noText class="h-[24px]" />
+          </div>
           <p class="flex text-primary font-medium">
             {$t('purchase_button_buy_immich')}
           </p>
@@ -118,7 +122,8 @@
     >
       <div class="flex justify-between place-items-center">
         <div class="h-10 w-10">
-          <Logo variant="icon" size="small" />
+          <!-- <Logo variant="icon" size="small" /> -->
+          <PizcloudLogo noText class="h-[32px]" />
         </div>
         <IconButton
           shape="round"

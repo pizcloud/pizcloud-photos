@@ -11,7 +11,7 @@
   let { location, assetCount, onClose }: Props = $props();
 </script>
 
-<Modal title={$t('confirm')} size="small" {onClose}>
+<Modal icon={false} title={$t('confirm')} size="small" {onClose}>
   <ModalBody>
     <p>
       {$t('update_location_action_prompt', {

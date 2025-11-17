@@ -553,6 +553,22 @@ class BackupOptionsRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [BillingPage]
+class BillingRoute extends PageRouteInfo<void> {
+  const BillingRoute({List<PageRouteInfo>? children})
+    : super(BillingRoute.name, initialChildren: children);
+
+  static const String name = 'BillingRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const BillingPage();
+    },
+  );
+}
+
+/// generated route for
 /// [ChangeExperiencePage]
 class ChangeExperienceRoute extends PageRouteInfo<ChangeExperienceRouteArgs> {
   ChangeExperienceRoute({
@@ -2671,6 +2687,22 @@ class SharedLinkRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const SharedLinkPage();
+    },
+  );
+}
+
+/// generated route for
+/// [SignupPage]
+class SignupRoute extends PageRouteInfo<void> {
+  const SignupRoute({List<PageRouteInfo>? children})
+    : super(SignupRoute.name, initialChildren: children);
+
+  static const String name = 'SignupRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SignupPage();
     },
   );
 }

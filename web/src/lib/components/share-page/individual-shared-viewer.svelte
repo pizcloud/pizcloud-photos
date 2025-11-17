@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import type { Action } from '$lib/components/asset-viewer/actions/action';
+  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud-logo-small-link.svelte';
   import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
   import RemoveFromSharedLink from '$lib/components/timeline/actions/RemoveFromSharedLinkAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
@@ -15,7 +16,7 @@
   import { handleError } from '$lib/utils/handle-error';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import { addSharedLinkAssets, getAssetInfo, type SharedLinkResponseDto } from '@immich/sdk';
-  import { IconButton, Logo, toastManager } from '@immich/ui';
+  import { IconButton, toastManager } from '@immich/ui';
   import { mdiArrowLeft, mdiDownload, mdiFileImagePlusOutline, mdiSelectAll } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import ControlAppBar from '../shared-components/control-app-bar.svelte';
@@ -108,7 +109,8 @@
       <ControlAppBar onClose={() => goto(AppRoute.PHOTOS)} backIcon={mdiArrowLeft} showBackButton={false}>
         {#snippet leading()}
           <a data-sveltekit-preload-data="hover" class="ms-4" href="/">
-            <Logo variant="inline" />
+            <!-- <Logo variant="inline" /> -->
+            <PizcloudLogoSmallLink />
           </a>
         {/snippet}
 

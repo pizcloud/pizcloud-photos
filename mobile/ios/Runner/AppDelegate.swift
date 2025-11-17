@@ -20,6 +20,17 @@ import UIKit
 
     GeneratedPluginRegistrant.register(with: self)
     let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
+
+    // New
+    let channel = FlutterMethodChannel(name: "com.yourbrand.iap/receipt", binaryMessenger: controller.binaryMessenger)
+    channel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      if call.method == "getAppStoreReceiptBase64" {
+        result(self.getAppStoreReceiptBase64())
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
     AppDelegate.registerPlugins(with: controller.engine)
     BackgroundServicePlugin.register(with: self.registrar(forPlugin: "BackgroundServicePlugin")!)
 
@@ -59,5 +70,11 @@ import UIKit
   
   public static func cancelPlugins(with engine: FlutterEngine) {
     (engine.valuePublished(byPlugin: NativeSyncApiImpl.name) as? NativeSyncApiImpl)?.detachFromEngine()
+  }
+
+  private func getAppStoreReceiptBase64() -> String? {
+    guard let receiptUrl = Bundle.main.appStoreReceiptURL,
+          let data = try? Data(contentsOf: receiptUrl) else { return nil }
+    return data.base64EncodedString()
   }
 }

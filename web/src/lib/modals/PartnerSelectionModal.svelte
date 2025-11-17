@@ -34,7 +34,7 @@
   };
 </script>
 
-<Modal title={$t('add_partner')} {onClose} size="small">
+<Modal icon={false} title={$t('add_partner')} {onClose} size="small">
   <ModalBody>
     <div class="immich-scrollbar max-h-75 overflow-y-auto">
       {#if availableUsers.length > 0}

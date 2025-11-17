@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:immich_mobile/widgets/common/immich_logo.dart';
+import 'package:immich_mobile/widgets/common/pizcloud_logo.dart';
 
 class ImmichLoadingIndicator extends HookWidget {
   final double? borderRadius;
@@ -35,7 +35,7 @@ class ImmichLoadingIndicator extends HookWidget {
           padding: const EdgeInsets.all(15),
           child: RotationTransition(
             turns: logoAnimationController,
-            child: const ImmichLogo(heroTag: 'logo'),
+            child: const PizCloudLogo(heroTag: 'logo'),
           ),
         ),
       ),

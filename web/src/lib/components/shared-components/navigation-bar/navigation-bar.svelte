@@ -7,6 +7,7 @@
   import { clickOutside } from '$lib/actions/click-outside';
   import CastButton from '$lib/cast/cast-button.svelte';
   import NotificationPanel from '$lib/components/shared-components/navigation-bar/notification-panel.svelte';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
   import SearchBar from '$lib/components/shared-components/search-bar/search-bar.svelte';
   import { AppRoute } from '$lib/constants';
   import SkipLink from '$lib/elements/SkipLink.svelte';
@@ -16,7 +17,7 @@
   import { notificationManager } from '$lib/stores/notification-manager.svelte';
   import { sidebarStore } from '$lib/stores/sidebar.svelte';
   import { user } from '$lib/stores/user.store';
-  import { Button, IconButton, Logo } from '@immich/ui';
+  import { Button, IconButton } from '@immich/ui';
   import { mdiBellBadge, mdiBellOutline, mdiMagnify, mdiMenu, mdiTrayArrowUp } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -77,7 +78,8 @@
         class="sidebar:hidden"
       />
       <a data-sveltekit-preload-data="hover" href={AppRoute.PHOTOS}>
-        <Logo variant={mobileDevice.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" />
+        <!-- <Logo variant={mobileDevice.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" /> -->
+        <PizcloudLogo class="w-40 h-[50px]" noText={!mobileDevice.isFullSidebar} />
       </a>
     </div>
     <div class="flex justify-between gap-4 lg:gap-8 pe-6">

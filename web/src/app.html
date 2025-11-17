@@ -1,115 +1,155 @@
 <!doctype html>
 <html>
-  <head>
-    <!-- (used for SSR) -->
-    <!-- metadata:tags -->
 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
-    <link rel="icon" type="image/png" sizes="144x144" href="/favicon-144.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180.png" />
-    <link rel="preload" as="font" type="font/ttf" href="%app.font%" crossorigin="anonymous" />
-    <link rel="preload" as="font" type="font/ttf" href="%app.monofont%" crossorigin="anonymous" />
-    %sveltekit.head%
-    <style>
-      /* prevent FOUC */
-      html {
-        height: 100%;
-        width: 100%;
+<head>
+  <!-- (used for SSR) -->
+  <!-- metadata:tags -->
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+  <link rel="icon" type="image/png" sizes="144x144" href="/favicon-144.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180.png" />
+  <link rel="preload" as="font" type="font/ttf" href="%app.font%" crossorigin="anonymous" />
+  <link rel="preload" as="font" type="font/ttf" href="%app.monofont%" crossorigin="anonymous" />
+  %sveltekit.head%
+  <style>
+    /* prevent FOUC */
+    html {
+      height: 100%;
+      width: 100%;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+    }
+
+    @keyframes delayedVisibility {
+      to {
+        visibility: visible;
       }
+    }
 
-      body,
-      html {
-        margin: 0;
-        padding: 0;
+    @keyframes loadspin {
+      100% {
+        transform: rotate(360deg);
       }
+    }
 
-      @keyframes delayedVisibility {
-        to {
-          visibility: visible;
-        }
-      }
+    #stencil {
+      --stencil-width: 150px;
+      display: flex;
+      width: var(--stencil-width);
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: calc(50vh - var(--stencil-width) / 2);
+      margin-bottom: 100vh;
+      place-items: center;
+      justify-content: center;
+      overflow: hidden;
+      visibility: hidden;
+      animation:
+        0s linear 0.3s forwards delayedVisibility,
+        loadspin 8s linear infinite;
+    }
 
-      @keyframes loadspin {
-        100% {
-          transform: rotate(360deg);
-        }
-      }
+    .bg-immich-bg {
+      background-color: white;
+    }
 
-      #stencil {
-        --stencil-width: 150px;
-        display: flex;
-        width: var(--stencil-width);
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: calc(50vh - var(--stencil-width) / 2);
-        margin-bottom: 100vh;
-        place-items: center;
-        justify-content: center;
-        overflow: hidden;
-        visibility: hidden;
-        animation:
-          0s linear 0.3s forwards delayedVisibility,
-          loadspin 8s linear infinite;
-      }
+    .dark .dark\:bg-immich-dark-bg {
+      background-color: black;
+    }
+  </style>
+  <script>
+    /**
+     * Prevent FOUC on page load.
+     */
+    const colorThemeKeyName = 'color-theme';
 
-      .bg-immich-bg {
-        background-color: white;
-      }
+    let theme = localStorage.getItem(colorThemeKeyName);
+    if (!theme) {
+      theme = { value: 'light', system: true };
+    } else if (theme === 'dark' || theme === 'light') {
+      theme = { value: theme, system: false };
+      localStorage.setItem(colorThemeKeyName, JSON.stringify(theme));
+    } else {
+      theme = JSON.parse(theme);
+    }
 
-      .dark .dark\:bg-immich-dark-bg {
-        background-color: black;
-      }
-    </style>
-    <script>
-      /**
-       * Prevent FOUC on page load.
-       */
-      const colorThemeKeyName = 'color-theme';
-
-      let theme = localStorage.getItem(colorThemeKeyName);
-      if (!theme) {
-        theme = { value: 'light', system: true };
-      } else if (theme === 'dark' || theme === 'light') {
-        theme = { value: theme, system: false };
-        localStorage.setItem(colorThemeKeyName, JSON.stringify(theme));
+    let themeValue = theme.value;
+    if (theme.system) {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        themeValue = 'dark';
       } else {
-        theme = JSON.parse(theme);
+        themeValue = 'light';
       }
+    }
 
-      let themeValue = theme.value;
-      if (theme.system) {
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          themeValue = 'dark';
-        } else {
-          themeValue = 'light';
-        }
-      }
+    if (themeValue === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
 
-      if (themeValue === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.add('dark');
-      }
-    </script>
+  <link rel="stylesheet" href="/custom.css" />
+</head>
 
-    <link rel="stylesheet" href="/custom.css" />
-  </head>
+<noscript
+  class="absolute z-1000 flex h-screen w-screen place-content-center place-items-center bg-immich-bg dark:bg-immich-dark-bg dark:text-immich-dark-fg">
+  To use Immich, you must enable JavaScript or use a JavaScript compatible browser.
+</noscript>
 
-  <noscript
-    class="absolute z-1000 flex h-screen w-screen place-content-center place-items-center bg-immich-bg dark:bg-immich-dark-bg dark:text-immich-dark-fg"
-  >
-    To use Immich, you must enable JavaScript or use a JavaScript compatible browser.
-  </noscript>
+<body class="bg-light text-dark">
+  <div id="stencil">
+    <svg width="280px" height="280px" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="drop" d="M60 150
+                       C 35 110, 20 80, 20 55
+                       C 20 25, 40 10, 60 10
+                       C 80 10, 100 25, 100 55
+                       C 100 80, 85 110, 60 150 Z" />
 
-  <body class="bg-light text-dark">
-    <div id="stencil">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 792 792">
+        <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity="0.25" />
+        </filter>
+        <clipPath id="leftHalf">
+          <rect x="0" y="0" width="60" height="160" />
+        </clipPath>
+      </defs>
+
+      <!-- <rect x="0" y="0" width="100%" height="100%" fill="#e3f2fd"/> -->
+
+      <g transform="translate(80,60) scale(1)">
+        <use href="#drop" fill="#64b5f6" filter="url(#softShadow)"
+          transform="rotate(0 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#4dd0e1" filter="url(#softShadow)"
+          transform="rotate(45 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#81c784" filter="url(#softShadow)"
+          transform="rotate(90 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#fff176" filter="url(#softShadow)"
+          transform="rotate(135 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#ffb74d" filter="url(#softShadow)"
+          transform="rotate(180 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#ef5350" filter="url(#softShadow)"
+          transform="rotate(225 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#ec407a" filter="url(#softShadow)"
+          transform="rotate(270 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#ab47bc" filter="url(#softShadow)"
+          transform="rotate(315 60 80) translate(0,70) rotate(180 60 80)" />
+        <use href="#drop" fill="#64b5f6" filter="url(#softShadow)"
+          transform="rotate(0 60 80) translate(0,70) rotate(180 60 80)" clip-path="url(#leftHalf)" />
+        <circle cx="60" cy="80" r="20" fill="#fffde7" />
+      </g>
+    </svg>
+    <!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 792 792">
         <style type="text/css">
           .st0 {
             fill: #fa2921;
@@ -159,8 +199,9 @@
 		c47.92-34.82,87.79-96.95,47.27-152.72C619.2,484.77,618.46,483.75,617.57,482.52z"
           />
         </g>
-      </svg>
-    </div>
-    <div>%sveltekit.body%</div>
-  </body>
+      </svg> -->
+  </div>
+  <div>%sveltekit.body%</div>
+</body>
+
 </html>

@@ -16,12 +16,14 @@
   import { cancelMultiselect } from '$lib/utils/asset-utils';
   import { fileUploadHandler, openFileUploadDialog } from '$lib/utils/file-uploader';
   import type { AlbumResponseDto, SharedLinkResponseDto, UserResponseDto } from '@immich/sdk';
-  import { IconButton, Logo } from '@immich/ui';
+  import { IconButton } from '@immich/ui';
   import { mdiDownload, mdiFileImagePlusOutline } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import ControlAppBar from '../shared-components/control-app-bar.svelte';
   import ThemeButton from '../shared-components/theme-button.svelte';
   import AlbumSummary from './album-summary.svelte';
+
+  import PizcloudLogoSmallLink from '../shared-components/pizcloud-logo-small-link.svelte';
 
   interface Props {
     sharedLink: SharedLinkResponseDto;
@@ -98,7 +100,8 @@
     <ControlAppBar showBackButton={false}>
       {#snippet leading()}
         <a data-sveltekit-preload-data="hover" class="ms-4" href="/">
-          <Logo variant="inline" />
+          <!-- <Logo variant="inline" /> -->
+          <PizcloudLogoSmallLink />
         </a>
       {/snippet}
 

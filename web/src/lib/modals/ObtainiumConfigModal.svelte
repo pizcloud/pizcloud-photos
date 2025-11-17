@@ -31,7 +31,7 @@
   let { onClose }: Props = $props();
 </script>
 
-<Modal title={$t('obtainium_configurator')} size="medium" {onClose}>
+<Modal icon={false} title={$t('obtainium_configurator')} size="medium" {onClose}>
   <ModalBody>
     <div>
       <Text color="muted" size="small">

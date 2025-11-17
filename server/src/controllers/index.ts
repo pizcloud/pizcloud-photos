@@ -35,6 +35,10 @@ import { UserController } from 'src/controllers/user.controller';
 import { ViewController } from 'src/controllers/view.controller';
 import { WorkflowController } from 'src/controllers/workflow.controller';
 
+// New
+import { BillingController } from 'src/controllers/billing.controller';
+// ==============================
+
 export const controllers = [
   ApiKeyController,
   ActivityController,
@@ -72,4 +76,5 @@ export const controllers = [
   UserController,
   ViewController,
   WorkflowController,
+  BillingController
 ];

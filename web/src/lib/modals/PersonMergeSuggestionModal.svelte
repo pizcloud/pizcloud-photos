@@ -51,7 +51,7 @@
   });
 </script>
 
-<Modal title="{$t('merge_people')} - {title}" {onClose}>
+<Modal icon={false} title="{$t('merge_people')} - {title}" {onClose}>
   <ModalBody>
     <div class="flex items-center justify-center gap-2 py-4 md:h-36">
       {#if !choosePersonToMerge}

@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -26,9 +27,9 @@ import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/provider_utils.dart';
 import 'package:immich_mobile/utils/url_helper.dart';
 import 'package:immich_mobile/utils/version_compatibility.dart';
-import 'package:immich_mobile/widgets/common/immich_logo.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
+import 'package:immich_mobile/widgets/common/pizcloud_logo.dart';
 import 'package:immich_mobile/widgets/forms/login/email_input.dart';
 import 'package:immich_mobile/widgets/forms/login/loading_icon.dart';
 import 'package:immich_mobile/widgets/forms/login/login_button.dart';
@@ -44,6 +45,12 @@ class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});
 
   final log = Logger('LoginForm');
+
+  // Change
+  final isBootstrapping = useState<bool>(false);
+  final lastBootstrapFailed = useState<bool>(false);
+
+  // ==============================
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -97,6 +104,10 @@ class LoginForm extends HookConsumerWidget {
 
       try {
         isLoadingServer.value = true;
+        // Change
+        warningMessage.value = null;
+        // ==============================
+
         final endpoint = await ref.read(authProvider.notifier).validateServerUrl(serverUrl);
 
         // Fetch and load server config and features
@@ -110,8 +121,26 @@ class LoginForm extends HookConsumerWidget {
         isPasswordLoginEnable.value = features.passwordLogin;
         oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty ? config.oauthButtonText : 'OAuth';
 
+        // Change
+        // try {
+        //   final packageInfo = await PackageInfo.fromPlatform();
+        //   final appVersion = packageInfo.version;
+        //   final appMajor = int.parse(appVersion.split('.')[0]);
+        //   final appMinor = int.parse(appVersion.split('.')[1]);
+        //   final serverMajor = serverInfo.serverVersion.major;
+        //   final serverMinor = serverInfo.serverVersion.minor;
+        //   warningMessage.value = getVersionCompatibilityMessage(appMajor, appMinor, serverMajor, serverMinor);
+        // } catch (_) {
+        //   warningMessage.value = 'Error checking version compatibility';
+        // }
+        // ==============================
+
         serverEndpoint.value = endpoint;
       } on ApiException catch (e) {
+        // Change
+        lastBootstrapFailed.value = true;
+        // ==============================
+
         ImmichToast.show(
           context: context,
           msg: e.message ?? 'login_form_api_exception'.tr(),
@@ -146,13 +175,66 @@ class LoginForm extends HookConsumerWidget {
       isLoadingServer.value = false;
     }
 
+    // Change
+    String ensureApiSuffix(String url) {
+      final u = url.trim().replaceAll(RegExp(r'/+$'), '');
+      if (u.endsWith('/api')) return u;
+      return '$u/api';
+    }
+
+    Future<bool> tryValidateUrl(String candidate) async {
+      serverEndpointController.text = candidate;
+      try {
+        await getServerAuthSettings();
+        return serverEndpoint.value != null;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    Future<void> bootstrapWithUrl(String start) async {
+      isBootstrapping.value = true;
+      lastBootstrapFailed.value = false;
+
+      final candidates = <String>[start, ensureApiSuffix(start)];
+      final backoffs = <int>[0, 800, 1500, 2500];
+
+      bool done = false;
+      for (final delayMs in backoffs) {
+        if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
+        for (final c in candidates) {
+          if (await tryValidateUrl(c)) {
+            done = true;
+            break;
+          }
+        }
+        if (done) break;
+      }
+
+      if (!done) lastBootstrapFailed.value = true;
+      isBootstrapping.value = false;
+    }
+
     useEffect(() {
-      final serverUrl = getServerUrl();
-      if (serverUrl != null) {
-        serverEndpointController.text = serverUrl;
+      final stored = getServerUrl();
+      final fallback = AppConfig.defaultServer.trim();
+      final start = (stored != null && stored.isNotEmpty) ? stored : (fallback.isNotEmpty ? fallback : null);
+      if (start != null) {
+        Future.microtask(() async {
+          await bootstrapWithUrl(start);
+        });
       }
       return null;
     }, []);
+    // ==============================
+
+    // useEffect(() {
+    //   final serverUrl = getServerUrl();
+    //   if (serverUrl != null) {
+    //     serverEndpointController.text = serverUrl;
+    //   }
+    //   return null;
+    // }, []);
 
     populateTestLoginInfo() {
       emailController.text = 'demo@immich.app';
@@ -435,7 +517,8 @@ class LoginForm extends HookConsumerWidget {
     }
 
     buildVersionCompatWarning() {
-      checkVersionMismatch();
+      // Change
+      // checkVersionMismatch();
 
       if (warningMessage.value == null) {
         return const SizedBox.shrink();
@@ -461,11 +544,12 @@ class LoginForm extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             buildVersionCompatWarning(),
-            Text(
-              sanitizeUrl(serverEndpointController.text),
-              style: context.textTheme.displaySmall,
-              textAlign: TextAlign.center,
-            ),
+            if (AppConfig.showServerLabel)
+              Text(
+                sanitizeUrl(serverEndpointController.text),
+                style: context.textTheme.displaySmall,
+                textAlign: TextAlign.center,
+              ),
             if (isPasswordLoginEnable.value) ...[
               const SizedBox(height: 18),
               EmailInput(
@@ -500,21 +584,73 @@ class LoginForm extends HookConsumerWidget {
                           onPressed: oAuthLogin,
                         ),
                       ],
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("no_account_yet").tr(),
+                          TextButton(
+                            onPressed: () => context.pushRoute(const SignupRoute()),
+                            child: const Text("sign_up").tr(),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
             if (!isOauthEnable.value && !isPasswordLoginEnable.value) Center(child: const Text('login_disabled').tr()),
             const SizedBox(height: 12),
-            TextButton.icon(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => serverEndpoint.value = null,
-              label: const Text('back').tr(),
-            ),
+            if (!AppConfig.lockServer)
+              TextButton.icon(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => serverEndpoint.value = null,
+                label: const Text('back').tr(),
+              ),
           ],
         ),
       );
     }
 
-    final serverSelectionOrLogin = serverEndpoint.value == null ? buildSelectServer() : buildLogin();
+    // Change
+    final bool hasDefault = AppConfig.defaultServer.trim().isNotEmpty;
+    Widget serverSelectionOrLogin;
+
+    if (serverEndpoint.value == null) {
+      final isAutoMode = (getServerUrl() != null && getServerUrl()!.isNotEmpty) || (hasDefault && AppConfig.lockServer);
+
+      if (isAutoMode) {
+        serverSelectionOrLogin = Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (isBootstrapping.value) const LoadingIcon(),
+            if (!isBootstrapping.value && lastBootstrapFailed.value)
+              ElevatedButton.icon(
+                onPressed: isLoadingServer.value
+                    ? null
+                    : () async {
+                        final stored = getServerUrl();
+                        final fallback = AppConfig.defaultServer.trim();
+                        final start = (stored != null && stored.isNotEmpty)
+                            ? stored
+                            : (fallback.isNotEmpty ? fallback : null);
+                        if (start != null) {
+                          await bootstrapWithUrl(start);
+                        }
+                      },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+          ],
+        );
+      } else {
+        serverSelectionOrLogin = buildSelectServer();
+      }
+    } else {
+      serverSelectionOrLogin = buildLogin();
+    }
+
+    // ==============================
+
+    // final serverSelectionOrLogin = serverEndpoint.value == null ? buildSelectServer() : buildLogin();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -536,7 +672,7 @@ class LoginForm extends HookConsumerWidget {
                         onLongPress: () => populateTestLoginInfo1(),
                         child: RotationTransition(
                           turns: logoAnimationController,
-                          child: const ImmichLogo(heroTag: 'logo'),
+                          child: const PizCloudLogo(heroTag: 'logo'),
                         ),
                       ),
                       const Padding(padding: EdgeInsets.only(top: 8.0, bottom: 16), child: ImmichTitleText()),

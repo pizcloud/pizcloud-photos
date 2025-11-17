@@ -64,7 +64,7 @@
   };
 </script>
 
-<Modal size="small" title={$t('share')} {onClose}>
+<Modal icon={false} size="small" title={$t('share')} {onClose}>
   <ModalBody>
     {#if Object.keys(selectedUsers).length > 0}
       <div class="mb-2 py-2 sticky">

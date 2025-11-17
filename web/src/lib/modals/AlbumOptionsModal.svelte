@@ -107,7 +107,7 @@
   };
 </script>
 
-<Modal title={$t('options')} onClose={() => onClose({ action: 'refreshAlbum' })} size="small">
+<Modal icon={false} title={$t('options')} onClose={() => onClose({ action: 'refreshAlbum' })} size="small">
   <ModalBody>
     <div class="items-center justify-center">
       <div class="py-2">

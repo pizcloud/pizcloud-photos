@@ -4099,6 +4099,37 @@
         "x-immich-state": "Stable"
       }
     },
+    "/auth/register": {
+      "post": {
+        "operationId": "register",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRegisterDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/auth/session/lock": {
       "post": {
         "description": "Remove elevated access to locked assets from the current session.",
@@ -4274,6 +4305,75 @@
           }
         ],
         "x-immich-state": "Stable"
+      }
+    },
+    "/billing/entitlements": {
+      "get": {
+        "operationId": "getEntitlement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/entitlements/webhook": {
+      "post": {
+        "operationId": "webhook",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/usage": {
+      "get": {
+        "operationId": "usage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "tags": [
+          "Billing"
+        ]
       }
     },
     "/download/archive": {
@@ -15506,6 +15606,25 @@
           "pcm_s16le"
         ],
         "type": "string"
+      },
+      "AuthRegisterDto": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object"
       },
       "AuthStatusResponseDto": {
         "properties": {

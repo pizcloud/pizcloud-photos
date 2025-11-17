@@ -101,11 +101,12 @@
     }
   };
 
-  $effect(() => void handleRelease($release));
+  // New
+  // $effect(() => void handleRelease($release));
 </script>
 
 <svelte:head>
-  <title>{page.data.meta?.title || 'Web'} - Immich</title>
+  <title>{page.data.meta?.title || 'Web'} - PizCloud</title>
   <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
   <meta name="theme-color" content="currentColor" />
   <AppleHeader />

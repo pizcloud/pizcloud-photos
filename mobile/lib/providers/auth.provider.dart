@@ -207,4 +207,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> setupPinCode(String pinCode) {
     return _authService.setupPinCode(pinCode);
   }
+
+  // NEW
+  Future<void> register(String email, String password, {String? name}) async {
+    try {
+      await _authService.register(email, password, name: name);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(500, e.toString());
+    }
+  }
 }

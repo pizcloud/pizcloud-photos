@@ -30,7 +30,7 @@
   };
 </script>
 
-<Modal title={$t('select_avatar_color')} size="small" {onClose}>
+<Modal icon={false} title={$t('select_avatar_color')} size="small" {onClose}>
   <ModalBody>
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 place-items-center">
       {#each colors as color (color)}

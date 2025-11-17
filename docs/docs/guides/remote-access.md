@@ -14,7 +14,7 @@ You may use a VPN service to open an encrypted connection to your Immich instanc
 ### Pros
 
 - Simple to set up and very secure.
-- Single point of potential failure, i.e., the VPN software itself. Even if there is a zero-day vulnerability on Immich, you will not be at risk.
+- Single point of potential failure, i.e., the VPN software itself. Even if there is a zero-day vulnerability on PizCloud, you will not be at risk.
 - Both Wireguard and OpenVPN are independently security-audited, so the risk of serious zero-day exploits are minimal.
 
 ### Cons
@@ -28,13 +28,13 @@ You may use a VPN service to open an encrypted connection to your Immich instanc
 If you are unable to open a port on your router for Wireguard or OpenVPN to your server, [Tailscale](https://tailscale.com/) is a good option. Tailscale mediates a peer-to-peer wireguard tunnel between your server and remote device, even if one or both of them are behind a [NAT firewall](https://en.wikipedia.org/wiki/Network_address_translation).
 
 :::tip Video tutorial
-You can learn how to set up Tailscale together with Immich with the [tutorial video](https://www.youtube.com/watch?v=Vt4PDUXB_fg) they created.
+You can learn how to set up Tailscale together with PizCloud with the [tutorial video](https://www.youtube.com/watch?v=Vt4PDUXB_fg) they created.
 :::
 
 ### Pros
 
 - Minimal configuration needed on server and client sides.
-- You are protected against zero-day vulnerabilities on Immich.
+- You are protected against zero-day vulnerabilities on PizCloud.
 
 ### Cons
 
@@ -55,7 +55,7 @@ A remote reverse proxy like [Cloudflare](https://www.cloudflare.com/learning/cdn
 ### Pros
 
 - No additional software needs to be installed client-side
-- If you only need access to the web interface remotely, it is possible to set up access controls that shield you from zero-day vulnerabilities on Immich. [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/) has a generous free tier.
+- If you only need access to the web interface remotely, it is possible to set up access controls that shield you from zero-day vulnerabilities on PizCloud. [Cloudflare Access](https://www.cloudflare.com/zero-trust/products/access/) has a generous free tier.
 
 ### Cons
 

@@ -13,7 +13,7 @@
   let { onClose, mapMarkers }: Props = $props();
 </script>
 
-<Modal title={$t('map')} size="giant" {onClose}>
+<Modal icon={false} title={$t('map')} size="giant" {onClose}>
   <ModalBody>
     <div class="flex flex-col w-full h-full gap-2 border border-gray-300 dark:border-light rounded-2xl">
       <div class="h-[75vh] min-h-[300px] w-full">

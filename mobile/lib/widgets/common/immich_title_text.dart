@@ -10,7 +10,7 @@ class ImmichTitleText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Image(
-      image: AssetImage(context.isDarkTheme ? 'assets/immich-text-dark.png' : 'assets/immich-text-light.png'),
+      image: AssetImage(context.isDarkTheme ? 'assets/pizcloud-text-dark.png' : 'assets/pizcloud-text-light.png'),
       width: fontSize * 4,
       filterQuality: FilterQuality.high,
       color: context.primaryColor,

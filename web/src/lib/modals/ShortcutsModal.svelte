@@ -49,7 +49,7 @@
   }: Props = $props();
 </script>
 
-<Modal title={$t('keyboard_shortcuts')} size="medium" {onClose}>
+<Modal icon={false} title={$t('keyboard_shortcuts')} size="medium" {onClose}>
   <ModalBody>
     <div class="grid grid-cols-1 gap-4 px-4 pb-4 md:grid-cols-2">
       {#if shortcuts.general.length > 0}

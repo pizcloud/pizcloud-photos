@@ -79,7 +79,7 @@
   };
 </script>
 
-<Modal size="small" title={$t('set_profile_picture')} {onClose}>
+<Modal icon={false} size="small" title={$t('set_profile_picture')} {onClose}>
   <ModalBody>
     <div class="flex place-items-center items-center justify-center">
       <div

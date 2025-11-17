@@ -192,3 +192,10 @@ export const endpointTags: Record<ApiTag, string> = {
   [ApiTag.Workflows]:
     'A workflow is a set of actions that run whenever a triggering event occurs. Workflows also can include filters to further limit execution.',
 };
+
+// NEW: default quota bytes for free-tier users (15 GiB)
+export const DEFAULT_FREE_TIER_QUOTA_BYTES = 15 * 1024 * 1024 * 1024;
+
+// NEW: User signup enabled flag
+// USER_SIGNUP_ENABLED=false  => disable user signups
+export const USER_SIGNUP_ENABLED = true;

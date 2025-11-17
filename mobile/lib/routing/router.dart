@@ -125,6 +125,10 @@ import 'package:immich_mobile/services/secure_storage.service.dart';
 import 'package:immich_mobile/widgets/asset_grid/asset_grid_data_structure.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
+// New
+import '../pages/settings/billing_page.dart';
+import 'package:immich_mobile/pages/login/signup_page.dart';
+
 part 'router.gr.dart';
 
 final appRouterProvider = Provider(
@@ -348,8 +352,21 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: DriftBackupAssetDetailRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: AssetTroubleshootRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: DownloadInfoRoute.page, guards: [_authGuard, _duplicateGuard]),
+
+    // Newrouter
+    // AutoRoute(page: BillingRoute.page, path: '/settings/billing'),
+    AutoRoute(page: BillingRoute.page, guards: [_authGuard, _duplicateGuard]),
+    AutoRoute(page: SignupRoute.page),
+
     // required to handle all deeplinks in deep_link.service.dart
     // auto_route_library#1722
     RedirectRoute(path: '*', redirectTo: '/'),
   ];
 }
+
+// @RoutePage()
+// class BillingRoute extends AutoRoutePage<void> {
+//   const BillingRoute({super.key});
+//   @override
+//   Widget build(BuildContext context) => const BillingPage();
+// }

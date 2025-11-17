@@ -2,6 +2,7 @@
   import AlbumViewer from '$lib/components/album-page/album-viewer.svelte';
   import IndividualSharedViewer from '$lib/components/share-page/individual-shared-viewer.svelte';
   import ControlAppBar from '$lib/components/shared-components/control-app-bar.svelte';
+  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud-logo-small-link.svelte';
   import ThemeButton from '$lib/components/shared-components/theme-button.svelte';
   import { assetViewingStore } from '$lib/stores/asset-viewing.store';
   import { user } from '$lib/stores/user.store';
@@ -9,7 +10,7 @@
   import { handleError } from '$lib/utils/handle-error';
   import { navigate } from '$lib/utils/navigation';
   import { getMySharedLink, SharedLinkType, type AssetResponseDto, type SharedLinkResponseDto } from '@immich/sdk';
-  import { Button, Logo, PasswordInput } from '@immich/ui';
+  import { Button, PasswordInput } from '@immich/ui';
   import { tick } from 'svelte';
   import { t } from 'svelte-i18n';
 
@@ -42,7 +43,7 @@
       sharedLink = await getMySharedLink({ password, key, slug });
       setSharedLink(sharedLink);
       passwordRequired = false;
-      title = (sharedLink.album ? sharedLink.album.albumName : $t('public_share')) + ' - Immich';
+      title = (sharedLink.album ? sharedLink.album.albumName : $t('public_share')) + ' - PizCloud';
       description =
         sharedLink.description ||
         $t('shared_photos_and_videos_count', { values: { assetCount: sharedLink.assets.length } });
@@ -87,7 +88,8 @@
     <ControlAppBar showBackButton={false}>
       {#snippet leading()}
         <a data-sveltekit-preload-data="hover" class="ms-4" href="/">
-          <Logo variant="inline" />
+          <!-- <Logo variant="inline" /> -->
+          <PizcloudLogoSmallLink />
         </a>
       {/snippet}
 

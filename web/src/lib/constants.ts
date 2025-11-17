@@ -59,6 +59,9 @@ export enum AppRoute {
   FOLDERS = '/folders',
   TAGS = '/tags',
   LOCKED = '/locked',
+
+  // New
+  AUTH_USER_REGISTER = '/auth/user-register',
 }
 
 export enum ProjectionType {
