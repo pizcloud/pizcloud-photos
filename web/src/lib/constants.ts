@@ -60,6 +60,8 @@ export enum AppRoute {
   TAGS = '/tags',
   LOCKED = '/locked',
 
+  MAINTENANCE = '/maintenance',
+
   // New
   AUTH_USER_REGISTER = '/auth/user-register',
 }
