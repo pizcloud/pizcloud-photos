@@ -128,10 +128,10 @@
 		<string>$(CUSTOM_GROUP_ID)</string>
 		<key>BGTaskSchedulerPermittedIdentifiers</key>
 		<array>
-			<string>com.hkan.picsmart.background.refreshUpload</string>
-			<string>com.hkan.picsmart.background.processingUpload</string>
-			<string>com.hkan.picsmart.backgroundFetch</string>
-			<string>com.hkan.picsmart.backgroundProcessing</string>
+			<string>com.pizcloud.photos.background.refreshUpload</string>
+			<string>com.pizcloud.photos.background.processingUpload</string>
+			<string>com.pizcloud.photos.backgroundFetch</string>
+			<string>com.pizcloud.photos.backgroundProcessing</string>
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
