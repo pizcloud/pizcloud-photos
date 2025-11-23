@@ -79,7 +79,10 @@
       />
       <a data-sveltekit-preload-data="hover" href={AppRoute.PHOTOS}>
         <!-- <Logo variant={mobileDevice.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" /> -->
-        <PizcloudLogo class="w-40 h-[50px]" noText={!mobileDevice.isFullSidebar} />
+        <PizcloudLogo
+          class="object-contain w-20 h-[40px] sm:w-20 sm:h-[40px] md:w-20 md:h-[50px] min-[850px]:w-40 min-[850px]:h-[50px] lg:w-40 lg:h-[50px]"
+          noText={!mobileDevice.isFullSidebar}
+        />
       </a>
     </div>
     <div class="flex justify-between gap-4 lg:gap-8 pe-6">
