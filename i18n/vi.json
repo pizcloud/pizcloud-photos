@@ -48,7 +48,7 @@
     "backup_database": "Tạo bản sao lưu CSDL",
     "backup_database_enable_description": "Bật sao lưu cơ sở dữ liệu",
     "backup_keep_last_amount": "Số lượng các bản sao lưu CSDL trước đó được giữ lại",
-    "backup_onboarding_footer": "Để biết thêm thông tin về sao lưu Immich, hãy xem <link>hướng dẫn</link>.",
+    "backup_onboarding_footer": "Để biết thêm thông tin về sao lưu PizCloud Photos, hãy xem <link>hướng dẫn</link>.",
     "backup_onboarding_parts_title": "Phương pháp sao lưu 3-2-1 bao gồm:",
     "backup_onboarding_title": "Sao lưu",
     "backup_settings": "Cài đặt sao lưu cơ sở dữ liệu",

@@ -38,7 +38,7 @@
   "admin": {
     "add_exclusion_pattern_description": "Shto modele përjashtimi. Mbështetet globimi duke përdorur *, ** dhe ?. Për të injoruar të gjithë skedarët në çdo drejtori të quajtur \"Raw\", përdorni \"**/Raw/**\". Për të injoruar të gjithë skedarët që mbarojnë me \".tif\", përdorni \"**/*.tif\". Për të injoruar një shteg absolut, përdorni \"/path/to/ignore/**\".",
     "admin_user": "Përdorues Administrator",
-    "asset_offline_description": "Ky aset i bibliotekës së jashtme nuk gjendet më në disk dhe është zhvendosur në koshin e plehrave. Nëse skedari është zhvendosur brenda bibliotekës, kontrolloni kronologjinë tuaj për asetin e ri përkatës. Për të rivendosur këtë aset, sigurohuni që shtegu i skedarit më poshtë të jetë i arritshëm nga Immich dhe skanoni bibliotekën.",
+    "asset_offline_description": "Ky aset i bibliotekës së jashtme nuk gjendet më në disk dhe është zhvendosur në koshin e plehrave. Nëse skedari është zhvendosur brenda bibliotekës, kontrolloni kronologjinë tuaj për asetin e ri përkatës. Për të rivendosur këtë aset, sigurohuni që shtegu i skedarit më poshtë të jetë i arritshëm nga PizCloud Photos dhe skanoni bibliotekën.",
     "authentication_settings": "Cilësimet e vërtetimit të përdoruesit",
     "authentication_settings_description": "Manaxho passwordin, OAuth, dhe cilësime të tjera të",
     "authentication_settings_disable_all": "Je i sigurt që dëshiron të çaktivizosh të gjitha metodat e hyrjes? Hyrja do të çaktivizohet plotësisht.",
@@ -50,8 +50,8 @@
     "backup_onboarding_1_description": "kopje në cloud ose në një vendndodhje tjetër fizike.",
     "backup_onboarding_2_description": "kopje lokale në pajisje të ndryshme. Kjo përfshin skedarët kryesorë dhe një kopje rezervë të këtyre skedarëve lokalisht.",
     "backup_onboarding_3_description": "kopje totale të të dhënave tuaja, duke përfshirë skedarët origjinalë. Kjo përfshin 1 kopje jashtë faqes dhe 2 kopje lokale.",
-    "backup_onboarding_description": "Rekomandohet një strategji <backblaze-link>3-2-1 për ruajtjen e të dhënave tuaja. Duhet të ruani kopje të fotove/videove të ngarkuara, si dhe të bazës së të dhënave të Immich për një zgjidhje gjithëpërfshirëse të ruajtjes së të dhënave.",
-    "backup_onboarding_footer": "Për më shumë informacion për të krijuar një kopje rezervë të Immich, ju lutem referouni tek <link>dokumentimi</link>.",
+    "backup_onboarding_description": "Rekomandohet një strategji <backblaze-link>3-2-1 për ruajtjen e të dhënave tuaja. Duhet të ruani kopje të fotove/videove të ngarkuara, si dhe të bazës së të dhënave të PizCloud Photos për një zgjidhje gjithëpërfshirëse të ruajtjes së të dhënave.",
+    "backup_onboarding_footer": "Për më shumë informacion për të krijuar një kopje rezervë të PizCloud Photos, ju lutem referouni tek <link>dokumentimi</link>.",
     "backup_onboarding_parts_title": "Një kopje rezervë 3-2-1 ka:",
     "backup_onboarding_title": "Kopje rezervë"
   }
