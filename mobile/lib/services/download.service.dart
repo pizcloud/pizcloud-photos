@@ -52,7 +52,7 @@ class DownloadService {
   Future<bool> saveImageWithPath(Task task) async {
     final filePath = await task.filePath();
     final title = task.filename;
-    final relativePath = Platform.isAndroid ? 'DCIM/Immich' : null;
+    final relativePath = Platform.isAndroid ? 'DCIM/PizCloudPhotos' : null;
     try {
       final Asset? resultAsset = await _fileMediaRepository.saveImageWithFile(
         filePath,
@@ -73,7 +73,7 @@ class DownloadService {
   Future<bool> saveVideo(Task task) async {
     final filePath = await task.filePath();
     final title = task.filename;
-    final relativePath = Platform.isAndroid ? 'DCIM/Immich' : null;
+    final relativePath = Platform.isAndroid ? 'DCIM/PizCloudPhotos' : null;
     final file = File(filePath);
     try {
       final Asset? resultAsset = await _fileMediaRepository.saveVideo(file, title: title, relativePath: relativePath);
