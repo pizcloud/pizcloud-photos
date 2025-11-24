@@ -303,7 +303,7 @@ class BackupWorker(ctx: Context, params: WorkerParameters) : ListenableWorker(ct
     private const val TASK_NAME_BACKUP = "immich/BackupWorker"
     private const val NOTIFICATION_CHANNEL_ID = "immich/backgroundService"
     private const val NOTIFICATION_CHANNEL_ERROR_ID = "immich/backgroundServiceError"
-    private const val NOTIFICATION_DEFAULT_TITLE = "Immich"
+    private const val NOTIFICATION_DEFAULT_TITLE = "PizCloud"
     private const val NOTIFICATION_ID = 1
     private const val NOTIFICATION_ERROR_ID = 2
     private const val NOTIFICATION_DETAIL_ID = 3
