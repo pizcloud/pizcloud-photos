@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,10 @@ import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:openapi/api.dart';
+import 'package:immich_mobile/config/app_config.dart';
+import 'package:http/http.dart' as http;
+
+final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
 @RoutePage()
 class SignupPage extends HookConsumerWidget {
@@ -75,21 +80,66 @@ class SignupPage extends HookConsumerWidget {
         // 1) Register
         await ref.read(authProvider.notifier).register(email, password);
 
-        // 2) Auto-login
-        final loginRes = await ref.read(authProvider.notifier).login(email, password);
-        if (loginRes.accessToken.isEmpty) {
+        // Verify email
+        final locale = context.locale;
+        final lang = [
+          locale.languageCode,
+          if (locale.countryCode != null && locale.countryCode!.isNotEmpty) locale.countryCode,
+        ].join('-');
+
+        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        final uri = Uri.parse('$base/auth/verify-email');
+
+        http.Response response;
+        try {
+          response = await http.post(
+            uri,
+            headers: const {'Content-Type': 'application/json'},
+            body: jsonEncode(<String, String>{'email': email, 'lang': lang}),
+          );
+        } catch (e) {
           ImmichToast.show(
             context: context,
-            msg: "registration_successful_but_automatic_login_failed".tr(),
+            msg: "registration_success_but_verification_email_failed".tr(),
             toastType: ToastType.error,
           );
           return;
         }
 
-        ImmichToast.show(context: context, msg: "registration_successful".tr(), toastType: ToastType.success);
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          ImmichToast.show(
+            context: context,
+            msg: "verification_email_sent_check_inbox".tr(),
+            toastType: ToastType.success,
+          );
+        } else {
+          debugPrint(
+            'Failed to send verification email: '
+            'status=${response.statusCode} body=${response.body}',
+          );
 
-        // 3) Post-login flow
-        await _postLoginFlow(context, ref);
+          ImmichToast.show(
+            context: context,
+            msg: "registration_success_but_verification_email_failed".tr(),
+            toastType: ToastType.error,
+          );
+        }
+
+        // // 2) Auto-login
+        // final loginRes = await ref.read(authProvider.notifier).login(email, password);
+        // if (loginRes.accessToken.isEmpty) {
+        //   ImmichToast.show(
+        //     context: context,
+        //     msg: "registration_successful_but_automatic_login_failed".tr(),
+        //     toastType: ToastType.error,
+        //   );
+        //   return;
+        // }
+
+        // ImmichToast.show(context: context, msg: "registration_successful".tr(), toastType: ToastType.success);
+
+        // // 3) Post-login flow
+        // await _postLoginFlow(context, ref);
       } on ApiException catch (e) {
         String msg = "registration_failed".tr();
         if (e.code == 409) {

@@ -1,14 +1,15 @@
-import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { isString } from 'class-validator';
 import { parse } from 'cookie';
 import { DateTime } from 'luxon';
 import { IncomingHttpHeaders } from 'node:http';
 import { join } from 'node:path';
-import { LOGIN_URL, MOBILE_REDIRECT, SALT_ROUNDS } from 'src/constants';
+import { DEFAULT_FREE_TIER_QUOTA_BYTES, LOGIN_URL, MOBILE_REDIRECT, SALT_ROUNDS, USER_SIGNUP_ENABLED } from 'src/constants';
 import { StorageCore } from 'src/cores/storage.core';
 import { AuthSharedLink, AuthUser, UserAdmin } from 'src/database';
 import {
   AuthDto,
+  AuthRegisterDto,
   AuthStatusResponseDto,
   ChangePasswordDto,
   LoginCredentialDto,
@@ -22,10 +23,11 @@ import {
   SignUpDto,
   mapLoginResponse,
 } from 'src/dtos/auth.dto';
-import { UserAdminResponseDto, mapUserAdmin } from 'src/dtos/user.dto';
+import { UserAdminCreateDto, UserAdminResponseDto, mapUserAdmin } from 'src/dtos/user.dto';
 import { AuthType, ImmichCookie, ImmichHeader, ImmichQuery, JobName, Permission, StorageFolder } from 'src/enum';
 import { OAuthProfile } from 'src/repositories/oauth.repository';
 import { BaseService } from 'src/services/base.service';
+import { UserAdminService } from 'src/services/user-admin.service';
 import { isGranted } from 'src/utils/access';
 import { HumanReadableSize } from 'src/utils/bytes';
 import { mimeTypes } from 'src/utils/mime-types';
@@ -581,5 +583,45 @@ export class AuthService extends BaseService {
       expiresAt: session?.expiresAt?.toISOString(),
       pinExpiresAt: session?.pinExpiresAt?.toISOString(),
     };
+  }
+
+  // New
+  async userRegister(dto: AuthRegisterDto, userAdminService: UserAdminService): Promise<Pick<UserAdminResponseDto, 'id' | 'email' | 'name'>> {
+    if (!USER_SIGNUP_ENABLED) {
+      throw new ForbiddenException('User self-signup is disabled');
+    }
+
+    const name = dto.name?.trim() || dto.email.split('@')[0];
+
+    const createDto: UserAdminCreateDto = {
+      email: dto.email,
+      password: dto.password,
+      name,
+      isAdmin: false,
+      shouldChangePassword: false,
+      notify: true,
+      // set quota free-tier
+      quotaSizeInBytes: DEFAULT_FREE_TIER_QUOTA_BYTES,
+    };
+
+    try {
+      const created = await userAdminService.create(createDto);
+      return { id: created.id, email: created.email, name: created.name };
+    } catch (e: any) {
+      const msg = (e?.message || '').toString();
+
+      if (msg.includes('already in use') || msg.toLowerCase().includes('duplicate')) {
+        throw new ConflictException('Email already in use');
+      }
+
+      if (msg.toLowerCase().includes('password')) {
+        throw new BadRequestException(msg);
+      }
+
+      if (e?.status) throw e;
+
+      // fallback 400
+      throw new BadRequestException(msg || 'Registration failed');
+    }
   }
 }

@@ -5,9 +5,9 @@
   import { AppRoute } from '$lib/constants';
   import { eventManager } from '$lib/managers/event-manager.svelte';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
-  import { login, type LoginResponseDto } from '@immich/sdk';
+  import { type LoginResponseDto } from '@immich/sdk';
   import { Alert, Button, Field, Input, PasswordInput, Stack } from '@immich/ui';
-  import { t } from 'svelte-i18n';
+  import { locale, t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
   interface Props {
@@ -19,6 +19,7 @@
   let password = $state('');
   let confirm = $state('');
   let errorMessage = $state('');
+  let successMessage = $state('');
   let loading = $state(false);
 
   const onSuccess = async (user: LoginResponseDto) => {
@@ -55,6 +56,7 @@
   const handleRegister = async () => {
     try {
       errorMessage = '';
+      successMessage = '';
 
       if (!email) {
         errorMessage = $t('email_required');
@@ -73,24 +75,49 @@
 
       await registerRequest({ email, password });
 
-      const user = await login({ loginCredentialDto: { email, password } });
+      try {
+        // const baseUrl = (PUBLIC_ATT_SERVER_URL || '').replace(/\/+$/, '');
+        const baseUrl = 'http://localhost:8080';
+        const currentLocale = $locale || 'en';
 
-      if (user.isAdmin && user.isOnboarded === false) {
-        await onOnboarding();
-        return;
+        const res = await fetch(`${baseUrl}/auth/verify-email`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email, lang: currentLocale }),
+        });
+
+        if (!res.ok) {
+          console.error('Failed to send verification email', await res.text());
+          successMessage = $t('registration_success_but_verification_email_failed');
+        } else {
+          successMessage = $t('verification_email_sent_check_inbox');
+        }
+      } catch (sendErr) {
+        console.error('Error sending verification email', sendErr);
+        successMessage = $t('registration_success_but_verification_email_failed');
       }
 
-      if (!user.isAdmin && user.shouldChangePassword) {
-        await onFirstLogin();
-        return;
-      }
+      password = '';
+      confirm = '';
 
-      if (!user.isOnboarded) {
-        await onOnboarding();
-        return;
-      }
+      // const user = await login({ loginCredentialDto: { email, password } });
 
-      await onSuccess(user);
+      // if (user.isAdmin && user.isOnboarded === false) {
+      //   await onOnboarding();
+      //   return;
+      // }
+
+      // if (!user.isAdmin && user.shouldChangePassword) {
+      //   await onFirstLogin();
+      //   return;
+      // }
+
+      // if (!user.isOnboarded) {
+      //   await onOnboarding();
+      //   return;
+      // }
+
+      // await onSuccess(user);
     } catch (err) {
       const status = (err as any)?.status as number | undefined;
       const rawMsg = String((err as any)?.message ?? getServerErrorMessage(err) ?? '').trim();
@@ -133,6 +160,10 @@
     <form {onsubmit} class="flex flex-col gap-4">
       {#if errorMessage}
         <Alert color="danger" title={errorMessage} closable />
+      {/if}
+
+      {#if successMessage}
+        <Alert color="success" title={successMessage} closable />
       {/if}
 
       <Field label={$t('email')}>

@@ -1,7 +1,6 @@
-import { BadRequestException, Body, ConflictException, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, Post, Put, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Put, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { DEFAULT_FREE_TIER_QUOTA_BYTES, USER_SIGNUP_ENABLED } from 'src/constants';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import {
   AuthDto,
@@ -18,7 +17,7 @@ import {
   SignUpDto,
   ValidateAccessTokenResponseDto,
 } from 'src/dtos/auth.dto';
-import { UserAdminCreateDto, UserAdminResponseDto } from 'src/dtos/user.dto';
+import { UserAdminResponseDto } from 'src/dtos/user.dto';
 import { ApiTag, AuthType, ImmichCookie, Permission } from 'src/enum';
 import { Auth, Authenticated, GetLoginDetails } from 'src/middleware/auth.guard';
 import { AuthService, LoginDetails } from 'src/services/auth.service';
@@ -184,41 +183,6 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: AuthRegisterDto): Promise<Pick<UserAdminResponseDto, 'id' | 'email' | 'name'>> {
-    if (!USER_SIGNUP_ENABLED) {
-      throw new ForbiddenException('User self-signup is disabled');
-    }
-
-    const name = dto.name?.trim() || dto.email.split('@')[0];
-
-    const createDto: UserAdminCreateDto = {
-      email: dto.email,
-      password: dto.password,
-      name,
-      isAdmin: false,
-      shouldChangePassword: false,
-      notify: true,
-      // set quota free-tier
-      quotaSizeInBytes: DEFAULT_FREE_TIER_QUOTA_BYTES,
-    };
-
-    try {
-      const created = await this.userAdminService.create(createDto);
-      return { id: created.id, email: created.email, name: created.name };
-    } catch (e: any) {
-      const msg = (e?.message || '').toString();
-
-      if (msg.includes('already in use') || msg.toLowerCase().includes('duplicate')) {
-        throw new ConflictException('Email already in use');
-      }
-
-      if (msg.toLowerCase().includes('password')) {
-        throw new BadRequestException(msg);
-      }
-
-      if (e?.status) throw e;
-
-      // fallback 400
-      throw new BadRequestException(msg || 'Registration failed');
-    }
+    return this.service.userRegister(dto, this.userAdminService);
   }
 }
