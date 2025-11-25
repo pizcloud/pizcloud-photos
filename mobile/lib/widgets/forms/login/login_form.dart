@@ -41,6 +41,11 @@ import 'package:openapi/api.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:http/http.dart' as http;
+
+// New
+final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+
 class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});
 
@@ -71,25 +76,28 @@ class LoginForm extends HookConsumerWidget {
     final loginFormKey = GlobalKey<FormState>();
     final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
 
-    checkVersionMismatch() async {
-      try {
-        final packageInfo = await PackageInfo.fromPlatform();
-        final appVersion = packageInfo.version;
-        final appMajorVersion = int.parse(appVersion.split('.')[0]);
-        final appMinorVersion = int.parse(appVersion.split('.')[1]);
-        final serverMajorVersion = serverInfo.serverVersion.major;
-        final serverMinorVersion = serverInfo.serverVersion.minor;
+    // Change
+    final needsVerification = useState<bool>(false);
 
-        warningMessage.value = getVersionCompatibilityMessage(
-          appMajorVersion,
-          appMinorVersion,
-          serverMajorVersion,
-          serverMinorVersion,
-        );
-      } catch (error) {
-        warningMessage.value = 'Error checking version compatibility';
-      }
-    }
+    // checkVersionMismatch() async {
+    //   try {
+    //     final packageInfo = await PackageInfo.fromPlatform();
+    //     final appVersion = packageInfo.version;
+    //     final appMajorVersion = int.parse(appVersion.split('.')[0]);
+    //     final appMinorVersion = int.parse(appVersion.split('.')[1]);
+    //     final serverMajorVersion = serverInfo.serverVersion.major;
+    //     final serverMinorVersion = serverInfo.serverVersion.minor;
+
+    //     warningMessage.value = getVersionCompatibilityMessage(
+    //       appMajorVersion,
+    //       appMinorVersion,
+    //       serverMajorVersion,
+    //       serverMinorVersion,
+    //     );
+    //   } catch (error) {
+    //     warningMessage.value = 'Error checking version compatibility';
+    //   }
+    // }
 
     /// Fetch the server login credential and enables oAuth login if necessary
     /// Returns true if successful, false otherwise
@@ -309,6 +317,128 @@ class LoginForm extends HookConsumerWidget {
 
     bool isSyncRemoteDeletionsMode() => Platform.isAndroid && Store.get(StoreKey.manageLocalMediaAndroid, false);
 
+    // New
+    Future<bool> ensureEmailVerified(String email) async {
+      final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+      if (base.isEmpty) {
+        return true;
+      }
+
+      try {
+        final uri = Uri.parse('$base/auth/email-verification-status').replace(queryParameters: {'email': email});
+
+        final resp = await http.get(uri, headers: const {'Accept': 'application/json'});
+
+        if (resp.statusCode >= 200 && resp.statusCode < 300) {
+          final data = jsonDecode(resp.body) as Map<String, dynamic>;
+          final verified = data['verified'] == true;
+          if (!verified) {
+            needsVerification.value = true;
+            ImmichToast.show(
+              context: context,
+              msg: "errors.email_not_verified".tr(),
+              toastType: ToastType.error,
+              gravity: ToastGravity.TOP,
+            );
+            return false;
+          }
+          needsVerification.value = false;
+          return true;
+        } else {
+          debugPrint(
+            'Failed to check email verification status: '
+            '${resp.statusCode} ${resp.body}',
+          );
+          needsVerification.value = false;
+          ImmichToast.show(
+            context: context,
+            msg: "errors.login_email_verification_failed".tr(),
+            toastType: ToastType.error,
+            gravity: ToastGravity.TOP,
+          );
+          return false;
+        }
+      } catch (e, st) {
+        debugPrint('Error checking email verification status: $e\n$st');
+        needsVerification.value = false;
+        ImmichToast.show(
+          context: context,
+          msg: "errors.login_email_verification_failed".tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
+        return false;
+      }
+    }
+
+    Future<void> resendVerificationEmail() async {
+      final email = emailController.text.trim();
+      if (email.isEmpty) {
+        ImmichToast.show(
+          context: context,
+          msg: "errors.email_required_for_resend".tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
+        return;
+      }
+
+      final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+      if (base.isEmpty) {
+        ImmichToast.show(
+          context: context,
+          msg: "errors.resend_verification_email_failed".tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
+        return;
+      }
+
+      try {
+        final locale = context.locale;
+        final lang = [
+          locale.languageCode,
+          if (locale.countryCode != null && locale.countryCode!.isNotEmpty) locale.countryCode,
+        ].join('-');
+
+        final uri = Uri.parse('$base/auth/verify-email');
+        final resp = await http.post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode(<String, String>{'email': email, 'lang': lang}),
+        );
+
+        if (resp.statusCode >= 200 && resp.statusCode < 300) {
+          ImmichToast.show(
+            context: context,
+            msg: "verification_email_resent".tr(),
+            toastType: ToastType.success,
+            gravity: ToastGravity.TOP,
+          );
+          needsVerification.value = false;
+        } else {
+          debugPrint(
+            'Failed to resend verification email: '
+            '${resp.statusCode} ${resp.body}',
+          );
+          ImmichToast.show(
+            context: context,
+            msg: "errors.resend_verification_email_failed".tr(),
+            toastType: ToastType.error,
+            gravity: ToastGravity.TOP,
+          );
+        }
+      } catch (e, st) {
+        debugPrint('Error resending verification email: $e\n$st');
+        ImmichToast.show(
+          context: context,
+          msg: "errors.resend_verification_email_failed".tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
+      }
+    }
+
     login() async {
       TextInput.finishAutofillContext();
 
@@ -318,7 +448,16 @@ class LoginForm extends HookConsumerWidget {
       invalidateAllApiRepositoryProviders(ref);
 
       try {
+        // New
+        final email = emailController.text.trim();
+
         final result = await ref.read(authProvider.notifier).login(emailController.text, passwordController.text);
+
+        // New - Call to check if the email has been verified
+        final ok = await ensureEmailVerified(email);
+        if (!ok) {
+          return;
+        }
 
         if (result.shouldChangePassword && !result.isAdmin) {
           unawaited(context.pushRoute(const ChangePasswordRoute()));
@@ -570,7 +709,15 @@ class LoginForm extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 18),
-                      if (isPasswordLoginEnable.value) LoginButton(onPressed: login),
+                      // if (isPasswordLoginEnable.value) LoginButton(onPressed: login),
+                      if (isPasswordLoginEnable.value) ...[
+                        LoginButton(onPressed: login),
+                        if (needsVerification.value)
+                          TextButton(
+                            onPressed: isLoading.value ? null : resendVerificationEmail,
+                            child: const Text('resend_verification_email').tr(),
+                          ),
+                      ],
                       if (isOauthEnable.value) ...[
                         if (isPasswordLoginEnable.value)
                           Padding(

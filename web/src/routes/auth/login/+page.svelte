@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { AppRoute } from '$lib/constants';
   import { eventManager } from '$lib/managers/event-manager.svelte';
@@ -10,7 +11,7 @@
   import { login, type LoginResponseDto } from '@immich/sdk';
   import { Alert, Button, Field, Input, PasswordInput, Stack } from '@immich/ui';
   import { onMount } from 'svelte';
-  import { t } from 'svelte-i18n';
+  import { locale, t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
   interface Props {
@@ -20,11 +21,17 @@
   let { data }: Props = $props();
 
   let errorMessage: string = $state('');
+
   let email = $state('');
   let password = $state('');
   let oauthError = $state('');
   let loading = $state(false);
   let oauthLoading = $state(true);
+
+  // New
+  let successMessage: string = $state('');
+  let needsEmailVerification = $state(false);
+  let resendLoading = $state(false);
 
   const serverConfig = $derived(serverConfigManager.value);
 
@@ -77,11 +84,92 @@
     oauthLoading = false;
   });
 
+  // New
+  const checkEmailVerification = async (): Promise<boolean> => {
+    const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+    if (!baseUrl || !email) {
+      return true;
+    }
+
+    try {
+      const res = await fetch(`${baseUrl}/auth/email-verification-status?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.verified === false) {
+          needsEmailVerification = true;
+          errorMessage = $t('errors.email_not_verified');
+          return false;
+        }
+        needsEmailVerification = false;
+        return true;
+      } else {
+        console.error('Failed to check email verification status', await res.text());
+        return true;
+      }
+    } catch (err) {
+      console.error('Error calling att-server for email verification status', err);
+      return true;
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      successMessage = '';
+      if (!email) {
+        errorMessage = $t('errors.email_required_for_resend');
+        return;
+      }
+
+      const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+      if (!baseUrl) {
+        errorMessage = $t('errors.resend_verification_email_failed');
+        return;
+      }
+
+      resendLoading = true;
+
+      const currentLocale = $locale || 'en';
+
+      const res = await fetch(`${baseUrl}/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, lang: currentLocale }),
+      });
+
+      if (res.ok) {
+        successMessage = $t('verification_email_resent');
+        errorMessage = '';
+        needsEmailVerification = false;
+      } else {
+        console.error('Failed to resend verification email', await res.text());
+        errorMessage = $t('errors.resend_verification_email_failed');
+      }
+    } catch (error) {
+      console.error('Error resending verification email', error);
+      errorMessage = $t('errors.resend_verification_email_failed');
+    } finally {
+      resendLoading = false;
+    }
+  };
+
   const handleLogin = async () => {
     try {
       errorMessage = '';
+      successMessage = '';
+      needsEmailVerification = false;
       loading = true;
       const user = await login({ loginCredentialDto: { email, password } });
+
+      // New - Call to check if the email has been verified
+      const ok = await checkEmailVerification();
+      if (!ok) {
+        loading = false;
+        return;
+      }
 
       if (user.isAdmin && !serverConfig.isOnboarded) {
         await onOnboarding();
@@ -141,6 +229,10 @@
           <Alert color="danger" title={errorMessage} closable />
         {/if}
 
+        {#if successMessage}
+          <Alert color="primary" title={successMessage} closable />
+        {/if}
+
         <Field label={$t('email')}>
           <Input id="email" name="email" type="email" autocomplete="email" bind:value={email} />
         </Field>
@@ -150,6 +242,20 @@
         </Field>
 
         <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">{$t('to_login')}</Button>
+
+        {#if needsEmailVerification}
+          <Button
+            type="button"
+            size="medium"
+            shape="round"
+            fullWidth
+            class="mt-2"
+            loading={resendLoading}
+            onclick={handleResendVerification}
+          >
+            {$t('resend_verification_email')}
+          </Button>
+        {/if}
       </form>
     {/if}
 

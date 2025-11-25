@@ -1,6 +1,7 @@
 <!-- web/src/routes/auth/user-register/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { AppRoute } from '$lib/constants';
   import { eventManager } from '$lib/managers/event-manager.svelte';
@@ -76,10 +77,8 @@
       await registerRequest({ email, password });
 
       try {
-        // const baseUrl = (PUBLIC_ATT_SERVER_URL || '').replace(/\/+$/, '');
-        const baseUrl = 'http://localhost:8080';
+        const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
         const currentLocale = $locale || 'en';
-
         const res = await fetch(`${baseUrl}/auth/verify-email`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },

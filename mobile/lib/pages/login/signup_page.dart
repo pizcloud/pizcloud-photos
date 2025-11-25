@@ -77,7 +77,7 @@ class SignupPage extends HookConsumerWidget {
 
       isSubmitting.value = true;
       try {
-        // 1) Register
+        // Register
         await ref.read(authProvider.notifier).register(email, password);
 
         // Verify email
@@ -125,7 +125,7 @@ class SignupPage extends HookConsumerWidget {
           );
         }
 
-        // // 2) Auto-login
+        // // Auto-login
         // final loginRes = await ref.read(authProvider.notifier).login(email, password);
         // if (loginRes.accessToken.isEmpty) {
         //   ImmichToast.show(
@@ -138,7 +138,7 @@ class SignupPage extends HookConsumerWidget {
 
         // ImmichToast.show(context: context, msg: "registration_successful".tr(), toastType: ToastType.success);
 
-        // // 3) Post-login flow
+        // // Post-login flow
         // await _postLoginFlow(context, ref);
       } on ApiException catch (e) {
         String msg = "registration_failed".tr();
