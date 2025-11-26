@@ -28,3 +28,6 @@ vite.config.js.timestamp-*
 .pnpm-store
 .devcontainer/library
 .devcontainer/.env*
+
+# FVM Version Cache
+.fvm/

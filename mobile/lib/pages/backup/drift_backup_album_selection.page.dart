@@ -283,34 +283,34 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                         _SelectAllButton(filteredAlbums: filteredAlbums, selectedBackupAlbums: selectedBackupAlbums),
 
                       // ========== New Button - Add photos ==========
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.add_photo_alternate_outlined),
-                          onPressed: () async {
-                            final success = await ref
-                                .read(limitedPickerBackupServiceProvider)
-                                .pickAndUploadFromSystemPicker();
+                      // Padding(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      //   child: ElevatedButton.icon(
+                      //     icon: const Icon(Icons.add_photo_alternate_outlined),
+                      //     onPressed: () async {
+                      //       final success = await ref
+                      //           .read(limitedPickerBackupServiceProvider)
+                      //           .pickAndUploadFromSystemPicker();
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  success
-                                      ? 'uploaded_the_selected_photos_videos'.tr()
-                                      : 'no_photos_videos_selected'.tr(),
-                                ),
-                              ),
-                            );
-                          },
-                          label: Text(
-                            context.tr(
-                              'backup_album_selection_page_pick_individual_media',
-                              args: [],
-                              namedArgs: const {},
-                            ),
-                          ),
-                        ),
-                      ),
+                      //       ScaffoldMessenger.of(context).showSnackBar(
+                      //         SnackBar(
+                      //           content: Text(
+                      //             success
+                      //                 ? 'uploaded_the_selected_photos_videos'.tr()
+                      //                 : 'no_photos_videos_selected'.tr(),
+                      //           ),
+                      //         ),
+                      //       );
+                      //     },
+                      //     label: Text(
+                      //       context.tr(
+                      //         'backup_album_selection_page_pick_individual_media',
+                      //         args: [],
+                      //         namedArgs: const {},
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       // ================================================================
                     ],
                   ),
