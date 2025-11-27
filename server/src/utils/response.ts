@@ -17,6 +17,7 @@ export const respondWithCookie = <T>(res: Response, body: T, { isSecure, values 
   const cookieOptions: Record<ImmichCookie, CookieOptions> = {
     [ImmichCookie.AuthType]: defaults,
     [ImmichCookie.AccessToken]: defaults,
+    [ImmichCookie.UserId]: defaults, // pizcloud
     [ImmichCookie.MaintenanceToken]: { ...defaults, maxAge: Duration.fromObject({ days: 1 }).toMillis() },
     [ImmichCookie.OAuthState]: defaults,
     [ImmichCookie.OAuthCodeVerifier]: defaults,
