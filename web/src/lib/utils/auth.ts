@@ -42,7 +42,7 @@ const hasAuthCookie = (): boolean => {
 
   for (const cookie of document.cookie.split('; ')) {
     const [name] = cookie.split('=');
-    if (name === 'immich_is_authenticated') {
+    if (name === 'pizcloud_is_authenticated') {
       return true;
     }
   }

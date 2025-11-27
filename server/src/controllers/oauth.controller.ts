@@ -81,6 +81,7 @@ export class OAuthController {
         { key: ImmichCookie.AccessToken, value: body.accessToken },
         { key: ImmichCookie.AuthType, value: AuthType.OAuth },
         { key: ImmichCookie.IsAuthenticated, value: 'true' },
+        { key: ImmichCookie.UserId, value: body.userId }, // pizcloud
       ],
     });
   }

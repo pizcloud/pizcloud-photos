@@ -147,7 +147,7 @@ describe(AuthController.name, () => {
       const cookies = headers['set-cookie'];
       expect(cookies).toHaveLength(3);
       expect(cookies[0].split(';').map((item) => item.trim())).toEqual([
-        `immich_access_token=${loginResponse.accessToken}`,
+        `pizcloud_access_token=${loginResponse.accessToken}`,
         'Max-Age=34560000',
         'Path=/',
         expect.stringContaining('Expires='),
@@ -155,7 +155,7 @@ describe(AuthController.name, () => {
         'SameSite=Lax',
       ]);
       expect(cookies[1].split(';').map((item) => item.trim())).toEqual([
-        'immich_auth_type=password',
+        'pizcloud_auth_type=password',
         'Max-Age=34560000',
         'Path=/',
         expect.stringContaining('Expires='),
@@ -163,7 +163,7 @@ describe(AuthController.name, () => {
         'SameSite=Lax',
       ]);
       expect(cookies[2].split(';').map((item) => item.trim())).toEqual([
-        'immich_is_authenticated=true',
+        'pizcloud_is_authenticated=true',
         'Max-Age=34560000',
         'Path=/',
         expect.stringContaining('Expires='),

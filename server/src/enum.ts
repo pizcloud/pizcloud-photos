@@ -2,8 +2,8 @@ export enum AuthType {
   Password = 'password',
   OAuth = 'oauth',
 }
-
-export enum ImmichCookie {
+// pizcloud
+/*export enum ImmichCookie {
   AccessToken = 'immich_access_token',
   MaintenanceToken = 'immich_maintenance_token',
   AuthType = 'immich_auth_type',
@@ -11,8 +11,18 @@ export enum ImmichCookie {
   SharedLinkToken = 'immich_shared_link_token',
   OAuthState = 'immich_oauth_state',
   OAuthCodeVerifier = 'immich_oauth_code_verifier',
+}*/
+export enum ImmichCookie {
+  AccessToken = 'pizcloud_access_token',
+  MaintenanceToken = 'pizcloud_maintenance_token',
+  AuthType = 'pizcloud_auth_type',
+  IsAuthenticated = 'pizcloud_is_authenticated',
+  SharedLinkToken = 'pizcloud_shared_link_token',
+  OAuthState = 'pizcloud_oauth_state',
+  OAuthCodeVerifier = 'pizcloud_oauth_code_verifier',
+  UserId = 'pizcloud_uid'
 }
-
+// #pizcloud
 export enum ImmichHeader {
   ApiKey = 'x-api-key',
   UserToken = 'x-immich-user-token',

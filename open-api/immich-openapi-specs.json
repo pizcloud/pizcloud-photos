@@ -77,9 +77,7 @@
           }
         ],
         "summary": "List all activities",
-        "tags": [
-          "Activities"
-        ],
+        "tags": ["Activities"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -135,9 +133,7 @@
           }
         ],
         "summary": "Create an activity",
-        "tags": [
-          "Activities"
-        ],
+        "tags": ["Activities"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -204,9 +200,7 @@
           }
         ],
         "summary": "Retrieve activity statistics",
-        "tags": [
-          "Activities"
-        ],
+        "tags": ["Activities"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -257,9 +251,7 @@
           }
         ],
         "summary": "Delete an activity",
-        "tags": [
-          "Activities"
-        ],
+        "tags": ["Activities"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -300,9 +292,7 @@
           }
         ],
         "summary": "Unlink all OAuth accounts",
-        "tags": [
-          "Authentication (admin)"
-        ],
+        "tags": ["Authentication (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -354,9 +344,7 @@
           }
         ],
         "summary": "Set maintenance mode",
-        "tags": [
-          "Maintenance (admin)"
-        ],
+        "tags": ["Maintenance (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -400,9 +388,7 @@
           }
         },
         "summary": "Log into maintenance mode",
-        "tags": [
-          "Maintenance (admin)"
-        ],
+        "tags": ["Maintenance (admin)"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -455,9 +441,7 @@
           }
         ],
         "summary": "Create a notification",
-        "tags": [
-          "Notifications (admin)"
-        ],
+        "tags": ["Notifications (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -524,9 +508,7 @@
           }
         ],
         "summary": "Render email template",
-        "tags": [
-          "Notifications (admin)"
-        ],
+        "tags": ["Notifications (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -584,9 +566,7 @@
           }
         ],
         "summary": "Send test email",
-        "tags": [
-          "Notifications (admin)"
-        ],
+        "tags": ["Notifications (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -655,9 +635,7 @@
           }
         ],
         "summary": "Search users",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -714,9 +692,7 @@
           }
         ],
         "summary": "Create a user",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -785,9 +761,7 @@
           }
         ],
         "summary": "Delete a user",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -844,9 +818,7 @@
           }
         ],
         "summary": "Retrieve a user",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -913,9 +885,7 @@
           }
         ],
         "summary": "Update a user",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -974,9 +944,7 @@
           }
         ],
         "summary": "Retrieve user preferences",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -1043,9 +1011,7 @@
           }
         ],
         "summary": "Update user preferences",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -1104,9 +1070,7 @@
           }
         ],
         "summary": "Restore a deleted user",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -1168,9 +1132,7 @@
           }
         ],
         "summary": "Retrieve user sessions",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -1253,9 +1215,7 @@
           }
         ],
         "summary": "Retrieve user statistics",
-        "tags": [
-          "Users (admin)"
-        ],
+        "tags": ["Users (admin)"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -1326,9 +1286,7 @@
           }
         ],
         "summary": "List all albums",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1384,9 +1342,7 @@
           }
         ],
         "summary": "Create an album",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1461,9 +1417,7 @@
           }
         ],
         "summary": "Add assets to albums",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1511,9 +1465,7 @@
           }
         ],
         "summary": "Retrieve album statistics",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1564,9 +1516,7 @@
           }
         ],
         "summary": "Delete an album",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1646,9 +1596,7 @@
           }
         ],
         "summary": "Retrieve an album",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1714,9 +1662,7 @@
           }
         ],
         "summary": "Update an album",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1787,9 +1733,7 @@
           }
         ],
         "summary": "Remove assets from an album",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1874,9 +1818,7 @@
           }
         ],
         "summary": "Add assets to an album",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -1935,9 +1877,7 @@
           }
         ],
         "summary": "Remove user from album",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2004,9 +1944,7 @@
           }
         ],
         "summary": "Update user role",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2074,9 +2012,7 @@
           }
         ],
         "summary": "Share album with users",
-        "tags": [
-          "Albums"
-        ],
+        "tags": ["Albums"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2127,9 +2063,7 @@
           }
         ],
         "summary": "List all API keys",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2185,9 +2119,7 @@
           }
         ],
         "summary": "Create an API key",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2235,9 +2167,7 @@
           }
         ],
         "summary": "Retrieve the current API key",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2287,9 +2217,7 @@
           }
         ],
         "summary": "Delete an API key",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2345,9 +2273,7 @@
           }
         ],
         "summary": "Retrieve an API key",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2413,9 +2339,7 @@
           }
         ],
         "summary": "Update an API key",
-        "tags": [
-          "API keys"
-        ],
+        "tags": ["API keys"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2466,9 +2390,7 @@
           }
         ],
         "summary": "Delete assets",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2551,9 +2473,7 @@
           }
         ],
         "summary": "Upload asset",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2602,9 +2522,7 @@
           }
         ],
         "summary": "Update assets",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2662,9 +2580,7 @@
           }
         ],
         "summary": "Check bulk upload",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2715,9 +2631,7 @@
           }
         ],
         "summary": "Copy asset",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2778,10 +2692,7 @@
           }
         ],
         "summary": "Retrieve assets by device ID",
-        "tags": [
-          "Assets",
-          "Deprecated"
-        ],
+        "tags": ["Assets", "Deprecated"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2834,9 +2745,7 @@
           }
         ],
         "summary": "Check existing assets",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2886,9 +2795,7 @@
           }
         ],
         "summary": "Run an asset job",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -2949,10 +2856,7 @@
           }
         ],
         "summary": "Get random assets",
-        "tags": [
-          "Assets",
-          "Deprecated"
-        ],
+        "tags": ["Assets", "Deprecated"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3022,9 +2926,7 @@
           }
         ],
         "summary": "Get asset statistics",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3098,9 +3000,7 @@
           }
         ],
         "summary": "Retrieve an asset",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3166,9 +3066,7 @@
           }
         ],
         "summary": "Update an asset",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3229,9 +3127,7 @@
           }
         ],
         "summary": "Get asset metadata",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3300,9 +3196,7 @@
           }
         ],
         "summary": "Update asset metadata",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3361,9 +3255,7 @@
           }
         ],
         "summary": "Delete asset metadata by key",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3427,9 +3319,7 @@
           }
         ],
         "summary": "Retrieve asset metadata by key",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3490,9 +3380,7 @@
           }
         ],
         "summary": "Retrieve asset OCR data",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3567,9 +3455,7 @@
           }
         ],
         "summary": "Download original asset",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3652,10 +3538,7 @@
           }
         ],
         "summary": "Replace asset",
-        "tags": [
-          "Assets",
-          "Deprecated"
-        ],
+        "tags": ["Assets", "Deprecated"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3735,9 +3618,7 @@
           }
         ],
         "summary": "View asset thumbnail",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3812,9 +3693,7 @@
           }
         ],
         "summary": "Play asset video",
-        "tags": [
-          "Assets"
-        ],
+        "tags": ["Assets"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3861,9 +3740,7 @@
           }
         },
         "summary": "Register admin",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3920,9 +3797,7 @@
           }
         ],
         "summary": "Change password",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -3969,9 +3844,7 @@
           }
         },
         "summary": "Login",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4018,9 +3891,7 @@
           }
         ],
         "summary": "Logout",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4070,9 +3941,7 @@
           }
         ],
         "summary": "Reset pin code",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4121,9 +3990,7 @@
           }
         ],
         "summary": "Setup pin code",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4172,9 +4039,7 @@
           }
         ],
         "summary": "Change pin code",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4219,9 +4084,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Authentication"
-        ]
+        "tags": ["Authentication"]
       }
     },
     "/auth/session/lock": {
@@ -4246,9 +4109,7 @@
           }
         ],
         "summary": "Lock auth session",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4298,9 +4159,7 @@
           }
         ],
         "summary": "Unlock auth session",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4347,9 +4206,7 @@
           }
         ],
         "summary": "Retrieve auth status",
-        "tags": [
-          "Authentication"
-        ]
+        "tags": ["Authentication"]
       }
     },
     "/auth/validateToken": {
@@ -4381,9 +4238,7 @@
           }
         ],
         "summary": "Validate access token",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4417,9 +4272,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Billing"
-        ]
+        "tags": ["Billing"]
       }
     },
     "/billing/entitlements/webhook": {
@@ -4440,9 +4293,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Billing"
-        ]
+        "tags": ["Billing"]
       }
     },
     "/billing/usage": {
@@ -4465,9 +4316,7 @@
             "api_key": []
           }
         ],
-        "tags": [
-          "Billing"
-        ]
+        "tags": ["Billing"]
       }
     },
     "/download/archive": {
@@ -4527,9 +4376,7 @@
           }
         ],
         "summary": "Download asset archive",
-        "tags": [
-          "Download"
-        ],
+        "tags": ["Download"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4604,9 +4451,7 @@
           }
         ],
         "summary": "Retrieve download information",
-        "tags": [
-          "Download"
-        ],
+        "tags": ["Download"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4657,9 +4502,7 @@
           }
         ],
         "summary": "Delete duplicates",
-        "tags": [
-          "Duplicates"
-        ],
+        "tags": ["Duplicates"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4708,9 +4551,7 @@
           }
         ],
         "summary": "Retrieve duplicates",
-        "tags": [
-          "Duplicates"
-        ],
+        "tags": ["Duplicates"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4761,9 +4602,7 @@
           }
         ],
         "summary": "Delete a duplicate",
-        "tags": [
-          "Duplicates"
-        ],
+        "tags": ["Duplicates"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4824,9 +4663,7 @@
           }
         ],
         "summary": "Retrieve faces for asset",
-        "tags": [
-          "Faces"
-        ],
+        "tags": ["Faces"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4875,9 +4712,7 @@
           }
         ],
         "summary": "Create a face",
-        "tags": [
-          "Faces"
-        ],
+        "tags": ["Faces"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -4938,9 +4773,7 @@
           }
         ],
         "summary": "Delete a face",
-        "tags": [
-          "Faces"
-        ],
+        "tags": ["Faces"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -5006,9 +4839,7 @@
           }
         ],
         "summary": "Re-assign a face to another person",
-        "tags": [
-          "Faces"
-        ],
+        "tags": ["Faces"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -5056,9 +4887,7 @@
           }
         ],
         "summary": "Retrieve queue counts and status",
-        "tags": [
-          "Jobs"
-        ],
+        "tags": ["Jobs"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5108,9 +4937,7 @@
           }
         ],
         "summary": "Create a manual job",
-        "tags": [
-          "Jobs"
-        ],
+        "tags": ["Jobs"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5178,9 +5005,7 @@
           }
         ],
         "summary": "Run jobs",
-        "tags": [
-          "Jobs"
-        ],
+        "tags": ["Jobs"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5232,9 +5057,7 @@
           }
         ],
         "summary": "Retrieve libraries",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5291,9 +5114,7 @@
           }
         ],
         "summary": "Create a library",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5345,9 +5166,7 @@
           }
         ],
         "summary": "Delete a library",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5404,9 +5223,7 @@
           }
         ],
         "summary": "Retrieve a library",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5473,9 +5290,7 @@
           }
         ],
         "summary": "Update a library",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5527,9 +5342,7 @@
           }
         ],
         "summary": "Scan a library",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5588,9 +5401,7 @@
           }
         ],
         "summary": "Retrieve library statistics",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5659,9 +5470,7 @@
           }
         ],
         "summary": "Validate library settings",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -5763,9 +5572,7 @@
           }
         ],
         "summary": "Retrieve map markers",
-        "tags": [
-          "Map"
-        ],
+        "tags": ["Map"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -5834,9 +5641,7 @@
           }
         ],
         "summary": "Reverse geocode coordinates",
-        "tags": [
-          "Map"
-        ],
+        "tags": ["Map"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -5938,9 +5743,7 @@
           }
         ],
         "summary": "Retrieve memories",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -5996,9 +5799,7 @@
           }
         ],
         "summary": "Create a memory",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6098,9 +5899,7 @@
           }
         ],
         "summary": "Retrieve memories statistics",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6151,9 +5950,7 @@
           }
         ],
         "summary": "Delete a memory",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6209,9 +6006,7 @@
           }
         ],
         "summary": "Retrieve a memory",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6277,9 +6072,7 @@
           }
         ],
         "summary": "Update a memory",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6350,9 +6143,7 @@
           }
         ],
         "summary": "Remove assets from a memory",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6421,9 +6212,7 @@
           }
         ],
         "summary": "Add assets to a memory",
-        "tags": [
-          "Memories"
-        ],
+        "tags": ["Memories"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6474,9 +6263,7 @@
           }
         ],
         "summary": "Delete notifications",
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6559,9 +6346,7 @@
           }
         ],
         "summary": "Retrieve notifications",
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6610,9 +6395,7 @@
           }
         ],
         "summary": "Update notifications",
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6663,9 +6446,7 @@
           }
         ],
         "summary": "Delete a notification",
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6721,9 +6502,7 @@
           }
         ],
         "summary": "Get a notification",
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6789,9 +6568,7 @@
           }
         ],
         "summary": "Update a notification",
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6838,9 +6615,7 @@
           }
         },
         "summary": "Start OAuth",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6886,9 +6661,7 @@
           }
         },
         "summary": "Finish OAuth",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6945,9 +6718,7 @@
           }
         ],
         "summary": "Link OAuth account",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -6976,9 +6747,7 @@
           }
         },
         "summary": "Redirect OAuth to mobile",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7025,9 +6794,7 @@
           }
         ],
         "summary": "Unlink OAuth account",
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7086,9 +6853,7 @@
           }
         ],
         "summary": "Retrieve partners",
-        "tags": [
-          "Partners"
-        ],
+        "tags": ["Partners"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7144,9 +6909,7 @@
           }
         ],
         "summary": "Create a partner",
-        "tags": [
-          "Partners"
-        ],
+        "tags": ["Partners"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7197,9 +6960,7 @@
           }
         ],
         "summary": "Remove a partner",
-        "tags": [
-          "Partners"
-        ],
+        "tags": ["Partners"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7256,10 +7017,7 @@
           }
         ],
         "summary": "Create a partner",
-        "tags": [
-          "Partners",
-          "Deprecated"
-        ],
+        "tags": ["Partners", "Deprecated"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7322,9 +7080,7 @@
           }
         ],
         "summary": "Update a partner",
-        "tags": [
-          "Partners"
-        ],
+        "tags": ["Partners"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7375,9 +7131,7 @@
           }
         ],
         "summary": "Delete people",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7473,9 +7227,7 @@
           }
         ],
         "summary": "Get all people",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7531,9 +7283,7 @@
           }
         ],
         "summary": "Create a person",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7592,9 +7342,7 @@
           }
         ],
         "summary": "Update people",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7645,9 +7393,7 @@
           }
         ],
         "summary": "Delete person",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7703,9 +7449,7 @@
           }
         ],
         "summary": "Get a person",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7771,9 +7515,7 @@
           }
         ],
         "summary": "Update person",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7844,9 +7586,7 @@
           }
         ],
         "summary": "Merge people",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7917,9 +7657,7 @@
           }
         ],
         "summary": "Reassign faces",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -7977,9 +7715,7 @@
           }
         ],
         "summary": "Get person statistics",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8038,9 +7774,7 @@
           }
         ],
         "summary": "Get person thumbnail",
-        "tags": [
-          "People"
-        ],
+        "tags": ["People"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8091,9 +7825,7 @@
           }
         ],
         "summary": "List all plugins",
-        "tags": [
-          "Plugins"
-        ],
+        "tags": ["Plugins"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -8147,9 +7879,7 @@
           }
         ],
         "summary": "Retrieve a plugin",
-        "tags": [
-          "Plugins"
-        ],
+        "tags": ["Plugins"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -8196,9 +7926,7 @@
           }
         ],
         "summary": "Retrieve assets by city",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8249,9 +7977,7 @@
           }
         ],
         "summary": "Retrieve explore data",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8592,9 +8318,7 @@
           }
         ],
         "summary": "Search large assets",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8652,9 +8376,7 @@
           }
         ],
         "summary": "Search assets by metadata",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8722,9 +8444,7 @@
           }
         ],
         "summary": "Search people",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8784,9 +8504,7 @@
           }
         ],
         "summary": "Search places",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8847,9 +8565,7 @@
           }
         ],
         "summary": "Search random assets",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8907,9 +8623,7 @@
           }
         ],
         "summary": "Smart asset search",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -8967,9 +8681,7 @@
           }
         ],
         "summary": "Search asset statistics",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9088,9 +8800,7 @@
           }
         ],
         "summary": "Retrieve search suggestions",
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9138,9 +8848,7 @@
           }
         ],
         "summary": "Get server information",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9188,9 +8896,7 @@
           }
         ],
         "summary": "Get APK links",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9227,9 +8933,7 @@
           }
         },
         "summary": "Get config",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9265,9 +8969,7 @@
           }
         },
         "summary": "Get features",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9307,9 +9009,7 @@
           }
         ],
         "summary": "Delete server product key",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -9359,9 +9059,7 @@
           }
         ],
         "summary": "Get product key",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -9418,9 +9116,7 @@
           }
         ],
         "summary": "Set server product key",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -9458,9 +9154,7 @@
           }
         },
         "summary": "Get supported media types",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9496,9 +9190,7 @@
           }
         },
         "summary": "Ping",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9545,9 +9237,7 @@
           }
         ],
         "summary": "Get statistics",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -9596,9 +9286,7 @@
           }
         ],
         "summary": "Get storage",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9635,9 +9323,7 @@
           }
         },
         "summary": "Get theme",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9673,9 +9359,7 @@
           }
         },
         "summary": "Get server version",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9722,9 +9406,7 @@
           }
         ],
         "summary": "Get version check status",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9764,9 +9446,7 @@
           }
         },
         "summary": "Get version history",
-        "tags": [
-          "Server"
-        ],
+        "tags": ["Server"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9806,9 +9486,7 @@
           }
         ],
         "summary": "Delete all sessions",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9857,9 +9535,7 @@
           }
         ],
         "summary": "Retrieve sessions",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9915,9 +9591,7 @@
           }
         ],
         "summary": "Create a session",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -9968,9 +9642,7 @@
           }
         ],
         "summary": "Delete a session",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10036,9 +9708,7 @@
           }
         ],
         "summary": "Update a session",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10089,9 +9759,7 @@
           }
         ],
         "summary": "Lock a session",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10152,9 +9820,7 @@
           }
         ],
         "summary": "Retrieve all shared links",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10210,9 +9876,7 @@
           }
         ],
         "summary": "Create a shared link",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10294,9 +9958,7 @@
           }
         ],
         "summary": "Retrieve current shared link",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10346,9 +10008,7 @@
           }
         ],
         "summary": "Delete a shared link",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10404,9 +10064,7 @@
           }
         ],
         "summary": "Retrieve a shared link",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10472,9 +10130,7 @@
           }
         ],
         "summary": "Update a shared link",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10561,9 +10217,7 @@
           }
         ],
         "summary": "Remove assets from a shared link",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10647,9 +10301,7 @@
           }
         ],
         "summary": "Add assets to a shared link",
-        "tags": [
-          "Shared links"
-        ],
+        "tags": ["Shared links"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10699,9 +10351,7 @@
           }
         ],
         "summary": "Delete stacks",
-        "tags": [
-          "Stacks"
-        ],
+        "tags": ["Stacks"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10760,9 +10410,7 @@
           }
         ],
         "summary": "Retrieve stacks",
-        "tags": [
-          "Stacks"
-        ],
+        "tags": ["Stacks"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10818,9 +10466,7 @@
           }
         ],
         "summary": "Create a stack",
-        "tags": [
-          "Stacks"
-        ],
+        "tags": ["Stacks"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10871,9 +10517,7 @@
           }
         ],
         "summary": "Delete a stack",
-        "tags": [
-          "Stacks"
-        ],
+        "tags": ["Stacks"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10929,9 +10573,7 @@
           }
         ],
         "summary": "Retrieve a stack",
-        "tags": [
-          "Stacks"
-        ],
+        "tags": ["Stacks"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -10997,9 +10639,7 @@
           }
         ],
         "summary": "Update a stack",
-        "tags": [
-          "Stacks"
-        ],
+        "tags": ["Stacks"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11059,9 +10699,7 @@
           }
         ],
         "summary": "Remove an asset from a stack",
-        "tags": [
-          "Stacks"
-        ],
+        "tags": ["Stacks"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11112,9 +10750,7 @@
           }
         ],
         "summary": "Delete acknowledgements",
-        "tags": [
-          "Sync"
-        ],
+        "tags": ["Sync"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11163,9 +10799,7 @@
           }
         ],
         "summary": "Retrieve acknowledgements",
-        "tags": [
-          "Sync"
-        ],
+        "tags": ["Sync"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11214,9 +10848,7 @@
           }
         ],
         "summary": "Acknowledge changes",
-        "tags": [
-          "Sync"
-        ],
+        "tags": ["Sync"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11275,10 +10907,7 @@
           }
         ],
         "summary": "Get delta sync for user",
-        "tags": [
-          "Sync",
-          "Deprecated"
-        ],
+        "tags": ["Sync", "Deprecated"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11335,10 +10964,7 @@
           }
         ],
         "summary": "Get full sync for user",
-        "tags": [
-          "Sync",
-          "Deprecated"
-        ],
+        "tags": ["Sync", "Deprecated"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11384,9 +11010,7 @@
           }
         ],
         "summary": "Stream sync changes",
-        "tags": [
-          "Sync"
-        ],
+        "tags": ["Sync"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11434,9 +11058,7 @@
           }
         ],
         "summary": "Get system configuration",
-        "tags": [
-          "System config"
-        ],
+        "tags": ["System config"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11493,9 +11115,7 @@
           }
         ],
         "summary": "Update system configuration",
-        "tags": [
-          "System config"
-        ],
+        "tags": ["System config"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11544,9 +11164,7 @@
           }
         ],
         "summary": "Get system configuration defaults",
-        "tags": [
-          "System config"
-        ],
+        "tags": ["System config"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11595,9 +11213,7 @@
           }
         ],
         "summary": "Get storage template options",
-        "tags": [
-          "System config"
-        ],
+        "tags": ["System config"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11646,9 +11262,7 @@
           }
         ],
         "summary": "Retrieve admin onboarding",
-        "tags": [
-          "System metadata"
-        ],
+        "tags": ["System metadata"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11698,9 +11312,7 @@
           }
         ],
         "summary": "Update admin onboarding",
-        "tags": [
-          "System metadata"
-        ],
+        "tags": ["System metadata"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11749,9 +11361,7 @@
           }
         ],
         "summary": "Retrieve reverse geocoding state",
-        "tags": [
-          "System metadata"
-        ],
+        "tags": ["System metadata"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11800,9 +11410,7 @@
           }
         ],
         "summary": "Retrieve version check state",
-        "tags": [
-          "System metadata"
-        ],
+        "tags": ["System metadata"],
         "x-immich-admin-only": true,
         "x-immich-history": [
           {
@@ -11854,9 +11462,7 @@
           }
         ],
         "summary": "Retrieve tags",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11912,9 +11518,7 @@
           }
         ],
         "summary": "Create a tag",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -11973,9 +11577,7 @@
           }
         ],
         "summary": "Upsert tags",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12033,9 +11635,7 @@
           }
         ],
         "summary": "Tag assets",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12086,9 +11686,7 @@
           }
         ],
         "summary": "Delete a tag",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12144,9 +11742,7 @@
           }
         ],
         "summary": "Retrieve a tag",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12212,9 +11808,7 @@
           }
         ],
         "summary": "Update a tag",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12285,9 +11879,7 @@
           }
         ],
         "summary": "Untag assets",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12356,9 +11948,7 @@
           }
         ],
         "summary": "Tag assets",
-        "tags": [
-          "Tags"
-        ],
+        "tags": ["Tags"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12536,9 +12126,7 @@
           }
         ],
         "summary": "Get time bucket",
-        "tags": [
-          "Timeline"
-        ],
+        "tags": ["Timeline"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12705,9 +12293,7 @@
           }
         ],
         "summary": "Get time buckets",
-        "tags": [
-          "Timeline"
-        ],
+        "tags": ["Timeline"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12751,9 +12337,7 @@
           }
         ],
         "summary": "Empty trash",
-        "tags": [
-          "Trash"
-        ],
+        "tags": ["Trash"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12801,9 +12385,7 @@
           }
         ],
         "summary": "Restore trash",
-        "tags": [
-          "Trash"
-        ],
+        "tags": ["Trash"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12861,9 +12443,7 @@
           }
         ],
         "summary": "Restore assets",
-        "tags": [
-          "Trash"
-        ],
+        "tags": ["Trash"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12914,9 +12494,7 @@
           }
         ],
         "summary": "Get all users",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -12964,9 +12542,7 @@
           }
         ],
         "summary": "Get current user",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13022,9 +12598,7 @@
           }
         ],
         "summary": "Update current user",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13065,9 +12639,7 @@
           }
         ],
         "summary": "Delete user product key",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13113,9 +12685,7 @@
           }
         ],
         "summary": "Retrieve user product key",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13171,9 +12741,7 @@
           }
         ],
         "summary": "Set user product key",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13214,9 +12782,7 @@
           }
         ],
         "summary": "Delete user onboarding",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13262,9 +12828,7 @@
           }
         ],
         "summary": "Retrieve user onboarding",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13320,9 +12884,7 @@
           }
         ],
         "summary": "Update user onboarding",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13370,9 +12932,7 @@
           }
         ],
         "summary": "Get my preferences",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13428,9 +12988,7 @@
           }
         ],
         "summary": "Update my preferences",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13471,9 +13029,7 @@
           }
         ],
         "summary": "Delete user profile image",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13530,9 +13086,7 @@
           }
         ],
         "summary": "Create user profile image",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13590,9 +13144,7 @@
           }
         ],
         "summary": "Retrieve a user",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13651,9 +13203,7 @@
           }
         ],
         "summary": "Retrieve user profile image",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13713,9 +13263,7 @@
           }
         ],
         "summary": "Retrieve assets by original path",
-        "tags": [
-          "Views"
-        ],
+        "tags": ["Views"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13765,9 +13313,7 @@
           }
         ],
         "summary": "Retrieve unique paths",
-        "tags": [
-          "Views"
-        ],
+        "tags": ["Views"],
         "x-immich-history": [
           {
             "version": "v1",
@@ -13817,9 +13363,7 @@
           }
         ],
         "summary": "List all workflows",
-        "tags": [
-          "Workflows"
-        ],
+        "tags": ["Workflows"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -13871,9 +13415,7 @@
           }
         ],
         "summary": "Create a workflow",
-        "tags": [
-          "Workflows"
-        ],
+        "tags": ["Workflows"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -13920,9 +13462,7 @@
           }
         ],
         "summary": "Delete a workflow",
-        "tags": [
-          "Workflows"
-        ],
+        "tags": ["Workflows"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -13974,9 +13514,7 @@
           }
         ],
         "summary": "Retrieve a workflow",
-        "tags": [
-          "Workflows"
-        ],
+        "tags": ["Workflows"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -14038,9 +13576,7 @@
           }
         ],
         "summary": "Update a workflow",
-        "tags": [
-          "Workflows"
-        ],
+        "tags": ["Workflows"],
         "x-immich-history": [
           {
             "version": "v2.3.0",
@@ -14220,7 +13756,7 @@
       "cookie": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "immich_access_token"
+        "name": "pizcloud_access_token"
       },
       "api_key": {
         "type": "apiKey",
@@ -14242,9 +13778,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "permissions"
-        ],
+        "required": ["permissions"],
         "type": "object"
       },
       "APIKeyCreateResponseDto": {
@@ -14256,10 +13790,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "apiKey",
-          "secret"
-        ],
+        "required": ["apiKey", "secret"],
         "type": "object"
       },
       "APIKeyResponseDto": {
@@ -14285,13 +13816,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "createdAt",
-          "id",
-          "name",
-          "permissions",
-          "updatedAt"
-        ],
+        "required": ["createdAt", "id", "name", "permissions", "updatedAt"],
         "type": "object"
       },
       "APIKeyUpdateDto": {
@@ -14330,10 +13855,7 @@
             ]
           }
         },
-        "required": [
-          "albumId",
-          "type"
-        ],
+        "required": ["albumId", "type"],
         "type": "object"
       },
       "ActivityResponseDto": {
@@ -14364,13 +13886,7 @@
             "$ref": "#/components/schemas/UserResponseDto"
           }
         },
-        "required": [
-          "assetId",
-          "createdAt",
-          "id",
-          "type",
-          "user"
-        ],
+        "required": ["assetId", "createdAt", "id", "type", "user"],
         "type": "object"
       },
       "ActivityStatisticsResponseDto": {
@@ -14382,10 +13898,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "comments",
-          "likes"
-        ],
+        "required": ["comments", "likes"],
         "type": "object"
       },
       "AddUsersDto": {
@@ -14398,9 +13911,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "albumUsers"
-        ],
+        "required": ["albumUsers"],
         "type": "object"
       },
       "AdminOnboardingUpdateDto": {
@@ -14409,9 +13920,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "isOnboarded"
-        ],
+        "required": ["isOnboarded"],
         "type": "object"
       },
       "AlbumResponseDto": {
@@ -14523,11 +14032,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "notShared",
-          "owned",
-          "shared"
-        ],
+        "required": ["notShared", "owned", "shared"],
         "type": "object"
       },
       "AlbumUserAddDto": {
@@ -14545,9 +14050,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "userId"
-        ],
+        "required": ["userId"],
         "type": "object"
       },
       "AlbumUserCreateDto": {
@@ -14564,10 +14067,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "role",
-          "userId"
-        ],
+        "required": ["role", "userId"],
         "type": "object"
       },
       "AlbumUserResponseDto": {
@@ -14583,17 +14083,11 @@
             "$ref": "#/components/schemas/UserResponseDto"
           }
         },
-        "required": [
-          "role",
-          "user"
-        ],
+        "required": ["role", "user"],
         "type": "object"
       },
       "AlbumUserRole": {
-        "enum": [
-          "editor",
-          "viewer"
-        ],
+        "enum": ["editor", "viewer"],
         "type": "string"
       },
       "AlbumsAddAssetsDto": {
@@ -14613,10 +14107,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "albumIds",
-          "assetIds"
-        ],
+        "required": ["albumIds", "assetIds"],
         "type": "object"
       },
       "AlbumsAddAssetsResponseDto": {
@@ -14632,9 +14123,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "success"
-        ],
+        "required": ["success"],
         "type": "object"
       },
       "AlbumsResponse": {
@@ -14648,9 +14137,7 @@
             "default": "desc"
           }
         },
-        "required": [
-          "defaultAssetOrder"
-        ],
+        "required": ["defaultAssetOrder"],
         "type": "object"
       },
       "AlbumsUpdate": {
@@ -14678,9 +14165,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "ids"
-        ],
+        "required": ["ids"],
         "type": "object"
       },
       "AssetBulkUpdateDto": {
@@ -14730,9 +14215,7 @@
             ]
           }
         },
-        "required": [
-          "ids"
-        ],
+        "required": ["ids"],
         "type": "object"
       },
       "AssetBulkUploadCheckDto": {
@@ -14744,9 +14227,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "assets"
-        ],
+        "required": ["assets"],
         "type": "object"
       },
       "AssetBulkUploadCheckItem": {
@@ -14759,10 +14240,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "checksum",
-          "id"
-        ],
+        "required": ["checksum", "id"],
         "type": "object"
       },
       "AssetBulkUploadCheckResponseDto": {
@@ -14774,18 +14252,13 @@
             "type": "array"
           }
         },
-        "required": [
-          "results"
-        ],
+        "required": ["results"],
         "type": "object"
       },
       "AssetBulkUploadCheckResult": {
         "properties": {
           "action": {
-            "enum": [
-              "accept",
-              "reject"
-            ],
+            "enum": ["accept", "reject"],
             "type": "string"
           },
           "assetId": {
@@ -14798,17 +14271,11 @@
             "type": "boolean"
           },
           "reason": {
-            "enum": [
-              "duplicate",
-              "unsupported-format"
-            ],
+            "enum": ["duplicate", "unsupported-format"],
             "type": "string"
           }
         },
-        "required": [
-          "action",
-          "id"
-        ],
+        "required": ["action", "id"],
         "type": "object"
       },
       "AssetCopyDto": {
@@ -14842,10 +14309,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "sourceId",
-          "targetId"
-        ],
+        "required": ["sourceId", "targetId"],
         "type": "object"
       },
       "AssetDeltaSyncDto": {
@@ -14862,10 +14326,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "updatedAfter",
-          "userIds"
-        ],
+        "required": ["updatedAfter", "userIds"],
         "type": "object"
       },
       "AssetDeltaSyncResponseDto": {
@@ -14886,11 +14347,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "deleted",
-          "needsFullSync",
-          "upserted"
-        ],
+        "required": ["deleted", "needsFullSync", "upserted"],
         "type": "object"
       },
       "AssetFaceCreateDto": {
@@ -14940,9 +14397,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "force"
-        ],
+        "required": ["force"],
         "type": "object"
       },
       "AssetFaceResponseDto": {
@@ -15006,9 +14461,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "data"
-        ],
+        "required": ["data"],
         "type": "object"
       },
       "AssetFaceUpdateItem": {
@@ -15022,10 +14475,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assetId",
-          "personId"
-        ],
+        "required": ["assetId", "personId"],
         "type": "object"
       },
       "AssetFaceWithoutPersonResponseDto": {
@@ -15090,10 +14540,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "limit",
-          "updatedUntil"
-        ],
+        "required": ["limit", "updatedUntil"],
         "type": "object"
       },
       "AssetIdsDto": {
@@ -15106,9 +14553,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "assetIds"
-        ],
+        "required": ["assetIds"],
         "type": "object"
       },
       "AssetIdsResponseDto": {
@@ -15117,21 +14562,14 @@
             "type": "string"
           },
           "error": {
-            "enum": [
-              "duplicate",
-              "no_permission",
-              "not_found"
-            ],
+            "enum": ["duplicate", "no_permission", "not_found"],
             "type": "string"
           },
           "success": {
             "type": "boolean"
           }
         },
-        "required": [
-          "assetId",
-          "success"
-        ],
+        "required": ["assetId", "success"],
         "type": "object"
       },
       "AssetJobName": {
@@ -15160,10 +14598,7 @@
             ]
           }
         },
-        "required": [
-          "assetIds",
-          "name"
-        ],
+        "required": ["assetIds", "name"],
         "type": "object"
       },
       "AssetMediaCreateDto": {
@@ -15276,32 +14711,19 @@
             ]
           }
         },
-        "required": [
-          "id",
-          "status"
-        ],
+        "required": ["id", "status"],
         "type": "object"
       },
       "AssetMediaSize": {
-        "enum": [
-          "fullsize",
-          "preview",
-          "thumbnail"
-        ],
+        "enum": ["fullsize", "preview", "thumbnail"],
         "type": "string"
       },
       "AssetMediaStatus": {
-        "enum": [
-          "created",
-          "replaced",
-          "duplicate"
-        ],
+        "enum": ["created", "replaced", "duplicate"],
         "type": "string"
       },
       "AssetMetadataKey": {
-        "enum": [
-          "mobile-app"
-        ],
+        "enum": ["mobile-app"],
         "type": "string"
       },
       "AssetMetadataResponseDto": {
@@ -15321,11 +14743,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "key",
-          "updatedAt",
-          "value"
-        ],
+        "required": ["key", "updatedAt", "value"],
         "type": "object"
       },
       "AssetMetadataUpsertDto": {
@@ -15337,9 +14755,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "type": "object"
       },
       "AssetMetadataUpsertItemDto": {
@@ -15355,10 +14771,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "key",
-          "value"
-        ],
+        "required": ["key", "value"],
         "type": "object"
       },
       "AssetOcrResponseDto": {
@@ -15444,10 +14857,7 @@
         "type": "object"
       },
       "AssetOrder": {
-        "enum": [
-          "asc",
-          "desc"
-        ],
+        "enum": ["asc", "desc"],
         "type": "string"
       },
       "AssetResponseDto": {
@@ -15652,11 +15062,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assetCount",
-          "id",
-          "primaryAssetId"
-        ],
+        "required": ["assetCount", "id", "primaryAssetId"],
         "type": "object"
       },
       "AssetStatsResponseDto": {
@@ -15671,38 +15077,19 @@
             "type": "integer"
           }
         },
-        "required": [
-          "images",
-          "total",
-          "videos"
-        ],
+        "required": ["images", "total", "videos"],
         "type": "object"
       },
       "AssetTypeEnum": {
-        "enum": [
-          "IMAGE",
-          "VIDEO",
-          "AUDIO",
-          "OTHER"
-        ],
+        "enum": ["IMAGE", "VIDEO", "AUDIO", "OTHER"],
         "type": "string"
       },
       "AssetVisibility": {
-        "enum": [
-          "archive",
-          "timeline",
-          "hidden",
-          "locked"
-        ],
+        "enum": ["archive", "timeline", "hidden", "locked"],
         "type": "string"
       },
       "AudioCodec": {
-        "enum": [
-          "mp3",
-          "aac",
-          "libopus",
-          "pcm_s16le"
-        ],
+        "enum": ["mp3", "aac", "libopus", "pcm_s16le"],
         "type": "string"
       },
       "AuthRegisterDto": {
@@ -15718,10 +15105,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "password"
-        ],
+        "required": ["email", "password"],
         "type": "object"
       },
       "AuthStatusResponseDto": {
@@ -15742,11 +15126,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "isElevated",
-          "password",
-          "pinCode"
-        ],
+        "required": ["isElevated", "password", "pinCode"],
         "type": "object"
       },
       "AvatarUpdate": {
@@ -15762,23 +15142,13 @@
         "type": "object"
       },
       "BulkIdErrorReason": {
-        "enum": [
-          "duplicate",
-          "no_permission",
-          "not_found",
-          "unknown"
-        ],
+        "enum": ["duplicate", "no_permission", "not_found", "unknown"],
         "type": "string"
       },
       "BulkIdResponseDto": {
         "properties": {
           "error": {
-            "enum": [
-              "duplicate",
-              "no_permission",
-              "not_found",
-              "unknown"
-            ],
+            "enum": ["duplicate", "no_permission", "not_found", "unknown"],
             "type": "string"
           },
           "id": {
@@ -15788,10 +15158,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "id",
-          "success"
-        ],
+        "required": ["id", "success"],
         "type": "object"
       },
       "BulkIdsDto": {
@@ -15804,9 +15171,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "ids"
-        ],
+        "required": ["ids"],
         "type": "object"
       },
       "CLIPConfig": {
@@ -15818,18 +15183,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "enabled",
-          "modelName"
-        ],
+        "required": ["enabled", "modelName"],
         "type": "object"
       },
       "CQMode": {
-        "enum": [
-          "auto",
-          "cqp",
-          "icq"
-        ],
+        "enum": ["auto", "cqp", "icq"],
         "type": "string"
       },
       "CastResponse": {
@@ -15839,9 +15197,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "gCastEnabled"
-        ],
+        "required": ["gCastEnabled"],
         "type": "object"
       },
       "CastUpdate": {
@@ -15868,10 +15224,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "newPassword",
-          "password"
-        ],
+        "required": ["newPassword", "password"],
         "type": "object"
       },
       "CheckExistingAssetsDto": {
@@ -15887,10 +15240,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "deviceAssetIds",
-          "deviceId"
-        ],
+        "required": ["deviceAssetIds", "deviceId"],
         "type": "object"
       },
       "CheckExistingAssetsResponseDto": {
@@ -15902,16 +15252,11 @@
             "type": "array"
           }
         },
-        "required": [
-          "existingIds"
-        ],
+        "required": ["existingIds"],
         "type": "object"
       },
       "Colorspace": {
-        "enum": [
-          "srgb",
-          "p3"
-        ],
+        "enum": ["srgb", "p3"],
         "type": "string"
       },
       "ContributorCountResponseDto": {
@@ -15923,10 +15268,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assetCount",
-          "userId"
-        ],
+        "required": ["assetCount", "userId"],
         "type": "object"
       },
       "CreateAlbumDto": {
@@ -15951,9 +15293,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "albumName"
-        ],
+        "required": ["albumName"],
         "type": "object"
       },
       "CreateLibraryDto": {
@@ -15982,9 +15322,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "ownerId"
-        ],
+        "required": ["ownerId"],
         "type": "object"
       },
       "CreateProfileImageDto": {
@@ -15994,9 +15332,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "file"
-        ],
+        "required": ["file"],
         "type": "object"
       },
       "CreateProfileImageResponseDto": {
@@ -16012,11 +15348,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "profileChangedAt",
-          "profileImagePath",
-          "userId"
-        ],
+        "required": ["profileChangedAt", "profileImagePath", "userId"],
         "type": "object"
       },
       "DatabaseBackupConfig": {
@@ -16032,11 +15364,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "cronExpression",
-          "enabled",
-          "keepLastAmount"
-        ],
+        "required": ["cronExpression", "enabled", "keepLastAmount"],
         "type": "object"
       },
       "DownloadArchiveInfo": {
@@ -16051,10 +15379,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "assetIds",
-          "size"
-        ],
+        "required": ["assetIds", "size"],
         "type": "object"
       },
       "DownloadInfoDto": {
@@ -16091,10 +15416,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "archiveSize",
-          "includeEmbeddedVideos"
-        ],
+        "required": ["archiveSize", "includeEmbeddedVideos"],
         "type": "object"
       },
       "DownloadResponseDto": {
@@ -16109,10 +15431,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "archives",
-          "totalSize"
-        ],
+        "required": ["archives", "totalSize"],
         "type": "object"
       },
       "DownloadUpdate": {
@@ -16139,10 +15458,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "enabled",
-          "maxDistance"
-        ],
+        "required": ["enabled", "maxDistance"],
         "type": "object"
       },
       "DuplicateResponseDto": {
@@ -16157,10 +15473,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assets",
-          "duplicateId"
-        ],
+        "required": ["assets", "duplicateId"],
         "type": "object"
       },
       "EmailNotificationsResponse": {
@@ -16175,11 +15488,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "albumInvite",
-          "albumUpdate",
-          "enabled"
-        ],
+        "required": ["albumInvite", "albumUpdate", "enabled"],
         "type": "object"
       },
       "EmailNotificationsUpdate": {
@@ -16321,9 +15630,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id"
-        ],
+        "required": ["id"],
         "type": "object"
       },
       "FacialRecognitionConfig": {
@@ -16371,10 +15678,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled",
-          "sidebarWeb"
-        ],
+        "required": ["enabled", "sidebarWeb"],
         "type": "object"
       },
       "FoldersUpdate": {
@@ -16389,10 +15693,7 @@
         "type": "object"
       },
       "ImageFormat": {
-        "enum": [
-          "jpeg",
-          "webp"
-        ],
+        "enum": ["jpeg", "webp"],
         "type": "string"
       },
       "JobCreateDto": {
@@ -16405,9 +15706,7 @@
             ]
           }
         },
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "type": "object"
       },
       "JobSettingsDto": {
@@ -16417,9 +15716,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "concurrency"
-        ],
+        "required": ["concurrency"],
         "type": "object"
       },
       "LibraryResponseDto": {
@@ -16495,12 +15792,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "photos",
-          "total",
-          "usage",
-          "videos"
-        ],
+        "required": ["photos", "total", "usage", "videos"],
         "type": "object"
       },
       "LicenseKeyDto": {
@@ -16513,10 +15805,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "activationKey",
-          "licenseKey"
-        ],
+        "required": ["activationKey", "licenseKey"],
         "type": "object"
       },
       "LicenseResponseDto": {
@@ -16533,22 +15822,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "activatedAt",
-          "activationKey",
-          "licenseKey"
-        ],
+        "required": ["activatedAt", "activationKey", "licenseKey"],
         "type": "object"
       },
       "LogLevel": {
-        "enum": [
-          "verbose",
-          "debug",
-          "log",
-          "warn",
-          "error",
-          "fatal"
-        ],
+        "enum": ["verbose", "debug", "log", "warn", "error", "fatal"],
         "type": "string"
       },
       "LoginCredentialDto": {
@@ -16563,10 +15841,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "password"
-        ],
+        "required": ["email", "password"],
         "type": "object"
       },
       "LoginResponseDto": {
@@ -16617,10 +15892,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "redirectUri",
-          "successful"
-        ],
+        "required": ["redirectUri", "successful"],
         "type": "object"
       },
       "MachineLearningAvailabilityChecksDto": {
@@ -16635,18 +15907,11 @@
             "type": "number"
           }
         },
-        "required": [
-          "enabled",
-          "interval",
-          "timeout"
-        ],
+        "required": ["enabled", "interval", "timeout"],
         "type": "object"
       },
       "MaintenanceAction": {
-        "enum": [
-          "start",
-          "end"
-        ],
+        "enum": ["start", "end"],
         "type": "string"
       },
       "MaintenanceAuthDto": {
@@ -16655,9 +15920,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "username"
-        ],
+        "required": ["username"],
         "type": "object"
       },
       "MaintenanceLoginDto": {
@@ -16705,14 +15968,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "city",
-          "country",
-          "id",
-          "lat",
-          "lon",
-          "state"
-        ],
+        "required": ["city", "country", "id", "lat", "lon", "state"],
         "type": "object"
       },
       "MapReverseGeocodeResponseDto": {
@@ -16730,11 +15986,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "city",
-          "country",
-          "state"
-        ],
+        "required": ["city", "country", "state"],
         "type": "object"
       },
       "MemoriesResponse": {
@@ -16748,10 +16000,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "duration",
-          "enabled"
-        ],
+        "required": ["duration", "enabled"],
         "type": "object"
       },
       "MemoriesUpdate": {
@@ -16797,11 +16046,7 @@
             ]
           }
         },
-        "required": [
-          "data",
-          "memoryAt",
-          "type"
-        ],
+        "required": ["data", "memoryAt", "type"],
         "type": "object"
       },
       "MemoryResponseDto": {
@@ -16874,11 +16119,7 @@
         "type": "object"
       },
       "MemorySearchOrder": {
-        "enum": [
-          "asc",
-          "desc",
-          "random"
-        ],
+        "enum": ["asc", "desc", "random"],
         "type": "string"
       },
       "MemoryStatisticsResponseDto": {
@@ -16887,15 +16128,11 @@
             "type": "integer"
           }
         },
-        "required": [
-          "total"
-        ],
+        "required": ["total"],
         "type": "object"
       },
       "MemoryType": {
-        "enum": [
-          "on_this_day"
-        ],
+        "enum": ["on_this_day"],
         "type": "string"
       },
       "MemoryUpdateDto": {
@@ -16924,9 +16161,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "ids"
-        ],
+        "required": ["ids"],
         "type": "object"
       },
       "MetadataSearchDto": {
@@ -17149,10 +16384,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "title",
-          "userId"
-        ],
+        "required": ["title", "userId"],
         "type": "object"
       },
       "NotificationDeleteAllDto": {
@@ -17165,9 +16397,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "ids"
-        ],
+        "required": ["ids"],
         "type": "object"
       },
       "NotificationDto": {
@@ -17207,22 +16437,11 @@
             ]
           }
         },
-        "required": [
-          "createdAt",
-          "id",
-          "level",
-          "title",
-          "type"
-        ],
+        "required": ["createdAt", "id", "level", "title", "type"],
         "type": "object"
       },
       "NotificationLevel": {
-        "enum": [
-          "success",
-          "error",
-          "warning",
-          "info"
-        ],
+        "enum": ["success", "error", "warning", "info"],
         "type": "string"
       },
       "NotificationType": {
@@ -17251,9 +16470,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "ids"
-        ],
+        "required": ["ids"],
         "type": "object"
       },
       "NotificationUpdateDto": {
@@ -17272,9 +16489,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "url"
-        ],
+        "required": ["url"],
         "type": "object"
       },
       "OAuthCallbackDto": {
@@ -17289,9 +16504,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "url"
-        ],
+        "required": ["url"],
         "type": "object"
       },
       "OAuthConfigDto": {
@@ -17306,16 +16519,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "redirectUri"
-        ],
+        "required": ["redirectUri"],
         "type": "object"
       },
       "OAuthTokenEndpointAuthMethod": {
-        "enum": [
-          "client_secret_post",
-          "client_secret_basic"
-        ],
+        "enum": ["client_secret_post", "client_secret_basic"],
         "type": "string"
       },
       "OcrConfig": {
@@ -17359,9 +16567,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "year"
-        ],
+        "required": ["year"],
         "type": "object"
       },
       "OnboardingDto": {
@@ -17370,9 +16576,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "isOnboarded"
-        ],
+        "required": ["isOnboarded"],
         "type": "object"
       },
       "OnboardingResponseDto": {
@@ -17381,9 +16585,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "isOnboarded"
-        ],
+        "required": ["isOnboarded"],
         "type": "object"
       },
       "PartnerCreateDto": {
@@ -17393,16 +16595,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "sharedWithId"
-        ],
+        "required": ["sharedWithId"],
         "type": "object"
       },
       "PartnerDirection": {
-        "enum": [
-          "shared-by",
-          "shared-with"
-        ],
+        "enum": ["shared-by", "shared-with"],
         "type": "string"
       },
       "PartnerResponseDto": {
@@ -17450,9 +16647,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "inTimeline"
-        ],
+        "required": ["inTimeline"],
         "type": "object"
       },
       "PeopleResponse": {
@@ -17466,10 +16661,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled",
-          "sidebarWeb"
-        ],
+        "required": ["enabled", "sidebarWeb"],
         "type": "object"
       },
       "PeopleResponseDto": {
@@ -17501,11 +16693,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "hidden",
-          "people",
-          "total"
-        ],
+        "required": ["hidden", "people", "total"],
         "type": "object"
       },
       "PeopleUpdate": {
@@ -17528,9 +16716,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "people"
-        ],
+        "required": ["people"],
         "type": "object"
       },
       "PeopleUpdateItem": {
@@ -17566,9 +16752,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id"
-        ],
+        "required": ["id"],
         "type": "object"
       },
       "Permission": {
@@ -17804,13 +16988,7 @@
             "x-immich-state": "Stable"
           }
         },
-        "required": [
-          "birthDate",
-          "id",
-          "isHidden",
-          "name",
-          "thumbnailPath"
-        ],
+        "required": ["birthDate", "id", "isHidden", "name", "thumbnailPath"],
         "type": "object"
       },
       "PersonStatisticsResponseDto": {
@@ -17819,9 +16997,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "assets"
-        ],
+        "required": ["assets"],
         "type": "object"
       },
       "PersonUpdateDto": {
@@ -17948,9 +17124,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "newPinCode"
-        ],
+        "required": ["newPinCode"],
         "type": "object"
       },
       "PinCodeResetDto": {
@@ -17972,9 +17146,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "pinCode"
-        ],
+        "required": ["pinCode"],
         "type": "object"
       },
       "PlacesResponseDto": {
@@ -17995,11 +17167,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "latitude",
-          "longitude",
-          "name"
-        ],
+        "required": ["latitude", "longitude", "name"],
         "type": "object"
       },
       "PluginActionResponseDto": {
@@ -18042,11 +17210,7 @@
         "type": "object"
       },
       "PluginContext": {
-        "enum": [
-          "asset",
-          "album",
-          "person"
-        ],
+        "enum": ["asset", "album", "person"],
         "type": "string"
       },
       "PluginFilterResponseDto": {
@@ -18142,10 +17306,7 @@
         "type": "object"
       },
       "PluginTriggerType": {
-        "enum": [
-          "AssetCreate",
-          "PersonRecognized"
-        ],
+        "enum": ["AssetCreate", "PersonRecognized"],
         "type": "string"
       },
       "PurchaseResponse": {
@@ -18157,10 +17318,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "hideBuyButtonUntil",
-          "showSupportBadge"
-        ],
+        "required": ["hideBuyButtonUntil", "showSupportBadge"],
         "type": "object"
       },
       "PurchaseUpdate": {
@@ -18175,13 +17333,7 @@
         "type": "object"
       },
       "QueueCommand": {
-        "enum": [
-          "start",
-          "pause",
-          "resume",
-          "empty",
-          "clear-failed"
-        ],
+        "enum": ["start", "pause", "resume", "empty", "clear-failed"],
         "type": "string"
       },
       "QueueCommandDto": {
@@ -18197,9 +17349,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "command"
-        ],
+        "required": ["command"],
         "type": "object"
       },
       "QueueName": {
@@ -18233,10 +17383,7 @@
             "$ref": "#/components/schemas/QueueStatusDto"
           }
         },
-        "required": [
-          "jobCounts",
-          "queueStatus"
-        ],
+        "required": ["jobCounts", "queueStatus"],
         "type": "object"
       },
       "QueueStatisticsDto": {
@@ -18279,10 +17426,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "isActive",
-          "isPaused"
-        ],
+        "required": ["isActive", "isPaused"],
         "type": "object"
       },
       "QueuesResponseDto": {
@@ -18511,9 +17655,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled"
-        ],
+        "required": ["enabled"],
         "type": "object"
       },
       "RatingsUpdate": {
@@ -18525,17 +17667,11 @@
         "type": "object"
       },
       "ReactionLevel": {
-        "enum": [
-          "album",
-          "asset"
-        ],
+        "enum": ["album", "asset"],
         "type": "string"
       },
       "ReactionType": {
-        "enum": [
-          "comment",
-          "like"
-        ],
+        "enum": ["comment", "like"],
         "type": "string"
       },
       "ReverseGeocodingStateResponseDto": {
@@ -18549,10 +17685,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "lastImportFileName",
-          "lastUpdate"
-        ],
+        "required": ["lastImportFileName", "lastUpdate"],
         "type": "object"
       },
       "SearchAlbumResponseDto": {
@@ -18576,12 +17709,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "count",
-          "facets",
-          "items",
-          "total"
-        ],
+        "required": ["count", "facets", "items", "total"],
         "type": "object"
       },
       "SearchAssetResponseDto": {
@@ -18609,13 +17737,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "count",
-          "facets",
-          "items",
-          "nextPage",
-          "total"
-        ],
+        "required": ["count", "facets", "items", "nextPage", "total"],
         "type": "object"
       },
       "SearchExploreItem": {
@@ -18627,10 +17749,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "data",
-          "value"
-        ],
+        "required": ["data", "value"],
         "type": "object"
       },
       "SearchExploreResponseDto": {
@@ -18645,10 +17764,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "fieldName",
-          "items"
-        ],
+        "required": ["fieldName", "items"],
         "type": "object"
       },
       "SearchFacetCountResponseDto": {
@@ -18660,10 +17776,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "count",
-          "value"
-        ],
+        "required": ["count", "value"],
         "type": "object"
       },
       "SearchFacetResponseDto": {
@@ -18678,10 +17791,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "counts",
-          "fieldName"
-        ],
+        "required": ["counts", "fieldName"],
         "type": "object"
       },
       "SearchResponseDto": {
@@ -18693,10 +17803,7 @@
             "$ref": "#/components/schemas/SearchAssetResponseDto"
           }
         },
-        "required": [
-          "albums",
-          "assets"
-        ],
+        "required": ["albums", "assets"],
         "type": "object"
       },
       "SearchStatisticsResponseDto": {
@@ -18705,9 +17812,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "total"
-        ],
+        "required": ["total"],
         "type": "object"
       },
       "SearchSuggestionType": {
@@ -18787,11 +17892,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "licensed",
-          "version",
-          "versionUrl"
-        ],
+        "required": ["licensed", "version", "versionUrl"],
         "type": "object"
       },
       "ServerApkLinksDto": {
@@ -18809,12 +17910,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "arm64v8a",
-          "armeabiv7a",
-          "universal",
-          "x86_64"
-        ],
+        "required": ["arm64v8a", "armeabiv7a", "universal", "x86_64"],
         "type": "object"
       },
       "ServerConfigDto": {
@@ -18956,11 +18052,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "image",
-          "sidecar",
-          "video"
-        ],
+        "required": ["image", "sidecar", "video"],
         "type": "object"
       },
       "ServerPingResponse": {
@@ -18971,9 +18063,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "res"
-        ],
+        "required": ["res"],
         "type": "object"
       },
       "ServerStatsResponseDto": {
@@ -19074,9 +18164,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "customCss"
-        ],
+        "required": ["customCss"],
         "type": "object"
       },
       "ServerVersionHistoryResponseDto": {
@@ -19092,11 +18180,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "createdAt",
-          "id",
-          "version"
-        ],
+        "required": ["createdAt", "id", "version"],
         "type": "object"
       },
       "ServerVersionResponseDto": {
@@ -19111,11 +18195,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "major",
-          "minor",
-          "patch"
-        ],
+        "required": ["major", "minor", "patch"],
         "type": "object"
       },
       "SessionCreateDto": {
@@ -19254,9 +18334,7 @@
             ]
           }
         },
-        "required": [
-          "action"
-        ],
+        "required": ["action"],
         "type": "object"
       },
       "SharedLinkCreateDto": {
@@ -19309,9 +18387,7 @@
             ]
           }
         },
-        "required": [
-          "type"
-        ],
+        "required": ["type"],
         "type": "object"
       },
       "SharedLinkEditDto": {
@@ -19429,10 +18505,7 @@
         "type": "object"
       },
       "SharedLinkType": {
-        "enum": [
-          "ALBUM",
-          "INDIVIDUAL"
-        ],
+        "enum": ["ALBUM", "INDIVIDUAL"],
         "type": "string"
       },
       "SharedLinksResponse": {
@@ -19446,10 +18519,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled",
-          "sidebarWeb"
-        ],
+        "required": ["enabled", "sidebarWeb"],
         "type": "object"
       },
       "SharedLinksUpdate": {
@@ -19479,11 +18549,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "name",
-          "password"
-        ],
+        "required": ["email", "name", "password"],
         "type": "object"
       },
       "SmartSearchDto": {
@@ -19639,11 +18705,7 @@
         "type": "object"
       },
       "SourceType": {
-        "enum": [
-          "machine-learning",
-          "exif",
-          "manual"
-        ],
+        "enum": ["machine-learning", "exif", "manual"],
         "type": "string"
       },
       "StackCreateDto": {
@@ -19658,9 +18720,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "assetIds"
-        ],
+        "required": ["assetIds"],
         "type": "object"
       },
       "StackResponseDto": {
@@ -19678,11 +18738,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assets",
-          "id",
-          "primaryAssetId"
-        ],
+        "required": ["assets", "id", "primaryAssetId"],
         "type": "object"
       },
       "StackUpdateDto": {
@@ -19848,10 +18904,7 @@
             ]
           }
         },
-        "required": [
-          "ack",
-          "type"
-        ],
+        "required": ["ack", "type"],
         "type": "object"
       },
       "SyncAckSetDto": {
@@ -19864,9 +18917,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "acks"
-        ],
+        "required": ["acks"],
         "type": "object"
       },
       "SyncAckV1": {
@@ -19879,9 +18930,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "albumId"
-        ],
+        "required": ["albumId"],
         "type": "object"
       },
       "SyncAlbumToAssetDeleteV1": {
@@ -19893,10 +18942,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "albumId",
-          "assetId"
-        ],
+        "required": ["albumId", "assetId"],
         "type": "object"
       },
       "SyncAlbumToAssetV1": {
@@ -19908,10 +18954,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "albumId",
-          "assetId"
-        ],
+        "required": ["albumId", "assetId"],
         "type": "object"
       },
       "SyncAlbumUserDeleteV1": {
@@ -19923,10 +18966,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "albumId",
-          "userId"
-        ],
+        "required": ["albumId", "userId"],
         "type": "object"
       },
       "SyncAlbumUserV1": {
@@ -19945,11 +18985,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "albumId",
-          "role",
-          "userId"
-        ],
+        "required": ["albumId", "role", "userId"],
         "type": "object"
       },
       "SyncAlbumV1": {
@@ -20008,9 +19044,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assetId"
-        ],
+        "required": ["assetId"],
         "type": "object"
       },
       "SyncAssetExifV1": {
@@ -20157,9 +19191,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assetFaceId"
-        ],
+        "required": ["assetFaceId"],
         "type": "object"
       },
       "SyncAssetFaceV1": {
@@ -20223,10 +19255,7 @@
             ]
           }
         },
-        "required": [
-          "assetId",
-          "key"
-        ],
+        "required": ["assetId", "key"],
         "type": "object"
       },
       "SyncAssetMetadataV1": {
@@ -20245,11 +19274,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "assetId",
-          "key",
-          "value"
-        ],
+        "required": ["assetId", "key", "value"],
         "type": "object"
       },
       "SyncAssetV1": {
@@ -20479,10 +19504,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assetId",
-          "memoryId"
-        ],
+        "required": ["assetId", "memoryId"],
         "type": "object"
       },
       "SyncMemoryAssetV1": {
@@ -20494,10 +19516,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "assetId",
-          "memoryId"
-        ],
+        "required": ["assetId", "memoryId"],
         "type": "object"
       },
       "SyncMemoryDeleteV1": {
@@ -20506,9 +19525,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "memoryId"
-        ],
+        "required": ["memoryId"],
         "type": "object"
       },
       "SyncMemoryV1": {
@@ -20590,10 +19607,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "sharedById",
-          "sharedWithId"
-        ],
+        "required": ["sharedById", "sharedWithId"],
         "type": "object"
       },
       "SyncPartnerV1": {
@@ -20608,11 +19622,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "inTimeline",
-          "sharedById",
-          "sharedWithId"
-        ],
+        "required": ["inTimeline", "sharedById", "sharedWithId"],
         "type": "object"
       },
       "SyncPersonDeleteV1": {
@@ -20621,9 +19631,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "personId"
-        ],
+        "required": ["personId"],
         "type": "object"
       },
       "SyncPersonV1": {
@@ -20714,9 +19722,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "stackId"
-        ],
+        "required": ["stackId"],
         "type": "object"
       },
       "SyncStackV1": {
@@ -20760,9 +19766,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "types"
-        ],
+        "required": ["types"],
         "type": "object"
       },
       "SyncUserDeleteV1": {
@@ -20771,9 +19775,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "userId"
-        ],
+        "required": ["userId"],
         "type": "object"
       },
       "SyncUserMetadataDeleteV1": {
@@ -20789,10 +19791,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "key",
-          "userId"
-        ],
+        "required": ["key", "userId"],
         "type": "object"
       },
       "SyncUserMetadataV1": {
@@ -20811,11 +19810,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "key",
-          "userId",
-          "value"
-        ],
+        "required": ["key", "userId", "value"],
         "type": "object"
       },
       "SyncUserV1": {
@@ -20867,9 +19862,7 @@
             "$ref": "#/components/schemas/DatabaseBackupConfig"
           }
         },
-        "required": [
-          "database"
-        ],
+        "required": ["database"],
         "type": "object"
       },
       "SystemConfigDto": {
@@ -21101,9 +20094,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "import"
-        ],
+        "required": ["import"],
         "type": "object"
       },
       "SystemConfigGeneratedFullsizeImageDto": {
@@ -21124,11 +20115,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "enabled",
-          "format",
-          "quality"
-        ],
+        "required": ["enabled", "format", "quality"],
         "type": "object"
       },
       "SystemConfigGeneratedImageDto": {
@@ -21150,11 +20137,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "format",
-          "quality",
-          "size"
-        ],
+        "required": ["format", "quality", "size"],
         "type": "object"
       },
       "SystemConfigImageDto": {
@@ -21256,10 +20239,7 @@
             "$ref": "#/components/schemas/SystemConfigLibraryWatchDto"
           }
         },
-        "required": [
-          "scan",
-          "watch"
-        ],
+        "required": ["scan", "watch"],
         "type": "object"
       },
       "SystemConfigLibraryScanDto": {
@@ -21271,10 +20251,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "cronExpression",
-          "enabled"
-        ],
+        "required": ["cronExpression", "enabled"],
         "type": "object"
       },
       "SystemConfigLibraryWatchDto": {
@@ -21283,9 +20260,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled"
-        ],
+        "required": ["enabled"],
         "type": "object"
       },
       "SystemConfigLoggingDto": {
@@ -21301,10 +20276,7 @@
             ]
           }
         },
-        "required": [
-          "enabled",
-          "level"
-        ],
+        "required": ["enabled", "level"],
         "type": "object"
       },
       "SystemConfigMachineLearningDto": {
@@ -21362,11 +20334,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "darkStyle",
-          "enabled",
-          "lightStyle"
-        ],
+        "required": ["darkStyle", "enabled", "lightStyle"],
         "type": "object"
       },
       "SystemConfigMetadataDto": {
@@ -21375,9 +20343,7 @@
             "$ref": "#/components/schemas/SystemConfigFacesDto"
           }
         },
-        "required": [
-          "faces"
-        ],
+        "required": ["faces"],
         "type": "object"
       },
       "SystemConfigNewVersionCheckDto": {
@@ -21386,9 +20352,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled"
-        ],
+        "required": ["enabled"],
         "type": "object"
       },
       "SystemConfigNightlyTasksDto": {
@@ -21428,9 +20392,7 @@
             "$ref": "#/components/schemas/SystemConfigSmtpDto"
           }
         },
-        "required": [
-          "smtp"
-        ],
+        "required": ["smtp"],
         "type": "object"
       },
       "SystemConfigOAuthDto": {
@@ -21527,9 +20489,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled"
-        ],
+        "required": ["enabled"],
         "type": "object"
       },
       "SystemConfigReverseGeocodingDto": {
@@ -21538,9 +20498,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled"
-        ],
+        "required": ["enabled"],
         "type": "object"
       },
       "SystemConfigServerDto": {
@@ -21556,11 +20514,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "externalDomain",
-          "loginPageMessage",
-          "publicUsers"
-        ],
+        "required": ["externalDomain", "loginPageMessage", "publicUsers"],
         "type": "object"
       },
       "SystemConfigSmtpDto": {
@@ -21578,12 +20532,7 @@
             "$ref": "#/components/schemas/SystemConfigSmtpTransportDto"
           }
         },
-        "required": [
-          "enabled",
-          "from",
-          "replyTo",
-          "transport"
-        ],
+        "required": ["enabled", "from", "replyTo", "transport"],
         "type": "object"
       },
       "SystemConfigSmtpTransportDto": {
@@ -21631,11 +20580,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "enabled",
-          "hashVerificationEnabled",
-          "template"
-        ],
+        "required": ["enabled", "hashVerificationEnabled", "template"],
         "type": "object"
       },
       "SystemConfigTemplateEmailsDto": {
@@ -21726,9 +20671,7 @@
             "$ref": "#/components/schemas/SystemConfigTemplateEmailsDto"
           }
         },
-        "required": [
-          "email"
-        ],
+        "required": ["email"],
         "type": "object"
       },
       "SystemConfigThemeDto": {
@@ -21737,9 +20680,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "customCss"
-        ],
+        "required": ["customCss"],
         "type": "object"
       },
       "SystemConfigTrashDto": {
@@ -21752,10 +20693,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "days",
-          "enabled"
-        ],
+        "required": ["days", "enabled"],
         "type": "object"
       },
       "SystemConfigUserDto": {
@@ -21765,9 +20703,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "deleteDelay"
-        ],
+        "required": ["deleteDelay"],
         "type": "object"
       },
       "TagBulkAssetsDto": {
@@ -21787,10 +20723,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "assetIds",
-          "tagIds"
-        ],
+        "required": ["assetIds", "tagIds"],
         "type": "object"
       },
       "TagBulkAssetsResponseDto": {
@@ -21799,9 +20732,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "count"
-        ],
+        "required": ["count"],
         "type": "object"
       },
       "TagCreateDto": {
@@ -21819,9 +20750,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "type": "object"
       },
       "TagResponseDto": {
@@ -21850,13 +20779,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "createdAt",
-          "id",
-          "name",
-          "updatedAt",
-          "value"
-        ],
+        "required": ["createdAt", "id", "name", "updatedAt", "value"],
         "type": "object"
       },
       "TagUpdateDto": {
@@ -21877,9 +20800,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "tags"
-        ],
+        "required": ["tags"],
         "type": "object"
       },
       "TagsResponse": {
@@ -21893,10 +20814,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "enabled",
-          "sidebarWeb"
-        ],
+        "required": ["enabled", "sidebarWeb"],
         "type": "object"
       },
       "TagsUpdate": {
@@ -21916,9 +20834,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "template"
-        ],
+        "required": ["template"],
         "type": "object"
       },
       "TemplateResponseDto": {
@@ -21930,10 +20846,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "html",
-          "name"
-        ],
+        "required": ["html", "name"],
         "type": "object"
       },
       "TestEmailResponseDto": {
@@ -21942,9 +20855,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "messageId"
-        ],
+        "required": ["messageId"],
         "type": "object"
       },
       "TimeBucketAssetResponseDto": {
@@ -22122,39 +21033,19 @@
             "type": "string"
           }
         },
-        "required": [
-          "count",
-          "timeBucket"
-        ],
+        "required": ["count", "timeBucket"],
         "type": "object"
       },
       "ToneMapping": {
-        "enum": [
-          "hable",
-          "mobius",
-          "reinhard",
-          "disabled"
-        ],
+        "enum": ["hable", "mobius", "reinhard", "disabled"],
         "type": "string"
       },
       "TranscodeHWAccel": {
-        "enum": [
-          "nvenc",
-          "qsv",
-          "vaapi",
-          "rkmpp",
-          "disabled"
-        ],
+        "enum": ["nvenc", "qsv", "vaapi", "rkmpp", "disabled"],
         "type": "string"
       },
       "TranscodePolicy": {
-        "enum": [
-          "all",
-          "optimal",
-          "bitrate",
-          "required",
-          "disabled"
-        ],
+        "enum": ["all", "optimal", "bitrate", "required", "disabled"],
         "type": "string"
       },
       "TrashResponseDto": {
@@ -22163,9 +21054,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "count"
-        ],
+        "required": ["count"],
         "type": "object"
       },
       "UpdateAlbumDto": {
@@ -22203,9 +21092,7 @@
             ]
           }
         },
-        "required": [
-          "role"
-        ],
+        "required": ["role"],
         "type": "object"
       },
       "UpdateAssetDto": {
@@ -22353,11 +21240,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "name",
-          "password"
-        ],
+        "required": ["email", "name", "password"],
         "type": "object"
       },
       "UserAdminDeleteDto": {
@@ -22538,19 +21421,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "activatedAt",
-          "activationKey",
-          "licenseKey"
-        ],
+        "required": ["activatedAt", "activationKey", "licenseKey"],
         "type": "object"
       },
       "UserMetadataKey": {
-        "enum": [
-          "preferences",
-          "license",
-          "onboarding"
-        ],
+        "enum": ["preferences", "license", "onboarding"],
         "type": "string"
       },
       "UserPreferencesResponseDto": {
@@ -22682,11 +21557,7 @@
         "type": "object"
       },
       "UserStatus": {
-        "enum": [
-          "active",
-          "removing",
-          "deleted"
-        ],
+        "enum": ["active", "removing", "deleted"],
         "type": "string"
       },
       "UserUpdateMeDto": {
@@ -22718,9 +21589,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "authStatus"
-        ],
+        "required": ["authStatus"],
         "type": "object"
       },
       "ValidateLibraryDto": {
@@ -22757,10 +21626,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "importPath",
-          "isValid"
-        ],
+        "required": ["importPath", "isValid"],
         "type": "object"
       },
       "ValidateLibraryResponseDto": {
@@ -22785,28 +21651,15 @@
             "type": "string"
           }
         },
-        "required": [
-          "checkedAt",
-          "releaseVersion"
-        ],
+        "required": ["checkedAt", "releaseVersion"],
         "type": "object"
       },
       "VideoCodec": {
-        "enum": [
-          "h264",
-          "hevc",
-          "vp9",
-          "av1"
-        ],
+        "enum": ["h264", "hevc", "vp9", "av1"],
         "type": "string"
       },
       "VideoContainer": {
-        "enum": [
-          "mov",
-          "mp4",
-          "ogg",
-          "webm"
-        ],
+        "enum": ["mov", "mp4", "ogg", "webm"],
         "type": "string"
       },
       "WorkflowActionItemDto": {
@@ -22819,9 +21672,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "actionId"
-        ],
+        "required": ["actionId"],
         "type": "object"
       },
       "WorkflowActionResponseDto": {
@@ -22843,13 +21694,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "actionConfig",
-          "actionId",
-          "id",
-          "order",
-          "workflowId"
-        ],
+        "required": ["actionConfig", "actionId", "id", "order", "workflowId"],
         "type": "object"
       },
       "WorkflowCreateDto": {
@@ -22883,12 +21728,7 @@
             ]
           }
         },
-        "required": [
-          "actions",
-          "filters",
-          "name",
-          "triggerType"
-        ],
+        "required": ["actions", "filters", "name", "triggerType"],
         "type": "object"
       },
       "WorkflowFilterItemDto": {
@@ -22901,9 +21741,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "filterId"
-        ],
+        "required": ["filterId"],
         "type": "object"
       },
       "WorkflowFilterResponseDto": {
@@ -22925,13 +21763,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "filterConfig",
-          "filterId",
-          "id",
-          "order",
-          "workflowId"
-        ],
+        "required": ["filterConfig", "filterId", "id", "order", "workflowId"],
         "type": "object"
       },
       "WorkflowResponseDto": {
@@ -22968,10 +21800,7 @@
             "type": "string"
           },
           "triggerType": {
-            "enum": [
-              "AssetCreate",
-              "PersonRecognized"
-            ],
+            "enum": ["AssetCreate", "PersonRecognized"],
             "type": "string"
           }
         },

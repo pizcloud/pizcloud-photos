@@ -28,7 +28,7 @@ test.describe('Maintenance', () => {
     const setCookie = await utils.enterMaintenance(admin.accessToken);
     const cookie = setCookie
       ?.map((cookie) => cookie.split(';')[0].split('='))
-      ?.find(([name]) => name === 'immich_maintenance_token');
+      ?.find(([name]) => name === 'pizcloud_maintenance_token');
 
     expect(cookie).toBeTruthy();
 

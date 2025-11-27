@@ -1,10 +1,10 @@
 import {
-  LoginResponseDto,
-  SystemConfigOAuthDto,
-  getConfigDefaults,
-  getMyUser,
-  startOAuth,
-  updateConfig,
+    LoginResponseDto,
+    SystemConfigOAuthDto,
+    getConfigDefaults,
+    getMyUser,
+    startOAuth,
+    updateConfig,
 } from '@immich/sdk';
 import { createHash, randomBytes } from 'node:crypto';
 import { errorDto } from 'src/responses';
@@ -182,7 +182,7 @@ describe(`/oauth`, () => {
       const { url, state, codeVerifier } = await loginWithOAuth('oauth-auto-register');
       const { status, body } = await request(app)
         .post('/oauth/callback')
-        .set('Cookie', [`immich_oauth_state=${state}`, `immich_oauth_code_verifier=${codeVerifier}`])
+        .set('Cookie', [`pizcloud_oauth_state=${state}`, `pizcloud_oauth_code_verifier=${codeVerifier}`])
         .send({ url });
       expect(status).toBe(201);
       expect(body).toMatchObject({

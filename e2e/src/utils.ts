@@ -487,7 +487,7 @@ export const utils = {
   setAuthCookies: async (context: BrowserContext, accessToken: string, domain = playwrightHost) =>
     await context.addCookies([
       {
-        name: 'immich_access_token',
+        name: 'pizcloud_access_token', // pizcloud
         value: accessToken,
         domain,
         path: '/',
@@ -497,7 +497,7 @@ export const utils = {
         sameSite: 'Lax',
       },
       {
-        name: 'immich_auth_type',
+        name: 'pizcloud_auth_type', // pizcloud
         value: 'password',
         domain,
         path: '/',
@@ -507,7 +507,7 @@ export const utils = {
         sameSite: 'Lax',
       },
       {
-        name: 'immich_is_authenticated',
+        name: 'pizcloud_is_authenticated', // pizcloud
         value: 'true',
         domain,
         path: '/',
@@ -521,7 +521,7 @@ export const utils = {
   setMaintenanceAuthCookie: async (context: BrowserContext, token: string, domain = '127.0.0.1') =>
     await context.addCookies([
       {
-        name: 'immich_maintenance_token',
+        name: 'pizcloud_maintenance_token', // pizcloud
         value: token,
         domain,
         path: '/',

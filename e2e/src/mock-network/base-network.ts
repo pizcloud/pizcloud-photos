@@ -4,7 +4,7 @@ import { playwrightHost } from 'playwright.config';
 export const setupBaseMockApiRoutes = async (context: BrowserContext, adminUserId: string) => {
   await context.addCookies([
     {
-      name: 'immich_is_authenticated',
+      name: 'pizcloud_is_authenticated',
       value: 'true',
       domain: playwrightHost,
       path: '/',

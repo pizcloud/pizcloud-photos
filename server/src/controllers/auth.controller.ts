@@ -48,6 +48,7 @@ export class AuthController {
         { key: ImmichCookie.AccessToken, value: body.accessToken },
         { key: ImmichCookie.AuthType, value: AuthType.Password },
         { key: ImmichCookie.IsAuthenticated, value: 'true' },
+        { key: ImmichCookie.UserId, value: body.userId }, // pizcloud
       ],
     });
   }

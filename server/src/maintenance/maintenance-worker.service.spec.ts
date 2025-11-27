@@ -67,7 +67,7 @@ describe(MaintenanceWorkerService.name, () => {
 
       await expect(
         sut.authenticate({
-          cookie: 'immich_maintenance_token=invalid-jwt',
+          cookie: 'pizcloud_maintenance_token=invalid-jwt',
         }),
       ).rejects.toThrowError(new UnauthorizedException('Invalid JWT Token'));
     });
