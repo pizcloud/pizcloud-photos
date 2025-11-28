@@ -2,10 +2,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 
-import 'package:immich_mobile/features/billing/entitlement_api_client.dart';
-import 'package:immich_mobile/features/billing/iap_service.dart';
-import 'package:immich_mobile/features/billing/billing_repository.dart';
-import 'package:immich_mobile/features/billing/billing_controller.dart';
+import 'package:immich_mobile/features/pizcloud/billing/entitlement_api_client.dart';
+import 'package:immich_mobile/features/pizcloud/billing/iap_service.dart';
+import 'package:immich_mobile/features/pizcloud/billing/billing_repository.dart';
+import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
 
 /// Separate configuration for the billing-service and Android package name
 class BillingConfig {
@@ -17,7 +17,6 @@ class BillingConfig {
 
 final billingConfigProvider = Provider<BillingConfig>((ref) {
   return const BillingConfig(
-    // billingBaseUrl: 'https://anhuynh-venus-series.tail015c11.ts.net:9443', // Ex: https://<url>
     androidPackageName: '', // Ex: com.<brand>.<proj>
   );
 });

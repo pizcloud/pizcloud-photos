@@ -19,9 +19,10 @@ import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 
-// New
+// pizcloud: new imports
 import 'package:immich_mobile/widgets/media_permissions/media_permission_banner.dart';
 import 'package:immich_mobile/widgets/media_permissions/media_permission_lifecycle_listener.dart';
+// #pizcloud
 
 @RoutePage()
 class TabShellPage extends ConsumerStatefulWidget {
@@ -100,7 +101,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                     children: [
                       navigationRail(tabsRouter),
                       const VerticalDivider(),
-                      // NEW
+                      // pizcloud: Media permission banner + child
                       Expanded(
                         child: Column(
                           children: [
@@ -109,6 +110,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                           ],
                         ),
                       ),
+                      // #pizcloud
                     ],
                   )
                 else

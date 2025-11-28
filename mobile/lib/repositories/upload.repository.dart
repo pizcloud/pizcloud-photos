@@ -24,7 +24,25 @@ class UploadRepository {
   void Function(TaskProgressUpdate)? onTaskProgress;
 
   UploadRepository() {
-    // New
+    // pizcloud
+
+    // FileDownloader().registerCallbacks(
+    //   group: kBackupGroup,
+    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
+    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
+    // );
+    // FileDownloader().registerCallbacks(
+    //   group: kBackupLivePhotoGroup,
+    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
+    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
+    // );
+    // FileDownloader().registerCallbacks(
+    //   group: kManualUploadGroup,
+    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
+    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
+    // );
+
+    // Handle 409 Conflict to mark upload as failed
     FileDownloader().registerCallbacks(
       group: kBackupGroup,
       taskStatusCallback: (update) {
@@ -74,23 +92,7 @@ class UploadRepository {
       },
       taskProgressCallback: (update) => onTaskProgress?.call(update),
     );
-    // ============================
-
-    // FileDownloader().registerCallbacks(
-    //   group: kBackupGroup,
-    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
-    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
-    // );
-    // FileDownloader().registerCallbacks(
-    //   group: kBackupLivePhotoGroup,
-    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
-    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
-    // );
-    // FileDownloader().registerCallbacks(
-    //   group: kManualUploadGroup,
-    //   taskStatusCallback: (update) => onUploadStatus?.call(update),
-    //   taskProgressCallback: (update) => onTaskProgress?.call(update),
-    // );
+    // #pizcloud
   }
 
   Future<void> enqueueBackground(UploadTask task) {

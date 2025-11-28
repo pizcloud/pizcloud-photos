@@ -53,8 +53,6 @@ class EntitlementApiClient {
   Future<Map<String, dynamic>> getUsage() async {
     final url = _join(immichBaseUrl, 'billing/usage');
     final h = _authOnly();
-    debugPrint('[billing] headers: $h');
-    debugPrint('[immichBaseUrl]: $immichBaseUrl');
 
     final res = await http.get(Uri.parse(url), headers: h);
     if (res.statusCode == 200) {

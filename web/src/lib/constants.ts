@@ -60,8 +60,7 @@ export enum AppRoute {
   TAGS = '/tags',
   LOCKED = '/locked',
 
-  // New
-  AUTH_USER_REGISTER = '/auth/user-register',
+  AUTH_USER_REGISTER = '/auth/pizcloud/user-register', //pizcloud
 }
 
 export enum ProjectionType {

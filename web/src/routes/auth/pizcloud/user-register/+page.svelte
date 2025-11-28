@@ -1,12 +1,9 @@
-<!-- web/src/routes/auth/user-register/+page.svelte -->
+<!-- web/src/routes/auth/pizcloud/user-register/+page.svelte -->
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { AppRoute } from '$lib/constants';
-  import { eventManager } from '$lib/managers/event-manager.svelte';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
-  import { type LoginResponseDto } from '@immich/sdk';
   import { Alert, Button, Field, Input, PasswordInput, Stack } from '@immich/ui';
   import { locale, t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -22,14 +19,6 @@
   let errorMessage = $state('');
   let successMessage = $state('');
   let loading = $state(false);
-
-  const onSuccess = async (user: LoginResponseDto) => {
-    await goto(data.continueUrl, { invalidateAll: true });
-    eventManager.emit('auth.login', user);
-  };
-
-  const onFirstLogin = () => goto(AppRoute.AUTH_CHANGE_PASSWORD);
-  const onOnboarding = () => goto(AppRoute.AUTH_ONBOARDING);
 
   const registerRequest = async (payload: { email: string; password: string; name?: string }) => {
     const res = await fetch('/api/auth/register', {
@@ -98,30 +87,10 @@
 
       password = '';
       confirm = '';
-
-      // const user = await login({ loginCredentialDto: { email, password } });
-
-      // if (user.isAdmin && user.isOnboarded === false) {
-      //   await onOnboarding();
-      //   return;
-      // }
-
-      // if (!user.isAdmin && user.shouldChangePassword) {
-      //   await onFirstLogin();
-      //   return;
-      // }
-
-      // if (!user.isOnboarded) {
-      //   await onOnboarding();
-      //   return;
-      // }
-
-      // await onSuccess(user);
     } catch (err) {
       const status = (err as any)?.status as number | undefined;
       const rawMsg = String((err as any)?.message ?? getServerErrorMessage(err) ?? '').trim();
       const msg = rawMsg.toLowerCase();
-      console.log('msg', msg);
       if (
         status === 409 ||
         /user\s+exist/i.test(msg) ||

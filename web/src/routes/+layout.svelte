@@ -101,8 +101,7 @@
     }
   };
 
-  // New
-  // $effect(() => void handleRelease($release));
+  // $effect(() => void handleRelease($release));   // pizcloud
 </script>
 
 <svelte:head>

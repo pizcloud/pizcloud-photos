@@ -179,7 +179,7 @@ export class AuthController {
     return this.service.lockSession(auth);
   }
 
-  // NEW: Public self-signup
+  // pizcloud: public self-signup
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: AuthRegisterDto): Promise<Pick<UserAdminResponseDto, 'id' | 'email' | 'name'>> {

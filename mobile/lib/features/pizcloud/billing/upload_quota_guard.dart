@@ -1,5 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:immich_mobile/providers/billing.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/billing.provider.dart';
 
 class UploadQuotaGuard {
   UploadQuotaGuard(this.ref);

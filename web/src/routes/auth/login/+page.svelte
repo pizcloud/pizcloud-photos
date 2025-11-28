@@ -28,10 +28,11 @@
   let loading = $state(false);
   let oauthLoading = $state(true);
 
-  // New
+  // pizcloud:
   let successMessage: string = $state('');
   let needsEmailVerification = $state(false);
   let resendLoading = $state(false);
+  // #pizcloud
 
   const serverConfig = $derived(serverConfigManager.value);
 
@@ -84,7 +85,7 @@
     oauthLoading = false;
   });
 
-  // New
+  // pizcloud
   const checkEmailVerification = async (): Promise<boolean> => {
     const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
     if (!baseUrl || !email) {
@@ -155,6 +156,7 @@
       resendLoading = false;
     }
   };
+  // #pizcloud
 
   const handleLogin = async () => {
     try {
@@ -164,12 +166,13 @@
       loading = true;
       const user = await login({ loginCredentialDto: { email, password } });
 
-      // New - Call to check if the email has been verified
+      // pizcloud: call to check if the email has been verified
       const ok = await checkEmailVerification();
       if (!ok) {
         loading = false;
         return;
       }
+      // #pizcloud
 
       if (user.isAdmin && !serverConfig.isOnboarded) {
         await onOnboarding();
@@ -229,9 +232,11 @@
           <Alert color="danger" title={errorMessage} closable />
         {/if}
 
+        <!-- pizcloud -->
         {#if successMessage}
           <Alert color="primary" title={successMessage} closable />
         {/if}
+        <!-- #pizcloud -->
 
         <Field label={$t('email')}>
           <Input id="email" name="email" type="email" autocomplete="email" bind:value={email} />
@@ -243,6 +248,7 @@
 
         <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">{$t('to_login')}</Button>
 
+        <!-- pizcloud -->
         {#if needsEmailVerification}
           <Button
             type="button"
@@ -256,6 +262,7 @@
             {$t('resend_verification_email')}
           </Button>
         {/if}
+        <!-- #pizcloud -->
       </form>
     {/if}
 

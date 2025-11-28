@@ -17,6 +17,7 @@ import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:openapi/api.dart';
 import 'package:immich_mobile/config/app_config.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
@@ -113,10 +114,12 @@ class SignupPage extends HookConsumerWidget {
             toastType: ToastType.success,
           );
         } else {
-          debugPrint(
-            'Failed to send verification email: '
-            'status=${response.statusCode} body=${response.body}',
-          );
+          if (kDebugMode) {
+            debugPrint(
+              'Failed to send verification email: '
+              'status=${response.statusCode} body=${response.body}',
+            );
+          }
 
           ImmichToast.show(
             context: context,
@@ -124,22 +127,6 @@ class SignupPage extends HookConsumerWidget {
             toastType: ToastType.error,
           );
         }
-
-        // // Auto-login
-        // final loginRes = await ref.read(authProvider.notifier).login(email, password);
-        // if (loginRes.accessToken.isEmpty) {
-        //   ImmichToast.show(
-        //     context: context,
-        //     msg: "registration_successful_but_automatic_login_failed".tr(),
-        //     toastType: ToastType.error,
-        //   );
-        //   return;
-        // }
-
-        // ImmichToast.show(context: context, msg: "registration_successful".tr(), toastType: ToastType.success);
-
-        // // Post-login flow
-        // await _postLoginFlow(context, ref);
       } on ApiException catch (e) {
         String msg = "registration_failed".tr();
         if (e.code == 409) {

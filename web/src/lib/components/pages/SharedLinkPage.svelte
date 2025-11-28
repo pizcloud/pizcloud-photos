@@ -2,7 +2,7 @@
   import AlbumViewer from '$lib/components/album-page/album-viewer.svelte';
   import IndividualSharedViewer from '$lib/components/share-page/individual-shared-viewer.svelte';
   import ControlAppBar from '$lib/components/shared-components/control-app-bar.svelte';
-  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud-logo-small-link.svelte';
+  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud/pizcloud-logo-small-link.svelte';
   import ThemeButton from '$lib/components/shared-components/theme-button.svelte';
   import { assetViewingStore } from '$lib/stores/asset-viewing.store';
   import { user } from '$lib/stores/user.store';

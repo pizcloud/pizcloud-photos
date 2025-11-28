@@ -29,7 +29,7 @@ import 'package:immich_mobile/utils/url_helper.dart';
 import 'package:immich_mobile/utils/version_compatibility.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
-import 'package:immich_mobile/widgets/common/pizcloud_logo.dart';
+import 'package:immich_mobile/widgets/common/pizcloud/pizcloud_logo.dart';
 import 'package:immich_mobile/widgets/forms/login/email_input.dart';
 import 'package:immich_mobile/widgets/forms/login/loading_icon.dart';
 import 'package:immich_mobile/widgets/forms/login/login_button.dart';
@@ -43,19 +43,18 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'package:http/http.dart' as http;
 
-// New
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // pizcloud
 
 class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});
 
   final log = Logger('LoginForm');
 
-  // Change
+  // pizcloud: bootstrap state
   final isBootstrapping = useState<bool>(false);
   final lastBootstrapFailed = useState<bool>(false);
 
-  // ==============================
+  // #pizcloud
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,9 +75,9 @@ class LoginForm extends HookConsumerWidget {
     final loginFormKey = GlobalKey<FormState>();
     final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
 
-    // Change
-    final needsVerification = useState<bool>(false);
+    final needsVerification = useState<bool>(false); // pizcloud: new email verification state
 
+    // pizcloud: hide check version mismatch
     // checkVersionMismatch() async {
     //   try {
     //     final packageInfo = await PackageInfo.fromPlatform();
@@ -98,6 +97,7 @@ class LoginForm extends HookConsumerWidget {
     //     warningMessage.value = 'Error checking version compatibility';
     //   }
     // }
+    // #pizcloud
 
     /// Fetch the server login credential and enables oAuth login if necessary
     /// Returns true if successful, false otherwise
@@ -112,9 +112,8 @@ class LoginForm extends HookConsumerWidget {
 
       try {
         isLoadingServer.value = true;
-        // Change
-        warningMessage.value = null;
-        // ==============================
+
+        warningMessage.value = null; // pizcloud
 
         final endpoint = await ref.read(authProvider.notifier).validateServerUrl(serverUrl);
 
@@ -129,7 +128,7 @@ class LoginForm extends HookConsumerWidget {
         isPasswordLoginEnable.value = features.passwordLogin;
         oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty ? config.oauthButtonText : 'OAuth';
 
-        // Change
+        // pizcloud: hide check version mismatch
         // try {
         //   final packageInfo = await PackageInfo.fromPlatform();
         //   final appVersion = packageInfo.version;
@@ -141,13 +140,11 @@ class LoginForm extends HookConsumerWidget {
         // } catch (_) {
         //   warningMessage.value = 'Error checking version compatibility';
         // }
-        // ==============================
+        // #pizcloud
 
         serverEndpoint.value = endpoint;
       } on ApiException catch (e) {
-        // Change
-        lastBootstrapFailed.value = true;
-        // ==============================
+        lastBootstrapFailed.value = true; // pizcloud
 
         ImmichToast.show(
           context: context,
@@ -183,7 +180,16 @@ class LoginForm extends HookConsumerWidget {
       isLoadingServer.value = false;
     }
 
-    // Change
+    // pizcloud
+
+    // useEffect(() {
+    //   final serverUrl = getServerUrl();
+    //   if (serverUrl != null) {
+    //     serverEndpointController.text = serverUrl;
+    //   }
+    //   return null;
+    // }, []);
+
     String ensureApiSuffix(String url) {
       final u = url.trim().replaceAll(RegExp(r'/+$'), '');
       if (u.endsWith('/api')) return u;
@@ -234,15 +240,7 @@ class LoginForm extends HookConsumerWidget {
       }
       return null;
     }, []);
-    // ==============================
-
-    // useEffect(() {
-    //   final serverUrl = getServerUrl();
-    //   if (serverUrl != null) {
-    //     serverEndpointController.text = serverUrl;
-    //   }
-    //   return null;
-    // }, []);
+    // #pizcloud
 
     populateTestLoginInfo() {
       emailController.text = 'demo@immich.app';
@@ -317,7 +315,7 @@ class LoginForm extends HookConsumerWidget {
 
     bool isSyncRemoteDeletionsMode() => Platform.isAndroid && Store.get(StoreKey.manageLocalMediaAndroid, false);
 
-    // New
+    // pizcloud: new email verification flow
     Future<bool> ensureEmailVerified(String email) async {
       final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
       if (base.isEmpty) {
@@ -345,10 +343,6 @@ class LoginForm extends HookConsumerWidget {
           needsVerification.value = false;
           return true;
         } else {
-          debugPrint(
-            'Failed to check email verification status: '
-            '${resp.statusCode} ${resp.body}',
-          );
           needsVerification.value = false;
           ImmichToast.show(
             context: context,
@@ -359,7 +353,6 @@ class LoginForm extends HookConsumerWidget {
           return false;
         }
       } catch (e, st) {
-        debugPrint('Error checking email verification status: $e\n$st');
         needsVerification.value = false;
         ImmichToast.show(
           context: context,
@@ -417,10 +410,6 @@ class LoginForm extends HookConsumerWidget {
           );
           needsVerification.value = false;
         } else {
-          debugPrint(
-            'Failed to resend verification email: '
-            '${resp.statusCode} ${resp.body}',
-          );
           ImmichToast.show(
             context: context,
             msg: "errors.resend_verification_email_failed".tr(),
@@ -429,7 +418,6 @@ class LoginForm extends HookConsumerWidget {
           );
         }
       } catch (e, st) {
-        debugPrint('Error resending verification email: $e\n$st');
         ImmichToast.show(
           context: context,
           msg: "errors.resend_verification_email_failed".tr(),
@@ -438,6 +426,7 @@ class LoginForm extends HookConsumerWidget {
         );
       }
     }
+    // #pizcloud
 
     login() async {
       TextInput.finishAutofillContext();
@@ -448,16 +437,16 @@ class LoginForm extends HookConsumerWidget {
       invalidateAllApiRepositoryProviders(ref);
 
       try {
-        // New
-        final email = emailController.text.trim();
+        final email = emailController.text.trim(); // pizcloud: get email before login
 
         final result = await ref.read(authProvider.notifier).login(emailController.text, passwordController.text);
 
-        // New - Call to check if the email has been verified
+        // pizcloud: call to check if the email has been verified
         final ok = await ensureEmailVerified(email);
         if (!ok) {
           return;
         }
+        // #pizcloud
 
         if (result.shouldChangePassword && !result.isAdmin) {
           unawaited(context.pushRoute(const ChangePasswordRoute()));
@@ -656,8 +645,7 @@ class LoginForm extends HookConsumerWidget {
     }
 
     buildVersionCompatWarning() {
-      // Change
-      // checkVersionMismatch();
+      // checkVersionMismatch(); // pizcloud: hide check version mismatch
 
       if (warningMessage.value == null) {
         return const SizedBox.shrink();
@@ -757,7 +745,9 @@ class LoginForm extends HookConsumerWidget {
       );
     }
 
-    // Change
+    // pizcloud
+    // final serverSelectionOrLogin = serverEndpoint.value == null ? buildSelectServer() : buildLogin();
+
     final bool hasDefault = AppConfig.defaultServer.trim().isNotEmpty;
     Widget serverSelectionOrLogin;
 
@@ -794,10 +784,7 @@ class LoginForm extends HookConsumerWidget {
     } else {
       serverSelectionOrLogin = buildLogin();
     }
-
-    // ==============================
-
-    // final serverSelectionOrLogin = serverEndpoint.value == null ? buildSelectServer() : buildLogin();
+    // #pizcloud
 
     return LayoutBuilder(
       builder: (context, constraints) {

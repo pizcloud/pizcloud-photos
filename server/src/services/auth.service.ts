@@ -585,7 +585,7 @@ export class AuthService extends BaseService {
     };
   }
 
-  // New
+  // pizcloud: public self-signup
   async userRegister(dto: AuthRegisterDto, userAdminService: UserAdminService): Promise<Pick<UserAdminResponseDto, 'id' | 'email' | 'name'>> {
     if (!USER_SIGNUP_ENABLED) {
       throw new ForbiddenException('User self-signup is disabled');
@@ -624,4 +624,5 @@ export class AuthService extends BaseService {
       throw new BadRequestException(msg || 'Registration failed');
     }
   }
+  // #pizcloud
 }

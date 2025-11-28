@@ -21,7 +21,7 @@ import UIKit
     GeneratedPluginRegistrant.register(with: self)
     let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
 
-    // New
+    // pizcloud: App Store receipt method channel
     let channel = FlutterMethodChannel(name: "com.yourbrand.iap/receipt", binaryMessenger: controller.binaryMessenger)
     channel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
       if call.method == "getAppStoreReceiptBase64" {
@@ -30,6 +30,7 @@ import UIKit
         result(FlutterMethodNotImplemented)
       }
     }
+    // #pizcloud
 
     AppDelegate.registerPlugins(with: controller.engine)
     BackgroundServicePlugin.register(with: self.registrar(forPlugin: "BackgroundServicePlugin")!)

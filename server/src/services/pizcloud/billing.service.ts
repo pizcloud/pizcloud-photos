@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { getGoogleAccessToken } from 'src/services/google-auth';
+import { getGoogleAccessToken } from 'src/services/pizcloud/google-auth';
 import { UserAdminService } from 'src/services/user-admin.service';
 
 export type Period = 'monthly' | 'yearly';

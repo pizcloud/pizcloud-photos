@@ -2,7 +2,7 @@
   import { Card, CardBody, CardHeader, Heading, VStack } from '@immich/ui';
   import type { Snippet } from 'svelte';
 
-  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
 
   import bgDarkUrl from '$lib/assets/pizcloud-logo-inline-dark.svg';
   import bgLightUrl from '$lib/assets/pizcloud-logo-inline-light.svg';

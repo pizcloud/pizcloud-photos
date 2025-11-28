@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
-  import PizcloudLogo from '../pizcloud-logo.svelte';
+  import PizcloudLogo from '../pizcloud/pizcloud-logo.svelte';
 
   interface Props {
     centered?: boolean;

@@ -57,14 +57,15 @@ export class UserAdminService extends BaseService {
       throw new BadRequestException('Admin status can only be changed by another admin');
     }
 
-    // New
-    if (dto.quotaSizeInBytes !== undefined && user.quotaSizeInBytes !== dto.quotaSizeInBytes) {
-      await this.userRepository.syncUsage(id);
-    }
+    // pizcloud: sync usage if quota changes
 
     // if (dto.quotaSizeInBytes && user.quotaSizeInBytes !== dto.quotaSizeInBytes) {
     //   await this.userRepository.syncUsage(id);
     // }
+    if (dto.quotaSizeInBytes !== undefined && user.quotaSizeInBytes !== dto.quotaSizeInBytes) {
+      await this.userRepository.syncUsage(id);
+    }
+    // #pizcloud
 
     if (dto.email) {
       const duplicate = await this.userRepository.getByEmail(dto.email);
@@ -163,9 +164,9 @@ export class UserAdminService extends BaseService {
     return user;
   }
 
-  // New
+  // pizcloud
   /**
-   * Update quotaSizeInBytes for the user according to the Immich standard:
+   * Update quotaSizeInBytes for the user according to the PizCloud standard:
    *  - null  => unlimited
    *  - 0     => no-upload
    *  - >0    => limit (bytes)
@@ -189,5 +190,5 @@ export class UserAdminService extends BaseService {
       updatedAt: new Date(),
     });
   }
-  // ============================
+  // #pizcloud
 }

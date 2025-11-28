@@ -7,7 +7,7 @@
   import { clickOutside } from '$lib/actions/click-outside';
   import CastButton from '$lib/cast/cast-button.svelte';
   import NotificationPanel from '$lib/components/shared-components/navigation-bar/notification-panel.svelte';
-  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
   import SearchBar from '$lib/components/shared-components/search-bar/search-bar.svelte';
   import { AppRoute } from '$lib/constants';
   import SkipLink from '$lib/elements/SkipLink.svelte';
