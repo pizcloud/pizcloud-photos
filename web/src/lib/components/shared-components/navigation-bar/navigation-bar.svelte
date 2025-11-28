@@ -7,7 +7,7 @@
   import { clickOutside } from '$lib/actions/click-outside';
   import CastButton from '$lib/cast/cast-button.svelte';
   import NotificationPanel from '$lib/components/shared-components/navigation-bar/notification-panel.svelte';
-  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
   import SearchBar from '$lib/components/shared-components/search-bar/search-bar.svelte';
   import { AppRoute } from '$lib/constants';
   import SkipLink from '$lib/elements/SkipLink.svelte';
@@ -79,7 +79,10 @@
       />
       <a data-sveltekit-preload-data="hover" href={AppRoute.PHOTOS}>
         <!-- <Logo variant={mobileDevice.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" /> -->
-        <PizcloudLogo class="w-40 h-[50px]" noText={!mobileDevice.isFullSidebar} />
+        <PizcloudLogo
+          class="object-contain w-20 h-[40px] sm:w-20 sm:h-[40px] md:w-20 md:h-[50px] min-[850px]:w-40 min-[850px]:h-[50px] lg:w-40 lg:h-[50px]"
+          noText={!mobileDevice.isFullSidebar}
+        />
       </a>
     </div>
     <div class="flex justify-between gap-4 lg:gap-8 pe-6">

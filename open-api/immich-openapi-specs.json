@@ -4275,21 +4275,26 @@
         "tags": ["Billing"]
       }
     },
-    "/billing/entitlements/webhook": {
+    "/billing/iap/android/verify": {
       "post": {
-        "operationId": "webhook",
-        "parameters": [
-          {
-            "name": "authorization",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "operationId": "verifyAndroid",
+        "parameters": [],
         "responses": {
-          "201": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/iap/ios/verify": {
+      "post": {
+        "operationId": "verifyIOS",
+        "parameters": [],
+        "responses": {
+          "200": {
             "description": ""
           }
         },

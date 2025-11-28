@@ -43,10 +43,13 @@
   <img src={darkUrl} {alt} {title} class={`block ${cssClass || ''}`} {decoding} {loading} />
 {:else}
   <!-- AUTO: prefers-color-scheme-based swap (no Tailwind .dark required) -->
-  <picture class={`block ${cssClass || ''}`} aria-label={alt} {title}>
+  <img src={lightUrl} {alt} {title} {decoding} {loading} class={`block dark:hidden ${cssClass || ''}`} />
+  <img src={darkUrl} {alt} {title} {decoding} {loading} class={`hidden dark:block ${cssClass || ''}`} />
+
+  <!-- <picture class={`block ${cssClass || ''}`} aria-label={alt} {title}>
     <source srcset={darkUrl} media="(prefers-color-scheme: dark)" />
     <img src={lightUrl} {alt} {decoding} {loading} class="block" />
-  </picture>
+  </picture> -->
 {/if}
 
 <style>

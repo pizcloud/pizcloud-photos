@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import type { Action } from '$lib/components/asset-viewer/actions/action';
-  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud-logo-small-link.svelte';
+  import PizcloudLogoSmallLink from '$lib/components/shared-components/pizcloud/pizcloud-logo-small-link.svelte';
   import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
   import RemoveFromSharedLink from '$lib/components/timeline/actions/RemoveFromSharedLinkAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';

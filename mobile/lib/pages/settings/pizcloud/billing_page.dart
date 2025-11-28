@@ -3,8 +3,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-// import 'package:immich_mobile/features/billing/billing_controller.dart';
-import 'package:immich_mobile/providers/billing.provider.dart';
+// import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
+import 'package:immich_mobile/providers/pizcloud/billing.provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// ===============================================================

@@ -19,10 +19,11 @@ import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/widgets/backup/drift_album_info_list_tile.dart';
 import 'package:immich_mobile/widgets/common/search_field.dart';
 import 'package:logging/logging.dart';
-// New
+
+// pizcloud: new imports
 import '../../providers/media_permission.provider.dart';
-import 'package:immich_mobile/services/limited_picker_backup.service.dart';
 import 'package:immich_mobile/services/media_permission_service.dart';
+// #pizcloud
 
 @RoutePage()
 class DriftBackupAlbumSelectionPage extends ConsumerStatefulWidget {
@@ -100,9 +101,10 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
     final selectedBackupAlbums = albums.where((album) => album.backupSelection == BackupSelection.selected).toList();
     final excludedBackupAlbums = albums.where((album) => album.backupSelection == BackupSelection.excluded).toList();
 
-    // New
+    // pizcloud: media permission state
     final mediaPermState = ref.watch(mediaPermissionProvider);
     final showLimitedBanner = _shouldShow(mediaPermState);
+    // #pizcloud
 
     return PopScope(
       canPop: false,
@@ -282,36 +284,36 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                       if (Platform.isAndroid)
                         _SelectAllButton(filteredAlbums: filteredAlbums, selectedBackupAlbums: selectedBackupAlbums),
 
-                      // ========== New Button - Add photos ==========
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.add_photo_alternate_outlined),
-                          onPressed: () async {
-                            final success = await ref
-                                .read(limitedPickerBackupServiceProvider)
-                                .pickAndUploadFromSystemPicker();
+                      // pizcloud: Button - Add photos
+                      // Padding(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      //   child: ElevatedButton.icon(
+                      //     icon: const Icon(Icons.add_photo_alternate_outlined),
+                      //     onPressed: () async {
+                      //       final success = await ref
+                      //           .read(limitedPickerBackupServiceProvider)
+                      //           .pickAndUploadFromSystemPicker();
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  success
-                                      ? 'uploaded_the_selected_photos_videos'.tr()
-                                      : 'no_photos_videos_selected'.tr(),
-                                ),
-                              ),
-                            );
-                          },
-                          label: Text(
-                            context.tr(
-                              'backup_album_selection_page_pick_individual_media',
-                              args: [],
-                              namedArgs: const {},
-                            ),
-                          ),
-                        ),
-                      ),
-                      // ================================================================
+                      //       ScaffoldMessenger.of(context).showSnackBar(
+                      //         SnackBar(
+                      //           content: Text(
+                      //             success
+                      //                 ? 'uploaded_the_selected_photos_videos'.tr()
+                      //                 : 'no_photos_videos_selected'.tr(),
+                      //           ),
+                      //         ),
+                      //       );
+                      //     },
+                      //     label: Text(
+                      //       context.tr(
+                      //         'backup_album_selection_page_pick_individual_media',
+                      //         args: [],
+                      //         namedArgs: const {},
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                      // #pizcloud
                     ],
                   ),
                 ),

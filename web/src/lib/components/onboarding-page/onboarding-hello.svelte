@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PizcloduLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
+  import PizcloduLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
   import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
   import { OnboardingRole } from '$lib/models/onboarding-role';
   import { user } from '$lib/stores/user.store';

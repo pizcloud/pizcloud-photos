@@ -1,4 +1,4 @@
-// web/src/routes/auth/user-register/+page.ts
+// web/src/routes/auth/pizcloud/user-register/+page.ts
 import { AppRoute } from '$lib/constants';
 import { getFormatter } from '$lib/utils/i18n';
 import type { PageLoad } from './$types';

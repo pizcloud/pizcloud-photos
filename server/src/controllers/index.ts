@@ -36,9 +36,8 @@ import { UserController } from 'src/controllers/user.controller';
 import { ViewController } from 'src/controllers/view.controller';
 import { WorkflowController } from 'src/controllers/workflow.controller';
 
-// New
-import { BillingController } from 'src/controllers/billing.controller';
-// ==============================
+
+import { BillingController } from 'src/controllers/pizcloud/billing.controller'; // pizcloud
 
 export const controllers = [
   ApiKeyController,
@@ -78,5 +77,5 @@ export const controllers = [
   UserController,
   ViewController,
   WorkflowController,
-  BillingController
+  BillingController // pizcloud
 ];

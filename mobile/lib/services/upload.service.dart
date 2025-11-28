@@ -64,10 +64,10 @@ class UploadService {
   final StreamController<TaskStatusUpdate> _taskStatusController = StreamController<TaskStatusUpdate>.broadcast();
   final StreamController<TaskProgressUpdate> _taskProgressController = StreamController<TaskProgressUpdate>.broadcast();
 
-  // New
+  // pizcloud: new quota exceeded stream
   final StreamController<void> _quotaExceededController = StreamController<void>.broadcast();
   Stream<void> get quotaExceededStream => _quotaExceededController.stream;
-  // ============================
+  // #pizcloud
 
   Stream<TaskStatusUpdate> get taskStatusStream => _taskStatusController.stream;
   Stream<TaskProgressUpdate> get taskProgressStream => _taskProgressController.stream;
@@ -85,12 +85,12 @@ class UploadService {
       _taskStatusController.add(update);
     }
 
-    // New
+    // pizcloud: Handle quota exceeded (HTTP 409)
     if (update.status == TaskStatus.failed && update.responseStatusCode == 409) {
       _handleQuotaExceeded(update);
       return;
     }
-    // ============================
+    // #pizcloud
 
     _handleTaskStatusUpdate(update);
   }
@@ -99,12 +99,10 @@ class UploadService {
     _taskStatusController.close();
     _taskProgressController.close();
 
-    // New
-    _quotaExceededController.close();
-    // ============================
+    _quotaExceededController.close(); // pizcloud
   }
 
-  // New
+  // pizcloud: Handle quota exceeded (HTTP 409)
   Future<void> _handleQuotaExceeded(TaskStatusUpdate update) async {
     _logger.severe('Upload blocked: quota exceeded (HTTP 409). Pausing backup queue.');
 
@@ -127,7 +125,7 @@ class UploadService {
       _quotaExceededController.add(null);
     }
   }
-  // ============================
+  // #pizcloud
 
   Future<List<bool>> enqueueTasks(List<UploadTask> tasks) {
     return _uploadRepository.enqueueBackgroundAll(tasks);

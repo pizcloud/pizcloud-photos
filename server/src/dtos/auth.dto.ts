@@ -155,7 +155,7 @@ export class AuthStatusResponseDto {
   pinExpiresAt?: string;
 }
 
-// NEW: DTO for self-signup (public)
+// pizcloud: DTO for self-signup (public)
 export class AuthRegisterDto {
   @IsEmail({ require_tld: false })
   @Transform(toEmail)
@@ -169,3 +169,4 @@ export class AuthRegisterDto {
   @IsString()
   name?: string; // default to email prefix if not provided
 }
+// #pizcloud

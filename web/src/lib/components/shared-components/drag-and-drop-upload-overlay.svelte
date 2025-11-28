@@ -7,7 +7,7 @@
   import { isAlbumsRoute, isLockedFolderRoute } from '$lib/utils/navigation';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
-  import PizcloudLogo from './pizcloud-logo.svelte';
+  import PizcloudLogo from './pizcloud/pizcloud-logo.svelte';
 
   let albumId = $derived(isAlbumsRoute(page.route?.id) ? page.params.albumId : undefined);
   let isInLockedFolder = $derived(isLockedFolderRoute(page.route.id));

@@ -18,11 +18,7 @@ import 'package:immich_mobile/services/network.service.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
 
-// UPDATE: added imports
-import 'dart:convert'; // NEW
-import 'dart:io'; // NEW
-import 'package:openapi/api.dart';
-import 'package:immich_mobile/entities/store.entity.dart';
+import 'dart:convert'; // pizcloud: added imports
 
 final authServiceProvider = Provider(
   (ref) => AuthService(
@@ -224,7 +220,7 @@ class AuthService {
     return _authApiRepository.setupPinCode(pinCode);
   }
 
-  // NEW: User registration method
+  // pizcloud: User registration method
   Future<void> register(String email, String password, {String? name}) async {
     final base = Store.get(StoreKey.serverEndpoint);
     if (base.isEmpty) {
@@ -273,4 +269,6 @@ class AuthService {
       client.close(force: true);
     }
   }
+
+  // #pizcloud
 }

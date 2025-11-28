@@ -2,23 +2,22 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 
-import 'package:immich_mobile/features/billing/entitlement_api_client.dart';
-import 'package:immich_mobile/features/billing/iap_service.dart';
-import 'package:immich_mobile/features/billing/billing_repository.dart';
-import 'package:immich_mobile/features/billing/billing_controller.dart';
+import 'package:immich_mobile/features/pizcloud/billing/entitlement_api_client.dart';
+import 'package:immich_mobile/features/pizcloud/billing/iap_service.dart';
+import 'package:immich_mobile/features/pizcloud/billing/billing_repository.dart';
+import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
 
 /// Separate configuration for the billing-service and Android package name
 class BillingConfig {
-  const BillingConfig({required this.billingBaseUrl, required this.androidPackageName});
+  const BillingConfig({required this.androidPackageName});
 
-  final String billingBaseUrl;
+  // final String billingBaseUrl;
   final String androidPackageName;
 }
 
 final billingConfigProvider = Provider<BillingConfig>((ref) {
   return const BillingConfig(
-    billingBaseUrl: 'EX', // Ex: https://<url>
-    androidPackageName: 'EX', // Ex: com.<brand>.<proj>
+    androidPackageName: '', // Ex: com.<brand>.<proj>
   );
 });
 
@@ -26,9 +25,9 @@ final iapServiceProvider = Provider<IapService>((ref) => IapService());
 
 final entitlementApiClientProvider = Provider<EntitlementApiClient>((ref) {
   final immichBaseUrl = Store.get(StoreKey.serverEndpoint);
-  final cfg = ref.watch(billingConfigProvider);
+  // final cfg = ref.watch(billingConfigProvider);
 
-  return EntitlementApiClient(immichBaseUrl: immichBaseUrl, billingBaseUrl: cfg.billingBaseUrl);
+  return EntitlementApiClient(immichBaseUrl: immichBaseUrl);
 });
 
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {

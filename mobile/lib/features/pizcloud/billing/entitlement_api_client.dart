@@ -8,10 +8,10 @@ import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 
 class EntitlementApiClient {
-  EntitlementApiClient({required this.immichBaseUrl, required this.billingBaseUrl});
+  EntitlementApiClient({required this.immichBaseUrl});
 
   final String immichBaseUrl;
-  final String billingBaseUrl;
+  // final String billingBaseUrl;
 
   String _join(String base, String path) {
     if (base.endsWith('/')) base = base.substring(0, base.length - 1);
@@ -53,8 +53,6 @@ class EntitlementApiClient {
   Future<Map<String, dynamic>> getUsage() async {
     final url = _join(immichBaseUrl, 'billing/usage');
     final h = _authOnly();
-    debugPrint('[billing] headers: $h');
-    debugPrint('[immichBaseUrl]: $immichBaseUrl');
 
     final res = await http.get(Uri.parse(url), headers: h);
     if (res.statusCode == 200) {
@@ -67,7 +65,7 @@ class EntitlementApiClient {
   }
 
   Future<void> verifyIosReceipt({required String productId, required String receiptBase64}) async {
-    final url = _join(billingBaseUrl, 'v1/iap/ios/verify');
+    final url = _join(immichBaseUrl, 'iap/ios/verify');
     final res = await http.post(
       Uri.parse(url),
       headers: _authJson(),
@@ -83,7 +81,7 @@ class EntitlementApiClient {
     required String purchaseToken,
     required String packageName,
   }) async {
-    final url = _join(billingBaseUrl, 'v1/iap/android/verify');
+    final url = _join(immichBaseUrl, 'iap/android/verify');
     final res = await http.post(
       Uri.parse(url),
       headers: _authJson(),

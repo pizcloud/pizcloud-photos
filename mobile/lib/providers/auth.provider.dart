@@ -208,7 +208,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return _authService.setupPinCode(pinCode);
   }
 
-  // NEW
+  // pizcloud: registration
   Future<void> register(String email, String password, {String? name}) async {
     try {
       await _authService.register(email, password, name: name);
@@ -218,4 +218,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       throw ApiException(500, e.toString());
     }
   }
+
+  // #pizcloud
 }

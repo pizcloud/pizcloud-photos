@@ -1,13 +1,11 @@
-<!-- web/src/routes/auth/user-register/+page.svelte -->
+<!-- web/src/routes/auth/pizcloud/user-register/+page.svelte -->
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { AppRoute } from '$lib/constants';
-  import { eventManager } from '$lib/managers/event-manager.svelte';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
-  import { login, type LoginResponseDto } from '@immich/sdk';
   import { Alert, Button, Field, Input, PasswordInput, Stack } from '@immich/ui';
-  import { t } from 'svelte-i18n';
+  import { locale, t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
   interface Props {
@@ -19,15 +17,8 @@
   let password = $state('');
   let confirm = $state('');
   let errorMessage = $state('');
+  let successMessage = $state('');
   let loading = $state(false);
-
-  const onSuccess = async (user: LoginResponseDto) => {
-    await goto(data.continueUrl, { invalidateAll: true });
-    eventManager.emit('auth.login', user);
-  };
-
-  const onFirstLogin = () => goto(AppRoute.AUTH_CHANGE_PASSWORD);
-  const onOnboarding = () => goto(AppRoute.AUTH_ONBOARDING);
 
   const registerRequest = async (payload: { email: string; password: string; name?: string }) => {
     const res = await fetch('/api/auth/register', {
@@ -55,6 +46,7 @@
   const handleRegister = async () => {
     try {
       errorMessage = '';
+      successMessage = '';
 
       if (!email) {
         errorMessage = $t('email_required');
@@ -73,29 +65,32 @@
 
       await registerRequest({ email, password });
 
-      const user = await login({ loginCredentialDto: { email, password } });
+      try {
+        const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+        const currentLocale = $locale || 'en';
+        const res = await fetch(`${baseUrl}/auth/verify-email`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email, lang: currentLocale }),
+        });
 
-      if (user.isAdmin && user.isOnboarded === false) {
-        await onOnboarding();
-        return;
+        if (!res.ok) {
+          console.error('Failed to send verification email', await res.text());
+          successMessage = $t('registration_success_but_verification_email_failed');
+        } else {
+          successMessage = $t('verification_email_sent_check_inbox');
+        }
+      } catch (sendErr) {
+        console.error('Error sending verification email', sendErr);
+        successMessage = $t('registration_success_but_verification_email_failed');
       }
 
-      if (!user.isAdmin && user.shouldChangePassword) {
-        await onFirstLogin();
-        return;
-      }
-
-      if (!user.isOnboarded) {
-        await onOnboarding();
-        return;
-      }
-
-      await onSuccess(user);
+      password = '';
+      confirm = '';
     } catch (err) {
       const status = (err as any)?.status as number | undefined;
       const rawMsg = String((err as any)?.message ?? getServerErrorMessage(err) ?? '').trim();
       const msg = rawMsg.toLowerCase();
-      console.log('msg', msg);
       if (
         status === 409 ||
         /user\s+exist/i.test(msg) ||
@@ -133,6 +128,10 @@
     <form {onsubmit} class="flex flex-col gap-4">
       {#if errorMessage}
         <Alert color="danger" title={errorMessage} closable />
+      {/if}
+
+      {#if successMessage}
+        <Alert color="success" title={successMessage} closable />
       {/if}
 
       <Field label={$t('email')}>

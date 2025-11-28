@@ -125,9 +125,10 @@ import 'package:immich_mobile/services/secure_storage.service.dart';
 import 'package:immich_mobile/widgets/asset_grid/asset_grid_data_structure.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-// New
-import '../pages/settings/billing_page.dart';
-import 'package:immich_mobile/pages/login/signup_page.dart';
+// pizcloud: new imports
+import '../pages/settings/pizcloud/billing_page.dart';
+import 'package:immich_mobile/pages/login/pizcloud/signup_page.dart';
+// #pizcloud
 
 part 'router.gr.dart';
 
@@ -353,10 +354,10 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: AssetTroubleshootRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: DownloadInfoRoute.page, guards: [_authGuard, _duplicateGuard]),
 
-    // Newrouter
-    // AutoRoute(page: BillingRoute.page, path: '/settings/billing'),
+    // pizcloud: new route
     AutoRoute(page: BillingRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: SignupRoute.page),
+    // #pizcloud
 
     // required to handle all deeplinks in deep_link.service.dart
     // auto_route_library#1722

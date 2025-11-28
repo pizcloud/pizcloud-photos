@@ -1,6 +1,5 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -14,6 +13,7 @@ import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/widgets/asset_viewer/cast_dialog.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_dialog.dart';
 import 'package:immich_mobile/widgets/common/user_circle_avatar.dart';
+import 'package:flutter/foundation.dart';
 
 class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
@@ -134,7 +134,7 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 child: SvgPicture.asset(
                   context.isDarkTheme
                       ? 'assets/pizcloud-logo-inline-dark.svg'
-                      : 'assets/pizcloud-logo-inline-light.svg',
+                      : 'assets/pizcloud-logo-inline-light.svg', // pizcloud
                   height: 40,
                 ),
               ),

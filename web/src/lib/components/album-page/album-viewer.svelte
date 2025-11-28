@@ -23,7 +23,7 @@
   import ThemeButton from '../shared-components/theme-button.svelte';
   import AlbumSummary from './album-summary.svelte';
 
-  import PizcloudLogoSmallLink from '../shared-components/pizcloud-logo-small-link.svelte';
+  import PizcloudLogoSmallLink from '../shared-components/pizcloud/pizcloud-logo-small-link.svelte';
 
   interface Props {
     sharedLink: SharedLinkResponseDto;

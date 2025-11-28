@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import PizcloudLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
+  import PizcloudLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
   import { AppRoute } from '$lib/constants';
   import Portal from '$lib/elements/Portal.svelte';
   import PurchaseModal from '$lib/modals/PurchaseModal.svelte';

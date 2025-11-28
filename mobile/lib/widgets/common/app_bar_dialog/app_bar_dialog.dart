@@ -24,6 +24,7 @@ import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 // import 'package:immich_mobile/widgets/common/immich_logo.dart';
 // import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
 
 class ImmichAppBarDialog extends HookConsumerWidget {
   const ImmichAppBarDialog({super.key});
@@ -205,7 +206,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // New
+            // pizcloud
             InkWell(
               onTap: () {
                 context.pop();
@@ -246,6 +247,8 @@ class ImmichAppBarDialog extends HookConsumerWidget {
             //   },
             //   child: Text("licenses", style: context.textTheme.bodySmall).tr(),
             // ),
+
+            // #pizcloud
           ],
         ),
       );
@@ -295,7 +298,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                 buildStorageInformation(),
                 // const AppBarServerInfo(),
                 if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
-                buildAppLogButton(),
+                if (kDebugMode || kProfileMode) buildAppLogButton(),
                 buildSettingButton(),
                 buildSignOutButton(),
                 buildFooter(),

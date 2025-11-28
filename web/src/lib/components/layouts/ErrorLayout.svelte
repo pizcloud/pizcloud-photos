@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PizcloduLogo from '$lib/components/shared-components/pizcloud-logo.svelte';
+  import PizcloduLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
   import { copyToClipboard } from '$lib/utils';
   import { Icon, IconButton } from '@immich/ui';
   import { mdiCodeTags, mdiContentCopy, mdiMessage, mdiPartyPopper } from '@mdi/js';
