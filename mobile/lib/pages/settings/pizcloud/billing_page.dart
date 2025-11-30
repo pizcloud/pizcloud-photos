@@ -6,6 +6,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 // import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
 import 'package:immich_mobile/providers/pizcloud/billing.provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// ===============================================================
 ///                FAKE MODE (UI DEMO WITHOUT IAP)
@@ -330,7 +331,7 @@ class BillingPage extends HookConsumerWidget {
     final showCta = selectedPlan.value != null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Choose Your Plan'), centerTitle: true),
+      appBar: AppBar(title: const Text('choose_your_plan').tr(), centerTitle: true),
       // Sticky CTA
       bottomNavigationBar: showCta
           ? SafeArea(
@@ -353,8 +354,15 @@ class BillingPage extends HookConsumerWidget {
                   children: [
                     // Summary line
                     Text(
-                      'Continue with ${selectedPlan.value!.title} – ${selectedPlan.value!.price}'
-                      ' / ${period.value == BillingPeriod.monthly ? 'month' : 'year'}',
+                      'subscription.continue_with'.tr(
+                        namedArgs: {
+                          'plan': selectedPlan.value!.title,
+                          'price': selectedPlan.value!.price,
+                          'period': period.value == BillingPeriod.monthly
+                              ? 'subscription.period_month'.tr()
+                              : 'subscription.period_year'.tr(),
+                        },
+                      ),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                     ),
@@ -375,7 +383,7 @@ class BillingPage extends HookConsumerWidget {
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Buy Now'),
+                        child: const Text('subscription.buy_now').tr(),
                       ),
                     ),
                   ],
@@ -398,25 +406,25 @@ class BillingPage extends HookConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Usage: ${usage['used_gb']} / ${usage['limit_gb']} GB (${usage['percent']}%)',
+                      'subscription.summary'.tr(
+                        namedArgs: {
+                          'used': usage['used_gb'].toString(),
+                          'limit': usage['limit_gb'].toString(),
+                          'percent': usage['percent'].toString(),
+                        },
+                      ),
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 8),
                     LinearProgressIndicator(value: ((usage['percent'] as num) / 100).clamp(0, 1).toDouble()),
                     if (usage['state'] == 'warn')
-                      const Padding(
-                        padding: EdgeInsets.only(top: 6),
-                        child: Text('You have used > 80%. Consider upgrading.'),
-                      ),
+                      Padding(padding: const EdgeInsets.only(top: 6), child: const Text('subscription.warn').tr()),
                     if (usage['state'] == 'critical')
-                      const Padding(padding: EdgeInsets.only(top: 6), child: Text('You have used > 90%. Very close!')),
+                      Padding(padding: const EdgeInsets.only(top: 6), child: const Text('subscription.critical').tr()),
                     if (usage['state'] == 'blocked')
-                      const Padding(
-                        padding: EdgeInsets.only(top: 6),
-                        child: Text(
-                          'OUT OF STORAGE - Uploads will be blocked.',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text('subscription.blocked'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
                       ),
                   ],
                 ),
@@ -438,13 +446,13 @@ class BillingPage extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Upgrade Your Storage',
+                  'subscription.upgrade_title'.tr(),
                   style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Get more space for your files, photos, and documents with our flexible storage plans.',
+                  'subscription.upgrade_subtitle'.tr(),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
@@ -459,7 +467,7 @@ class BillingPage extends HookConsumerWidget {
               children: [
                 Expanded(
                   child: _PeriodTab(
-                    text: 'Monthly',
+                    text: 'subscription.period_monthly'.tr(),
                     selected: period.value == BillingPeriod.monthly,
                     onTap: () => period.value = BillingPeriod.monthly,
                   ),
@@ -467,8 +475,8 @@ class BillingPage extends HookConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _PeriodTab(
-                    text: 'Yearly',
-                    hintRight: 'Save 20%',
+                    text: 'subscription.period_yearly'.tr(),
+                    hintRight: 'subscription.save_20'.tr(),
                     selected: period.value == BillingPeriod.yearly,
                     onTap: () => period.value = BillingPeriod.yearly,
                   ),
@@ -505,26 +513,26 @@ class BillingPage extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Why Choose Our Storage?',
+                    'subscription.why_title'.tr(),
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
-                  const _WhyRow(
+                  _WhyRow(
                     icon: Icons.verified_user_outlined,
-                    title: 'Secure & Encrypted',
-                    subtitle: 'Your files are protected with end-to-end encryption',
+                    title: 'subscription.why_secure_title'.tr(),
+                    subtitle: 'subscription.why_secure_sub'.tr(),
                   ),
                   const SizedBox(height: 10),
-                  const _WhyRow(
+                  _WhyRow(
                     icon: Icons.sync_outlined,
-                    title: 'Auto Sync',
-                    subtitle: 'Access your files from any device, anywhere',
+                    title: 'subscription.why_sync_title'.tr(),
+                    subtitle: 'subscription.why_sync_sub'.tr(),
                   ),
                   const SizedBox(height: 10),
-                  const _WhyRow(
+                  _WhyRow(
                     icon: Icons.history_outlined,
-                    title: 'Version History',
-                    subtitle: 'Restore previous versions of your files',
+                    title: 'subscription.why_history_title'.tr(),
+                    subtitle: 'subscription.why_history_sub'.tr(),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -532,7 +540,7 @@ class BillingPage extends HookConsumerWidget {
                       Icon(Icons.verified, size: 18, color: Colors.green[600]),
                       const SizedBox(width: 6),
                       Text(
-                        '30-day money-back guarantee',
+                        'subscription.guarantee'.tr(),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: Colors.green[700],
                           fontWeight: FontWeight.w600,
@@ -551,12 +559,12 @@ class BillingPage extends HookConsumerWidget {
               child: TextButton(
                 onPressed: () {
                   if (isFakeMode) {
-                    _snack(context, 'Pretend restore purchases');
+                    _snack(context, 'subscription.pretend_restore'.tr());
                   } else {
                     ctl.restore();
                   }
                 },
-                child: const Text('Restore Purchases'),
+                child: Text('subscription.restore_purchases'.tr()),
               ),
             ),
             SizedBox(
@@ -569,7 +577,7 @@ class BillingPage extends HookConsumerWidget {
                   await _openManageSubscription(context, ref, productId: activeProductId);
                 },
                 style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Manage Subscription'),
+                child: Text('subscription.manage_subscription'.tr()),
               ),
             ),
           ],

@@ -1,8 +1,7 @@
 <script lang="ts">
   import AppDownloadModal from '$lib/modals/AppDownloadModal.svelte';
-  import ObtainiumConfigModal from '$lib/modals/ObtainiumConfigModal.svelte';
   import { Button, HStack, modalManager } from '@immich/ui';
-  import { mdiCellphoneArrowDownVariant, mdiLinkEdit } from '@mdi/js';
+  import { mdiCellphoneArrowDownVariant } from '@mdi/js';
   import { t } from 'svelte-i18n';
 </script>
 
@@ -19,7 +18,8 @@
     {$t('app_stores')}
   </Button>
 
-  <Button
+  <!-- pixcloud -->
+  <!-- <Button
     size="medium"
     shape="semi-round"
     fullWidth
@@ -27,5 +27,6 @@
     leadingIcon={mdiLinkEdit}
   >
     {$t('obtainium_configurator')}
-  </Button>
+  </Button> -->
+  <!-- #pixcloud -->
 </HStack>

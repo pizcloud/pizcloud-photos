@@ -58,7 +58,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Image.asset(
-                  context.isDarkTheme ? 'assets/pizcloud-text-dark.png' : 'assets/pizcloud-text-light.png',
+                  context.isDarkTheme ? 'assets/pizcloud-text-dark.png' : 'assets/pizcloud-text-light.png', // pizcloud
                   height: 16,
                 ),
               ),
@@ -177,12 +177,13 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                       'backup_controller_page_storage_format',
                     ).tr(namedArgs: {'used': usedDiskSpace, 'total': totalDiskSpace}),
                   ),
+                  // pizcloud
                   const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: FilledButton.icon(
                       icon: const Icon(Icons.workspace_premium_rounded),
-                      label: const Text('Upgrade'),
+                      label: const Text('upgrade').tr(),
                       onPressed: () {
                         final root = context.router.root;
                         context.pop();
@@ -192,6 +193,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                       },
                     ),
                   ),
+                  // #pizcloud
                 ],
               ),
             ),
@@ -296,9 +298,9 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8), child: buildTopRow()),
                 const AppBarProfileInfoBox(),
                 buildStorageInformation(),
-                // const AppBarServerInfo(),
+                // const AppBarServerInfo(), // pizcloud
                 if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
-                if (kDebugMode || kProfileMode) buildAppLogButton(),
+                if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
                 buildSettingButton(),
                 buildSignOutButton(),
                 buildFooter(),

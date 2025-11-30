@@ -186,7 +186,7 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
       return proposedRoute;
     }
 
-    if (deepLink.uri.host == "my.immich.app") {
+    if (deepLink.uri.host == "photos.pizcloud.com") {
       final proposedRoute = await deepLinkHandler.handleMyImmichApp(deepLink, ref, isColdStart);
 
       return proposedRoute;

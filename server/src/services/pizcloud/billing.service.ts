@@ -186,7 +186,7 @@ export class BillingService {
     const me = await this.userAdmin.get(auth, auth.user.id);
     const stats = await this.userAdmin.getStatistics(auth, auth.user.id, {} as any);
 
-    const usage = Number((stats as any).usage ?? 0);
+    const usage = me.quotaUsageInBytes ?? 0;
     const limit = me.quotaSizeInBytes; // null = unlimited
 
     const percent = limit && limit > 0 ? Math.min(100, Math.round((usage / limit) * 100)) : 0;
