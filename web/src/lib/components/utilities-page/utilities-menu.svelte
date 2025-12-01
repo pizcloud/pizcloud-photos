@@ -1,14 +1,12 @@
 <script lang="ts">
   import { AppRoute } from '$lib/constants';
   import AppDownloadModal from '$lib/modals/AppDownloadModal.svelte';
-  import ObtainiumConfigModal from '$lib/modals/ObtainiumConfigModal.svelte';
   import { Icon, modalManager } from '@immich/ui';
   import {
     mdiCellphoneArrowDownVariant,
     mdiContentDuplicate,
     mdiCrosshairsGps,
     mdiImageSizeSelectLarge,
-    mdiLinkEdit,
   } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
@@ -32,7 +30,8 @@
 <br />
 <div class="border border-gray-300 dark:border-immich-dark-gray rounded-3xl pt-1 pb-6 dark:text-white">
   <p class="uppercase text-xs font-medium p-4">{$t('download')}</p>
-  <button
+  <!-- pizcloud -->
+  <!-- <button
     type="button"
     onclick={() => modalManager.show(ObtainiumConfigModal, {})}
     class="w-full hover:bg-gray-100 dark:hover:bg-immich-dark-gray flex items-center gap-4 p-4"
@@ -41,7 +40,8 @@
       <Icon icon={mdiLinkEdit} class="text-immich-primary dark:text-immich-dark-primary" size="24" />
     </span>
     {$t('obtainium_configurator')}
-  </button>
+  </button> -->
+  <!-- #pizcloud -->
   <button
     type="button"
     onclick={() => modalManager.show(AppDownloadModal, {})}

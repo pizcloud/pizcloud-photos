@@ -3,7 +3,6 @@
   import { focusTrap } from '$lib/actions/focus-trap';
   import { AppRoute } from '$lib/constants';
   import AvatarEditModal from '$lib/modals/AvatarEditModal.svelte';
-  import HelpAndFeedbackModal from '$lib/modals/HelpAndFeedbackModal.svelte';
   import { user } from '$lib/stores/user.store';
   import { userInteraction } from '$lib/stores/user.svelte';
   import { getAboutInfo, type ServerAboutResponseDto } from '@immich/sdk';
@@ -105,7 +104,8 @@
       color="secondary">{$t('sign_out')}</Button
     >
 
-    <button
+    <!-- pizcloud -->
+    <!-- <button
       type="button"
       class="text-center mt-4 underline text-xs text-primary"
       onclick={async () => {
@@ -116,6 +116,7 @@
       }}
     >
       {$t('support_and_feedback')}
-    </button>
+    </button> -->
+    <!-- #pizcloud -->
   </div>
 </div>

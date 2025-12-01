@@ -18,7 +18,7 @@
     {$t('app_stores')}
   </Button>
 
-  <!-- pixcloud -->
+  <!-- pizcloud -->
   <!-- <Button
     size="medium"
     shape="semi-round"
@@ -28,5 +28,5 @@
   >
     {$t('obtainium_configurator')}
   </Button> -->
-  <!-- #pixcloud -->
+  <!-- #pizcloud -->
 </HStack>

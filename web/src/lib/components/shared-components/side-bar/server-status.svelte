@@ -49,7 +49,7 @@
       return;
     }
 
-    return { availableVersion, releaseUrl: `https://github.com/immich-app/immich/releases/tag/${availableVersion}` };
+    return { availableVersion, releaseUrl: `https://github.com/immich-app/immich/releases/tag/${availableVersion}` }; // pizcloud: only admin
   });
 </script>
 

@@ -34,9 +34,14 @@
       <FormatMessage key="maintenance_description">
         {#snippet children({ tag, message })}
           {#if tag === 'link'}
-            <Link href="https://docs.immich.app/administration/maintenance-mode">
+            <!-- pizcloud -->
+            <!-- <Link href="https://docs.immich.app/administration/maintenance-mode">
+              {message}
+            </Link> -->
+            <Link href="/">
               {message}
             </Link>
+            <!-- #pizcloud -->
           {/if}
         {/snippet}
       </FormatMessage>

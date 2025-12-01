@@ -745,6 +745,8 @@
   "default_locale": "Định dạng ngày giờ",
   "default_locale_description": "Dựa theo trình duyệt của bạn",
   "delete": "Xóa",
+  "delete_action_confirmation_message": "Bạn có chắc chắn muốn xóa tài nguyên này không? Thao tác này sẽ chuyển tài sản vào thùng rác của máy chủ và sẽ hỏi bạn có muốn xóa cục bộ không.",
+  "delete_action_prompt": "{count} đã xóa",
   "delete_album": "Xóa album",
   "delete_api_key_prompt": "Bạn có chắc chắn muốn xóa khóa API này không?",
   "delete_dialog_alert": "Những mục này sẽ bị xóa vĩnh viễn khỏi PizCloud và thiết bị của bạn",

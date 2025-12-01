@@ -212,7 +212,10 @@ class ImmichAppBarDialog extends HookConsumerWidget {
             InkWell(
               onTap: () {
                 context.pop();
-                launchUrl(Uri.parse('https://immich.app'), mode: LaunchMode.externalApplication);
+                launchUrl(
+                  Uri.parse('https://pizcloud.com/en/privacy/'),
+                  mode: LaunchMode.externalApplication,
+                ); // pizcloud
               },
               child: Text("policy", style: context.textTheme.bodySmall).tr(),
             ),
