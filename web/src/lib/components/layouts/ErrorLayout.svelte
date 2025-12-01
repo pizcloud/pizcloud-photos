@@ -1,8 +1,8 @@
 <script lang="ts">
   import PizcloduLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
   import { copyToClipboard } from '$lib/utils';
-  import { Icon, IconButton } from '@immich/ui';
-  import { mdiCodeTags, mdiContentCopy, mdiMessage, mdiPartyPopper } from '@mdi/js';
+  import { IconButton } from '@immich/ui';
+  import { mdiContentCopy } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
   interface Props {
@@ -67,7 +67,8 @@
 
           <div class="flex place-content-center place-items-center justify-around">
             <!-- href="https://github.com/immich-app/immich/issues/new" -->
-            <a
+            <!-- pizcloud -->
+            <!-- <a
               href="https://discord.immich.app"
               target="_blank"
               rel="noopener noreferrer"
@@ -77,9 +78,9 @@
                 <Icon icon={mdiMessage} size="24" />
                 <p class="text-sm">{$t('get_help')}</p>
               </div>
-            </a>
+            </a> -->
 
-            <a
+            <!-- <a
               href="https://github.com/immich-app/immich/releases"
               target="_blank"
               rel="noopener noreferrer"
@@ -89,9 +90,9 @@
                 <Icon icon={mdiPartyPopper} size="24" />
                 <p class="text-sm">{$t('read_changelog')}</p>
               </div>
-            </a>
+            </a> -->
 
-            <a
+            <!-- <a
               href="https://docs.immich.app/guides/docker-help"
               target="_blank"
               rel="noopener noreferrer"
@@ -101,7 +102,8 @@
                 <Icon icon={mdiCodeTags} size="24" />
                 <p class="text-sm">{$t('check_logs')}</p>
               </div>
-            </a>
+            </a> -->
+            <!-- #pizcloud -->
           </div>
         </div>
       </div>
