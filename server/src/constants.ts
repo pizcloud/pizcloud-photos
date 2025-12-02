@@ -196,3 +196,5 @@ export const endpointTags: Record<ApiTag, string> = {
 
 export const DEFAULT_FREE_TIER_QUOTA_BYTES = 30 * 1024 * 1024 * 1024; // pizcloud: default quota bytes for free-tier users (30 GiB)
 export const USER_SIGNUP_ENABLED = true; // pizcloud: User signup enabled flag
+
+export const SSO_JWT_PUBLIC_KEY_PATH = process.env.SSO_JWT_PUBLIC_KEY_PATH; // pizcloud

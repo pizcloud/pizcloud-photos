@@ -48,6 +48,8 @@ import { VersionService } from 'src/services/version.service';
 import { ViewService } from 'src/services/view.service';
 import { WorkflowService } from 'src/services/workflow.service';
 
+import { SsoService } from 'src/services/pizcloud/sso.service'; // pizcloud
+
 export const services = [
   ApiKeyService,
   ActivityService,
@@ -97,5 +99,6 @@ export const services = [
   VersionService,
   ViewService,
   WorkflowService,
-  BillingService
+  BillingService, // pizcloud
+  SsoService, // pizcloud
 ];
