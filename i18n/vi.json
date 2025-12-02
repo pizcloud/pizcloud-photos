@@ -2054,5 +2054,40 @@
   "you_have_denied_permission_multiple_times": "Bạn đã từ chối cấp quyền nhiều lần nên hệ thống không hiển thị hộp thoại xin quyền nữa.",
   "you_have_granted_access_to_some_photos_and_videos": "Bạn đã cấp cho PizCloud quyền truy cập một số ảnh và video",
   "your_wifi_name": "Tên Wi-Fi của bạn",
-  "zoom_image": "Thu phóng ảnh"
+  "zoom_image": "Thu phóng ảnh",
+  "referral_program": "Chương trình giới thiệu",
+  "referral": {
+    "title": "Giới thiệu bạn bè",
+    "subtitle": "Chia sẻ mã giới thiệu của bạn cho bạn bè. Mỗi khi họ tham gia và sử dụng dịch vụ, bạn sẽ nhận được 30% hoa hồng tương ứng.",
+    "code_label": "Mã giới thiệu của bạn",
+    "copy_code": "Copy mã",
+    "share": "Chia sẻ",
+    "copy_success": "Đã sao chép mã giới thiệu vào clipboard.",
+    "copy_error": "Không thể sao chép mã. Vui lòng thử lại.",
+    "share_text_prefix": "Đây là mã giới thiệu của mình:",
+    "share_error": "Không thể chia sẻ, vui lòng thử lại.",
+    "share_fallback": "Trình duyệt không hỗ trợ chia sẻ trực tiếp. Nội dung đã được sao chép, bạn có thể dán vào nơi muốn chia sẻ.",
+    "share_fallback_error": "Trình duyệt không hỗ trợ chia sẻ. Hãy tự copy mã và liên kết để gửi cho bạn bè nhé.",
+    "total_users": "Tổng số người đã giới thiệu",
+    "total_commission": "Tổng số tiền hoa hồng",
+    "empty_title": "Chưa có lượt giới thiệu nào",
+    "empty_text": "Hiện tại bạn chưa giới thiệu bạn bè nào. Hãy chia sẻ mã giới thiệu của bạn để bắt đầu kiếm hoa hồng từ những người bạn mời tham gia.",
+    "empty_cta": "Copy mã và bắt đầu chia sẻ",
+    "table_title": "Thống kê hoa hồng theo tháng",
+    "table_month": "Tháng",
+    "table_commission": "Hoa hồng trong tháng",
+    "table_active_users": "Số user phát sinh hoa hồng"
+  },
+  "register_referral": {
+    "label": "Nhập mã giới thiệu (mã giảm giá)",
+    "placeholder": "Nhập mã (không bắt buộc)",
+    "description": "Nhập mã để được giảm 30% trong 1 năm cho các gói từ 500 GB trở lên.",
+    "apply": "Kiểm tra mã",
+    "validating": "Đang kiểm tra mã...",
+    "applied_message": "Bạn đã được áp dụng giảm {discount}% cho các gói từ 500 GB trở lên đến ngày {date}.",
+    "code_not_found": "Mã không tồn tại.",
+    "code_own_code": "Bạn không thể sử dụng mã giới thiệu của chính mình.",
+    "code_invalid": "Mã không hợp lệ.",
+    "empty_error": "Vui lòng nhập mã trước khi áp dụng."
+  }
 }

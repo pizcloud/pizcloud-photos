@@ -2285,5 +2285,40 @@
   "you_have_granted_access_to_some_photos_and_videos": "You have granted PizCloud access to some photos and videos",
   "your_wifi_name": "Your Wi-Fi name",
   "zoom_image": "Zoom Image",
-  "zoom_to_bounds": "Zoom to bounds"
+  "zoom_to_bounds": "Zoom to bounds",
+  "referral_program": "Referral Program",
+  "referral": {
+    "title": "Invite friends",
+    "subtitle": "Share your referral code with friends. Whenever they join and use the service, you earn 30% commission.",
+    "code_label": "Your referral code",
+    "copy_code": "Copy code",
+    "share": "Share",
+    "copy_success": "Referral code copied to clipboard.",
+    "copy_error": "Could not copy the code. Please try again.",
+    "share_text_prefix": "Here is my referral code:",
+    "share_error": "Could not share. Please try again.",
+    "share_fallback": "Your browser does not support direct sharing. The content has been copied; you can paste it where you want to share.",
+    "share_fallback_error": "Your browser does not support sharing. Please copy the code and link manually.",
+    "total_users": "Total referred users",
+    "total_commission": "Total commission earned",
+    "empty_title": "No referrals yet",
+    "empty_text": "You have not referred any friends yet. Share your code to start earning commission from your invites.",
+    "empty_cta": "Copy code and start sharing",
+    "table_title": "Commission by month",
+    "table_month": "Month",
+    "table_commission": "Commission in month",
+    "table_active_users": "Users with commission"
+  },
+  "register_referral": {
+    "label": "Enter referral (discount) code",
+    "placeholder": "Enter code (optional)",
+    "description": "Enter a code to get 30% off for 1 year on plans from 500 GB and above.",
+    "apply": "Check code",
+    "validating": "Validating code...",
+    "applied_message": "You received {discount}% off on plans from 500 GB and above until {date}.",
+    "code_not_found": "This code does not exist.",
+    "code_own_code": "You cannot use your own referral code.",
+    "code_invalid": "This code is invalid.",
+    "empty_error": "Please enter a code before applying."
+  }
 }

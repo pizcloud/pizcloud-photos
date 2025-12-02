@@ -11,16 +11,40 @@
   interface Props {
     data: PageData;
   }
+
   let { data }: Props = $props();
 
+  // Form fields
   let email = $state('');
   let password = $state('');
   let confirm = $state('');
+
+  // Referral code
+  let referralCode = $state('');
+  let referralLoading = $state(false);
+  let referralError = $state('');
+  let referralInfo = $state('');
+
+  // General messages
   let errorMessage = $state('');
   let successMessage = $state('');
   let loading = $state(false);
 
-  const registerRequest = async (payload: { email: string; password: string; name?: string }) => {
+  interface RegisterPayload {
+    email: string;
+    password: string;
+    name?: string;
+    referralCode?: string;
+  }
+
+  interface ReferralValidationResponse {
+    valid: boolean;
+    reason?: 'NOT_FOUND' | 'OWN_CODE' | 'EMPTY_CODE' | string;
+    validUntil?: string;
+    discountPercent?: number;
+  }
+
+  const registerRequest = async (payload: RegisterPayload) => {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -43,6 +67,99 @@
     throw error;
   };
 
+  function formatDisplayDate(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  const validateReferralCode = async (code: string, email?: string): Promise<ReferralValidationResponse> => {
+    const trimmed = code.trim();
+
+    const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+    const res = await fetch(`${baseUrl}/api/referral/validate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        code: trimmed,
+        email: email?.trim() || undefined,
+      }),
+    });
+
+    if (!res.ok) {
+      let message: string;
+      try {
+        const json = await res.json();
+        message = json?.message ?? '';
+      } catch {
+        message = await res.text();
+      }
+
+      const error = new Error(message || 'Referral validation failed') as Error & {
+        status?: number;
+      };
+      error.status = res.status;
+      throw error;
+    }
+
+    return (await res.json()) as ReferralValidationResponse;
+  };
+
+  const handleValidateReferral = async () => {
+    referralError = '';
+    referralInfo = '';
+
+    const code = referralCode.trim();
+    if (!code) {
+      referralError = $t('register_referral.empty_error');
+      return;
+    }
+
+    referralLoading = true;
+    try {
+      const result = await validateReferralCode(code, email);
+
+      if (!result.valid) {
+        if (result.reason === 'NOT_FOUND') {
+          referralError = $t('register_referral.code_not_found');
+        } else if (result.reason === 'OWN_CODE') {
+          referralError = $t('register_referral.code_own_code');
+        } else {
+          referralError = $t('register_referral.code_invalid');
+        }
+        return;
+      }
+
+      const discount = result.discountPercent ?? 30;
+      let expiry: Date;
+
+      if (result.validUntil) {
+        expiry = new Date(result.validUntil);
+      } else {
+        const now = new Date();
+        expiry = new Date(now.getTime());
+        expiry.setFullYear(now.getFullYear() + 1);
+      }
+
+      const formattedDate = formatDisplayDate(expiry);
+
+      // referralInfo = $t('register_referral.applied_message', {
+      //   discount,
+      //   date: formattedDate,
+      // });
+      referralInfo = $t('register_referral.applied_message', { discount, date: formattedDate } as any);
+      referralError = '';
+    } catch (err) {
+      console.error('Error validating referral', err);
+      if (!referralError) {
+        referralError = $t('register_referral.code_invalid');
+      }
+    } finally {
+      referralLoading = false;
+    }
+  };
+
   const handleRegister = async () => {
     try {
       errorMessage = '';
@@ -63,7 +180,16 @@
 
       loading = true;
 
-      await registerRequest({ email, password });
+      const payload: RegisterPayload = {
+        email,
+        password,
+      };
+
+      if (referralCode.trim()) {
+        payload.referralCode = referralCode.trim();
+      }
+
+      await registerRequest(payload);
 
       try {
         const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
@@ -144,6 +270,49 @@
 
       <Field label={$t('confirm_password')}>
         <PasswordInput id="confirm-password" bind:value={confirm} autocomplete="new-password" />
+      </Field>
+
+      <!-- Referral / discount code -->
+      <Field label={$t('register_referral.label')}>
+        <div class="flex flex-col gap-1">
+          <div class="flex gap-2 items-stretch">
+            <Input
+              id="referral-code"
+              name="referral-code"
+              autocomplete="off"
+              bind:value={referralCode}
+              placeholder={$t('register_referral.placeholder')}
+            />
+            <Button
+              type="button"
+              size="medium"
+              shape="round"
+              onclick={handleValidateReferral}
+              loading={referralLoading}
+              class="mt-8"
+            >
+              {$t('register_referral.apply')}
+            </Button>
+          </div>
+
+          <p class="text-xs text-slate-500">
+            {$t('register_referral.description')}
+          </p>
+
+          {#if referralLoading}
+            <p class="text-xs text-slate-500">
+              {$t('register_referral.validating')}
+            </p>
+          {:else if referralError}
+            <p class="text-xs text-red-500">
+              {referralError}
+            </p>
+          {:else if referralInfo}
+            <p class="text-xs text-emerald-600">
+              {referralInfo}
+            </p>
+          {/if}
+        </div>
       </Field>
 
       <Button type="submit" size="large" shape="round" fullWidth {loading} class="mt-6">

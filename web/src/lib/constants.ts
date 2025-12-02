@@ -63,6 +63,7 @@ export enum AppRoute {
   MAINTENANCE = '/maintenance',
 
   AUTH_USER_REGISTER = '/auth/pizcloud/user-register', //pizcloud
+  REFERRAL_PROGRAM = '/pizcloud/referral', //pizcloud
 }
 
 export enum ProjectionType {
