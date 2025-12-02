@@ -802,8 +802,10 @@ class LoginForm extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onDoubleTap: () => populateTestLoginInfo(),
-                        onLongPress: () => populateTestLoginInfo1(),
+                        // pizcloud
+                        // onDoubleTap: () => populateTestLoginInfo(),
+                        // onLongPress: () => populateTestLoginInfo1(),
+                        // #pizcloud
                         child: RotationTransition(
                           turns: logoAnimationController,
                           child: const PizCloudLogo(heroTag: 'logo'),

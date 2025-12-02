@@ -379,6 +379,7 @@
   "advanced_settings_prefer_remote_title": "Ưu tiên ảnh từ máy chủ",
   "advanced_settings_proxy_headers_subtitle": "Xác định các tiêu đề proxy PizCloud sẽ gửi kèm mỗi yêu cầu mạng",
   "advanced_settings_proxy_headers_title": "Tiêu đề proxy",
+  "advanced_settings_readonly_mode_subtitle": "Bật chế độ chỉ xem (ảnh chỉ xem được, không thể chọn, chia sẻ, cast hay xóa). Bật/tắt chế độ này bằng cách nhấn vào ảnh đại diện trên màn hình chính",
   "advanced_settings_readonly_mode_title": "Chế độ chỉ đọc",
   "advanced_settings_self_signed_ssl_subtitle": "Bỏ qua xác minh chứng chỉ SSL cho máy chủ cuối. Yêu cầu cho chứng chỉ tự ký.",
   "advanced_settings_self_signed_ssl_title": "Cho phép chứng chỉ SSL tự ký",

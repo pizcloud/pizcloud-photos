@@ -23,6 +23,7 @@ import 'package:immich_mobile/widgets/settings/settings_sub_page_scaffold.dart';
 import 'package:immich_mobile/widgets/settings/settings_switch_list_tile.dart';
 import 'package:immich_mobile/widgets/settings/ssl_client_cert_settings.dart';
 import 'package:logging/logging.dart';
+import 'package:flutter/foundation.dart';
 
 class AdvancedSettings extends HookConsumerWidget {
   const AdvancedSettings({super.key});
@@ -68,12 +69,13 @@ class AdvancedSettings extends HookConsumerWidget {
     }, []);
 
     final advancedSettings = [
-      SettingsSwitchListTile(
-        enabled: true,
-        valueNotifier: advancedTroubleshooting,
-        title: "advanced_settings_troubleshooting_title".tr(),
-        subtitle: "advanced_settings_troubleshooting_subtitle".tr(),
-      ),
+      if (kDebugMode || kProfileMode) // pizcloud
+        SettingsSwitchListTile(
+          enabled: true,
+          valueNotifier: advancedTroubleshooting,
+          title: "advanced_settings_troubleshooting_title".tr(),
+          subtitle: "advanced_settings_troubleshooting_subtitle".tr(),
+        ),
       if (isManageMediaSupported.value)
         Column(
           children: [
@@ -104,29 +106,33 @@ class AdvancedSettings extends HookConsumerWidget {
             ),
           ],
         ),
-      SettingsSliderListTile(
-        text: "advanced_settings_log_level_title".tr(namedArgs: {'level': logLevel}),
-        valueNotifier: levelId,
-        maxValue: 8,
-        minValue: 1,
-        noDivisons: 7,
-        label: logLevel,
-      ),
+      if (kDebugMode || kProfileMode) // pizcloud
+        SettingsSliderListTile(
+          text: "advanced_settings_log_level_title".tr(namedArgs: {'level': logLevel}),
+          valueNotifier: levelId,
+          maxValue: 8,
+          minValue: 1,
+          noDivisons: 7,
+          label: logLevel,
+        ),
       SettingsSwitchListTile(
         valueNotifier: preferRemote,
         title: "advanced_settings_prefer_remote_title".tr(),
         subtitle: "advanced_settings_prefer_remote_subtitle".tr(),
       ),
       if (!Store.isBetaTimelineEnabled) const LocalStorageSettings(),
-      SettingsSwitchListTile(
-        enabled: !isLoggedIn,
-        valueNotifier: allowSelfSignedSSLCert,
-        title: "advanced_settings_self_signed_ssl_title".tr(),
-        subtitle: "advanced_settings_self_signed_ssl_subtitle".tr(),
-        onChanged: HttpSSLOptions.applyFromSettings,
-      ),
-      const CustomProxyHeaderSettings(),
-      SslClientCertSettings(isLoggedIn: ref.read(currentUserProvider) != null),
+      if (kDebugMode || kProfileMode) // pizcloud
+        SettingsSwitchListTile(
+          enabled: !isLoggedIn,
+          valueNotifier: allowSelfSignedSSLCert,
+          title: "advanced_settings_self_signed_ssl_title".tr(),
+          subtitle: "advanced_settings_self_signed_ssl_subtitle".tr(),
+          onChanged: HttpSSLOptions.applyFromSettings,
+        ),
+      if (kDebugMode || kProfileMode) // pizcloud
+        const CustomProxyHeaderSettings(),
+      if (kDebugMode || kProfileMode) // pizcloud
+        SslClientCertSettings(isLoggedIn: ref.read(currentUserProvider) != null),
       if (!Store.isBetaTimelineEnabled)
         SettingsSwitchListTile(
           valueNotifier: useAlternatePMFilter,

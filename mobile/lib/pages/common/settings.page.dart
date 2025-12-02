@@ -13,7 +13,7 @@ import 'package:immich_mobile/widgets/settings/backup_settings/backup_settings.d
 import 'package:immich_mobile/widgets/settings/backup_settings/drift_backup_settings.dart';
 import 'package:immich_mobile/widgets/settings/beta_sync_settings/sync_status_and_actions.dart';
 import 'package:immich_mobile/widgets/settings/language_settings.dart';
-import 'package:immich_mobile/widgets/settings/networking_settings/networking_settings.dart';
+// import 'package:immich_mobile/widgets/settings/networking_settings/networking_settings.dart'; // pizcloud
 import 'package:immich_mobile/widgets/settings/notification_setting.dart';
 import 'package:immich_mobile/widgets/settings/preference_settings/preference_setting.dart';
 import 'package:immich_mobile/widgets/settings/settings_card.dart';
@@ -23,7 +23,7 @@ enum SettingSection {
   assetViewer('asset_viewer_settings_title', Icons.image_outlined, "asset_viewer_settings_subtitle"),
   backup('backup', Icons.cloud_upload_outlined, "backup_settings_subtitle"),
   languages('language', Icons.language, "setting_languages_subtitle"),
-  networking('networking_settings', Icons.wifi, "networking_subtitle"),
+  // networking('networking_settings', Icons.wifi, "networking_subtitle"), // pizcloud
   notifications('notifications', Icons.notifications_none_rounded, "setting_notifications_subtitle"),
   preferences('preferences_settings_title', Icons.interests_outlined, "preferences_settings_subtitle"),
   timeline('asset_list_settings_title', Icons.auto_awesome_mosaic_outlined, "asset_list_settings_subtitle"),
@@ -39,7 +39,7 @@ enum SettingSection {
     SettingSection.backup =>
       Store.tryGet(StoreKey.betaTimeline) ?? false ? const DriftBackupSettings() : const BackupSettings(),
     SettingSection.languages => const LanguageSettings(),
-    SettingSection.networking => const NetworkingSettings(),
+    // SettingSection.networking => const NetworkingSettings(), // pizcloud
     SettingSection.notifications => const NotificationSetting(),
     SettingSection.preferences => const PreferenceSetting(),
     SettingSection.timeline => const AssetListSettings(),
