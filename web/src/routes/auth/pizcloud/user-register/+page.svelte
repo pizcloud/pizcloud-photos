@@ -78,7 +78,7 @@
     const trimmed = code.trim();
 
     const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
-    const res = await fetch(`${baseUrl}/api/referral/validate`, {
+    const res = await fetch(`${baseUrl}/papi/referral/validate`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -144,11 +144,7 @@
 
       const formattedDate = formatDisplayDate(expiry);
 
-      // referralInfo = $t('register_referral.applied_message', {
-      //   discount,
-      //   date: formattedDate,
-      // });
-      referralInfo = $t('register_referral.applied_message', { discount, date: formattedDate } as any);
+      referralInfo = $t('register_referral.applied_message', { values: { discount, date: formattedDate } });
       referralError = '';
     } catch (err) {
       console.error('Error validating referral', err);
@@ -159,89 +155,226 @@
       referralLoading = false;
     }
   };
+  // ============================================
+  const normalizeBaseUrl = (url?: string) => (url || '').replace(/\/+$/, '');
+
+  const buildRegisterPayload = (email: string, password: string, referralCode: string): RegisterPayload => {
+    const payload: RegisterPayload = { email, password };
+    const code = referralCode?.trim();
+    if (code) payload.referralCode = code;
+    return payload;
+  };
+
+  const getValidationError = (email: string, password: string, confirm: string, t: typeof $t): string | null => {
+    if (!email) return t('email_required');
+    if (!password) return t('password_required');
+    if (password !== confirm) return t('password_does_not_match');
+    return null;
+  };
+
+  const buildReferralSyncBody = (email: string, referralCode: string): Record<string, unknown> => {
+    const body: Record<string, unknown> = { email };
+    const code = referralCode?.trim();
+    if (code) body.referralCode = code;
+    return body;
+  };
+
+  const syncReferralOnRegister = async (baseUrl: string, email: string, referralCode: string) => {
+    try {
+      const syncBody = buildReferralSyncBody(email, referralCode);
+
+      const res = await fetch(`${baseUrl}/papi/referral/on-register`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(syncBody),
+      });
+
+      if (!res.ok) {
+        console.error('Failed to sync referral user on register', res.status, await res.text());
+      }
+    } catch (err) {
+      console.error('Error calling referral on-register', err);
+    }
+  };
+
+  const sendVerificationEmail = async (baseUrl: string, email: string, lang: string): Promise<'ok' | 'failed'> => {
+    try {
+      const res = await fetch(`${baseUrl}/papi/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, lang }),
+      });
+
+      if (!res.ok) {
+        console.error('Failed to send verification email', await res.text());
+        return 'failed';
+      }
+
+      return 'ok';
+    } catch (err) {
+      console.error('Error sending verification email', err);
+      return 'failed';
+    }
+  };
+
+  const getRegistrationErrorMessage = (err: unknown, t: typeof $t): string => {
+    const status = (err as any)?.status as number | undefined;
+    const rawMsg = String((err as any)?.message ?? getServerErrorMessage(err) ?? '').trim();
+    const msg = rawMsg.toLowerCase();
+
+    if (
+      status === 409 ||
+      /user\s+exist/i.test(msg) ||
+      /user\s+already\s+exist/i.test(msg) ||
+      /already\s+exists/i.test(msg) ||
+      /email.*exist/i.test(msg)
+    ) {
+      return t('email_already_exists');
+    }
+
+    if (status === 403) {
+      return t('server_does_not_allow_self_registration');
+    }
+
+    if (status === 400) {
+      if (/(password|pwd|weak|invalid)/.test(msg)) {
+        return t('password_invalid');
+      }
+      return rawMsg || t('registration_failed');
+    }
+
+    return rawMsg || t('registration_failed');
+  };
+
+  const resetPasswordFields = () => {
+    password = '';
+    confirm = '';
+  };
 
   const handleRegister = async () => {
+    errorMessage = '';
+    successMessage = '';
+
+    // 1. Validate input
+    const validationError = getValidationError(email, password, confirm, $t);
+
+    if (validationError) {
+      errorMessage = validationError;
+      return;
+    }
+
+    loading = true;
+
     try {
-      errorMessage = '';
-      successMessage = '';
-
-      if (!email) {
-        errorMessage = $t('email_required');
-        return;
-      }
-      if (!password) {
-        errorMessage = $t('password_required');
-        return;
-      }
-      if (password !== confirm) {
-        errorMessage = $t('password_does_not_match');
-        return;
-      }
-
-      loading = true;
-
-      const payload: RegisterPayload = {
-        email,
-        password,
-      };
-
-      if (referralCode.trim()) {
-        payload.referralCode = referralCode.trim();
-      }
-
+      const payload = buildRegisterPayload(email, password, referralCode);
       await registerRequest(payload);
 
-      try {
-        const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
-        const currentLocale = $locale || 'en';
-        const res = await fetch(`${baseUrl}/auth/verify-email`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ email, lang: currentLocale }),
-        });
+      const baseUrl = normalizeBaseUrl(PUBLIC_PIZCLOUD_SERVER_URL);
+      const currentLocale = $locale || 'en';
 
-        if (!res.ok) {
-          console.error('Failed to send verification email', await res.text());
-          successMessage = $t('registration_success_but_verification_email_failed');
-        } else {
-          successMessage = $t('verification_email_sent_check_inbox');
-        }
-      } catch (sendErr) {
-        console.error('Error sending verification email', sendErr);
-        successMessage = $t('registration_success_but_verification_email_failed');
-      }
+      await syncReferralOnRegister(baseUrl, email, referralCode);
 
-      password = '';
-      confirm = '';
+      const emailStatus = await sendVerificationEmail(baseUrl, email, currentLocale);
+
+      successMessage =
+        emailStatus === 'ok'
+          ? $t('verification_email_sent_check_inbox')
+          : $t('registration_success_but_verification_email_failed');
+
+      resetPasswordFields();
     } catch (err) {
-      const status = (err as any)?.status as number | undefined;
-      const rawMsg = String((err as any)?.message ?? getServerErrorMessage(err) ?? '').trim();
-      const msg = rawMsg.toLowerCase();
-      if (
-        status === 409 ||
-        /user\s+exist/i.test(msg) ||
-        /user\s+already\s+exist/i.test(msg) ||
-        /already\s+exists/i.test(msg) ||
-        /email.*exist/i.test(msg)
-      ) {
-        errorMessage = $t('email_already_exists');
-      } else if (status === 403) {
-        errorMessage = $t('server_does_not_allow_self_registration');
-      } else if (status === 400) {
-        if (/(password|pwd|weak|invalid)/.test(msg)) {
-          errorMessage = $t('password_invalid');
-        } else {
-          errorMessage = rawMsg || $t('registration_failed');
-        }
-      } else {
-        errorMessage = rawMsg || $t('registration_failed');
-      }
-
+      errorMessage = getRegistrationErrorMessage(err, $t);
       handleError(err, $t('registration_failed'));
     } finally {
       loading = false;
     }
   };
+
+  // const handleRegister = async () => {
+  //   try {
+  //     errorMessage = '';
+  //     successMessage = '';
+
+  //     if (!email) {
+  //       errorMessage = $t('email_required');
+  //       return;
+  //     }
+  //     if (!password) {
+  //       errorMessage = $t('password_required');
+  //       return;
+  //     }
+  //     if (password !== confirm) {
+  //       errorMessage = $t('password_does_not_match');
+  //       return;
+  //     }
+
+  //     loading = true;
+
+  //     const payload: RegisterPayload = {
+  //       email,
+  //       password,
+  //     };
+
+  //     if (referralCode.trim()) {
+  //       payload.referralCode = referralCode.trim();
+  //     }
+
+  //     await registerRequest(payload);
+
+  //     const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+  //     const currentLocale = $locale || 'en';
+
+  //     try {
+  //       const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+  //       const currentLocale = $locale || 'en';
+  //       const res = await fetch(`${baseUrl}/papi/auth/verify-email`, {
+  //         method: 'POST',
+  //         headers: { 'content-type': 'application/json' },
+  //         body: JSON.stringify({ email, lang: currentLocale }),
+  //       });
+
+  //       if (!res.ok) {
+  //         console.error('Failed to send verification email', await res.text());
+  //         successMessage = $t('registration_success_but_verification_email_failed');
+  //       } else {
+  //         successMessage = $t('verification_email_sent_check_inbox');
+  //       }
+  //     } catch (sendErr) {
+  //       console.error('Error sending verification email', sendErr);
+  //       successMessage = $t('registration_success_but_verification_email_failed');
+  //     }
+
+  //     password = '';
+  //     confirm = '';
+  //   } catch (err) {
+  //     const status = (err as any)?.status as number | undefined;
+  //     const rawMsg = String((err as any)?.message ?? getServerErrorMessage(err) ?? '').trim();
+  //     const msg = rawMsg.toLowerCase();
+  //     if (
+  //       status === 409 ||
+  //       /user\s+exist/i.test(msg) ||
+  //       /user\s+already\s+exist/i.test(msg) ||
+  //       /already\s+exists/i.test(msg) ||
+  //       /email.*exist/i.test(msg)
+  //     ) {
+  //       errorMessage = $t('email_already_exists');
+  //     } else if (status === 403) {
+  //       errorMessage = $t('server_does_not_allow_self_registration');
+  //     } else if (status === 400) {
+  //       if (/(password|pwd|weak|invalid)/.test(msg)) {
+  //         errorMessage = $t('password_invalid');
+  //       } else {
+  //         errorMessage = rawMsg || $t('registration_failed');
+  //       }
+  //     } else {
+  //       errorMessage = rawMsg || $t('registration_failed');
+  //     }
+
+  //     handleError(err, $t('registration_failed'));
+  //   } finally {
+  //     loading = false;
+  //   }
+  // };
 
   const onsubmit = async (event: Event) => {
     event.preventDefault();

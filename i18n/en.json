@@ -2307,7 +2307,22 @@
     "table_title": "Commission by month",
     "table_month": "Month",
     "table_commission": "Commission in month",
-    "table_active_users": "Users with commission"
+    "table_active_users": "Users with commission",
+    "referrer_label": "Referrer",
+    "referrer_hint": "If you have a referral code from a friend, enter it to get the discount.",
+    "referrer_applied_title": "Your referrer",
+    "referrer_code": "Referral code:",
+    "referrer_discount_range": "Discount is applied from {start} to {end}.",
+    "apply_referrer_placeholder": "Enter your referrer’s code",
+    "apply_referrer_button": "Apply code",
+    "apply_loading": "Applying...",
+    "apply_empty_error": "Please enter a referral code.",
+    "apply_missing_email": "Missing email information. Please sign in again.",
+    "apply_not_found": "This referral code does not exist.",
+    "apply_own_code": "You cannot use your own referral code.",
+    "apply_already_has_referrer": "You already have a referrer and cannot change it.",
+    "apply_unknown_error": "Could not apply referral code. Please try again later.",
+    "apply_success": "Referral code applied. Your referrer: {email}."
   },
   "register_referral": {
     "label": "Enter referral (discount) code",

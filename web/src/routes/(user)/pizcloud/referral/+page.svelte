@@ -26,6 +26,16 @@
     />
   {/snippet}
   <Container size="medium" center>
-    <UserReferral keys={data.keys} sessions={data.sessions} />
+    <UserReferral
+      keys={data.keys}
+      sessions={data.sessions}
+      referralCode={data.referral?.referralCode ?? ''}
+      totalReferredUsers={data.referral?.totalReferredUsers ?? 0}
+      totalCommission={data.referral?.totalCommission ?? 0}
+      monthlyStats={data.referral?.monthlyStats ?? []}
+      currency={data.referral?.currency ?? 'VND'}
+      referrer={data.referral?.referrer ?? null}
+      userEmail={data.referralEmail ?? ''}
+    />
   </Container>
 </UserPageLayout>

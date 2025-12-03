@@ -2076,7 +2076,22 @@
     "table_title": "Thống kê hoa hồng theo tháng",
     "table_month": "Tháng",
     "table_commission": "Hoa hồng trong tháng",
-    "table_active_users": "Số user phát sinh hoa hồng"
+    "table_active_users": "Số user phát sinh hoa hồng",
+    "referrer_label": "Người giới thiệu",
+    "referrer_hint": "Nếu bạn có mã giới thiệu từ bạn bè, hãy nhập để được áp dụng ưu đãi.",
+    "referrer_applied_title": "Người đã giới thiệu bạn",
+    "referrer_code": "Mã giới thiệu:",
+    "referrer_discount_range": "Ưu đãi được áp dụng từ {start} đến {end}.",
+    "apply_referrer_placeholder": "Nhập mã giới thiệu của người đã giới thiệu bạn",
+    "apply_referrer_button": "Áp dụng mã",
+    "apply_loading": "Đang áp dụng...",
+    "apply_empty_error": "Vui lòng nhập mã giới thiệu.",
+    "apply_missing_email": "Không tìm thấy thông tin email, vui lòng đăng nhập lại.",
+    "apply_not_found": "Mã giới thiệu không tồn tại.",
+    "apply_own_code": "Bạn không thể sử dụng mã giới thiệu của chính mình.",
+    "apply_already_has_referrer": "Bạn đã có người giới thiệu, không thể thay đổi.",
+    "apply_unknown_error": "Không thể áp dụng mã giới thiệu. Vui lòng thử lại sau.",
+    "apply_success": "Mã giới thiệu đã được áp dụng. Người giới thiệu: {email}."
   },
   "register_referral": {
     "label": "Nhập mã giới thiệu (mã giảm giá)",

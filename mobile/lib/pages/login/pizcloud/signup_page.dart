@@ -89,7 +89,7 @@ class SignupPage extends HookConsumerWidget {
         ].join('-');
 
         final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-        final uri = Uri.parse('$base/auth/verify-email');
+        final uri = Uri.parse('$base/papi/auth/verify-email');
 
         http.Response response;
         try {
