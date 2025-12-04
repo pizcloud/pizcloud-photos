@@ -1,15 +1,21 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
 class IapService {
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _sub;
 
   static const productIds = <String>{
+    'storage_50gb_monthly',
+    'storage_50gb_yearly',
     'storage_100g_monthly',
     'storage_100g_yearly',
-    'storage_200g_monthly',
-    'storage_200g_yearly',
+    'storage_500gb_monthly',
+    'storage_500gb_yearly',
+    'storage_1tb_monthly',
+    'storage_1tb_yearly',
     'storage_2tb_monthly',
     'storage_2tb_yearly',
   };
@@ -28,7 +34,13 @@ class IapService {
   }
 
   Future<void> buy(ProductDetails p) async {
-    final param = PurchaseParam(productDetails: p);
+    PurchaseParam param;
+    if (Platform.isAndroid && p is GooglePlayProductDetails) {
+      param = GooglePlayPurchaseParam(productDetails: p, offerToken: p.offerToken);
+    } else {
+      param = PurchaseParam(productDetails: p);
+    }
+    // final param = PurchaseParam(productDetails: p);
     await _iap.buyNonConsumable(purchaseParam: param);
   }
 

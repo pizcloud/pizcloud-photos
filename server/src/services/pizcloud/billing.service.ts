@@ -10,15 +10,15 @@ export type Period = 'monthly' | 'yearly';
 export type EntitlementWebhookBody = {
   userId: string;
   productId: string;
-  planCode: string;        // '100G' | '200G' | '2TB' | ...
-  storageLimitGb: number;  // 100, 200, 2000, ...
-  mlTier?: 'free' | 'pro' | 'priority';
+  planCode: string;
+  storageLimitGb: number;
+  mlTier?: 'free' | 'basic' | 'pro1' | 'pro2' | 'pro3' | 'premium';
   seats?: number;
   shareEnabled?: boolean;
   signature: string;       // HMAC-SHA256(JSON(payload_without_signature))
 };
 
-type MlTier = 'free' | 'pro' | 'priority';
+type MlTier = 'free' | 'basic' | 'pro1' | 'pro2' | 'pro3' | 'premium';
 
 type ProductInfo = {
   planCode: string;
@@ -42,17 +42,25 @@ type EntitlementData = {
 };
 
 const PRODUCT_MAP: Record<string, ProductInfo> = {
-  // 100 GB
-  'storage_100g_monthly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro', seats: 1, shareEnabled: true, period: 'monthly' },
-  'storage_100g_yearly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro', seats: 1, shareEnabled: true, period: 'yearly' },
+  // 50 GB
+  'storage_50gb_monthly': { planCode: '50GB', storageLimitGb: 50, mlTier: 'basic', seats: 1, shareEnabled: true, period: 'monthly' },
+  'storage_50gb_yearly': { planCode: '50GB', storageLimitGb: 50, mlTier: 'basic', seats: 1, shareEnabled: true, period: 'yearly' },
 
-  // 200 GB
-  'storage_200g_monthly': { planCode: '200G', storageLimitGb: 200, mlTier: 'pro', seats: 1, shareEnabled: true, period: 'monthly' },
-  'storage_200g_yearly': { planCode: '200G', storageLimitGb: 200, mlTier: 'pro', seats: 1, shareEnabled: true, period: 'yearly' },
+  // 100 GB
+  'storage_100g_monthly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro1', seats: 1, shareEnabled: true, period: 'monthly' },
+  'storage_100g_yearly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro1', seats: 1, shareEnabled: true, period: 'yearly' },
+
+  // 500 GB
+  'storage_500gb_monthly': { planCode: '500GB', storageLimitGb: 500, mlTier: 'pro2', seats: 1, shareEnabled: true, period: 'monthly' },
+  'storage_500gb_yearly': { planCode: '500GB', storageLimitGb: 500, mlTier: 'pro2', seats: 1, shareEnabled: true, period: 'yearly' },
+
+  // 1 TB
+  'storage_1tb_monthly': { planCode: '1TB', storageLimitGb: 1000, mlTier: 'pro3', seats: 1, shareEnabled: true, period: 'monthly' },
+  'storage_1tb_yearly': { planCode: '1TB', storageLimitGb: 1000, mlTier: 'pro3', seats: 1, shareEnabled: true, period: 'yearly' },
 
   // 2 TB
-  'storage_2tb_monthly': { planCode: '2TB', storageLimitGb: 2000, mlTier: 'priority', seats: 5, shareEnabled: true, period: 'monthly' },
-  'storage_2tb_yearly': { planCode: '2TB', storageLimitGb: 2000, mlTier: 'priority', seats: 5, shareEnabled: true, period: 'yearly' },
+  'storage_2tb_monthly': { planCode: '2TB', storageLimitGb: 2000, mlTier: 'premium', seats: 5, shareEnabled: true, period: 'monthly' },
+  'storage_2tb_yearly': { planCode: '2TB', storageLimitGb: 2000, mlTier: 'premium', seats: 5, shareEnabled: true, period: 'yearly' },
 };
 
 @Injectable()

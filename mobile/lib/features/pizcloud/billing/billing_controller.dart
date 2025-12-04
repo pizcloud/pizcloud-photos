@@ -22,7 +22,8 @@ class BillingController extends StateNotifier<BillingState> {
           await repo.handlePurchase(p);
           final ent = await repo.loadEntitlement();
           final usage = await repo.loadUsage();
-          state = state.copy(entitlement: ent, usage: usage);
+          final referral = await repo.loadReferralSummary();
+          state = state.copy(entitlement: ent, usage: usage, referral: referral);
         } catch (e) {
           state = state.copy(error: '$e');
         }
@@ -31,11 +32,24 @@ class BillingController extends StateNotifier<BillingState> {
       final resp = await iap.queryProducts();
       final ent = await repo.loadEntitlement();
       final usage = await repo.loadUsage();
+      final referral = await repo.loadReferralSummary();
 
       if (resp.error != null) {
-        state = state.copy(loading: false, error: resp.error!.message, entitlement: ent, usage: usage);
+        state = state.copy(
+          loading: false,
+          error: resp.error!.message,
+          entitlement: ent,
+          usage: usage,
+          referral: referral,
+        );
       } else {
-        state = state.copy(loading: false, products: resp.productDetails, entitlement: ent, usage: usage);
+        state = state.copy(
+          loading: false,
+          products: resp.productDetails,
+          entitlement: ent,
+          usage: usage,
+          referral: referral,
+        );
       }
     } catch (e) {
       state = state.copy(loading: false, error: '$e');
@@ -45,7 +59,8 @@ class BillingController extends StateNotifier<BillingState> {
   Future<void> buy(ProductDetails p) => repo.purchase(p);
   Future<void> refreshUsage() async {
     final usage = await repo.loadUsage();
-    state = state.copy(usage: usage);
+    final referral = await repo.loadReferralSummary();
+    state = state.copy(usage: usage, referral: referral);
   }
 
   Future<void> restore() => iap.restore();

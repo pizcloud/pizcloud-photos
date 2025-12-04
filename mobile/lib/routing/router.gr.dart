@@ -2434,6 +2434,42 @@ class RecentlyTakenRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [ReferralPage]
+class ReferralRoute extends PageRouteInfo<ReferralRouteArgs> {
+  ReferralRoute({Key? key, String? userEmail, List<PageRouteInfo>? children})
+    : super(
+        ReferralRoute.name,
+        args: ReferralRouteArgs(key: key, userEmail: userEmail),
+        initialChildren: children,
+      );
+
+  static const String name = 'ReferralRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ReferralRouteArgs>(
+        orElse: () => const ReferralRouteArgs(),
+      );
+      return ReferralPage(key: args.key, userEmail: args.userEmail);
+    },
+  );
+}
+
+class ReferralRouteArgs {
+  const ReferralRouteArgs({this.key, this.userEmail});
+
+  final Key? key;
+
+  final String? userEmail;
+
+  @override
+  String toString() {
+    return 'ReferralRouteArgs{key: $key, userEmail: $userEmail}';
+  }
+}
+
+/// generated route for
 /// [RemoteAlbumPage]
 class RemoteAlbumRoute extends PageRouteInfo<RemoteAlbumRouteArgs> {
   RemoteAlbumRoute({

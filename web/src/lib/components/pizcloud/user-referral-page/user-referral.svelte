@@ -725,10 +725,20 @@
       justify-content: center;
       text-align: center;
     }
+    .referral__input {
+      flex: none;
+    }
+    .referral__code-box {
+      width: 100%;
+    }
+    .referral__code-actions {
+      width: 100%;
+      flex-wrap: nowrap;
+    }
   }
 
   /* Dark mode tweaks */
-  @media (prefers-color-scheme: dark) {
+  /* @media (prefers-color-scheme: dark) {
     .referral__code-card,
     .referral__stat-card,
     .referral__empty,
@@ -762,5 +772,5 @@
     .referral__table thead {
       background: var(--immich-bg-subtle, #020617);
     }
-  }
+  } */
 </style>

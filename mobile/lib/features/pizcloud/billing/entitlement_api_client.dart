@@ -1,11 +1,14 @@
 // lib/features/billing/entitlement_api_client.dart
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/config/app_config.dart';
+
+final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
 class EntitlementApiClient {
   EntitlementApiClient({required this.immichBaseUrl});
@@ -64,6 +67,15 @@ class EntitlementApiClient {
     throw Exception('Failed to load usage: ${res.statusCode}');
   }
 
+  Future<Map<String, dynamic>?> getReferralSummary() async {
+    final url = _join(pizCloudServerUrl, 'papi/referral/summary');
+    final res = await http.get(Uri.parse(url), headers: _authOnly());
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
   Future<void> verifyIosReceipt({required String productId, required String receiptBase64}) async {
     final url = _join(immichBaseUrl, 'iap/ios/verify');
     final res = await http.post(
@@ -89,6 +101,21 @@ class EntitlementApiClient {
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Android verify failed: ${res.statusCode} ${res.body}');
+    }
+  }
+
+  Future<void> notifyVerifiedPurchase({
+    required String productId,
+    required String platform, // 'android' | 'ios'
+  }) async {
+    final url = _join(pizCloudServerUrl, 'papi/billing/verify-success');
+    final res = await http.post(
+      Uri.parse(url),
+      headers: _authJson(),
+      body: jsonEncode({'productId': productId, 'platform': platform}),
+    );
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Notify verified purchase failed: ${res.statusCode} ${res.body}');
     }
   }
 }
