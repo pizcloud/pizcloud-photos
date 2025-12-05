@@ -1558,7 +1558,8 @@
     "table_title": "Thống kê hoa hồng theo tháng",
     "title": "Giới thiệu bạn bè",
     "total_commission": "Tổng số tiền hoa hồng",
-    "total_users": "Tổng số người đã giới thiệu"
+    "total_users": "Tổng số người đã giới thiệu",
+    "you_are_receiving_discount_on_this_plan": "Bạn đang được giảm 30% cho gói này nhờ mã giới thiệu."
   },
   "referral_program": "Chương trình giới thiệu",
   "refresh": "Làm mới",

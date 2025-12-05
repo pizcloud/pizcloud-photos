@@ -38,4 +38,8 @@ class BillingRepository {
       await iap.complete(p);
     }
   }
+
+  Future<void> fakePurchase(String productId) async {
+    await api.notifyVerifiedPurchase(productId: productId, platform: Platform.isAndroid ? 'android' : 'ios');
+  }
 }

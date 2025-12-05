@@ -2,18 +2,21 @@
 import 'dart:convert';
 // import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:immich_mobile/domain/models/user.model.dart';
 
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/config/app_config.dart';
+import 'package:flutter/foundation.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
 class EntitlementApiClient {
-  EntitlementApiClient({required this.immichBaseUrl});
+  EntitlementApiClient({required this.immichBaseUrl, required this.userEntity});
 
   final String immichBaseUrl;
+  final UserDto userEntity;
   // final String billingBaseUrl;
 
   String _join(String base, String path) {
@@ -30,7 +33,6 @@ class EntitlementApiClient {
     final token = Store.tryGet(StoreKey.accessToken);
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
-
       headers['x-immich-user-token'] = headers['x-immich-user-token'] ?? token;
     }
 
@@ -68,11 +70,21 @@ class EntitlementApiClient {
   }
 
   Future<Map<String, dynamic>?> getReferralSummary() async {
-    final url = _join(pizCloudServerUrl, 'papi/referral/summary');
+    String path = 'papi/referral/summary';
+    String email = userEntity.email;
+    if (email != '' && email.trim().isNotEmpty) {
+      final encoded = Uri.encodeQueryComponent(email.trim());
+      path = '$path?email=$encoded';
+    }
+
+    final url = _join(pizCloudServerUrl, path);
     final res = await http.get(Uri.parse(url), headers: _authOnly());
+
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as Map<String, dynamic>;
     }
+
+    debugPrint('getReferralSummary failed: ${res.statusCode} ${res.body}');
     return null;
   }
 

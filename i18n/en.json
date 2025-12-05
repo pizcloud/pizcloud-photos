@@ -1732,7 +1732,8 @@
     "table_title": "Commission by month",
     "title": "Invite friends",
     "total_commission": "Total commission earned",
-    "total_users": "Total referred users"
+    "total_users": "Total referred users",
+    "you_are_receiving_discount_on_this_plan": "You are receiving a 30% discount on this plan thanks to a referral code."
   },
   "referral_program": "Referral Program",
   "refresh": "Refresh",

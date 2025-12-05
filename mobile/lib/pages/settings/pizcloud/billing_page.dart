@@ -95,6 +95,20 @@ String _planShortTitle(String title, String id) {
   return 'Basic';
 }
 
+bool _isLargePlan(String idOrTitleOrDesc) {
+  final s = idOrTitleOrDesc.toLowerCase();
+  return s.contains('500gb') ||
+      s.contains('500 gb') ||
+      s.contains('1tb') ||
+      s.contains('1 tb') ||
+      s.contains('1000gb') ||
+      s.contains('1000 gb') ||
+      s.contains('2tb') ||
+      s.contains('2 tb') ||
+      s.contains('2000gb') ||
+      s.contains('2000 gb');
+}
+
 class PlanDisplay {
   final String id;
   final String title; // Basic / Pro / Premium
@@ -104,6 +118,8 @@ class PlanDisplay {
   final bool highlighted; // Most Popular
   final ProductDetails? raw; // null if fake
 
+  final bool referralDiscountApplied;
+
   const PlanDisplay({
     required this.id,
     required this.title,
@@ -112,6 +128,7 @@ class PlanDisplay {
     required this.features,
     required this.highlighted,
     required this.raw,
+    this.referralDiscountApplied = false,
   });
 }
 
@@ -199,7 +216,66 @@ class _PlanCard extends StatelessWidget {
                             ),
                           ),
                         ],
+                        if (data.referralDiscountApplied) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.local_offer, size: 14, color: Colors.green[700]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '-30% referral',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: Colors.green[700],
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
+                      // children: [
+                      //   Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                      //   const SizedBox(width: 8),
+                      //   if (data.highlighted)
+                      //     Container(
+                      //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      //       decoration: BoxDecoration(
+                      //         color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      //         borderRadius: BorderRadius.circular(12),
+                      //       ),
+                      //       child: Text(
+                      //         'Most Popular',
+                      //         style: theme.textTheme.labelSmall?.copyWith(
+                      //           color: theme.colorScheme.primary,
+                      //           fontWeight: FontWeight.w700,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   if (selected) ...[
+                      //     const SizedBox(width: 8),
+                      //     Container(
+                      //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      //       decoration: BoxDecoration(
+                      //         color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      //         borderRadius: BorderRadius.circular(12),
+                      //       ),
+                      //       child: Text(
+                      //         'Selected',
+                      //         style: theme.textTheme.labelSmall?.copyWith(
+                      //           color: theme.colorScheme.primary,
+                      //           fontWeight: FontWeight.w700,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ],
                     ),
                   ),
                   Column(
@@ -231,6 +307,23 @@ class _PlanCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
+              if (data.referralDiscountApplied)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: Colors.green[700]),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'referral.you_are_receiving_discount_on_this_plan',
+                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.green[700], height: 1.2),
+                        ).tr(),
+                      ),
+                    ],
+                  ),
+                ),
               // Select button
               SizedBox(
                 width: double.infinity,
@@ -292,6 +385,7 @@ class BillingPage extends HookConsumerWidget {
     }
 
     final bool referralStillValid = hasReferralDiscount;
+    debugPrint('referralStillValid: $referralStillValid');
 
     // Toggle Monthly / Yearly (default: Monthly)
     final period = useState(BillingPeriod.monthly);
@@ -309,6 +403,7 @@ class BillingPage extends HookConsumerWidget {
     final List<PlanDisplay> items = [];
     if (isFakeMode) {
       for (final p in kFakeProducts) {
+        final bool largePlan = _isLargePlan('${p.id} ${p.title} ${p.description}');
         items.add(
           PlanDisplay(
             id: p.id,
@@ -318,6 +413,7 @@ class BillingPage extends HookConsumerWidget {
             features: _featuresFor('${p.id} ${p.title}'),
             highlighted: _isMostPopular('${p.id} ${p.title}'),
             raw: null,
+            referralDiscountApplied: referralStillValid && largePlan,
           ),
         );
       }
@@ -360,23 +456,7 @@ class BillingPage extends HookConsumerWidget {
           final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
           final resolvedMonthly = isM || (!isM && !isY);
 
-          items.add(
-            PlanDisplay(
-              id: p.id,
-              title: _planShortTitle(p.title, p.id),
-              price: p.price,
-              isMonthly: resolvedMonthly,
-              features: _featuresFor('${p.id} ${p.title} ${p.description}'),
-              highlighted: _isMostPopular('${p.id} ${p.title}'),
-              raw: p,
-            ),
-          );
-        }
-      } else {
-        for (final p in realProducts) {
-          final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
-          final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
-          final resolvedMonthly = isM || (!isM && !isY);
+          final bool largePlan = _isLargePlan('${p.id} ${p.title} ${p.description}');
 
           items.add(
             PlanDisplay(
@@ -387,6 +467,28 @@ class BillingPage extends HookConsumerWidget {
               features: _featuresFor('${p.id} ${p.title} ${p.description}'),
               highlighted: _isMostPopular('${p.id} ${p.title}'),
               raw: p,
+              referralDiscountApplied: referralStillValid && largePlan,
+            ),
+          );
+        }
+      } else {
+        for (final p in realProducts) {
+          final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
+          final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
+          final resolvedMonthly = isM || (!isM && !isY);
+
+          final bool largePlan = _isLargePlan('${p.id} ${p.title} ${p.description}');
+
+          items.add(
+            PlanDisplay(
+              id: p.id,
+              title: _planShortTitle(p.title, p.id),
+              price: p.price,
+              isMonthly: resolvedMonthly,
+              features: _featuresFor('${p.id} ${p.title} ${p.description}'),
+              highlighted: _isMostPopular('${p.id} ${p.title}'),
+              raw: p,
+              referralDiscountApplied: referralStillValid && largePlan,
             ),
           );
         }
@@ -469,14 +571,21 @@ class BillingPage extends HookConsumerWidget {
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           final plan = selectedPlan.value!;
                           if (plan.raw != null) {
                             // Real purchase
                             ref.read(billingControllerProvider.notifier).buy(plan.raw!);
                           } else {
+                            try {
+                              await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
+                              _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
+                            } catch (e) {
+                              _snack(context, 'Fake buy failed: $e');
+                            }
+
                             // Fake purchase
-                            _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
+                            // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
                           }
                         },
                         style: ElevatedButton.styleFrom(

@@ -34,15 +34,31 @@ class IapService {
   }
 
   Future<void> buy(ProductDetails p) async {
-    PurchaseParam param;
     if (Platform.isAndroid && p is GooglePlayProductDetails) {
-      param = GooglePlayPurchaseParam(productDetails: p, offerToken: p.offerToken);
-    } else {
-      param = PurchaseParam(productDetails: p);
+      final googleProduct = p;
+      final String? offerToken = googleProduct.offerToken;
+
+      if (offerToken != null && offerToken.isNotEmpty) {
+        final param = GooglePlayPurchaseParam(productDetails: googleProduct, offerToken: offerToken);
+        await _iap.buyNonConsumable(purchaseParam: param);
+        return;
+      }
     }
-    // final param = PurchaseParam(productDetails: p);
+
+    final param = PurchaseParam(productDetails: p);
     await _iap.buyNonConsumable(purchaseParam: param);
   }
+
+  // Future<void> buy(ProductDetails p) async {
+  //   PurchaseParam param;
+  //   if (Platform.isAndroid && p is GooglePlayProductDetails) {
+  //     param = GooglePlayPurchaseParam(productDetails: p, offerToken: p.offerToken);
+  //   } else {
+  //     param = PurchaseParam(productDetails: p);
+  //   }
+  //   // final param = PurchaseParam(productDetails: p);
+  //   await _iap.buyNonConsumable(purchaseParam: param);
+  // }
 
   Future<void> restore() => _iap.restorePurchases();
 
