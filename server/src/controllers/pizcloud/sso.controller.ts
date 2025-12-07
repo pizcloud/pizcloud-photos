@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import { AuthDto, OAuthAuthorizeResponseDto, OAuthCallbackDto, OAuthConfigDto } from 'src/dtos/auth.dto';
 import { UserAdminResponseDto } from 'src/dtos/user.dto';
-import { ApiTag, ImmichCookie } from 'src/enum';
+import { ApiTag, AuthType, ImmichCookie } from 'src/enum';
 import { Auth, Authenticated, GetLoginDetails } from 'src/middleware/auth.guard';
 import { LoginDetails, SsoService } from 'src/services/pizcloud/sso.service';
 import { respondWithCookie } from 'src/utils/response';
@@ -64,24 +64,29 @@ export class SsoController {
     @Req() request: Request,
     @Res({ passthrough: true }) res: Response,
     // @Body() dto: OAuthCallbackDto,
-    // @GetLoginDetails() loginDetails: LoginDetails,
+    @GetLoginDetails() loginDetails: LoginDetails,
     @Query('sso_token') ssoToken: string,
+    @Query('continue') continueUrl: string,
   ): Promise<any> {
-    const body = await this.service.callback(ssoToken);
-    console.log(ssoToken);
-    return {};
+    // console.log(request.url);
+    const body = await this.service.callback(ssoToken, loginDetails);
+    // console.log(ssoToken);
     /*const body = await this.service.callback(dto, request.headers, loginDetails);
     res.clearCookie(ImmichCookie.OAuthState);
     res.clearCookie(ImmichCookie.OAuthCodeVerifier);
-    return respondWithCookie(res, body, {
+    */
+    respondWithCookie(res, body, {
       isSecure: loginDetails.isSecure,
       values: [
         { key: ImmichCookie.AccessToken, value: body.accessToken },
         { key: ImmichCookie.AuthType, value: AuthType.OAuth },
         { key: ImmichCookie.IsAuthenticated, value: 'true' },
-        { key: ImmichCookie.UserId, value: body.userId }, // pizcloud
+        { key: ImmichCookie.UserId, value: body.userId },
       ],
-    });*/
+    });
+    if (continueUrl != '') {
+      res.redirect(continueUrl);
+    }
   }
 
   @Post('link')

@@ -8,16 +8,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { parse } from 'cookie';
+import { verify } from 'jsonwebtoken';
 import { DateTime } from 'luxon';
 import { readFileSync } from 'node:fs';
 import { IncomingHttpHeaders } from 'node:http';
 import { join, resolve } from 'node:path';
-// import { verify } from 'jsonwebtoken';
 import {
   DEFAULT_FREE_TIER_QUOTA_BYTES,
   LOGIN_URL,
   MOBILE_REDIRECT,
   SALT_ROUNDS,
+  SSO_JWT_AUDIENCE,
+  SSO_JWT_ISSUER,
   SSO_JWT_PUBLIC_KEY_PATH,
   USER_SIGNUP_ENABLED,
 } from 'src/constants';
@@ -45,6 +47,7 @@ import { OAuthProfile } from 'src/repositories/oauth.repository';
 import { BaseService } from 'src/services/base.service';
 import { UserAdminService } from 'src/services/user-admin.service';
 import { isGranted } from 'src/utils/access';
+import { HumanReadableSize } from 'src/utils/bytes';
 import { mimeTypes } from 'src/utils/mime-types';
 import { getUserAgentDetails } from 'src/utils/request';
 export interface LoginDetails {
@@ -272,7 +275,7 @@ export class SsoService extends BaseService {
     );
   }
 
-  async callback(ssoToken: string) {
+  async callback(ssoToken: string, loginDetails: LoginDetails) {
     const publicKeyPath = SSO_JWT_PUBLIC_KEY_PATH;
     if (!publicKeyPath) {
       throw new Error('SSO public key is not configured');
@@ -283,101 +286,62 @@ export class SsoService extends BaseService {
       throw new HttpException('Missing SSO token', HttpStatus.UNAUTHORIZED);
     }
 
-    /*try {
-      const payload = verify(ssoToken, this.publicKey, {
+    var payload;
+    try {
+      payload = verify(ssoToken, publicKey, {
         algorithms: ['RS256'],
-        audience: env.sso.audience,
-        issuer: env.sso.issuer,
+        audience: SSO_JWT_AUDIENCE,
+        issuer: SSO_JWT_ISSUER,
       });
-
-      return {
-        status: 'ok',
-        ssoToken: ssoToken,
-        payload,
-      };
     } catch (err) {
-      throw new HttpException(
-        `SSO token invalid: ${(err as Error).message}`,
-        HttpStatus.UNAUTHORIZED,
-      );
-    }*/
-
-    /*const expectedState = dto.state ?? this.getCookieOauthState(headers);
-    if (!expectedState?.length) {
-      throw new BadRequestException('OAuth state is missing');
+      throw new HttpException(`SSO token invalid: ${(err as Error).message}`, HttpStatus.UNAUTHORIZED);
+    }
+    // console.log(payload);
+    if (typeof payload != 'object') {
+      throw new HttpException(`payload invalid`, HttpStatus.UNAUTHORIZED);
+    }
+    const email = payload.email;
+    const oauthId = payload.sub;
+    const name = payload.name;
+    // const name =
+    if (!oauthId) {
+      throw new Error('Unexpected profile response, no `sub`');
     }
 
-    const codeVerifier = dto.codeVerifier ?? this.getCookieCodeVerifier(headers);
-    if (!codeVerifier?.length) {
-      throw new BadRequestException('OAuth code verifier is missing');
-    }
-
-    const { oauth } = await this.getConfig({ withCache: false });
-    const url = this.resolveRedirectUri(oauth, dto.url);
-    const profile = await this.oauthRepository.getProfile(oauth, url, expectedState, codeVerifier);
-    const { autoRegister, defaultStorageQuota, storageLabelClaim, storageQuotaClaim, roleClaim } = oauth;
-    this.logger.debug(`Logging in with OAuth: ${JSON.stringify(profile)}`);
-    let user: UserAdmin | undefined = await this.userRepository.getByOAuthId(profile.sub);
-
+    // console.log(payload)
+    let user: UserAdmin | undefined = await this.userRepository.getByOAuthId(oauthId);
+    // console.log(user)
     // link by email
-    if (!user && profile.email) {
-      const emailUser = await this.userRepository.getByEmail(profile.email);
+    if (!user && email) {
+      const emailUser = await this.userRepository.getByEmail(email);
       if (emailUser) {
         if (emailUser.oauthId) {
-          throw new BadRequestException('User already exists, but is linked to another account.');
+          console.log('User already exists, but is linked to another account.');
+          // throw new BadRequestException('User already exists, but is linked to another account.');
         }
-        user = await this.userRepository.update(emailUser.id, { oauthId: profile.sub });
+        user = await this.userRepository.update(emailUser.id, { oauthId: oauthId });
       }
     }
 
     // register new user
     if (!user) {
-      if (!autoRegister) {
-        this.logger.warn(
-          `Unable to register ${profile.sub}/${profile.email || '(no email)'}. To enable set OAuth Auto Register to true in admin settings.`,
-        );
-        throw new BadRequestException(`User does not exist and auto registering is disabled.`);
-      }
-
-      if (!profile.email) {
+      if (!email) {
         throw new BadRequestException('OAuth profile does not have an email address');
       }
 
-      this.logger.log(`Registering new user: ${profile.sub}/${profile.email}`);
+      this.logger.log(`Registering new user: ${oauthId}/${email}`);
 
-      const storageLabel = this.getClaim(profile, {
-        key: storageLabelClaim,
-        default: '',
-        isValid: isString,
-      });
-      const storageQuota = this.getClaim(profile, {
-        key: storageQuotaClaim,
-        default: defaultStorageQuota,
-        isValid: (value: unknown) => Number(value) >= 0,
-      });
-      const role = this.getClaim<'admin' | 'user'>(profile, {
-        key: roleClaim,
-        default: 'user',
-        isValid: (value: unknown) => isString(value) && ['admin', 'user'].includes(value),
-      });
-
-      const userName = profile.name ?? `${profile.given_name || ''} ${profile.family_name || ''}`;
       user = await this.createUser({
-        name: userName,
-        email: profile.email,
-        oauthId: profile.sub,
-        quotaSizeInBytes: storageQuota === null ? null : storageQuota * HumanReadableSize.GiB,
-        storageLabel: storageLabel || null,
-        isAdmin: role === 'admin',
+        name: name,
+        email: email,
+        oauthId: oauthId,
+        quotaSizeInBytes: 30 * HumanReadableSize.GiB,
+        storageLabel: null,
+        isAdmin: false,
       });
-    }
-
-    if (!user.profileImagePath && profile.picture) {
-      await this.syncProfilePicture(user, profile.picture);
     }
 
     return this.createLoginResponse(user, loginDetails);
-    */
   }
 
   private async syncProfilePicture(user: UserAdmin, url: string) {
