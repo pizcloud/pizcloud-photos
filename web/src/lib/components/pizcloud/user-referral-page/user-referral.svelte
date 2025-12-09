@@ -33,7 +33,7 @@
     totalReferredUsers = 0,
     totalCommission = 0,
     monthlyStats = [],
-    currency = 'VND',
+    currency = 'USD',
     referrer = null,
     userEmail = '',
     keys,

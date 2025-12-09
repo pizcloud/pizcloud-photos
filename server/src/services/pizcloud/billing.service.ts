@@ -307,6 +307,20 @@ export class BillingService {
       return;
     }
 
+    if (notificationType === 1) { // PURCHASED
+      this.logger.log(
+        `RTDN: PURCHASED event for ${productId}, ignore for pizCloud (already handled by app)`,
+      );
+      return;
+    }
+
+    if (notificationType !== 2) { // RENEWED
+      this.logger.log(
+        `RTDN: notificationType=${notificationType} for productId=${productId}, not handled`,
+      );
+      return;
+    }
+
     const subInfo = await this.fetchAndroidSubscriptionInfo(
       packageName,
       productId,

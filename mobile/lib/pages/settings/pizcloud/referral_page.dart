@@ -7,12 +7,42 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:immich_mobile/pages/settings/pizcloud/referral_payout_method_page.dart';
 // import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:immich_mobile/config/app_config.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+
+class ReferralPayoutMethod {
+  final String? method; // 'bank' | 'paypal' | null
+  final String? bankName;
+  final String? bankAccountNumber;
+  final String? bankAccountHolderName;
+  final String? paypalEmail;
+  final String? paypalFullName;
+
+  const ReferralPayoutMethod({
+    required this.method,
+    this.bankName,
+    this.bankAccountNumber,
+    this.bankAccountHolderName,
+    this.paypalEmail,
+    this.paypalFullName,
+  });
+
+  factory ReferralPayoutMethod.fromJson(Map<String, dynamic> json) {
+    return ReferralPayoutMethod(
+      method: json['method'] as String?,
+      bankName: json['bankName'] as String?,
+      bankAccountNumber: json['bankAccountNumber'] as String?,
+      bankAccountHolderName: json['bankAccountHolderName'] as String?,
+      paypalEmail: json['paypalEmail'] as String?,
+      paypalFullName: json['paypalFullName'] as String?,
+    );
+  }
+}
 
 class MonthlyStat {
   final String month;
@@ -84,7 +114,7 @@ class ReferralPage extends HookConsumerWidget {
     final totalReferredUsers = useState<int>(0);
     final totalCommission = useState<double>(0);
     final monthlyStatsState = useState<List<MonthlyStat>>(<MonthlyStat>[]);
-    final currency = useState<String>('VND');
+    final currency = useState<String>('USD');
     final localReferrer = useState<ReferrerInfo?>(null);
 
     // Loading + error cho summary
@@ -96,6 +126,10 @@ class ReferralPage extends HookConsumerWidget {
     final applyLoading = useState<bool>(false);
     final applyError = useState<String?>(null);
     final applySuccess = useState<String?>(null);
+
+    final minWithdrawAmount = AppConfig.minReferralWithdrawAmount;
+
+    final payoutMethodState = useState<ReferralPayoutMethod?>(null);
 
     Future<void> loadSummary() async {
       summaryLoading.value = true;
@@ -147,7 +181,7 @@ class ReferralPage extends HookConsumerWidget {
         referralCode.value = (data['referralCode'] ?? '').toString();
         totalReferredUsers.value = (data['totalReferredUsers'] as num?)?.toInt() ?? 0;
         totalCommission.value = (data['totalCommission'] as num?)?.toDouble() ?? 0.0;
-        currency.value = (data['currency'] ?? 'VND').toString();
+        currency.value = (data['currency'] ?? 'USD').toString();
 
         final statsRaw = data['monthlyStats'] as List<dynamic>? ?? <dynamic>[];
         monthlyStatsState.value = statsRaw
@@ -180,8 +214,33 @@ class ReferralPage extends HookConsumerWidget {
       }
     }
 
+    Future<void> loadPayoutMethod() async {
+      if (userEmail == null || userEmail!.isEmpty) {
+        payoutMethodState.value = null;
+        return;
+      }
+
+      try {
+        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        Uri uri = Uri.parse('$base/papi/referral/payout-method').replace(queryParameters: {'email': userEmail!});
+
+        final res = await http.get(uri);
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          final data = jsonDecode(res.body);
+          if (data is Map<String, dynamic>) {
+            payoutMethodState.value = ReferralPayoutMethod.fromJson(data);
+          }
+        } else {
+          debugPrint('Failed to load payout method: ${res.statusCode} ${res.body}');
+        }
+      } catch (e, s) {
+        debugPrint('Error loading payout method: $e\n$s');
+      }
+    }
+
     useEffect(() {
       loadSummary();
+      loadPayoutMethod();
       return null;
     }, [userEmail]);
 
@@ -333,7 +392,340 @@ class ReferralPage extends HookConsumerWidget {
         totalCommission.value == 0 &&
         monthlyStatsState.value.isEmpty;
 
+    Future<void> openWithdrawDialog() async {
+      if (userEmail == null || userEmail!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('referral.withdraw_missing_email'.tr())));
+        return;
+      }
+
+      final currentBalance = totalCommission.value;
+      final currentCurrency = currency.value;
+      final minAmount = minWithdrawAmount;
+      final payout = payoutMethodState.value;
+
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) {
+          final theme = Theme.of(ctx);
+
+          final amountController = TextEditingController(
+            text: currentBalance > 0 ? currentBalance.toStringAsFixed(2) : '',
+          );
+
+          String? errorText;
+          bool submitting = false;
+          String withdrawMethod = (payout?.method == 'paypal' ? 'paypal' : 'bank');
+
+          void goEditPayout() {
+            Navigator.of(ctx).pop();
+            if (userEmail == null || userEmail!.isEmpty) return;
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ReferralPayoutMethodPage(
+                  userEmail: userEmail!,
+                  onSaved: () {
+                    loadPayoutMethod();
+                    loadSummary();
+                  },
+                ),
+              ),
+            );
+          }
+
+          bool hasInfoFor(String method) {
+            if (payout == null) return false;
+            if (method == 'bank') {
+              return (payout.bankName ?? '').isNotEmpty &&
+                  (payout.bankAccountNumber ?? '').isNotEmpty &&
+                  (payout.bankAccountHolderName ?? '').isNotEmpty;
+            } else {
+              return (payout.paypalEmail ?? '').isNotEmpty;
+            }
+          }
+
+          return StatefulBuilder(
+            builder: (ctx, setState) {
+              Future<void> submit() async {
+                FocusScope.of(ctx).unfocus();
+
+                final raw = amountController.text.trim().replaceAll(',', '');
+                final amount = double.tryParse(raw);
+
+                if (amount == null || amount <= 0) {
+                  setState(() {
+                    errorText = 'referral.withdraw_amount_invalid'.tr();
+                  });
+                  return;
+                }
+
+                if (amount < minAmount) {
+                  setState(() {
+                    errorText = 'referral.withdraw_min_error'.tr(namedArgs: {'min': minAmount.toStringAsFixed(2)});
+                  });
+                  return;
+                }
+
+                if (amount > currentBalance) {
+                  setState(() {
+                    errorText = 'referral.withdraw_balance_insufficient'.tr();
+                  });
+                  return;
+                }
+
+                if (!hasInfoFor(withdrawMethod)) {
+                  setState(() {
+                    errorText = withdrawMethod == 'bank'
+                        ? 'referral.withdraw_bank_info_required'.tr()
+                        : 'referral.withdraw_paypal_info_required'.tr();
+                  });
+                  return;
+                }
+
+                setState(() {
+                  errorText = null;
+                  submitting = true;
+                });
+
+                try {
+                  final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+                  final uri = Uri.parse('$base/papi/referral/withdrawals');
+
+                  final res = await http.post(
+                    uri,
+                    headers: const {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'email': userEmail,
+                      'amount': amount,
+                      'currency': currentCurrency,
+                      'method': withdrawMethod,
+                    }),
+                  );
+
+                  if (res.statusCode < 200 || res.statusCode >= 300) {
+                    String? code;
+                    try {
+                      final body = jsonDecode(res.body);
+                      if (body is Map<String, dynamic>) {
+                        final msg = body['message'];
+                        if (msg is String) {
+                          code = msg;
+                        } else if (msg is List && msg.isNotEmpty && msg.first is String) {
+                          code = msg.first as String;
+                        }
+                      }
+                    } catch (_) {}
+
+                    switch (code) {
+                      case 'MIN_TOTAL_COMMISSION_NOT_REACHED':
+                        setState(() {
+                          errorText = 'referral.withdraw_min_total_not_reached'.tr(
+                            namedArgs: {'min': minAmount.toStringAsFixed(2)},
+                          );
+                        });
+                        break;
+                      case 'AMOUNT_EXCEEDS_BALANCE':
+                      case 'AMOUNT_EXCEEDS_AVAILABLE_AFTER_PENDING':
+                        setState(() {
+                          errorText = 'referral.withdraw_balance_insufficient'.tr();
+                        });
+                        break;
+                      case 'INVALID_AMOUNT':
+                        setState(() {
+                          errorText = 'referral.withdraw_amount_invalid'.tr();
+                        });
+                        break;
+                      case 'INVALID_WITHDRAW_METHOD':
+                        setState(() {
+                          errorText = 'referral.withdraw_method_invalid'.tr();
+                        });
+                        break;
+                      case 'BANK_INFO_REQUIRED':
+                        setState(() {
+                          errorText = 'referral.withdraw_bank_info_required'.tr();
+                        });
+                        break;
+                      case 'PAYPAL_INFO_REQUIRED':
+                        setState(() {
+                          errorText = 'referral.withdraw_paypal_info_required'.tr();
+                        });
+                        break;
+                      case 'USER_NOT_FOUND':
+                      case 'EMAIL_REQUIRED':
+                        setState(() {
+                          errorText = 'referral.apply_missing_email'.tr();
+                        });
+                        break;
+                      default:
+                        setState(() {
+                          errorText = 'referral.withdraw_request_error'.tr();
+                        });
+                    }
+
+                    return;
+                  }
+
+                  if (context.mounted) {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('referral.withdraw_request_success'.tr())));
+                  }
+                } catch (e, s) {
+                  debugPrint('Error requesting withdrawal: $e\n$s');
+                  setState(() {
+                    errorText = 'referral.withdraw_request_error'.tr();
+                  });
+                } finally {
+                  setState(() {
+                    submitting = false;
+                  });
+                }
+              }
+
+              String buildPayoutSummary(String method) {
+                if (payout == null) return 'referral.withdraw_no_payout_info'.tr();
+                if (method == 'bank') {
+                  if (!hasInfoFor('bank')) {
+                    return 'referral.withdraw_bank_info_required'.tr();
+                  }
+                  return [
+                    payout.bankName ?? '',
+                    payout.bankAccountNumber ?? '',
+                    payout.bankAccountHolderName ?? '',
+                  ].where((e) => e.isNotEmpty).join(' • ');
+                } else {
+                  if (!hasInfoFor('paypal')) {
+                    return 'referral.withdraw_paypal_info_required'.tr();
+                  }
+                  final parts = [
+                    payout.paypalEmail ?? '',
+                    payout.paypalFullName ?? '',
+                  ].where((e) => e.isNotEmpty).toList();
+                  return parts.isEmpty ? 'referral.withdraw_paypal_info_required'.tr() : parts.join(' • ');
+                }
+              }
+
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                title: Text(
+                  'referral.withdraw_title'.tr(),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'referral.withdraw_description'.tr(namedArgs: {'min': minAmount.toStringAsFixed(2)}),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'referral.withdraw_balance_label'.tr(
+                          namedArgs: {'balance': formatCurrency(currentBalance, currentCurrency)},
+                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'referral.withdraw_method_label'.tr(),
+                        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ChoiceChip(
+                              label: Text('referral.withdraw_method_bank'.tr()),
+                              selected: withdrawMethod == 'bank',
+                              onSelected: (v) {
+                                if (!v) return;
+                                setState(() {
+                                  withdrawMethod = 'bank';
+                                  errorText = null;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ChoiceChip(
+                              label: Text('referral.withdraw_method_paypal'.tr()),
+                              selected: withdrawMethod == 'paypal',
+                              onSelected: (v) {
+                                if (!v) return;
+                                setState(() {
+                                  withdrawMethod = 'paypal';
+                                  errorText = null;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            buildPayoutSummary(withdrawMethod),
+                            style: theme.textTheme.bodySmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 2),
+                          TextButton(
+                            onPressed: goEditPayout,
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 0),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text('referral.withdraw_edit_payout_method'.tr(), textAlign: TextAlign.center),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      TextField(
+                        controller: amountController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          labelText: 'referral.withdraw_amount_label'.tr(),
+                          hintText: 'referral.withdraw_amount_hint'.tr(),
+                          isDense: true,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onSubmitted: (_) => submit(),
+                      ),
+                      if (errorText != null && errorText!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(errorText!, style: theme.textTheme.bodySmall?.copyWith(color: Colors.red.shade500)),
+                      ],
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(onPressed: submitting ? null : () => Navigator.of(ctx).pop(), child: Text('cancel'.tr())),
+                  ElevatedButton(
+                    onPressed: submitting ? null : submit,
+                    style: ElevatedButton.styleFrom(shape: const StadiumBorder()),
+                    child: submitting
+                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text('referral.withdraw_submit'.tr()),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    }
+
     Widget buildLoadedBody() {
+      final canWithdraw = totalCommission.value >= minWithdrawAmount;
+
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
@@ -376,6 +768,35 @@ class ReferralPage extends HookConsumerWidget {
               totalReferredUsers: totalReferredUsers.value,
               totalCommission: totalCommission.value,
               currency: currency.value,
+            ),
+
+            // Withdraw section
+            const SizedBox(height: 12),
+            _WithdrawSection(
+              canWithdraw: canWithdraw,
+              minWithdrawAmount: minWithdrawAmount,
+              totalCommission: totalCommission.value,
+              currency: currency.value,
+              onTap: openWithdrawDialog,
+              onEditPayoutMethod: () {
+                if (userEmail == null || userEmail!.isEmpty) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('referral.withdraw_missing_email'.tr())));
+                  return;
+                }
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ReferralPayoutMethodPage(
+                      userEmail: userEmail!,
+                      onSaved: () {
+                        loadPayoutMethod();
+                        loadSummary();
+                      },
+                    ),
+                  ),
+                );
+              },
             ),
 
             if (isEmptyState) ...[const SizedBox(height: 16), _EmptyState(onCopy: handleCopy)],
@@ -850,6 +1271,98 @@ class _PillButton extends StatelessWidget {
                   color: primary ? colorScheme.onPrimary : colorScheme.primary,
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _WithdrawSection extends StatelessWidget {
+  const _WithdrawSection({
+    required this.canWithdraw,
+    required this.minWithdrawAmount,
+    required this.totalCommission,
+    required this.currency,
+    required this.onTap,
+    required this.onEditPayoutMethod,
+  });
+
+  final bool canWithdraw;
+  final double minWithdrawAmount;
+  final double totalCommission;
+  final String currency;
+  final VoidCallback onTap;
+  final VoidCallback onEditPayoutMethod;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodySmall?.color?.withValues(alpha: 0.9);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'referral.withdraw_section_title'.tr(),
+            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'referral.withdraw_section_hint'.tr(namedArgs: {'min': minWithdrawAmount.toStringAsFixed(2)}),
+            style: theme.textTheme.bodySmall?.copyWith(color: textColor),
+          ),
+          // const SizedBox(height: 8),
+          // InkWell(
+          //   onTap: onEditPayoutMethod,
+          //   child: Text(
+          //     'referral.withdraw_edit_payout_method'.tr(),
+          //     style: theme.textTheme.bodySmall?.copyWith(
+          //       color: theme.colorScheme.primary,
+          //       decoration: TextDecoration.underline,
+          //     ),
+          //   ),
+          // ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'referral.withdraw_current_balance'.tr(
+                    namedArgs: {'balance': formatCurrency(totalCommission, currency)},
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                height: 36,
+                child: _PillButton(
+                  label: 'referral.withdraw_button'.tr(),
+                  onPressed: canWithdraw
+                      ? onTap
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'referral.withdraw_min_total_not_reached'.tr(
+                                  namedArgs: {'min': minWithdrawAmount.toStringAsFixed(2)},
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                  primary: true,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

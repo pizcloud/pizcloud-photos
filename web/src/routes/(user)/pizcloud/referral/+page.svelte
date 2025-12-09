@@ -33,7 +33,7 @@
       totalReferredUsers={data.referral?.totalReferredUsers ?? 0}
       totalCommission={data.referral?.totalCommission ?? 0}
       monthlyStats={data.referral?.monthlyStats ?? []}
-      currency={data.referral?.currency ?? 'VND'}
+      currency={data.referral?.currency ?? 'USD'}
       referrer={data.referral?.referrer ?? null}
       userEmail={data.referralEmail ?? ''}
     />
