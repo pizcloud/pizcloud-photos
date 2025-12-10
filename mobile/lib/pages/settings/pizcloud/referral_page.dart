@@ -12,37 +12,10 @@ import 'package:immich_mobile/pages/settings/pizcloud/referral_payout_method_pag
 import 'package:share_plus/share_plus.dart';
 
 import 'package:immich_mobile/config/app_config.dart';
+import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
+import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
-
-class ReferralPayoutMethod {
-  final String? method; // 'bank' | 'paypal' | null
-  final String? bankName;
-  final String? bankAccountNumber;
-  final String? bankAccountHolderName;
-  final String? paypalEmail;
-  final String? paypalFullName;
-
-  const ReferralPayoutMethod({
-    required this.method,
-    this.bankName,
-    this.bankAccountNumber,
-    this.bankAccountHolderName,
-    this.paypalEmail,
-    this.paypalFullName,
-  });
-
-  factory ReferralPayoutMethod.fromJson(Map<String, dynamic> json) {
-    return ReferralPayoutMethod(
-      method: json['method'] as String?,
-      bankName: json['bankName'] as String?,
-      bankAccountNumber: json['bankAccountNumber'] as String?,
-      bankAccountHolderName: json['bankAccountHolderName'] as String?,
-      paypalEmail: json['paypalEmail'] as String?,
-      paypalFullName: json['paypalFullName'] as String?,
-    );
-  }
-}
 
 class MonthlyStat {
   final String month;
@@ -221,18 +194,8 @@ class ReferralPage extends HookConsumerWidget {
       }
 
       try {
-        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-        Uri uri = Uri.parse('$base/papi/referral/payout-method').replace(queryParameters: {'email': userEmail!});
-
-        final res = await http.get(uri);
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          final data = jsonDecode(res.body);
-          if (data is Map<String, dynamic>) {
-            payoutMethodState.value = ReferralPayoutMethod.fromJson(data);
-          }
-        } else {
-          debugPrint('Failed to load payout method: ${res.statusCode} ${res.body}');
-        }
+        final pm = await referralPayoutMethodService.loadPayoutMethod(userEmail!);
+        payoutMethodState.value = pm;
       } catch (e, s) {
         debugPrint('Error loading payout method: $e\n$s');
       }

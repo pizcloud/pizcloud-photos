@@ -1,16 +1,11 @@
-import 'dart:convert';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:http/http.dart' as http;
 
-import 'package:immich_mobile/config/app_config.dart';
-import 'referral_page.dart';
-
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+// import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
+import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.dart';
 
 @RoutePage()
 class ReferralPayoutMethodPage extends HookConsumerWidget {
@@ -22,6 +17,8 @@ class ReferralPayoutMethodPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+
+    final payoutService = referralPayoutMethodService;
 
     final loading = useState<bool>(true);
     final saving = useState<bool>(false);
@@ -41,23 +38,15 @@ class ReferralPayoutMethodPage extends HookConsumerWidget {
       error.value = null;
 
       try {
-        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-        final uri = Uri.parse('$base/papi/referral/payout-method').replace(queryParameters: {'email': userEmail});
+        final pm = await payoutService.loadPayoutMethod(userEmail);
 
-        final res = await http.get(uri);
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          final data = jsonDecode(res.body);
-          if (data is Map<String, dynamic>) {
-            final pm = ReferralPayoutMethod.fromJson(data);
-            method.value = pm.method == 'paypal' ? 'paypal' : 'bank';
-            bankNameController.text = pm.bankName ?? '';
-            bankAccountController.text = pm.bankAccountNumber ?? '';
-            bankHolderController.text = pm.bankAccountHolderName ?? '';
-            paypalEmailController.text = pm.paypalEmail ?? '';
-            paypalFullNameController.text = pm.paypalFullName ?? '';
-          }
-        } else {
-          error.value = 'referral.payout_method_load_error'.tr();
+        if (pm != null) {
+          method.value = pm.method == 'paypal' ? 'paypal' : 'bank';
+          bankNameController.text = pm.bankName ?? '';
+          bankAccountController.text = pm.bankAccountNumber ?? '';
+          bankHolderController.text = pm.bankAccountHolderName ?? '';
+          paypalEmailController.text = pm.paypalEmail ?? '';
+          paypalFullNameController.text = pm.paypalFullName ?? '';
         }
       } catch (e, s) {
         debugPrint('Error loading payout method: $e\n$s');
@@ -77,6 +66,7 @@ class ReferralPayoutMethodPage extends HookConsumerWidget {
 
       final currentMethod = method.value;
 
+      // Validate client-side
       if (currentMethod == 'bank') {
         if (bankNameController.text.trim().isEmpty ||
             bankAccountController.text.trim().isEmpty ||
@@ -94,31 +84,17 @@ class ReferralPayoutMethodPage extends HookConsumerWidget {
       saving.value = true;
 
       try {
-        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-        final uri = Uri.parse('$base/papi/referral/payout-method');
+        final code = await payoutService.savePayoutMethod(
+          email: userEmail,
+          method: currentMethod,
+          bankName: bankNameController.text,
+          bankAccountNumber: bankAccountController.text,
+          bankAccountHolderName: bankHolderController.text,
+          paypalEmail: paypalEmailController.text,
+          paypalFullName: paypalFullNameController.text,
+        );
 
-        final body = {
-          'email': userEmail,
-          'method': currentMethod,
-          'bankName': bankNameController.text.trim(),
-          'bankAccountNumber': bankAccountController.text.trim(),
-          'bankAccountHolderName': bankHolderController.text.trim(),
-          'paypalEmail': paypalEmailController.text.trim(),
-          'paypalFullName': paypalFullNameController.text.trim(),
-        };
-
-        final res = await http.post(uri, headers: const {'Content-Type': 'application/json'}, body: jsonEncode(body));
-
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          String? code;
-          try {
-            final data = jsonDecode(res.body);
-            if (data is Map<String, dynamic>) {
-              final msg = data['message'];
-              if (msg is String) code = msg;
-            }
-          } catch (_) {}
-
+        if (code != null) {
           switch (code) {
             case 'BANK_INFO_REQUIRED':
               error.value = 'referral.withdraw_bank_info_required'.tr();
@@ -139,6 +115,7 @@ class ReferralPayoutMethodPage extends HookConsumerWidget {
           return;
         }
 
+        // success
         onSaved?.call();
 
         if (context.mounted) {
