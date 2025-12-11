@@ -14,6 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
 import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.dart';
+import 'package:immich_mobile/pages/settings/pizcloud/referral_withdrawals_page.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
@@ -90,6 +91,12 @@ class ReferralPage extends HookConsumerWidget {
     final currency = useState<String>('USD');
     final localReferrer = useState<ReferrerInfo?>(null);
 
+    final totalCommissionPaid = useState<double>(0);
+    final availableBalance = useState<double>(0);
+    final totalRequestedWithdrawal = useState<double>(0);
+    final totalPaidWithdrawal = useState<double>(0);
+    final pendingWithdrawalAmount = useState<double>(0);
+
     // Loading + error cho summary
     final summaryLoading = useState<bool>(true);
     final summaryError = useState<String?>(null);
@@ -155,6 +162,12 @@ class ReferralPage extends HookConsumerWidget {
         totalReferredUsers.value = (data['totalReferredUsers'] as num?)?.toInt() ?? 0;
         totalCommission.value = (data['totalCommission'] as num?)?.toDouble() ?? 0.0;
         currency.value = (data['currency'] ?? 'USD').toString();
+
+        totalCommissionPaid.value = (data['totalCommissionPaid'] as num?)?.toDouble() ?? 0.0;
+        availableBalance.value = (data['availableBalance'] as num?)?.toDouble() ?? 0.0;
+        totalRequestedWithdrawal.value = (data['totalRequestedWithdrawal'] as num?)?.toDouble() ?? 0.0;
+        totalPaidWithdrawal.value = (data['totalPaidWithdrawal'] as num?)?.toDouble() ?? 0.0;
+        pendingWithdrawalAmount.value = (data['pendingWithdrawalAmount'] as num?)?.toDouble() ?? 0.0;
 
         final statsRaw = data['monthlyStats'] as List<dynamic>? ?? <dynamic>[];
         monthlyStatsState.value = statsRaw
@@ -361,7 +374,7 @@ class ReferralPage extends HookConsumerWidget {
         return;
       }
 
-      final currentBalance = totalCommission.value;
+      final currentBalance = availableBalance.value;
       final currentCurrency = currency.value;
       final minAmount = minWithdrawAmount;
       final payout = payoutMethodState.value;
@@ -428,7 +441,8 @@ class ReferralPage extends HookConsumerWidget {
                   return;
                 }
 
-                if (amount > currentBalance) {
+                const epsilon = 0.0001;
+                if (amount - currentBalance > epsilon) {
                   setState(() {
                     errorText = 'referral.withdraw_balance_insufficient'.tr();
                   });
@@ -532,6 +546,7 @@ class ReferralPage extends HookConsumerWidget {
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('referral.withdraw_request_success'.tr())));
+                    await loadSummary();
                   }
                 } catch (e, s) {
                   debugPrint('Error requesting withdrawal: $e\n$s');
@@ -687,7 +702,7 @@ class ReferralPage extends HookConsumerWidget {
     }
 
     Widget buildLoadedBody() {
-      final canWithdraw = totalCommission.value >= minWithdrawAmount;
+      final canWithdraw = totalCommissionPaid.value >= minWithdrawAmount && availableBalance.value > 0;
 
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -731,6 +746,7 @@ class ReferralPage extends HookConsumerWidget {
               totalReferredUsers: totalReferredUsers.value,
               totalCommission: totalCommission.value,
               currency: currency.value,
+              availableBalance: availableBalance.value,
             ),
 
             // Withdraw section
@@ -738,7 +754,7 @@ class ReferralPage extends HookConsumerWidget {
             _WithdrawSection(
               canWithdraw: canWithdraw,
               minWithdrawAmount: minWithdrawAmount,
-              totalCommission: totalCommission.value,
+              totalCommission: availableBalance.value,
               currency: currency.value,
               onTap: openWithdrawDialog,
               onEditPayoutMethod: () {
@@ -760,6 +776,25 @@ class ReferralPage extends HookConsumerWidget {
                   ),
                 );
               },
+            ),
+
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  if (userEmail == null || userEmail!.isEmpty) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('referral.withdraw_missing_email'.tr())));
+                    return;
+                  }
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => ReferralWithdrawalsPage(userEmail: userEmail!)));
+                },
+                child: Text('referral.withdraw_history_button'.tr()),
+              ),
             ),
 
             if (isEmptyState) ...[const SizedBox(height: 16), _EmptyState(onCopy: handleCopy)],
@@ -1034,23 +1069,38 @@ class _ReferrerSection extends StatelessWidget {
 }
 
 class _SummaryStats extends StatelessWidget {
-  const _SummaryStats({required this.totalReferredUsers, required this.totalCommission, required this.currency});
+  const _SummaryStats({
+    required this.totalReferredUsers,
+    required this.totalCommission,
+    required this.currency,
+    required this.availableBalance,
+  });
 
   final int totalReferredUsers;
   final double totalCommission;
   final String currency;
+  final double availableBalance;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _StatCard(label: 'referral.total_users'.tr(), value: totalReferredUsers.toString()),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(label: 'referral.total_users'.tr(), value: totalReferredUsers.toString()),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                label: 'referral.total_commission'.tr(),
+                value: formatCurrency(totalCommission, currency),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(label: 'referral.total_commission'.tr(), value: formatCurrency(totalCommission, currency)),
-        ),
+        // const SizedBox(height: 8),
+        // _StatCard(label: 'referral.available_balance'.tr(), value: formatCurrency(availableBalance, currency)),
       ],
     );
   }
@@ -1296,7 +1346,7 @@ class _WithdrawSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'referral.withdraw_current_balance'.tr(
+                  'referral.withdraw_balance_label'.tr(
                     namedArgs: {'balance': formatCurrency(totalCommission, currency)},
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),

@@ -27,7 +27,15 @@ interface ReferralSummary {
   monthlyStats: ReferralMonthlyStat[];
   currency: string;
   referrer?: ReferralReferrer | null;
+
+  totalRequestedWithdrawal?: number;
+  totalPaidWithdrawal?: number;
+  totalRejectedWithdrawal?: number;
+  pendingWithdrawalAmount?: number;
+  availableBalance?: number;
 }
+
+const MIN_WITHDRAW_AMOUNT = 5;
 
 export const load = (async ({ url, fetch }) => {
   await authenticate(url);
@@ -70,6 +78,7 @@ export const load = (async ({ url, fetch }) => {
     sessions,
     referral,
     referralEmail: userEmail,
+    minWithdrawAmount: MIN_WITHDRAW_AMOUNT,
     meta: {
       title: $t('referral_program'),
     },

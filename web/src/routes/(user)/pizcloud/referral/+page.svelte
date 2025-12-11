@@ -36,6 +36,14 @@
       currency={data.referral?.currency ?? 'USD'}
       referrer={data.referral?.referrer ?? null}
       userEmail={data.referralEmail ?? ''}
+      availableBalance={data.referral?.availableBalance ?? data.referral?.totalCommission ?? 0}
+      pendingWithdrawalAmount={data.referral?.pendingWithdrawalAmount ?? 0}
+      totalRequestedWithdrawal={data.referral?.totalRequestedWithdrawal ?? 0}
+      totalPaidWithdrawal={data.referral?.totalPaidWithdrawal ?? 0}
+      totalRejectedWithdrawal={data.referral?.totalRejectedWithdrawal ?? 0}
+      minWithdrawAmount={data.minWithdrawAmount ?? 5}
+      payoutMethodUrl="/pizcloud/payout-method"
+      withdrawalHistoryUrl="/pizcloud/withdrawals"
     />
   </Container>
 </UserPageLayout>

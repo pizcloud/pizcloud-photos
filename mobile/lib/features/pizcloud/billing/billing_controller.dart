@@ -47,7 +47,6 @@ class BillingController extends StateNotifier<BillingState> {
       final ent = await repo.loadEntitlement();
       final usage = await repo.loadUsage();
       final referral = await repo.loadReferralSummary();
-      debugPrint('Error loading referral summary: $referral');
 
       if (resp.error != null) {
         state = state.copy(

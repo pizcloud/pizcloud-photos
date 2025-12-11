@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+  import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
 
   interface MonthlyStat {
@@ -15,6 +16,17 @@
     discountEndAt?: string | null;
   }
 
+  type ReferralWithdrawStatus = 'pending' | 'approved' | 'rejected' | 'paid';
+
+  interface ReferralPayoutMethod {
+    method?: 'bank' | 'paypal' | null;
+    bankName?: string | null;
+    bankAccountNumber?: string | null;
+    bankAccountHolderName?: string | null;
+    paypalEmail?: string | null;
+    paypalFullName?: string | null;
+  }
+
   interface Props {
     referralCode?: string;
     totalReferredUsers?: number;
@@ -23,6 +35,18 @@
     currency?: string;
     referrer?: ReferrerInfo | null;
     userEmail?: string;
+
+    //extra summary fields
+    availableBalance?: number;
+    pendingWithdrawalAmount?: number;
+    totalRequestedWithdrawal?: number;
+    totalPaidWithdrawal?: number;
+    totalRejectedWithdrawal?: number;
+
+    //config
+    minWithdrawAmount?: number;
+    payoutMethodUrl?: string;
+    withdrawalHistoryUrl?: string;
 
     keys?: unknown;
     sessions?: unknown;
@@ -36,6 +60,16 @@
     currency = 'USD',
     referrer = null,
     userEmail = '',
+
+    availableBalance = 0,
+    pendingWithdrawalAmount = 0,
+    totalRequestedWithdrawal = 0,
+    totalPaidWithdrawal = 0,
+    totalRejectedWithdrawal = 0,
+    minWithdrawAmount = 5,
+    payoutMethodUrl = '/pizcloud/payout-method',
+    withdrawalHistoryUrl = '/pizcloud/withdrawals',
+
     keys,
     sessions,
   }: Props = $props();
@@ -48,6 +82,14 @@
   let applyLoading = $state(false);
   let applyError = $state('');
   let applySuccess = $state('');
+
+  // withdraw + payout state
+  let payoutMethod = $state<ReferralPayoutMethod | null>(null);
+  let withdrawModalOpen = $state(false);
+  let withdrawAmount = $state<string>('');
+  let withdrawError = $state('');
+  let withdrawSuccess = $state('');
+  let withdrawSubmitting = $state(false);
 
   function isEmptyState() {
     return totalReferredUsers === 0 && totalCommission === 0 && monthlyStats.length === 0;
@@ -202,6 +244,263 @@
       applyLoading = false;
     }
   }
+
+  // ========== payout method & withdraw logic ==========
+
+  function getBaseUrl(): string {
+    return (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+  }
+
+  async function loadPayoutMethod() {
+    if (!userEmail) {
+      payoutMethod = null;
+      return;
+    }
+
+    try {
+      const baseUrl = getBaseUrl();
+      const url = new URL('/papi/referral/payout-method', baseUrl);
+      url.searchParams.set('email', userEmail);
+
+      const res = await fetch(url.toString(), {
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        payoutMethod = null;
+        return;
+      }
+
+      const data = await res.json();
+      payoutMethod = {
+        method: data.method ?? null,
+        bankName: data.bankName ?? null,
+        bankAccountNumber: data.bankAccountNumber ?? null,
+        bankAccountHolderName: data.bankAccountHolderName ?? null,
+        paypalEmail: data.paypalEmail ?? null,
+        paypalFullName: data.paypalFullName ?? null,
+      };
+    } catch (e) {
+      console.error('Error loading payout method', e);
+      payoutMethod = null;
+    }
+  }
+
+  function hasInfoFor(method: 'bank' | 'paypal'): boolean {
+    if (!payoutMethod) return false;
+    if (method === 'bank') {
+      return !!payoutMethod.bankName && !!payoutMethod.bankAccountNumber && !!payoutMethod.bankAccountHolderName;
+    }
+    return !!payoutMethod.paypalEmail;
+  }
+
+  function buildPayoutSummary(method: 'bank' | 'paypal'): string {
+    if (!payoutMethod) return $t('referral.withdraw_no_payout_info');
+
+    if (method === 'bank') {
+      if (!hasInfoFor('bank')) {
+        return $t('referral.withdraw_bank_info_required');
+      }
+      const parts = [
+        payoutMethod.bankName || '',
+        payoutMethod.bankAccountNumber || '',
+        payoutMethod.bankAccountHolderName || '',
+      ].filter(Boolean);
+      return parts.join(' • ');
+    }
+
+    // paypal
+    if (!hasInfoFor('paypal')) {
+      return $t('referral.withdraw_paypal_info_required');
+    }
+    const parts = [payoutMethod.paypalEmail || '', payoutMethod.paypalFullName || ''].filter(Boolean);
+    return parts.length ? parts.join(' • ') : $t('referral.withdraw_paypal_info_required');
+  }
+
+  const currentBalance = () => {
+    if (typeof availableBalance === 'number' && Number.isFinite(availableBalance)) {
+      return availableBalance;
+    }
+
+    if (typeof totalCommission === 'number' && Number.isFinite(totalCommission)) {
+      return totalCommission;
+    }
+
+    return 0;
+  };
+
+  function normalizeToTwoDecimals(value: number): number {
+    if (!Number.isFinite(value)) return 0;
+    const cents = Math.round((value + Number.EPSILON) * 100);
+    return cents / 100;
+  }
+
+  function applyWithdrawLocally(amount: number) {
+    const normalized = normalizeToTwoDecimals(amount);
+
+    const prevBalance = normalizeToTwoDecimals(currentBalance());
+    const newBalanceRaw = prevBalance - normalized;
+    const newBalance = newBalanceRaw <= 0 ? 0 : normalizeToTwoDecimals(newBalanceRaw);
+
+    availableBalance = newBalance;
+
+    const prevPending =
+      typeof pendingWithdrawalAmount === 'number' && Number.isFinite(pendingWithdrawalAmount)
+        ? pendingWithdrawalAmount
+        : 0;
+    pendingWithdrawalAmount = normalizeToTwoDecimals(prevPending + normalized);
+
+    const prevTotalRequested =
+      typeof totalRequestedWithdrawal === 'number' && Number.isFinite(totalRequestedWithdrawal)
+        ? totalRequestedWithdrawal
+        : 0;
+    totalRequestedWithdrawal = normalizeToTwoDecimals(prevTotalRequested + normalized);
+  }
+
+  function canWithdraw() {
+    return currentBalance() >= minWithdrawAmount;
+  }
+
+  function openWithdrawModal() {
+    withdrawError = '';
+    withdrawSuccess = '';
+    withdrawSubmitting = false;
+
+    if (!userEmail) {
+      withdrawError = $t('referral.withdraw_missing_email');
+      return;
+    }
+
+    const bal = currentBalance();
+    withdrawAmount = bal > 0 ? bal.toFixed(2) : '';
+    withdrawModalOpen = true;
+  }
+
+  function closeWithdrawModal() {
+    withdrawModalOpen = false;
+    withdrawSubmitting = false;
+  }
+
+  function stopModalClick(event: MouseEvent) {
+    event.stopPropagation();
+  }
+
+  async function submitWithdraw() {
+    if (withdrawSubmitting) {
+      return;
+    }
+
+    if (!userEmail) {
+      withdrawError = $t('referral.withdraw_missing_email');
+      return;
+    }
+
+    withdrawError = '';
+    withdrawSuccess = '';
+    withdrawSubmitting = true;
+
+    try {
+      const rawValue = (withdrawAmount ?? '').toString();
+      const raw = rawValue.trim().replace(/,/g, '');
+      const parsed = Number(raw);
+
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        withdrawError = $t('referral.withdraw_amount_invalid');
+        return;
+      }
+
+      const amount = normalizeToTwoDecimals(parsed);
+      const balance = normalizeToTwoDecimals(currentBalance());
+
+      if (amount < minWithdrawAmount) {
+        withdrawError = $t('referral.withdraw_min_error', {
+          values: { min: minWithdrawAmount.toFixed(2) },
+        });
+        return;
+      }
+
+      if (amount - balance > 1e-6) {
+        withdrawError = $t('referral.withdraw_balance_insufficient');
+        return;
+      }
+
+      const method: 'bank' | 'paypal' = payoutMethod?.method === 'paypal' ? 'paypal' : 'bank';
+
+      if (!hasInfoFor(method)) {
+        withdrawError =
+          method === 'bank' ? $t('referral.withdraw_bank_info_required') : $t('referral.withdraw_paypal_info_required');
+        return;
+      }
+
+      const baseUrl = getBaseUrl();
+      const res = await fetch(`${baseUrl}/papi/referral/withdrawals`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          amount,
+          currency,
+          method,
+        }),
+      });
+
+      if (!res.ok) {
+        let code: string | undefined;
+        try {
+          const body = await res.json();
+          const msg = body?.message;
+          if (typeof msg === 'string') code = msg;
+        } catch {
+          // ignore
+        }
+
+        switch (code) {
+          case 'MIN_TOTAL_COMMISSION_NOT_REACHED':
+            withdrawError = $t('referral.withdraw_min_total_not_reached', {
+              values: { min: minWithdrawAmount.toFixed(2) },
+            });
+            break;
+          case 'AMOUNT_EXCEEDS_BALANCE':
+          case 'AMOUNT_EXCEEDS_AVAILABLE_AFTER_PENDING':
+            withdrawError = $t('referral.withdraw_balance_insufficient');
+            break;
+          case 'INVALID_AMOUNT':
+            withdrawError = $t('referral.withdraw_amount_invalid');
+            break;
+          case 'INVALID_WITHDRAW_METHOD':
+            withdrawError = $t('referral.withdraw_method_invalid');
+            break;
+          case 'BANK_INFO_REQUIRED':
+            withdrawError = $t('referral.withdraw_bank_info_required');
+            break;
+          case 'PAYPAL_INFO_REQUIRED':
+            withdrawError = $t('referral.withdraw_paypal_info_required');
+            break;
+          case 'USER_NOT_FOUND':
+          case 'EMAIL_REQUIRED':
+            withdrawError = $t('referral.apply_missing_email');
+            break;
+          default:
+            withdrawError = $t('referral.withdraw_request_error');
+        }
+
+        return;
+      }
+
+      applyWithdrawLocally(amount);
+      withdrawSuccess = $t('referral.withdraw_request_success');
+      closeWithdrawModal();
+    } catch (e) {
+      console.error('Error requesting withdrawal', e);
+      withdrawError = $t('referral.withdraw_request_error');
+    } finally {
+      withdrawSubmitting = false;
+    }
+  }
+
+  onMount(() => {
+    loadPayoutMethod();
+  });
 </script>
 
 <section class="referral">
@@ -337,6 +636,74 @@
       <span class="referral__stat-label">{$t('referral.total_commission')}</span>
       <span class="referral__stat-value">{formatCurrency(totalCommission)}</span>
     </div>
+
+    <div class="referral__stat-card">
+      <span class="referral__stat-label">
+        {$t('referral.withdraw_balance_label', {
+          values: { balance: '' },
+        })}
+      </span>
+      <span class="referral__stat-value">
+        {formatCurrency(currentBalance())}
+      </span>
+      {#if pendingWithdrawalAmount > 0}
+        <span class="referral__stat-hint">
+          {$t('referral.withdraw_pending_amount_label', {
+            values: { amount: formatCurrency(pendingWithdrawalAmount) },
+          })}
+        </span>
+      {/if}
+    </div>
+  </section>
+
+  <section class="referral__withdraw">
+    <div class="referral__withdraw-header">
+      <div>
+        <h2 class="referral__withdraw-title">
+          {$t('referral.withdraw_section_title')}
+        </h2>
+        <p class="referral__withdraw-text">
+          {$t('referral.withdraw_section_hint', {
+            values: { min: minWithdrawAmount.toFixed(2) },
+          })}
+        </p>
+      </div>
+      <div class="referral__withdraw-actions">
+        <button
+          type="button"
+          class="referral__btn referral__btn--primary"
+          onclick={canWithdraw()
+            ? openWithdrawModal
+            : () =>
+                (withdrawError = $t('referral.withdraw_min_total_not_reached', {
+                  values: { min: minWithdrawAmount.toFixed(2) },
+                }))}
+        >
+          {$t('referral.withdraw_button')}
+        </button>
+
+        <a href={payoutMethodUrl} class="referral__btn referral__btn--outline referral__withdraw-secondary">
+          {$t('referral.withdraw_edit_payout_method')}
+        </a>
+      </div>
+    </div>
+
+    <div class="referral__withdraw-footer">
+      <a href={withdrawalHistoryUrl} class="referral__withdraw-history-link">
+        {$t('referral.withdraw_history_button')}
+      </a>
+    </div>
+
+    {#if withdrawError}
+      <p class="referral__apply-message referral__apply-message--error">
+        {withdrawError}
+      </p>
+    {/if}
+    {#if withdrawSuccess}
+      <p class="referral__apply-message referral__apply-message--success">
+        {withdrawSuccess}
+      </p>
+    {/if}
   </section>
 
   <!-- Empty state -->
@@ -378,6 +745,92 @@
         </table>
       </div>
     </section>
+  {/if}
+
+  <!-- Withdraw modal -->
+  {#if withdrawModalOpen}
+    <div
+      class="referral-modal-backdrop"
+      role="button"
+      tabindex="0"
+      aria-label={$t('cancel')}
+      onclick={closeWithdrawModal}
+      onkeydown={(event) => {
+        const key = event.key;
+        if (key === 'Enter' || key === ' ') {
+          event.preventDefault();
+          closeWithdrawModal();
+        }
+        if (key === 'Escape') {
+          event.preventDefault();
+          closeWithdrawModal();
+        }
+      }}
+    >
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <div class="referral-modal" role="dialog" aria-modal="true" tabindex="-1" onclick={stopModalClick}>
+        <div class="referral-modal__header">
+          <h2>{$t('referral.withdraw_title')}</h2>
+        </div>
+
+        <div class="referral-modal__body">
+          <p class="referral-modal__text">
+            {$t('referral.withdraw_description', {
+              values: { min: minWithdrawAmount.toFixed(2) },
+            })}
+          </p>
+
+          <p class="referral-modal__balance">
+            {$t('referral.withdraw_balance_label', {
+              values: { balance: formatCurrency(currentBalance()) },
+            })}
+          </p>
+
+          <div class="referral-modal__payout-summary">
+            <p class="referral-modal__payout-text">
+              {buildPayoutSummary(payoutMethod?.method === 'paypal' ? 'paypal' : 'bank')}
+            </p>
+            <a href={payoutMethodUrl} class="referral-modal__payout-link">
+              {$t('referral.withdraw_edit_payout_method')}
+            </a>
+          </div>
+
+          <label class="referral-modal__label">
+            <span>{$t('referral.withdraw_amount_label')}</span>
+            <input class="referral-modal__input" type="number" step="0.01" min="0" bind:value={withdrawAmount} />
+          </label>
+
+          {#if withdrawError}
+            <p class="referral__apply-message referral__apply-message--error referral-modal__error">
+              {withdrawError}
+            </p>
+          {/if}
+        </div>
+
+        <div class="referral-modal__footer">
+          <button
+            type="button"
+            class="referral__btn referral__btn--outline"
+            onclick={closeWithdrawModal}
+            disabled={withdrawSubmitting}
+          >
+            {$t('cancel')}
+          </button>
+          <button
+            type="button"
+            class="referral__btn referral__btn--primary"
+            onclick={submitWithdraw}
+            disabled={withdrawSubmitting}
+          >
+            {#if withdrawSubmitting}
+              {$t('referral.withdraw_submitting')}
+            {:else}
+              {$t('referral.withdraw_submit')}
+            {/if}
+          </button>
+        </div>
+      </div>
+    </div>
   {/if}
 </section>
 
@@ -773,4 +1226,183 @@
       background: var(--immich-bg-subtle, #020617);
     }
   } */
+
+  .referral__stat-hint {
+    font-size: 0.8rem;
+    color: var(--immich-fg-muted, #64748b);
+  }
+
+  /* Withdraw section */
+  .referral__withdraw {
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--immich-border-subtle, #e2e8f0);
+    background: var(--immich-bg-elevated, #ffffff);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .referral__withdraw-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .referral__withdraw-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .referral__withdraw-text {
+    margin: 0.25rem 0 0;
+    font-size: 0.9rem;
+    color: var(--immich-fg-muted, #64748b);
+  }
+
+  .referral__withdraw-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .referral__withdraw-secondary {
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .referral__withdraw-footer {
+    margin-top: 0.25rem;
+  }
+
+  .referral__withdraw-history-link {
+    font-size: 0.85rem;
+    color: var(--immich-accent, #2563eb);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* Modal */
+  .referral-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+
+  .referral-modal {
+    width: min(420px, 100% - 2rem);
+    border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem 1rem;
+    background: var(--immich-bg-elevated, #ffffff);
+    box-shadow:
+      0 10px 25px rgba(15, 23, 42, 0.12),
+      0 0 0 1px rgba(148, 163, 184, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .referral-modal__header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .referral-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .referral-modal__text {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--immich-fg-muted, #64748b);
+  }
+
+  .referral-modal__balance {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .referral-modal__payout-summary {
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .referral-modal__payout-text {
+    margin: 0;
+    color: var(--immich-fg-muted, #64748b);
+  }
+
+  .referral-modal__payout-link {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--immich-accent, #2563eb);
+    text-decoration: underline;
+  }
+
+  .referral-modal__label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
+
+  .referral-modal__input {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--immich-border-subtle, #e2e8f0);
+    background: var(--immich-bg-subtle, #f8fafc);
+    font-size: 0.9rem;
+    outline: none;
+  }
+
+  .referral-modal__input:focus {
+    border-color: var(--immich-accent, #2563eb);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+  }
+
+  .referral-modal__error {
+    margin-top: 0.25rem;
+  }
+
+  .referral-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .referral__withdraw-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .referral-modal {
+      width: calc(100% - 2rem);
+    }
+
+    .referral__withdraw-actions {
+      width: 100%;
+    }
+
+    .referral__withdraw-actions .referral__btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
 </style>

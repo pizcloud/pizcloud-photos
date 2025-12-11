@@ -8,5 +8,5 @@ class AppConfig {
 
   static const bool showServerLabel = bool.fromEnvironment('PIZCLOUD_SHOW_SERVER_LABEL', defaultValue: false);
 
-  static const double minReferralWithdrawAmount = 10.0;
+  static const double minReferralWithdrawAmount = 5.0;
 }

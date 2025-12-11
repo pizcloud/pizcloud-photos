@@ -26,7 +26,7 @@ import 'package:immich_mobile/repositories/local_files_manager.repository.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/provider_utils.dart';
 import 'package:immich_mobile/utils/url_helper.dart';
-import 'package:immich_mobile/utils/version_compatibility.dart';
+// import 'package:immich_mobile/utils/version_compatibility.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/common/pizcloud/pizcloud_logo.dart';
@@ -38,7 +38,7 @@ import 'package:immich_mobile/widgets/forms/login/password_input.dart';
 import 'package:immich_mobile/widgets/forms/login/server_endpoint_input.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+// import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:http/http.dart' as http;
@@ -70,7 +70,7 @@ class LoginForm extends HookConsumerWidget {
     final isPasswordLoginEnable = useState<bool>(false);
     final oAuthButtonLabel = useState<String>('OAuth');
     final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
-    final serverInfo = ref.watch(serverInfoProvider);
+    // final serverInfo = ref.watch(serverInfoProvider);
     final warningMessage = useState<String?>(null);
     final loginFormKey = GlobalKey<FormState>();
     final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
@@ -242,17 +242,19 @@ class LoginForm extends HookConsumerWidget {
     }, []);
     // #pizcloud
 
-    populateTestLoginInfo() {
-      emailController.text = 'demo@immich.app';
-      passwordController.text = 'demo';
-      serverEndpointController.text = 'https://demo.immich.app';
-    }
+    // pizcloud
+    // populateTestLoginInfo() {
+    //   emailController.text = 'demo@immich.app';
+    //   passwordController.text = 'demo';
+    //   serverEndpointController.text = 'https://demo.immich.app';
+    // }
 
-    populateTestLoginInfo1() {
-      emailController.text = 'testuser@email.com';
-      passwordController.text = 'password';
-      serverEndpointController.text = 'http://10.1.15.216:2283/api';
-    }
+    // populateTestLoginInfo1() {
+    //   emailController.text = 'testuser@email.com';
+    //   passwordController.text = 'password';
+    //   serverEndpointController.text = 'http://10.1.15.216:2283/api';
+    // }
+    // #pizcloud
 
     Future<void> handleSyncFlow() async {
       final backgroundManager = ref.read(backgroundSyncProvider);
@@ -352,7 +354,7 @@ class LoginForm extends HookConsumerWidget {
           );
           return false;
         }
-      } catch (e, st) {
+      } catch (e) {
         needsVerification.value = false;
         ImmichToast.show(
           context: context,
@@ -417,7 +419,7 @@ class LoginForm extends HookConsumerWidget {
             gravity: ToastGravity.TOP,
           );
         }
-      } catch (e, st) {
+      } catch (e) {
         ImmichToast.show(
           context: context,
           msg: "errors.resend_verification_email_failed".tr(),

@@ -106,7 +106,11 @@ bool _isLargePlan(String idOrTitleOrDesc) {
       s.contains('2tb') ||
       s.contains('2 tb') ||
       s.contains('2000gb') ||
-      s.contains('2000 gb');
+      s.contains('2000 gb') ||
+      s.contains('50 gb') ||
+      s.contains('50gb') ||
+      s.contains('100 g') ||
+      s.contains('100g');
 }
 
 class PlanDisplay {
@@ -385,7 +389,6 @@ class BillingPage extends HookConsumerWidget {
     }
 
     final bool referralStillValid = hasReferralDiscount;
-    debugPrint('referralStillValid: $referralStillValid');
 
     // Toggle Monthly / Yearly (default: Monthly)
     final period = useState(BillingPeriod.monthly);
