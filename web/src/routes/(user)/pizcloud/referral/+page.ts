@@ -48,7 +48,6 @@ export const load = (async ({ url, fetch }) => {
 
   const userEmail = get(user).email;
   let referral: ReferralSummary | null = null;
-  console.log('userEmail', userEmail)
 
   if (userEmail) {
     const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');

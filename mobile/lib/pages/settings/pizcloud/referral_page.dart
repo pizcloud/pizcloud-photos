@@ -15,6 +15,7 @@ import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
 import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_withdrawals_page.dart';
+import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
@@ -111,6 +112,8 @@ class ReferralPage extends HookConsumerWidget {
 
     final payoutMethodState = useState<ReferralPayoutMethod?>(null);
 
+    final authHeaders = const AuthHeaderService();
+
     Future<void> loadSummary() async {
       summaryLoading.value = true;
       summaryError.value = null;
@@ -124,11 +127,11 @@ class ReferralPage extends HookConsumerWidget {
         final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
 
         Uri uri = Uri.parse('$base/papi/referral/summary');
-        if (userEmail != null && userEmail!.isNotEmpty) {
-          uri = uri.replace(queryParameters: {'email': userEmail!});
-        }
-
-        final res = await http.get(uri);
+        // if (userEmail != null && userEmail!.isNotEmpty) {
+        //   uri = uri.replace(queryParameters: {'email': userEmail!});
+        // }
+        final jsonHeaders = authHeaders.authJson();
+        final res = await http.get(uri, headers: jsonHeaders);
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
           String? messageCode;
@@ -284,20 +287,12 @@ class ReferralPage extends HookConsumerWidget {
       applyLoading.value = true;
 
       try {
-        // final rawBase = AppConfig.serverBaseUrl.trim();
-        // if (rawBase.isEmpty) {
-        //   applyError.value = 'referral.apply_unknown_error'.tr();
-        //   return;
-        // }
         final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
 
         final uri = Uri.parse('$base/papi/referral/apply-code');
 
-        final res = await http.post(
-          uri,
-          headers: const {'Content-Type': 'application/json'},
-          body: jsonEncode({'email': userEmail, 'code': code}),
-        );
+        final jsonHeaders = authHeaders.authJson();
+        final res = await http.post(uri, headers: jsonHeaders, body: jsonEncode({'email': userEmail, 'code': code}));
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
           debugPrint('Failed to apply referral code: ${res.statusCode} ${res.body}');
@@ -466,10 +461,11 @@ class ReferralPage extends HookConsumerWidget {
                 try {
                   final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
                   final uri = Uri.parse('$base/papi/referral/withdrawals');
+                  final jsonHeaders = authHeaders.authJson();
 
                   final res = await http.post(
                     uri,
-                    headers: const {'Content-Type': 'application/json'},
+                    headers: jsonHeaders,
                     body: jsonEncode({
                       'email': userEmail,
                       'amount': amount,

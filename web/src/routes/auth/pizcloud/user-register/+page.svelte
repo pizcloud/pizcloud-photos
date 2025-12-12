@@ -183,7 +183,7 @@
     try {
       const syncBody = buildReferralSyncBody(email, referralCode);
 
-      const res = await fetch(`${baseUrl}/papi/referral/on-register`, {
+      const res = await fetch(`${baseUrl}/papi/auth/on-register`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(syncBody),

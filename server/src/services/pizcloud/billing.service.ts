@@ -424,8 +424,7 @@ export class BillingService {
     periodEnd?: string;
     purchaseToken?: string;
   }) {
-    const base =
-      process.env.PIZCLOUD_BASE_URL || 'http://127.0.0.1:3000';
+    const base = process.env.PIZCLOUD_BASE_URL || 'http://127.0.0.1:3000';
     const url = `${base}/internal/billing/verify-success`;
     const internalKey = process.env.PIZCLOUD_INTERNAL_KEY;
 

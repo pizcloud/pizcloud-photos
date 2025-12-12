@@ -6,11 +6,13 @@ import 'package:http/http.dart' as http;
 
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_withdrawal.model.dart';
+import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 
 class ReferralWithdrawalService {
   ReferralWithdrawalService() : _base = AppConfig.pizCloudServerUrl.trim().replaceAll(RegExp(r'/+$'), '');
 
   final String _base;
+  final authHeaders = const AuthHeaderService();
 
   Uri _buildUri({required String email, int? page, int? limit, String? status}) {
     final base = Uri.parse('$_base/papi/referral/withdrawals');
@@ -34,7 +36,8 @@ class ReferralWithdrawalService {
     }
 
     final uri = _buildUri(email: email, page: page, limit: limit);
-    final res = await http.get(uri);
+    final jsonHeaders = authHeaders.authJson();
+    final res = await http.get(uri, headers: jsonHeaders);
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
       return ReferralWithdrawalListResponse.empty();

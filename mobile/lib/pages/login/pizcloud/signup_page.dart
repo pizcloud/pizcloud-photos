@@ -166,7 +166,7 @@ class SignupPage extends HookConsumerWidget {
 
     Future<void> syncReferralOnRegister(String base, String email, String referralCode) async {
       try {
-        final uri = Uri.parse('$base/papi/referral/on-register');
+        final uri = Uri.parse('$base/papi/auth/on-register');
 
         final code = referralCode.trim();
         final body = <String, dynamic>{'email': email};

@@ -1,14 +1,11 @@
 // lib/features/billing/entitlement_api_client.dart
 import 'dart:convert';
-// import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:immich_mobile/domain/models/user.model.dart';
 
-import 'package:immich_mobile/services/api.service.dart';
-import 'package:immich_mobile/domain/models/store.model.dart';
-import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:flutter/foundation.dart';
+import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
@@ -17,6 +14,7 @@ class EntitlementApiClient {
 
   final String immichBaseUrl;
   final UserDto userEntity;
+  final authHeaders = const AuthHeaderService();
   // final String billingBaseUrl;
 
   String _join(String base, String path) {
@@ -25,30 +23,10 @@ class EntitlementApiClient {
     return '$base/$path';
   }
 
-  Map<String, String> _buildAuthHeaders({bool json = false}) {
-    final headers = Map<String, String>.from(ApiService.getRequestHeaders());
-
-    headers['Accept'] = 'application/json';
-
-    final token = Store.tryGet(StoreKey.accessToken);
-    if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
-      headers['x-immich-user-token'] = headers['x-immich-user-token'] ?? token;
-    }
-
-    if (json) {
-      headers['Content-Type'] = 'application/json';
-    }
-
-    return headers;
-  }
-
-  Map<String, String> _authOnly() => _buildAuthHeaders(json: false);
-  Map<String, String> _authJson() => _buildAuthHeaders(json: true);
-
   Future<Map<String, dynamic>?> getEntitlements() async {
     final url = _join(immichBaseUrl, 'billing/entitlements');
-    final res = await http.get(Uri.parse(url), headers: _authOnly());
+    final oHeaders = authHeaders.authOnly();
+    final res = await http.get(Uri.parse(url), headers: oHeaders);
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as Map<String, dynamic>;
     }
@@ -57,9 +35,9 @@ class EntitlementApiClient {
 
   Future<Map<String, dynamic>> getUsage() async {
     final url = _join(immichBaseUrl, 'billing/usage');
-    final h = _authOnly();
+    final oHeaders = authHeaders.authOnly();
 
-    final res = await http.get(Uri.parse(url), headers: h);
+    final res = await http.get(Uri.parse(url), headers: oHeaders);
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as Map<String, dynamic>;
     }
@@ -71,14 +49,15 @@ class EntitlementApiClient {
 
   Future<Map<String, dynamic>?> getReferralSummary() async {
     String path = 'papi/referral/summary';
-    String email = userEntity.email;
-    if (email != '' && email.trim().isNotEmpty) {
-      final encoded = Uri.encodeQueryComponent(email.trim());
-      path = '$path?email=$encoded';
-    }
+    // String email = userEntity.email;
+    // if (email != '' && email.trim().isNotEmpty) {
+    //   final encoded = Uri.encodeQueryComponent(email.trim());
+    //   path = '$path?email=$encoded';
+    // }
 
+    final jsonHeaders = authHeaders.authJson();
     final url = _join(pizCloudServerUrl, path);
-    final res = await http.get(Uri.parse(url), headers: _authOnly());
+    final res = await http.get(Uri.parse(url), headers: jsonHeaders);
 
     if (res.statusCode == 200) {
       return jsonDecode(res.body) as Map<String, dynamic>;
@@ -90,9 +69,10 @@ class EntitlementApiClient {
 
   Future<void> verifyIosReceipt({required String productId, required String receiptBase64}) async {
     final url = _join(immichBaseUrl, 'iap/ios/verify');
+    final jsonHeaders = authHeaders.authJson();
     final res = await http.post(
       Uri.parse(url),
-      headers: _authJson(),
+      headers: jsonHeaders,
       body: jsonEncode({'productId': productId, 'receiptData': receiptBase64}),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -106,9 +86,10 @@ class EntitlementApiClient {
     required String packageName,
   }) async {
     final url = _join(immichBaseUrl, 'iap/android/verify');
+    final jsonHeaders = authHeaders.authJson();
     final res = await http.post(
       Uri.parse(url),
-      headers: _authJson(),
+      headers: jsonHeaders,
       body: jsonEncode({'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName}),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -121,9 +102,10 @@ class EntitlementApiClient {
     required String platform, // 'android' | 'ios'
   }) async {
     final url = _join(pizCloudServerUrl, 'papi/billing/verify-success');
+    final jsonHeaders = authHeaders.authJson();
     final res = await http.post(
       Uri.parse(url),
-      headers: _authJson(),
+      headers: jsonHeaders,
       body: jsonEncode({'productId': productId, 'platform': platform}),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {

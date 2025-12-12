@@ -4,11 +4,13 @@ import 'package:http/http.dart' as http;
 
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
+import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 
 class ReferralPayoutMethodService {
   ReferralPayoutMethodService() : _base = AppConfig.pizCloudServerUrl.trim().replaceAll(RegExp(r'/+$'), '');
 
   final String _base;
+  final authHeaders = const AuthHeaderService();
 
   Uri _buildPayoutUri({String? email}) {
     final uri = Uri.parse('$_base/papi/referral/payout-method');
@@ -22,8 +24,10 @@ class ReferralPayoutMethodService {
   Future<ReferralPayoutMethod?> loadPayoutMethod(String email) async {
     if (email.isEmpty) return null;
 
-    final uri = _buildPayoutUri(email: email);
-    final res = await http.get(uri);
+    // final uri = _buildPayoutUri(email: email);
+    final uri = _buildPayoutUri();
+    final jsonHeaders = authHeaders.authJson();
+    final res = await http.get(uri, headers: jsonHeaders);
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
       return null;
@@ -52,6 +56,7 @@ class ReferralPayoutMethodService {
     }
 
     final uri = _buildPayoutUri();
+    final jsonHeaders = authHeaders.authJson();
 
     final body = <String, dynamic>{
       'email': email,
@@ -63,7 +68,7 @@ class ReferralPayoutMethodService {
       'paypalFullName': paypalFullName?.trim(),
     };
 
-    final res = await http.post(uri, headers: const {'Content-Type': 'application/json'}, body: jsonEncode(body));
+    final res = await http.post(uri, headers: jsonHeaders, body: jsonEncode(body));
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return null; // success
