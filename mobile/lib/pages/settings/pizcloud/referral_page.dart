@@ -119,17 +119,12 @@ class ReferralPage extends HookConsumerWidget {
       summaryError.value = null;
 
       try {
-        // final rawBase = AppConfig.serverBaseUrl.trim();
-        // if (rawBase.isEmpty) {
-        //   summaryError.value = 'referral.apply_unknown_error'.tr();
-        //   return;
-        // }
         final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
 
         Uri uri = Uri.parse('$base/papi/referral/summary');
-        // if (userEmail != null && userEmail!.isNotEmpty) {
-        //   uri = uri.replace(queryParameters: {'email': userEmail!});
-        // }
+        if (userEmail != null && userEmail!.isNotEmpty) {
+          uri = uri.replace(queryParameters: {'email': userEmail!});
+        }
         final jsonHeaders = authHeaders.authJson();
         final res = await http.get(uri, headers: jsonHeaders);
 

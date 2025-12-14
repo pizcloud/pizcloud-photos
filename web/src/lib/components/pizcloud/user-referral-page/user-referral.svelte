@@ -192,8 +192,7 @@
     applyLoading = true;
 
     try {
-      const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
-      const res = await fetch(`${baseUrl}/papi/referral/apply-code`, {
+      const res = await fetch(`/api/referral/apply-code`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email: userEmail, code }),
@@ -247,10 +246,6 @@
 
   // ========== payout method & withdraw logic ==========
 
-  function getBaseUrl(): string {
-    return (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
-  }
-
   async function loadPayoutMethod() {
     if (!userEmail) {
       payoutMethod = null;
@@ -258,11 +253,7 @@
     }
 
     try {
-      const baseUrl = getBaseUrl();
-      const url = new URL('/papi/referral/payout-method', baseUrl);
-      url.searchParams.set('email', userEmail);
-
-      const res = await fetch(url.toString(), {
+      const res = await fetch(`/api/referral/payout-method?email=${encodeURIComponent(userEmail)}`, {
         credentials: 'include',
       });
 
@@ -432,8 +423,7 @@
         return;
       }
 
-      const baseUrl = getBaseUrl();
-      const res = await fetch(`${baseUrl}/papi/referral/withdrawals`, {
+      const res = await fetch(`/api/referral/withdrawals`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
