@@ -5,9 +5,17 @@ class BillingState {
   final List<ProductDetails> products;
   final Map<String, dynamic>? entitlement;
   final Map<String, dynamic>? usage;
+  final Map<String, dynamic>? referral;
   final String? error;
 
-  BillingState({required this.loading, required this.products, this.entitlement, this.usage, this.error});
+  BillingState({
+    required this.loading,
+    required this.products,
+    this.entitlement,
+    this.usage,
+    this.referral,
+    this.error,
+  });
 
   factory BillingState.initial() => BillingState(loading: true, products: const []);
 
@@ -16,12 +24,14 @@ class BillingState {
     List<ProductDetails>? products,
     Map<String, dynamic>? entitlement,
     Map<String, dynamic>? usage,
+    Map<String, dynamic>? referral,
     String? error,
   }) => BillingState(
     loading: loading ?? this.loading,
     products: products ?? this.products,
     entitlement: entitlement ?? this.entitlement,
     usage: usage ?? this.usage,
+    referral: referral ?? this.referral,
     error: error,
   );
 }

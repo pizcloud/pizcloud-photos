@@ -43,7 +43,6 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
   Future? _handleLinkedAlbumFuture;
 
   bool _shouldShow(MediaPermState s) {
-    // Chỉ hiển thị khi user chọn "Allow limited access"
     return s == MediaPermState.limited;
   }
 

@@ -127,6 +127,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 
 // pizcloud: new imports
 import '../pages/settings/pizcloud/billing_page.dart';
+import '../pages/settings/pizcloud/referral_page.dart';
 import 'package:immich_mobile/pages/login/pizcloud/signup_page.dart';
 // #pizcloud
 
@@ -357,6 +358,7 @@ class AppRouter extends RootStackRouter {
     // pizcloud: new route
     AutoRoute(page: BillingRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: SignupRoute.page),
+    AutoRoute(page: ReferralRoute.page, guards: [_authGuard, _duplicateGuard]),
     // #pizcloud
 
     // required to handle all deeplinks in deep_link.service.dart

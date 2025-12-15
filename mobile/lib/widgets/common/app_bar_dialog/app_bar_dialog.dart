@@ -88,6 +88,16 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       return buildActionButton(Icons.settings_outlined, "settings", () => context.pushRoute(const SettingsRoute()));
     }
 
+    // pizcloud
+    buildReferralProgramButton() {
+      return buildActionButton(
+        Icons.wallet_giftcard,
+        "referral_program",
+        () => context.pushRoute(ReferralRoute(userEmail: user?.email)),
+      );
+    }
+    // #pizcloud
+
     buildAppLogButton() {
       return buildActionButton(
         Icons.assignment_outlined,
@@ -304,6 +314,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                 // const AppBarServerInfo(), // pizcloud
                 if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
                 if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
+                buildReferralProgramButton(), // pizcloud
                 buildSettingButton(),
                 buildSignOutButton(),
                 buildFooter(),

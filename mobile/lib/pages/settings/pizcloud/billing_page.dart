@@ -3,6 +3,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+// import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'dart:io';
+import 'package:immich_mobile/features/pizcloud/billing/android_offer_utils.dart';
 // import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
 import 'package:immich_mobile/providers/pizcloud/billing.provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,12 +25,16 @@ class FakeProduct {
 }
 
 const List<FakeProduct> kFakeProducts = [
-  FakeProduct('storage_100g_monthly', 'Basic', '100 GB cloud storage billed monthly', '\$1.99'),
-  FakeProduct('storage_100g_yearly', 'Basic', '100 GB cloud storage billed yearly', '\$19.99'),
-  FakeProduct('storage_200g_monthly', 'Pro', '200 GB cloud storage billed monthly', '\$2.99'),
-  FakeProduct('storage_200g_yearly', 'Pro', '200 GB cloud storage billed yearly', '\$29.99'),
-  FakeProduct('storage_2tb_monthly', 'Premium', '2 TB cloud storage billed monthly', '\$9.99'),
-  FakeProduct('storage_2tb_yearly', 'Premium', '2 TB cloud storage billed yearly', '\$99.99'),
+  FakeProduct('storage_50gb_monthly', 'Basic', '50 GB cloud storage billed monthly', '\$0.2'),
+  FakeProduct('storage_50gb_yearly', 'Basic', '50 GB cloud storage billed yearly', '\$2,4'),
+  FakeProduct('storage_100g_monthly', 'Pro1', '100 GB cloud storage billed monthly', '\$0.4'),
+  FakeProduct('storage_100g_yearly', 'Pro1', '100 GB cloud storage billed yearly', '\$4.8'),
+  FakeProduct('storage_500gb_monthly', 'Pro2', '500 GB cloud storage billed monthly', '\$5'),
+  FakeProduct('storage_500gb_yearly', 'Pro2', '500 GB cloud storage billed yearly', '\$50'),
+  FakeProduct('storage_1tb_monthly', 'Pro3', '1 TB cloud storage billed monthly', '\$10'),
+  FakeProduct('storage_1tb_yearly', 'Pro3', '1 TB cloud storage billed yearly', '\$120'),
+  FakeProduct('storage_2tb_monthly', 'Premium', '2 TB cloud storage billed monthly', '\$12'),
+  FakeProduct('storage_2tb_yearly', 'Premium', '2 TB cloud storage billed yearly', '\$144'),
 ];
 
 /// ===============================================================
@@ -59,28 +66,51 @@ List<String> _featuresFor(String idOrTitle) {
   if (s.contains('2tb') || s.contains('premium')) {
     return const ['2 TB Storage', 'Team Collaboration', '24/7 Premium Support', 'Advanced Security', 'Admin Controls'];
   }
-  // if (s.contains('500') || s.contains('pro')) {
-  //   return const ['500 GB Storage', 'Advanced File Sharing', 'Priority Support', 'Version History'];
-  // }
-  if (s.contains('200') || s.contains('pro')) {
-    return const ['200 GB Storage', 'Multi-device Sync', 'Priority Support'];
+  if (s.contains('1tb') || s.contains('pro3')) {
+    return const ['1 TB Storage', 'Team Collaboration', '24/7 Premium Support', 'Advanced Security', 'Admin Controls'];
   }
-  return const ['100 GB Storage', 'File Sync Across Devices', 'Basic Support'];
+  if (s.contains('500') || s.contains('pro2')) {
+    return const ['500 GB Storage', 'Advanced File Sharing', 'Priority Support', 'Version History'];
+  }
+  if (s.contains('100') || s.contains('pro1')) {
+    return const ['100 GB Storage', 'Multi-device Sync', 'Priority Support'];
+  }
+  return const ['50 GB Storage', 'File Sync Across Devices', 'Basic Support'];
 }
 
 bool _isMostPopular(String idOrTitle) {
   final s = idOrTitle.toLowerCase();
-  return s.contains('200') || s.contains('pro') || s.contains('200g');
+  return s.contains('100') || s.contains('pro1') || s.contains('100g');
 }
 
 String _planShortTitle(String title, String id) {
   final t = title.trim();
   if (t.toLowerCase().contains('basic')) return 'Basic';
-  if (t.toLowerCase().contains('pro')) return 'Pro';
+  if (t.toLowerCase().contains('pro1')) return 'Pro1';
+  if (t.toLowerCase().contains('pro2')) return 'Pro2';
+  if (t.toLowerCase().contains('pro3')) return 'Pro3';
   if (t.toLowerCase().contains('premium')) return 'Premium';
   if (id.contains('2tb')) return 'Premium';
-  if (id.contains('200')) return 'Pro';
+  if (id.contains('100')) return 'Pro1';
   return 'Basic';
+}
+
+bool _isLargePlan(String idOrTitleOrDesc) {
+  final s = idOrTitleOrDesc.toLowerCase();
+  return s.contains('500gb') ||
+      s.contains('500 gb') ||
+      s.contains('1tb') ||
+      s.contains('1 tb') ||
+      s.contains('1000gb') ||
+      s.contains('1000 gb') ||
+      s.contains('2tb') ||
+      s.contains('2 tb') ||
+      s.contains('2000gb') ||
+      s.contains('2000 gb') ||
+      s.contains('50 gb') ||
+      s.contains('50gb') ||
+      s.contains('100 g') ||
+      s.contains('100g');
 }
 
 class PlanDisplay {
@@ -92,6 +122,8 @@ class PlanDisplay {
   final bool highlighted; // Most Popular
   final ProductDetails? raw; // null if fake
 
+  final bool referralDiscountApplied;
+
   const PlanDisplay({
     required this.id,
     required this.title,
@@ -100,6 +132,7 @@ class PlanDisplay {
     required this.features,
     required this.highlighted,
     required this.raw,
+    this.referralDiscountApplied = false,
   });
 }
 
@@ -187,7 +220,66 @@ class _PlanCard extends StatelessWidget {
                             ),
                           ),
                         ],
+                        if (data.referralDiscountApplied) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.local_offer, size: 14, color: Colors.green[700]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '-30% referral',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: Colors.green[700],
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
+                      // children: [
+                      //   Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                      //   const SizedBox(width: 8),
+                      //   if (data.highlighted)
+                      //     Container(
+                      //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      //       decoration: BoxDecoration(
+                      //         color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      //         borderRadius: BorderRadius.circular(12),
+                      //       ),
+                      //       child: Text(
+                      //         'Most Popular',
+                      //         style: theme.textTheme.labelSmall?.copyWith(
+                      //           color: theme.colorScheme.primary,
+                      //           fontWeight: FontWeight.w700,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   if (selected) ...[
+                      //     const SizedBox(width: 8),
+                      //     Container(
+                      //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      //       decoration: BoxDecoration(
+                      //         color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      //         borderRadius: BorderRadius.circular(12),
+                      //       ),
+                      //       child: Text(
+                      //         'Selected',
+                      //         style: theme.textTheme.labelSmall?.copyWith(
+                      //           color: theme.colorScheme.primary,
+                      //           fontWeight: FontWeight.w700,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ],
                     ),
                   ),
                   Column(
@@ -219,6 +311,23 @@ class _PlanCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
+              if (data.referralDiscountApplied)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: Colors.green[700]),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'referral.you_are_receiving_discount_on_this_plan',
+                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.green[700], height: 1.2),
+                        ).tr(),
+                      ),
+                    ],
+                  ),
+                ),
               // Select button
               SizedBox(
                 width: double.infinity,
@@ -262,6 +371,24 @@ class BillingPage extends HookConsumerWidget {
     final ctl = ref.read(billingControllerProvider.notifier);
 
     final usage = state.usage as Map<String, dynamic>?;
+    final referral = state.referral as Map<String, dynamic>?;
+
+    // Check if the user has a valid referral discount
+    bool hasReferralDiscount = false;
+    DateTime? discountEndAt;
+
+    final referrer = referral?['referrer'] as Map<String, dynamic>?;
+    if (referrer != null) {
+      final endStr = referrer['discountEndAt'] as String?;
+      if (endStr != null) {
+        discountEndAt = DateTime.tryParse(endStr);
+        if (discountEndAt != null && discountEndAt.isAfter(DateTime.now())) {
+          hasReferralDiscount = true;
+        }
+      }
+    }
+
+    final bool referralStillValid = hasReferralDiscount;
 
     // Toggle Monthly / Yearly (default: Monthly)
     final period = useState(BillingPeriod.monthly);
@@ -279,6 +406,7 @@ class BillingPage extends HookConsumerWidget {
     final List<PlanDisplay> items = [];
     if (isFakeMode) {
       for (final p in kFakeProducts) {
+        final bool largePlan = _isLargePlan('${p.id} ${p.title} ${p.description}');
         items.add(
           PlanDisplay(
             id: p.id,
@@ -288,26 +416,102 @@ class BillingPage extends HookConsumerWidget {
             features: _featuresFor('${p.id} ${p.title}'),
             highlighted: _isMostPopular('${p.id} ${p.title}'),
             raw: null,
+            referralDiscountApplied: referralStillValid && largePlan,
           ),
         );
       }
     } else {
-      for (final p in realProducts) {
-        final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
-        final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
-        final resolvedMonthly = isM || (!isM && !isY); // default monthly if unknown
-        items.add(
-          PlanDisplay(
-            id: p.id,
-            title: _planShortTitle(p.title, p.id),
-            price: p.price,
-            isMonthly: resolvedMonthly,
-            features: _featuresFor('${p.id} ${p.title} ${p.description}'),
-            highlighted: _isMostPopular('${p.id} ${p.title}'),
-            raw: p,
-          ),
-        );
+      if (Platform.isAndroid) {
+        // ANDROID: Use offer token, select the referral-30 offer if it is still valid
+        final androidOffers = extractAndroidOffers(realProducts);
+
+        final Map<String, AndroidOfferInfo> selectedByKey = {};
+
+        AndroidOfferInfo pickForKey(String key, AndroidOfferInfo candidate) {
+          final current = selectedByKey[key];
+
+          if (referralStillValid) {
+            if (candidate.isReferralOffer) return candidate;
+            return current ?? candidate;
+          } else {
+            if (candidate.isReferralOffer) {
+              return current ?? candidate;
+            } else {
+              return candidate;
+            }
+          }
+        }
+
+        for (final info in androidOffers) {
+          final p = info.product;
+          final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
+          final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
+          final resolvedMonthly = isM || (!isM && !isY);
+
+          final key = '${p.id}#${resolvedMonthly ? 'm' : 'y'}';
+          final chosen = pickForKey(key, info);
+          selectedByKey[key] = chosen;
+        }
+
+        for (final entry in selectedByKey.entries) {
+          final p = entry.value.product;
+          final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
+          final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
+          final resolvedMonthly = isM || (!isM && !isY);
+
+          final bool largePlan = _isLargePlan('${p.id} ${p.title} ${p.description}');
+
+          items.add(
+            PlanDisplay(
+              id: p.id,
+              title: _planShortTitle(p.title, p.id),
+              price: p.price,
+              isMonthly: resolvedMonthly,
+              features: _featuresFor('${p.id} ${p.title} ${p.description}'),
+              highlighted: _isMostPopular('${p.id} ${p.title}'),
+              raw: p,
+              referralDiscountApplied: referralStillValid && largePlan,
+            ),
+          );
+        }
+      } else {
+        for (final p in realProducts) {
+          final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
+          final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
+          final resolvedMonthly = isM || (!isM && !isY);
+
+          final bool largePlan = _isLargePlan('${p.id} ${p.title} ${p.description}');
+
+          items.add(
+            PlanDisplay(
+              id: p.id,
+              title: _planShortTitle(p.title, p.id),
+              price: p.price,
+              isMonthly: resolvedMonthly,
+              features: _featuresFor('${p.id} ${p.title} ${p.description}'),
+              highlighted: _isMostPopular('${p.id} ${p.title}'),
+              raw: p,
+              referralDiscountApplied: referralStillValid && largePlan,
+            ),
+          );
+        }
       }
+      // for (final p in realProducts) {
+      //   final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
+      //   final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
+      //   final resolvedMonthly = isM || (!isM && !isY); // default monthly if unknown
+      //   items.add(
+      //     PlanDisplay(
+      //       id: p.id,
+      //       title: _planShortTitle(p.title, p.id),
+      //       price: p.price,
+      //       isMonthly: resolvedMonthly,
+      //       features: _featuresFor('${p.id} ${p.title} ${p.description}'),
+      //       highlighted: _isMostPopular('${p.id} ${p.title}'),
+      //       raw: p,
+      //     ),
+      //   );
+      // }
     }
 
     // Filter by current period
@@ -370,14 +574,21 @@ class BillingPage extends HookConsumerWidget {
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           final plan = selectedPlan.value!;
                           if (plan.raw != null) {
                             // Real purchase
                             ref.read(billingControllerProvider.notifier).buy(plan.raw!);
                           } else {
+                            try {
+                              await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
+                              _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
+                            } catch (e) {
+                              _snack(context, 'Fake buy failed: $e');
+                            }
+
                             // Fake purchase
-                            _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
+                            // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
                           }
                         },
                         style: ElevatedButton.styleFrom(

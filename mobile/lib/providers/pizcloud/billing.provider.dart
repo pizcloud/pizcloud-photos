@@ -6,6 +6,7 @@ import 'package:immich_mobile/features/pizcloud/billing/entitlement_api_client.d
 import 'package:immich_mobile/features/pizcloud/billing/iap_service.dart';
 import 'package:immich_mobile/features/pizcloud/billing/billing_repository.dart';
 import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
+import 'package:immich_mobile/providers/user.provider.dart';
 
 /// Separate configuration for the billing-service and Android package name
 class BillingConfig {
@@ -25,9 +26,10 @@ final iapServiceProvider = Provider<IapService>((ref) => IapService());
 
 final entitlementApiClientProvider = Provider<EntitlementApiClient>((ref) {
   final immichBaseUrl = Store.get(StoreKey.serverEndpoint);
+  final user = ref.watch(currentUserProvider);
   // final cfg = ref.watch(billingConfigProvider);
 
-  return EntitlementApiClient(immichBaseUrl: immichBaseUrl);
+  return EntitlementApiClient(immichBaseUrl: immichBaseUrl, userEntity: user!);
 });
 
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {
