@@ -37,7 +37,6 @@ import { ViewController } from 'src/controllers/view.controller';
 import { WorkflowController } from 'src/controllers/workflow.controller';
 
 import { BillingController } from 'src/controllers/pizcloud/billing.controller'; // pizcloud
-import { ReferralController } from 'src/controllers/pizcloud/referral.controller'; // pizcloud
 import { SsoController } from 'src/controllers/pizcloud/sso.controller'; // pizcloud
 
 export const controllers = [
@@ -79,6 +78,5 @@ export const controllers = [
   ViewController,
   WorkflowController,
   BillingController, // pizcloud
-  ReferralController, // pizcloud
   SsoController, // pizcloud
 ];

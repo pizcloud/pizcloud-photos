@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
 
@@ -31,6 +32,8 @@
   let paypalEmail = $state('');
   let paypalFullName = $state('');
 
+  const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+
   async function load() {
     if (!userEmail) {
       error = $t('referral.apply_missing_email');
@@ -42,7 +45,7 @@
     error = '';
 
     try {
-      const res = await fetch(`/api/referral/payout-method?email=${encodeURIComponent(userEmail)}`, {
+      const res = await fetch(`${baseUrl}/referral/payout-method`, {
         credentials: 'include',
       });
 
@@ -96,9 +99,10 @@
     success = '';
 
     try {
-      const res = await fetch(`/api/referral/payout-method`, {
+      const res = await fetch(`${baseUrl}/referral/payout-method`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           email: userEmail,
           method,

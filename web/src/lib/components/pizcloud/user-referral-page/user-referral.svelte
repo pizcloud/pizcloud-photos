@@ -91,6 +91,8 @@
   let withdrawSuccess = $state('');
   let withdrawSubmitting = $state(false);
 
+  const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+
   function isEmptyState() {
     return totalReferredUsers === 0 && totalCommission === 0 && monthlyStats.length === 0;
   }
@@ -192,9 +194,10 @@
     applyLoading = true;
 
     try {
-      const res = await fetch(`/api/referral/apply-code`, {
+      const res = await fetch(`${baseUrl}/referral/apply-code`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: userEmail, code }),
       });
 
@@ -253,7 +256,7 @@
     }
 
     try {
-      const res = await fetch(`/api/referral/payout-method?email=${encodeURIComponent(userEmail)}`, {
+      const res = await fetch(`${baseUrl}/referral/payout-method`, {
         credentials: 'include',
       });
 
@@ -423,9 +426,10 @@
         return;
       }
 
-      const res = await fetch(`/api/referral/withdrawals`, {
+      const res = await fetch(`${baseUrl}/referral/withdrawals`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           email: userEmail,
           amount,

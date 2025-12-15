@@ -1,3 +1,4 @@
+import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
 import { user } from '$lib/stores/user.store';
 import { authenticate } from '$lib/utils/auth';
 import { getFormatter } from '$lib/utils/i18n';
@@ -49,12 +50,14 @@ export const load = (async ({ url, fetch }) => {
   let referral: ReferralSummary | null = null;
 
   if (userEmail) {
+    const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
     try {
       const res = await fetch(
-        `/api/referral/summary?email=${encodeURIComponent(userEmail)}`,
+        `${baseUrl}/referral/summary`,
         {
           method: 'GET',
           headers: { 'content-type': 'application/json' },
+          credentials: 'include',
         },
       );
 
