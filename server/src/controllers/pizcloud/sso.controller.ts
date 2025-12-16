@@ -84,8 +84,15 @@ export class SsoController {
         { key: ImmichCookie.UserId, value: body.userId },
       ],
     });
-    if (continueUrl != '') {
+    if (continueUrl) {
       res.redirect(continueUrl);
+    } else {
+      return {
+        userId: body.userId,
+        userEmail: body.userEmail,
+        name: body.name,
+        profileImagePath: body.profileImagePath,
+      };
     }
   }
 
