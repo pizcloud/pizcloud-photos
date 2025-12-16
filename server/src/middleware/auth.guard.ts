@@ -86,6 +86,16 @@ export class AuthGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+
+    //pizcloud
+    const req = context.switchToHttp().getRequest();
+    const path = req.originalUrl || req.url;
+
+    if (path.startsWith('/internal')) {
+      return true;
+    }
+    // #pizcloud
+
     const targets = [context.getHandler()];
     const options = this.reflector.getAllAndOverride<AuthenticatedOptions | undefined>(MetadataKey.AuthRoute, targets);
     if (!options) {

@@ -200,3 +200,7 @@ export const USER_SIGNUP_ENABLED = true; // pizcloud: User signup enabled flag
 export const SSO_JWT_PUBLIC_KEY_PATH = process.env.SSO_JWT_PUBLIC_KEY_PATH; // pizcloud
 export const SSO_JWT_ISSUER = process.env.SSO_JWT_ISSUER;
 export const SSO_JWT_AUDIENCE = process.env.SSO_JWT_AUDIENCE;
+
+export const INTERNAL_JWT_PUBLIC_KEY_PATH = process.env.INTERNAL_JWT_PUBLIC_KEY_PATH; // pizcloud
+export const INTERNAL_JWT_ISSUER = process.env.INTERNAL_JWT_ISSUER; // pizcloud
+export const INTERNAL_JWT_AUDIENCE = process.env.INTERNAL_JWT_AUDIENCE; // pizcloud

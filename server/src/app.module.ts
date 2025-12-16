@@ -18,6 +18,7 @@ import { ErrorInterceptor } from 'src/middleware/error.interceptor';
 import { FileUploadInterceptor } from 'src/middleware/file-upload.interceptor';
 import { GlobalExceptionFilter } from 'src/middleware/global-exception.filter';
 import { LoggingInterceptor } from 'src/middleware/logging.interceptor';
+import { InternalModule } from 'src/pizcloud/internal/internal.module'; // pizcloud
 import { repositories } from 'src/repositories';
 import { AppRepository } from 'src/repositories/app.repository';
 import { ConfigRepository } from 'src/repositories/config.repository';
@@ -91,11 +92,13 @@ export class BaseModule implements OnModuleInit, OnModuleDestroy {
 }
 
 @Module({
-  imports: [...bullImports, ...commonImports, ScheduleModule.forRoot()],
+  imports: [...bullImports, ...commonImports, ScheduleModule.forRoot(),
+    InternalModule // pizcloud
+  ],
   controllers: [...controllers],
   providers: [...common, ...apiMiddleware, { provide: IWorker, useValue: ImmichWorker.Api }],
 })
-export class ApiModule extends BaseModule {}
+export class ApiModule extends BaseModule { }
 
 @Module({
   imports: [...commonImports],
@@ -125,14 +128,14 @@ export class MaintenanceModule {
   imports: [...bullImports, ...commonImports],
   providers: [...common, { provide: IWorker, useValue: ImmichWorker.Microservices }, SchedulerRegistry],
 })
-export class MicroservicesModule extends BaseModule {}
+export class MicroservicesModule extends BaseModule { }
 
 @Module({
   imports: [...bullImports, ...commonImports],
   providers: [...common, ...commandsAndQuestions, SchedulerRegistry],
 })
 export class ImmichAdminModule implements OnModuleDestroy {
-  constructor(private service: CliService) {}
+  constructor(private service: CliService) { }
 
   async onModuleDestroy() {
     await this.service.cleanup();
