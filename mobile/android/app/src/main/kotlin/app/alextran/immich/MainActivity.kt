@@ -81,7 +81,7 @@ private fun granted(ctx: Context, perm: String): Boolean {
  * Android 14+: FULL: READ_MEDIA_IMAGES + READ_MEDIA_VIDEO,
  *               LIMITED: READ_MEDIA_VISUAL_USER_SELECTED,
  *               NONE: nothing.
- * Android 13  : FULL: READ_MEDIA_IMAGES hoặc READ_MEDIA_VIDEO,
+ * Android 13  : FULL: READ_MEDIA_IMAGES or READ_MEDIA_VIDEO,
  *               NONE: nothing.
  * ≤ Android 12: LEGACY: READ_EXTERNAL_STORAGE, NONE: nothing.
  */

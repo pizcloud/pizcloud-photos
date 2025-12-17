@@ -6,6 +6,7 @@ import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
+import 'package:immich_mobile/services/pizcloud/api.service.dart' as pizApi;
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
@@ -15,6 +16,10 @@ class EntitlementApiClient {
   final String immichBaseUrl;
   final UserDto userEntity;
   final authHeaders = const AuthHeaderService();
+  late final pizApi.ApiService _pizApiService = pizApi.ApiService(
+    baseUrl: pizCloudServerUrl,
+    headers: authHeaders.authJson(),
+  );
   // final String billingBaseUrl;
 
   String _join(String base, String path) {
@@ -55,28 +60,56 @@ class EntitlementApiClient {
     //   path = '$path?email=$encoded';
     // }
 
-    final jsonHeaders = authHeaders.authJson();
-    final url = _join(pizCloudServerUrl, path);
-    final res = await http.get(Uri.parse(url), headers: jsonHeaders);
+    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
 
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
+    // Old http-based implementation (kept for reference)
+    // final jsonHeaders = authHeaders.authJson();
+    // final url = _join(pizCloudServerUrl, path);
+    // final res = await http.get(Uri.parse(url), headers: jsonHeaders);
+
+    // New Dio-based implementation using shared CookieJar (sid) + headers
+    final res = await _pizApiService.client.get<dynamic>('/$path');
+
+    final status = res.statusCode ?? 0;
+    if (status == 200) {
+      final data = res.data;
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+      try {
+        if (data is String) {
+          return jsonDecode(data) as Map<String, dynamic>;
+        }
+      } catch (_) {}
     }
 
-    debugPrint('getReferralSummary failed: ${res.statusCode} ${res.body}');
+    debugPrint('getReferralSummary failed: ${res.statusCode} ${res.data}');
     return null;
   }
 
   Future<void> verifyIosReceipt({required String productId, required String receiptBase64}) async {
-    final url = _join(pizCloudServerUrl, 'iap/ios/verify');
-    final jsonHeaders = authHeaders.authJson();
-    final res = await http.post(
-      Uri.parse(url),
-      headers: jsonHeaders,
-      body: jsonEncode({'productId': productId, 'receiptData': receiptBase64}),
+    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
+
+    // Old http-based implementation (kept for reference)
+    // final url = _join(pizCloudServerUrl, 'papi/iap/ios/verify');
+    // final jsonHeaders = authHeaders.authJson();
+    // final res = await http.post(
+    //   Uri.parse(url),
+    //   headers: jsonHeaders,
+    //   body: jsonEncode({'productId': productId, 'receiptData': receiptBase64}),
+    // );
+    // if (res.statusCode < 200 || res.statusCode >= 300) {
+    //   throw Exception('iOS verify failed: ${res.statusCode} ${res.body}');
+    // }
+
+    // New Dio-based implementation using shared CookieJar (sid) + headers
+    final res = await _pizApiService.client.post<dynamic>(
+      '/papi/iap/ios/verify',
+      data: {'productId': productId, 'receiptData': receiptBase64},
     );
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('iOS verify failed: ${res.statusCode} ${res.body}');
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('iOS verify failed: $status ${res.data}');
     }
   }
 
@@ -85,15 +118,28 @@ class EntitlementApiClient {
     required String purchaseToken,
     required String packageName,
   }) async {
-    final url = _join(pizCloudServerUrl, 'iap/android/verify');
-    final jsonHeaders = authHeaders.authJson();
-    final res = await http.post(
-      Uri.parse(url),
-      headers: jsonHeaders,
-      body: jsonEncode({'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName}),
+    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
+
+    // Old http-based implementation (kept for reference)
+    // final url = _join(pizCloudServerUrl, 'papi/iap/android/verify');
+    // final jsonHeaders = authHeaders.authJson();
+    // final res = await http.post(
+    //   Uri.parse(url),
+    //   headers: jsonHeaders,
+    //   body: jsonEncode({'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName}),
+    // );
+    // if (res.statusCode < 200 || res.statusCode >= 300) {
+    //   throw Exception('Android verify failed: ${res.statusCode} ${res.body}');
+    // }
+
+    // New Dio-based implementation using shared CookieJar (sid) + headers
+    final res = await _pizApiService.client.post<dynamic>(
+      '/papi/iap/android/verify',
+      data: {'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName},
     );
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Android verify failed: ${res.statusCode} ${res.body}');
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('Android verify failed: $status ${res.data}');
     }
   }
 
@@ -101,15 +147,28 @@ class EntitlementApiClient {
     required String productId,
     required String platform, // 'android' | 'ios'
   }) async {
-    final url = _join(pizCloudServerUrl, 'papi/billing/verify-success');
-    final jsonHeaders = authHeaders.authJson();
-    final res = await http.post(
-      Uri.parse(url),
-      headers: jsonHeaders,
-      body: jsonEncode({'productId': productId, 'platform': platform}),
+    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
+
+    // Old http-based implementation (kept for reference)
+    // final url = _join(pizCloudServerUrl, 'papi/billing/verify-success');
+    // final jsonHeaders = authHeaders.authJson();
+    // final res = await http.post(
+    //   Uri.parse(url),
+    //   headers: jsonHeaders,
+    //   body: jsonEncode({'productId': productId, 'platform': platform}),
+    // );
+    // if (res.statusCode < 200 || res.statusCode >= 300) {
+    //   throw Exception('Notify verified purchase failed: ${res.statusCode} ${res.body}');
+    // }
+
+    // New Dio-based implementation using shared CookieJar (sid) + headers
+    final res = await _pizApiService.client.post<dynamic>(
+      '/papi/billing/verify-success',
+      data: {'productId': productId, 'platform': platform},
     );
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Notify verified purchase failed: ${res.statusCode} ${res.body}');
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('Notify verified purchase failed: $status ${res.data}');
     }
   }
 }

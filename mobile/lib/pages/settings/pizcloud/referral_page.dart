@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:immich_mobile/pages/settings/pizcloud/referral_payout_method_page.dart';
 // import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -16,6 +13,7 @@ import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart'
 import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_withdrawals_page.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
+import 'package:immich_mobile/services/pizcloud/api.service.dart' as pizApi;
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
@@ -113,25 +111,38 @@ class ReferralPage extends HookConsumerWidget {
     final payoutMethodState = useState<ReferralPayoutMethod?>(null);
 
     final authHeaders = const AuthHeaderService();
+    final pizApiService = pizApi.ApiService(baseUrl: pizCloudServerUrl, headers: authHeaders.authJson());
+
+    // Ensure sid cookie is restored after app restart before hitting APIs
+    useEffect(() {
+      Future.microtask(() => pizApi.ApiService.ensureSidCookie(pizCloudServerUrl));
+      return null;
+    }, []);
 
     Future<void> loadSummary() async {
       summaryLoading.value = true;
       summaryError.value = null;
 
       try {
-        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
 
-        Uri uri = Uri.parse('$base/papi/referral/summary');
-        if (userEmail != null && userEmail!.isNotEmpty) {
-          uri = uri.replace(queryParameters: {'email': userEmail!});
-        }
-        final jsonHeaders = authHeaders.authJson();
-        final res = await http.get(uri, headers: jsonHeaders);
+        // Old http-based implementation (kept for reference)
+        // Uri uri = Uri.parse('$base/papi/referral/summary');
+        // if (userEmail != null && userEmail!.isNotEmpty) {
+        //   uri = uri.replace(queryParameters: {'email': userEmail!});
+        // }
+        // final jsonHeaders = authHeaders.authJson();
+        // final res = await http.get(uri, headers: jsonHeaders);
 
-        if (res.statusCode < 200 || res.statusCode >= 300) {
+        // New Dio-based implementation using shared CookieJar (sid) + headers
+        final client = pizApiService.client;
+        final res = await client.get<dynamic>('/papi/referral/summary');
+
+        final status = res.statusCode ?? 0;
+        if (status < 200 || status >= 300) {
           String? messageCode;
           try {
-            final body = jsonDecode(res.body);
+            final body = res.data;
             if (body is Map<String, dynamic>) {
               final msg = body['message'];
               if (msg is String) {
@@ -150,7 +161,7 @@ class ReferralPage extends HookConsumerWidget {
           return;
         }
 
-        final data = jsonDecode(res.body);
+        final data = res.data;
         if (data is! Map<String, dynamic>) {
           summaryError.value = 'referral.apply_unknown_error'.tr();
           return;
@@ -282,20 +293,34 @@ class ReferralPage extends HookConsumerWidget {
       applyLoading.value = true;
 
       try {
-        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
 
-        final uri = Uri.parse('$base/papi/referral/apply-code');
+        // Old http-based implementation (kept for reference)
+        // final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        // final uri = Uri.parse('$base/papi/referral/apply-code');
+        // final jsonHeaders = authHeaders.authJson();
+        // final res = await http.post(uri, headers: jsonHeaders, body: jsonEncode({'email': userEmail, 'code': code}));
+        // if (res.statusCode < 200 || res.statusCode >= 300) {
+        //   debugPrint('Failed to apply referral code: ${res.statusCode} ${res.body}');
+        //   applyError.value = 'referral.apply_unknown_error'.tr();
+        //   return;
+        // }
+        // final dynamic body = jsonDecode(res.body);
 
-        final jsonHeaders = authHeaders.authJson();
-        final res = await http.post(uri, headers: jsonHeaders, body: jsonEncode({'email': userEmail, 'code': code}));
+        // New Dio-based implementation using shared CookieJar (sid) + headers
+        final res = await pizApiService.client.post<dynamic>(
+          '/papi/referral/apply-code',
+          data: {'email': userEmail, 'code': code},
+        );
 
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          debugPrint('Failed to apply referral code: ${res.statusCode} ${res.body}');
+        final status = res.statusCode ?? 0;
+        if (status < 200 || status >= 300) {
+          debugPrint('Failed to apply referral code: $status ${res.data}');
           applyError.value = 'referral.apply_unknown_error'.tr();
           return;
         }
 
-        final dynamic body = jsonDecode(res.body);
+        final dynamic body = res.data;
         if (body is! Map<String, dynamic>) {
           applyError.value = 'referral.apply_unknown_error'.tr();
           return;
@@ -454,25 +479,34 @@ class ReferralPage extends HookConsumerWidget {
                 });
 
                 try {
-                  final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-                  final uri = Uri.parse('$base/papi/referral/withdrawals');
-                  final jsonHeaders = authHeaders.authJson();
+                  await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
 
-                  final res = await http.post(
-                    uri,
-                    headers: jsonHeaders,
-                    body: jsonEncode({
-                      'email': userEmail,
-                      'amount': amount,
-                      'currency': currentCurrency,
-                      'method': withdrawMethod,
-                    }),
+                  // Old http-based implementation (kept for reference)
+                  // final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+                  // final uri = Uri.parse('$base/papi/referral/withdrawals');
+                  // final jsonHeaders = authHeaders.authJson();
+                  // final res = await http.post(
+                  //   uri,
+                  //   headers: jsonHeaders,
+                  //   body: jsonEncode({
+                  //     'email': userEmail,
+                  //     'amount': amount,
+                  //     'currency': currentCurrency,
+                  //     'method': withdrawMethod,
+                  //   }),
+                  // );
+
+                  // New Dio-based implementation using shared CookieJar (sid) + headers
+                  final res = await pizApiService.client.post<dynamic>(
+                    '/papi/referral/withdrawals',
+                    data: {'email': userEmail, 'amount': amount, 'currency': currentCurrency, 'method': withdrawMethod},
                   );
 
-                  if (res.statusCode < 200 || res.statusCode >= 300) {
+                  final status = res.statusCode ?? 0;
+                  if (status < 200 || status >= 300) {
                     String? code;
                     try {
-                      final body = jsonDecode(res.body);
+                      final body = res.data;
                       if (body is Map<String, dynamic>) {
                         final msg = body['message'];
                         if (msg is String) {

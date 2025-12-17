@@ -1,18 +1,16 @@
 // mobile/lib/services/pizcloud/referral_withdrawal.service.dart
 
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_withdrawal.model.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
+import 'package:immich_mobile/services/pizcloud/api.service.dart' as pizApi;
 
 class ReferralWithdrawalService {
   ReferralWithdrawalService() : _base = AppConfig.pizCloudServerUrl.trim().replaceAll(RegExp(r'/+$'), '');
 
   final String _base;
   final authHeaders = const AuthHeaderService();
+  late final pizApi.ApiService _pizApiService = pizApi.ApiService(baseUrl: _base, headers: authHeaders.authJson());
 
   Uri _buildUri({required String email, int? page, int? limit, String? status}) {
     final base = Uri.parse('$_base/papi/referral/withdrawals');
@@ -35,15 +33,30 @@ class ReferralWithdrawalService {
       return ReferralWithdrawalListResponse.empty();
     }
 
-    final uri = _buildUri(email: email, page: page, limit: limit);
-    final jsonHeaders = authHeaders.authJson();
-    final res = await http.get(uri, headers: jsonHeaders);
+    await pizApi.ApiService.ensureSidCookie(_base);
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
+    // Old http-based implementation (kept for reference)
+    // final uri = _buildUri(email: email, page: page, limit: limit);
+    // final jsonHeaders = authHeaders.authJson();
+    // final res = await http.get(uri, headers: jsonHeaders);
+
+    // New Dio-based implementation using shared CookieJar (sid) + headers
+    final res = await _pizApiService.client.get<dynamic>(
+      '/papi/referral/withdrawals',
+      queryParameters: {
+        'email': email,
+        'page': page,
+        'limit': limit,
+        if (status != null && status.isNotEmpty) 'status': status,
+      },
+    );
+
+    final statusCode = res.statusCode ?? 0;
+    if (statusCode < 200 || statusCode >= 300) {
       return ReferralWithdrawalListResponse.empty();
     }
 
-    final data = jsonDecode(res.body);
+    final data = res.data;
     if (data is! Map<String, dynamic>) {
       return ReferralWithdrawalListResponse.empty();
     }
