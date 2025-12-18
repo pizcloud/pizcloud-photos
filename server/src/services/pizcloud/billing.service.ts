@@ -1,5 +1,5 @@
 // server/src/services/billing.service.ts
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
 import { AuthDto } from 'src/dtos/auth.dto';
 import { getGoogleAccessToken } from 'src/services/pizcloud/google-auth';
@@ -109,130 +109,6 @@ export class BillingService {
 
     if (limitGiB === 0) return 0;
     return limitGiB * 1024 ** 3;
-  }
-
-  // =========================================================
-  //  VERIFY ANDROID
-  // =========================================================
-  async verifyAndroidPurchase(params: {
-    userId: string | undefined;
-    userEmail: string | undefined;
-    productId: string;
-    purchaseToken: string;
-    packageName: string;
-  }): Promise<{ ok: true }> {
-    const { userId, userEmail, productId, purchaseToken, packageName } = params;
-
-    const accessToken = await getGoogleAccessToken();
-    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions/${productId}/tokens/${purchaseToken}`;
-
-    const { data } = await axios.get(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      timeout: 8000,
-    });
-
-    const now = Date.now();
-    const exp = Number(data.expiryTimeMillis ?? 0);
-    if (!exp || exp <= now) {
-      throw new Error('Android subscription expired or invalid');
-    }
-
-    const ent = PRODUCT_MAP[productId];
-    if (!ent) throw new Error('Unknown productId');
-
-    const payload: EntitlementData = {
-      userId: userId as string,
-      userEmail: userEmail,
-      productId,
-      planCode: ent.planCode,
-      storageLimitGb: ent.storageLimitGb,
-      mlTier: ent.mlTier,
-      seats: ent.seats,
-      shareEnabled: ent.shareEnabled,
-      period: ent.period,
-      expiresAtMs: exp,
-      purchaseToken,
-    };
-
-    const quotaSizeInBytes = this.computeQuotaBytes(payload.storageLimitGb);
-
-    await this.userAdmin.updateUserQuota(payload.userId, quotaSizeInBytes);
-    this.entitlements.set(payload.userId, payload);
-
-    this.purchaseTokenToUser.set(purchaseToken, {
-      userId: payload.userId,
-      userEmail: payload.userEmail,
-      productId,
-    });
-
-    return { ok: true };
-  }
-
-  async verifyIOSPurchase(params: {
-    userId: string | undefined;
-    userEmail: string | undefined;
-    productId: string;
-    receiptData: string;
-  }): Promise<{ ok: true }> {
-    const { userId, userEmail, productId, receiptData } = params;
-
-    const endpoint = process.env.IOS_RECEIPT_ENDPOINT ?? 'https://buy.itunes.apple.com/verifyReceipt';
-    const secret = process.env.APPLE_IAP_SHARED_SECRET;
-    if (!secret) {
-      throw new Error('APPLE_IAP_SHARED_SECRET is required for iOS verification');
-    }
-    const verify = async (url: string) =>
-      (
-        await axios.post(
-          url,
-          { 'receipt-data': receiptData, password: secret, 'exclude-old-transactions': true },
-          { timeout: 8000 }
-        )
-      ).data;
-
-    let data = await verify(endpoint);
-    // 21007 → sandbox
-    if (data?.status === 21007) {
-      data = await verify('https://sandbox.itunes.apple.com/verifyReceipt');
-    }
-    if (data?.status !== 0) {
-      throw new Error(`iOS verify failed: ${data?.status}`);
-    }
-
-    const now = Date.now();
-    const items: any[] = (data.latest_receipt_info || data.receipt?.in_app || []);
-
-    const ent = PRODUCT_MAP[productId];
-    if (!ent) throw new Error('Unknown productId');
-
-    const match = items
-      .filter((i) => i.product_id === productId)
-      .map((i) => Number(i.expires_date_ms ?? 0))
-      .sort((a, b) => b - a)[0];
-
-    if (!match || match <= now) {
-      throw new Error('iOS subscription not active');
-    }
-
-    const payload: EntitlementData = {
-      userId: userId as string,
-      userEmail,
-      productId,
-      planCode: ent.planCode,
-      storageLimitGb: ent.storageLimitGb,
-      mlTier: ent.mlTier,
-      seats: ent.seats,
-      shareEnabled: ent.shareEnabled,
-      period: ent.period,
-      expiresAtMs: match,
-    };
-
-    const quotaSizeInBytes = this.computeQuotaBytes(payload.storageLimitGb);
-
-    await this.userAdmin.updateUserQuota(payload.userId, quotaSizeInBytes);
-    this.entitlements.set(payload.userId, payload);
-
-    return { ok: true };
   }
 
   async getUsage(auth: AuthDto) {
@@ -469,39 +345,147 @@ export class BillingService {
     }
   }
 
-  // async handleEntitlementWebhook(
-  //   body: EntitlementWebhookBody,
-  //   authorizationHeader: string | undefined,
-  // ): Promise<{ ok: true }> {
-  //   // Check service token
-  //   const token = (authorizationHeader || '').replace(/^Bearer\s+/i, '');
-  //   if (token !== process.env.BILLING_SERVICE_TOKEN) {
-  //     throw new UnauthorizedException('Invalid service token');
+  async handleEntitlementWebhook(body: EntitlementWebhookBody,): Promise<{ ok: true }> {
+
+    const { signature, ...payloadWithoutSignature } = body;
+    const secret = process.env.ENTITLEMENT_HMAC_SECRET;
+    if (!secret) {
+      throw new UnauthorizedException('HMAC secret not configured');
+    }
+
+    const quotaSizeInBytes = this.computeQuotaBytes(body.storageLimitGb);
+    await this.userAdmin.updateUserQuota(body.userId, quotaSizeInBytes);
+
+    const entitlement: EntitlementData = {
+      ...payloadWithoutSignature,
+    };
+
+    this.entitlements.set(body.userId, entitlement);
+
+    return { ok: true };
+  }
+
+
+  // =========================================================
+  //  VERIFY ANDROID
+  // =========================================================
+  // async verifyAndroidPurchase(params: {
+  //   userId: string | undefined;
+  //   userEmail: string | undefined;
+  //   productId: string;
+  //   purchaseToken: string;
+  //   packageName: string;
+  // }): Promise<{ ok: true }> {
+  //   const { userId, userEmail, productId, purchaseToken, packageName } = params;
+
+  //   const accessToken = await getGoogleAccessToken();
+  //   const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions/${productId}/tokens/${purchaseToken}`;
+
+  //   const { data } = await axios.get(url, {
+  //     headers: { Authorization: `Bearer ${accessToken}` },
+  //     timeout: 8000,
+  //   });
+
+  //   const now = Date.now();
+  //   const exp = Number(data.expiryTimeMillis ?? 0);
+  //   if (!exp || exp <= now) {
+  //     throw new Error('Android subscription expired or invalid');
   //   }
 
-  //   const { signature, ...payloadWithoutSignature } = body;
-  //   const secret = process.env.ENTITLEMENT_HMAC_SECRET;
-  //   if (!secret) {
-  //     throw new UnauthorizedException('HMAC secret not configured');
-  //   }
+  //   const ent = PRODUCT_MAP[productId];
+  //   if (!ent) throw new Error('Unknown productId');
 
-  //   const expected = crypto
-  //     .createHmac('sha256', secret)
-  //     .update(JSON.stringify(payloadWithoutSignature))
-  //     .digest('hex');
-
-  //   if (signature !== expected) {
-  //     throw new UnauthorizedException('Bad HMAC signature');
-  //   }
-
-  //   const quotaSizeInBytes = this.computeQuotaBytes(body.storageLimitGb);
-  //   await this.userAdmin.updateUserQuota(body.userId, quotaSizeInBytes);
-
-  //   const entitlement: EntitlementData = {
-  //     ...payloadWithoutSignature,
+  //   const payload: EntitlementData = {
+  //     userId: userId as string,
+  //     userEmail: userEmail,
+  //     productId,
+  //     planCode: ent.planCode,
+  //     storageLimitGb: ent.storageLimitGb,
+  //     mlTier: ent.mlTier,
+  //     seats: ent.seats,
+  //     shareEnabled: ent.shareEnabled,
+  //     period: ent.period,
+  //     expiresAtMs: exp,
+  //     purchaseToken,
   //   };
 
-  //   this.entitlements.set(body.userId, entitlement);
+  //   const quotaSizeInBytes = this.computeQuotaBytes(payload.storageLimitGb);
+
+  //   await this.userAdmin.updateUserQuota(payload.userId, quotaSizeInBytes);
+  //   this.entitlements.set(payload.userId, payload);
+
+  //   this.purchaseTokenToUser.set(purchaseToken, {
+  //     userId: payload.userId,
+  //     userEmail: payload.userEmail,
+  //     productId,
+  //   });
+
+  //   return { ok: true };
+  // }
+
+  // async verifyIOSPurchase(params: {
+  //   userId: string | undefined;
+  //   userEmail: string | undefined;
+  //   productId: string;
+  //   receiptData: string;
+  // }): Promise<{ ok: true }> {
+  //   const { userId, userEmail, productId, receiptData } = params;
+
+  //   const endpoint = process.env.IOS_RECEIPT_ENDPOINT ?? 'https://buy.itunes.apple.com/verifyReceipt';
+  //   const secret = process.env.APPLE_IAP_SHARED_SECRET;
+  //   if (!secret) {
+  //     throw new Error('APPLE_IAP_SHARED_SECRET is required for iOS verification');
+  //   }
+  //   const verify = async (url: string) =>
+  //     (
+  //       await axios.post(
+  //         url,
+  //         { 'receipt-data': receiptData, password: secret, 'exclude-old-transactions': true },
+  //         { timeout: 8000 }
+  //       )
+  //     ).data;
+
+  //   let data = await verify(endpoint);
+  //   // 21007 → sandbox
+  //   if (data?.status === 21007) {
+  //     data = await verify('https://sandbox.itunes.apple.com/verifyReceipt');
+  //   }
+  //   if (data?.status !== 0) {
+  //     throw new Error(`iOS verify failed: ${data?.status}`);
+  //   }
+
+  //   const now = Date.now();
+  //   const items: any[] = (data.latest_receipt_info || data.receipt?.in_app || []);
+
+  //   const ent = PRODUCT_MAP[productId];
+  //   if (!ent) throw new Error('Unknown productId');
+
+  //   const match = items
+  //     .filter((i) => i.product_id === productId)
+  //     .map((i) => Number(i.expires_date_ms ?? 0))
+  //     .sort((a, b) => b - a)[0];
+
+  //   if (!match || match <= now) {
+  //     throw new Error('iOS subscription not active');
+  //   }
+
+  //   const payload: EntitlementData = {
+  //     userId: userId as string,
+  //     userEmail,
+  //     productId,
+  //     planCode: ent.planCode,
+  //     storageLimitGb: ent.storageLimitGb,
+  //     mlTier: ent.mlTier,
+  //     seats: ent.seats,
+  //     shareEnabled: ent.shareEnabled,
+  //     period: ent.period,
+  //     expiresAtMs: match,
+  //   };
+
+  //   const quotaSizeInBytes = this.computeQuotaBytes(payload.storageLimitGb);
+
+  //   await this.userAdmin.updateUserQuota(payload.userId, quotaSizeInBytes);
+  //   this.entitlements.set(payload.userId, payload);
 
   //   return { ok: true };
   // }

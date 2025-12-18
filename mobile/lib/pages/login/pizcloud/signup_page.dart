@@ -96,7 +96,7 @@ class SignupPage extends HookConsumerWidget {
       referralLoading.value = true;
       try {
         final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-        final uri = Uri.parse('$base/papi/referral/validate');
+        final uri = Uri.parse('$base/papi/external/referral/validate');
 
         final email = emailCtl.text.trim();
         final body = <String, dynamic>{'code': code};

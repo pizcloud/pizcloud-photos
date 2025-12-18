@@ -78,7 +78,7 @@
     const trimmed = code.trim();
 
     const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
-    const res = await fetch(`${baseUrl}/papi/referral/validate`, {
+    const res = await fetch(`${baseUrl}/papi/external/referral/validate`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({

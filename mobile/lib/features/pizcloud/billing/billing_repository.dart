@@ -27,13 +27,9 @@ class BillingRepository {
       if (Platform.isIOS) {
         final receipt = await IosReceiptChannel.getReceiptBase64();
         await api.verifyIosReceipt(productId: productId, receiptBase64: receipt);
-
-        await api.notifyVerifiedPurchase(productId: productId, platform: 'ios');
       } else {
         final token = p.verificationData.serverVerificationData; // purchaseToken
         await api.verifyAndroidPurchase(productId: productId, purchaseToken: token, packageName: packageName);
-
-        await api.notifyVerifiedPurchase(productId: productId, platform: 'android');
       }
       await iap.complete(p);
     }

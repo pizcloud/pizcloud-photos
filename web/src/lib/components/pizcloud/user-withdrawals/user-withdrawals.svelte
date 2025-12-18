@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
 
@@ -40,6 +41,8 @@
   let limit = $state(10);
   let total = $state(0);
   let selectedStatus = $state<'all' | ReferralWithdrawStatus>('all');
+
+  const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
 
   function canLoadMore() {
     return items.length < total;
@@ -85,8 +88,8 @@
     }
 
     try {
-      const url = new URL('/api/referral/withdrawals', globalThis.location.origin);
-      url.searchParams.set('email', userEmail);
+      const url = new URL(`${baseUrl}/referral/withdrawals`, globalThis.location.origin);
+      // url.searchParams.set('email', userEmail);
       url.searchParams.set('page', String(page));
       url.searchParams.set('limit', String(limit));
       if (selectedStatus !== 'all') {

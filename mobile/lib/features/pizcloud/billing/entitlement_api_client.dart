@@ -68,7 +68,7 @@ class EntitlementApiClient {
   }
 
   Future<void> verifyIosReceipt({required String productId, required String receiptBase64}) async {
-    final url = _join(immichBaseUrl, 'iap/ios/verify');
+    final url = _join(pizCloudServerUrl, 'iap/ios/verify');
     final jsonHeaders = authHeaders.authJson();
     final res = await http.post(
       Uri.parse(url),
@@ -85,7 +85,7 @@ class EntitlementApiClient {
     required String purchaseToken,
     required String packageName,
   }) async {
-    final url = _join(immichBaseUrl, 'iap/android/verify');
+    final url = _join(pizCloudServerUrl, 'iap/android/verify');
     final jsonHeaders = authHeaders.authJson();
     final res = await http.post(
       Uri.parse(url),

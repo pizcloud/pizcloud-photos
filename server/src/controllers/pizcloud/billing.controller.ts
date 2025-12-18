@@ -8,42 +8,6 @@ import { BillingService } from 'src/services/pizcloud/billing.service';
 export class BillingController {
   constructor(private readonly billingService: BillingService,) { }
 
-  // POST /api/billing/iap/android/verify
-  @Post('iap/android/verify')
-  @HttpCode(HttpStatus.OK)
-  async verifyAndroid(
-    @Req() req: any,
-    @Body() b: { productId: string; purchaseToken: string; packageName: string },
-  ) {
-    const userId = req.user?.id as string | undefined;
-    const userEmail = req.user?.email as string | undefined;
-
-    return this.billingService.verifyAndroidPurchase({
-      userId,
-      userEmail,
-      productId: b.productId,
-      purchaseToken: b.purchaseToken,
-      packageName: b.packageName,
-    });
-  }
-
-  // POST /api/billing/iap/ios/verify
-  @Post('iap/ios/verify')
-  @HttpCode(HttpStatus.OK)
-  async verifyIOS(
-    @Req() req: any,
-    @Body() b: { productId: string; receiptData: string },
-  ) {
-    const userId = req.user?.id as string | undefined;
-    const userEmail = req.user?.email as string | undefined;
-
-    return this.billingService.verifyIOSPurchase({
-      userId,
-      userEmail,
-      productId: b.productId,
-      receiptData: b.receiptData
-    });
-  }
 
   // GET /api/billing/usage
   @Get('usage')
@@ -77,12 +41,50 @@ export class BillingController {
     return { ok: true };
   }
 
+  // // POST /api/billing/iap/android/verify
+  // @Post('iap/android/verify')
+  // @HttpCode(HttpStatus.OK)
+  // async verifyAndroid(
+  //   @Req() req: any,
+  //   @Body() b: { productId: string; purchaseToken: string; packageName: string },
+  // ) {
+  //   const userId = req.user?.id as string | undefined;
+  //   const userEmail = req.user?.email as string | undefined;
+
+  //   return this.billingService.verifyAndroidPurchase({
+  //     userId,
+  //     userEmail,
+  //     productId: b.productId,
+  //     purchaseToken: b.purchaseToken,
+  //     packageName: b.packageName,
+  //   });
+  // }
+
+  // // POST /api/billing/iap/ios/verify
+  // @Post('iap/ios/verify')
+  // @HttpCode(HttpStatus.OK)
+  // async verifyIOS(
+  //   @Req() req: any,
+  //   @Body() b: { productId: string; receiptData: string },
+  // ) {
+  //   const userId = req.user?.id as string | undefined;
+  //   const userEmail = req.user?.email as string | undefined;
+
+  //   return this.billingService.verifyIOSPurchase({
+  //     userId,
+  //     userEmail,
+  //     productId: b.productId,
+  //     receiptData: b.receiptData
+  //   });
+  // }
+
+
   // // POST /api/billing/entitlements/webhook
   // @Post('entitlements/webhook')
   // async webhook(
   //   @Body() body: EntitlementWebhookBody,
   //   @Headers('authorization') auth: string,
   // ) {
-  //   return this.billingService.handleEntitlementWebhook(body, auth);
+  //   return this.billingService.handleEntitlementWebhook(body);
   // }
 }
