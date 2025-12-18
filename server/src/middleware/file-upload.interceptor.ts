@@ -2,7 +2,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
 import { transformException } from '@nestjs/platform-express/multer/multer/multer.utils';
-import { NextFunction, RequestHandler } from 'express';
+import { NextFunction, Request, RequestHandler } from 'express';
 import multer, { StorageEngine, diskStorage } from 'multer';
 import { createHash, randomUUID } from 'node:crypto';
 import { Observable } from 'rxjs';
@@ -98,20 +98,20 @@ export class FileUploadInterceptor implements NestInterceptor {
     return next.handle();
   }
 
-  private fileFilter(request: AuthRequest, file: Express.Multer.File, callback: multer.FileFilterCallback) {
-    return callbackify(() => this.assetService.canUploadFile(asUploadRequest(request, file)), callback);
+  private fileFilter(request: Request, file: Express.Multer.File, callback: multer.FileFilterCallback) {
+    return callbackify(() => this.assetService.canUploadFile(asUploadRequest(request as AuthRequest, file)), callback);
   }
 
-  private filename(request: AuthRequest, file: Express.Multer.File, callback: DiskStorageCallback) {
+  private filename(request: Request, file: Express.Multer.File, callback: DiskStorageCallback) {
     return callbackify(
-      () => this.assetService.getUploadFilename(asUploadRequest(request, file)),
+      () => this.assetService.getUploadFilename(asUploadRequest(request as AuthRequest, file)),
       callback as Callback<string>,
     );
   }
 
-  private destination(request: AuthRequest, file: Express.Multer.File, callback: DiskStorageCallback) {
+  private destination(request: Request, file: Express.Multer.File, callback: DiskStorageCallback) {
     return callbackify(
-      () => this.assetService.getUploadFolder(asUploadRequest(request, file)),
+      () => this.assetService.getUploadFolder(asUploadRequest(request as AuthRequest, file)),
       callback as Callback<string>,
     );
   }
