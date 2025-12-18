@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { GeneratedImageType, StorageCore } from 'src/cores/storage.core';
+import { Request } from 'express';
 import { AssetFile } from 'src/database';
 import { BulkIdErrorReason, BulkIdResponseDto } from 'src/dtos/asset-ids.response.dto';
 import { UploadFieldName } from 'src/dtos/asset-media.dto';
@@ -190,9 +191,9 @@ export function mapToUploadFile(file: ImmichFile): UploadFile {
   };
 }
 
-export const asUploadRequest = (request: AuthRequest, file: Express.Multer.File): UploadRequest => {
+export const asUploadRequest = (request: Request, file: Express.Multer.File): UploadRequest => {
   return {
-    auth: request.user || null,
+    auth: (request as AuthRequest).user || null,
     body: request.body,
     fieldName: file.fieldname as UploadFieldName,
     file: mapToUploadFile(file as ImmichFile),
