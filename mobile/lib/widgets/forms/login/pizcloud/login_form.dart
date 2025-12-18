@@ -51,7 +51,7 @@ class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});
 
   final log = Logger('LoginForm');
-
+  final TextEditingController _emailController = TextEditingController();
   // pizcloud: bootstrap state
   final isBootstrapping = useState<bool>(false);
   final lastBootstrapFailed = useState<bool>(false);
@@ -768,6 +768,7 @@ class LoginForm extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 18),
+
                       // if (isPasswordLoginEnable.value) LoginButton(onPressed: login),
                       // if (isPasswordLoginEnable.value) ...[
                       //   LoginButton(onPressed: login),
@@ -790,26 +791,63 @@ class LoginForm extends HookConsumerWidget {
                       //     onPressed: oAuthLogin,
                       //   ),
                       // ],
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.login),
-                        label: const Text('Login with Google'),
-                        onPressed: () => onGoogleLogin(),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("no_account_yet").tr(),
-                          TextButton(
-                            onPressed: () => context.pushRoute(const SignupRoute()),
-                            child: const Text("sign_up").tr(),
-                          ),
+                          const Text(
+                            "Log in or sign up",
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          ).tr(),
                         ],
                       ),
+                      const SizedBox(height: 18),
+
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.login),
+                        label: const Text('Continue with Google'),
+                        onPressed: () => onGoogleLogin(),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Divider(color: context.isDarkTheme ? Colors.white : Colors.black),
+                      ),
+
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(labelText: 'Email', hintText: 'you@example.com'),
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        textInputAction: TextInputAction.done,
+                        // validator: _validateEmail,
+                      ),
+                      const SizedBox(height: 20),
+                      // Text('Service: ${AppConfig.service}'),
+                      // const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: null,
+                        icon: const Icon(Icons.arrow_forward),
+                        label: const Text('Continue'),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // const SizedBox(height: 12),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.center,
+                      //   children: [
+                      //     const Text("no_account_yet").tr(),
+                      //     TextButton(
+                      //       onPressed: () => context.pushRoute(const SignupRoute()),
+                      //       child: const Text("sign_up").tr(),
+                      //     ),
+                      //   ],
+                      // ),
                     ],
                   ),
             if (!isOauthEnable.value && !isPasswordLoginEnable.value) Center(child: const Text('login_disabled').tr()),

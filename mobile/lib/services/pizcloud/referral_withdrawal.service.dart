@@ -3,14 +3,15 @@
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_withdrawal.model.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
-import 'package:immich_mobile/services/pizcloud/api.service.dart' as pizApi;
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
 
 class ReferralWithdrawalService {
   ReferralWithdrawalService() : _base = AppConfig.pizCloudServerUrl.trim().replaceAll(RegExp(r'/+$'), '');
 
   final String _base;
   final authHeaders = const AuthHeaderService();
-  late final pizApi.ApiService _pizApiService = pizApi.ApiService(baseUrl: _base, headers: authHeaders.authJson());
+  late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
+      pizPersist.ApiPersistCookieJarService.instance(baseUrl: _base, headers: authHeaders.authJson());
 
   Uri _buildUri({required String email, int? page, int? limit, String? status}) {
     final base = Uri.parse('$_base/papi/referral/withdrawals');
@@ -33,15 +34,16 @@ class ReferralWithdrawalService {
       return ReferralWithdrawalListResponse.empty();
     }
 
-    await pizApi.ApiService.ensureSidCookie(_base);
+    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(_base);
 
     // Old http-based implementation (kept for reference)
     // final uri = _buildUri(email: email, page: page, limit: limit);
     // final jsonHeaders = authHeaders.authJson();
     // final res = await http.get(uri, headers: jsonHeaders);
 
-    // New Dio-based implementation using shared CookieJar (sid) + headers
-    final res = await _pizApiService.client.get<dynamic>(
+    // New Dio-based implementation using PersistCookieJar (sid) + headers
+    final api = await _pizApiService;
+    final res = await api.client.get<dynamic>(
       '/papi/referral/withdrawals',
       queryParameters: {
         'email': email,

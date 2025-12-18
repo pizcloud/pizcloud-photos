@@ -10,10 +10,9 @@ import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
-import 'package:immich_mobile/services/pizcloud/api.service.dart' as pizApi;
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizApiPersist;
 import 'account_api.dart';
 import 'photos_api.dart';
-import 'api.service.dart';
 
 /// Thin wrapper around Google Sign-In (v7) to centralize initialization and
 /// requests.
@@ -83,11 +82,11 @@ class GoogleService {
     debugPrint('photosResponse: $photosResponse');
     // ===============
 
-    final baseUrl = _photosApi.api.client.options.baseUrl;
+    final baseUrl = await _photosApi.baseUrl;
     final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
     final uri = Uri.parse(base).resolve('sso/callback');
 
-    final cookies = await ApiService.sharedCookieJar.loadForRequest(uri);
+    final cookies = await pizApiPersist.ApiPersistCookieJarService.loadCookiesFor(uri);
 
     // for (final c in cookies) {
     //   debugPrint('COOKIE: ${c.name}=${c.value}');
@@ -97,9 +96,8 @@ class GoogleService {
     final accessToken = cookies
         .firstWhere((c) => c.name == 'pizcloud_access_token', orElse: () => throw 'No access token cookie')
         .value;
-
-    // debugPrint('sid = $sid');
-    // debugPrint('accessToken = $accessToken');
+    debugPrint('Pizcloud SID: $sid');
+    debugPrint('Pizcloud Access Token: $accessToken');
 
     // Persist sid for future sessions and rehydrate cookie jar now
     await _persistSid(base, sid);
@@ -124,6 +122,7 @@ class GoogleService {
 
   Future<void> signOut() async {
     await _googleSignIn.signOut();
+    await _accountApi.logout();
     _currentUser = null;
   }
 
@@ -174,5 +173,5 @@ Future<void> _persistSid(String baseUrl, String sid) async {
     ..domain = uri.host
     ..path = '/';
 
-  await pizApi.ApiService.sharedCookieJar.saveFromResponse(uri, [cookie]);
+  await pizApiPersist.ApiPersistCookieJarService.persistSid(baseUrl, sid);
 }

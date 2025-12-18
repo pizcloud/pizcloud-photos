@@ -11,6 +11,8 @@ class ApiService {
   static final CookieJar _sharedCookieJar = CookieJar();
   static CookieJar get sharedCookieJar => _sharedCookieJar;
 
+  // final cookieJar = PersistCookieJar(storage: FileStorage(appDocPath));
+
   ApiService({required String baseUrl, Dio? dio, Map<String, dynamic>? headers})
     : _dio =
           dio ??
@@ -23,6 +25,7 @@ class ApiService {
             ),
           ) {
     _dio.interceptors.add(CookieManager(_sharedCookieJar));
+
     // _dio.interceptors.add(
     //   InterceptorsWrapper(
     //     onRequest: (options, handler) {

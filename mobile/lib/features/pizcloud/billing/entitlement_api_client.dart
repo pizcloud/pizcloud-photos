@@ -6,7 +6,7 @@ import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/config/app_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
-import 'package:immich_mobile/services/pizcloud/api.service.dart' as pizApi;
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
 
@@ -16,10 +16,8 @@ class EntitlementApiClient {
   final String immichBaseUrl;
   final UserDto userEntity;
   final authHeaders = const AuthHeaderService();
-  late final pizApi.ApiService _pizApiService = pizApi.ApiService(
-    baseUrl: pizCloudServerUrl,
-    headers: authHeaders.authJson(),
-  );
+  late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
+      pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl, headers: authHeaders.authJson());
   // final String billingBaseUrl;
 
   String _join(String base, String path) {
@@ -60,7 +58,7 @@ class EntitlementApiClient {
     //   path = '$path?email=$encoded';
     // }
 
-    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
+    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
 
     // Old http-based implementation (kept for reference)
     // final jsonHeaders = authHeaders.authJson();
@@ -68,7 +66,8 @@ class EntitlementApiClient {
     // final res = await http.get(Uri.parse(url), headers: jsonHeaders);
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
-    final res = await _pizApiService.client.get<dynamic>('/$path');
+    final api = await _pizApiService;
+    final res = await api.client.get<dynamic>('/$path');
 
     final status = res.statusCode ?? 0;
     if (status == 200) {
@@ -88,7 +87,7 @@ class EntitlementApiClient {
   }
 
   Future<void> verifyIosReceipt({required String productId, required String receiptBase64}) async {
-    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
+    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
 
     // Old http-based implementation (kept for reference)
     // final url = _join(pizCloudServerUrl, 'papi/iap/ios/verify');
@@ -103,7 +102,8 @@ class EntitlementApiClient {
     // }
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
-    final res = await _pizApiService.client.post<dynamic>(
+    final api = await _pizApiService;
+    final res = await api.client.post<dynamic>(
       '/papi/iap/ios/verify',
       data: {'productId': productId, 'receiptData': receiptBase64},
     );
@@ -118,7 +118,7 @@ class EntitlementApiClient {
     required String purchaseToken,
     required String packageName,
   }) async {
-    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
+    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
 
     // Old http-based implementation (kept for reference)
     // final url = _join(pizCloudServerUrl, 'papi/iap/android/verify');
@@ -133,7 +133,8 @@ class EntitlementApiClient {
     // }
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
-    final res = await _pizApiService.client.post<dynamic>(
+    final api = await _pizApiService;
+    final res = await api.client.post<dynamic>(
       '/papi/iap/android/verify',
       data: {'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName},
     );
@@ -147,7 +148,7 @@ class EntitlementApiClient {
     required String productId,
     required String platform, // 'android' | 'ios'
   }) async {
-    await pizApi.ApiService.ensureSidCookie(pizCloudServerUrl);
+    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
 
     // Old http-based implementation (kept for reference)
     // final url = _join(pizCloudServerUrl, 'papi/billing/verify-success');
@@ -162,7 +163,8 @@ class EntitlementApiClient {
     // }
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
-    final res = await _pizApiService.client.post<dynamic>(
+    final api = await _pizApiService;
+    final res = await api.client.post<dynamic>(
       '/papi/billing/verify-success',
       data: {'productId': productId, 'platform': platform},
     );

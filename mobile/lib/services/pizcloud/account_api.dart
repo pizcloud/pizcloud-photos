@@ -1,24 +1,32 @@
 import 'package:dio/dio.dart';
 
 import 'package:immich_mobile/config/app_config.dart';
-import 'api.service.dart';
+import 'api_persist_cookie_jar.service.dart';
 
 class AccountApi {
-  AccountApi({ApiService? api}) : _api = api ?? ApiService(baseUrl: AppConfig.accountServiceBase);
+  AccountApi({ApiPersistCookieJarService? api}) : _api = api;
 
-  final ApiService _api;
+  ApiPersistCookieJarService? _api;
 
-  ApiService get api => _api;
-
-  Future<Response<dynamic>> verifyIdToken(String idToken) {
-    return _api.post<dynamic>('/google/verify-id-token', data: {'id_token': idToken});
+  Future<ApiPersistCookieJarService> _client() async {
+    _api ??= await ApiPersistCookieJarService.instance(
+      baseUrl: AppConfig.accountServiceBase,
+    );
+    return _api!;
   }
 
-  Future<Response<dynamic>> fetchProfile() {
-    return _api.get<dynamic>('/users/me');
+  Future<Response<dynamic>> verifyIdToken(String idToken) async {
+    final client = await _client();
+    return client.post<dynamic>('/google/verify-id-token', data: {'id_token': idToken});
   }
 
-  Future<Response<dynamic>> logout() {
-    return _api.get<dynamic>('/users/logout');
+  Future<Response<dynamic>> fetchProfile() async {
+    final client = await _client();
+    return client.get<dynamic>('/users/me');
+  }
+
+  Future<Response<dynamic>> logout() async {
+    final client = await _client();
+    return client.get<dynamic>('/users/logout');
   }
 }
