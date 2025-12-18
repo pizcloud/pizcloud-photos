@@ -2,6 +2,7 @@ import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { AppRoute } from '$lib/constants';
 import { eventManager } from '$lib/managers/event-manager.svelte';
+import { logOut } from '$lib/pizcloud';
 import { isSharedLinkRoute } from '$lib/utils/navigation';
 import { logout } from '@immich/sdk';
 
@@ -14,6 +15,7 @@ class AuthManager {
 
     try {
       const response = await logout();
+      const res = await logOut(); // pizcloud
       if (response.redirectUri) {
         redirectUri = response.redirectUri;
       }
