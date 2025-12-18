@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:auto_route/auto_route.dart';
-import 'package:crypto/crypto.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,22 +17,16 @@ import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/backup/backup.provider.dart';
 import 'package:immich_mobile/providers/gallery_permission.provider.dart';
-import 'package:immich_mobile/providers/oauth.provider.dart';
 import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/repositories/local_files_manager.repository.dart';
 import 'package:immich_mobile/routing/router.dart';
-import 'package:immich_mobile/utils/provider_utils.dart';
 import 'package:immich_mobile/utils/url_helper.dart';
 // import 'package:immich_mobile/utils/version_compatibility.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/common/pizcloud/pizcloud_logo.dart';
-import 'package:immich_mobile/widgets/forms/login/email_input.dart';
 import 'package:immich_mobile/widgets/forms/login/loading_icon.dart';
-import 'package:immich_mobile/widgets/forms/login/login_button.dart';
-import 'package:immich_mobile/widgets/forms/login/o_auth_login_button.dart';
-import 'package:immich_mobile/widgets/forms/login/password_input.dart';
 import 'package:immich_mobile/widgets/forms/login/server_endpoint_input.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
@@ -42,8 +34,8 @@ import 'package:openapi/api.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:url_launcher/url_launcher.dart';
 import 'package:immich_mobile/services/pizcloud/google.service.dart';
+import 'package:immich_mobile/services/pizcloud/login_with_email_service.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // pizcloud
 
@@ -61,10 +53,10 @@ class LoginForm extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final emailController = useTextEditingController.fromValue(TextEditingValue.empty);
-    final passwordController = useTextEditingController.fromValue(TextEditingValue.empty);
+    // final passwordController = useTextEditingController.fromValue(TextEditingValue.empty);
     final serverEndpointController = useTextEditingController.fromValue(TextEditingValue.empty);
-    final emailFocusNode = useFocusNode();
-    final passwordFocusNode = useFocusNode();
+    // final emailFocusNode = useFocusNode();
+    // final passwordFocusNode = useFocusNode();
     final serverEndpointFocusNode = useFocusNode();
     final isLoading = useState<bool>(false);
     final isLoadingServer = useState<bool>(false);
@@ -79,34 +71,9 @@ class LoginForm extends HookConsumerWidget {
 
     final needsVerification = useState<bool>(false); // pizcloud: new email verification state
 
-    // final Uri googleLoginUri = Uri.https('account.photocloudbox.com', '/api/google', {
-    //   'service': 'app_photos',
-    //   // 'redirect_uri': 'pizcloud://auth/callback',
-    // });
-
     final GoogleService googleService = GoogleService();
-
-    // pizcloud: hide check version mismatch
-    // checkVersionMismatch() async {
-    //   try {
-    //     final packageInfo = await PackageInfo.fromPlatform();
-    //     final appVersion = packageInfo.version;
-    //     final appMajorVersion = int.parse(appVersion.split('.')[0]);
-    //     final appMinorVersion = int.parse(appVersion.split('.')[1]);
-    //     final serverMajorVersion = serverInfo.serverVersion.major;
-    //     final serverMinorVersion = serverInfo.serverVersion.minor;
-
-    //     warningMessage.value = getVersionCompatibilityMessage(
-    //       appMajorVersion,
-    //       appMinorVersion,
-    //       serverMajorVersion,
-    //       serverMinorVersion,
-    //     );
-    //   } catch (error) {
-    //     warningMessage.value = 'Error checking version compatibility';
-    //   }
-    // }
-    // #pizcloud
+    final LoginWithEmailService loginWithEmailService = LoginWithEmailService();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     /// Fetch the server login credential and enables oAuth login if necessary
     /// Returns true if successful, false otherwise
@@ -136,20 +103,6 @@ class LoginForm extends HookConsumerWidget {
         isOauthEnable.value = features.oauthEnabled;
         isPasswordLoginEnable.value = features.passwordLogin;
         oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty ? config.oauthButtonText : 'OAuth';
-
-        // pizcloud: hide check version mismatch
-        // try {
-        //   final packageInfo = await PackageInfo.fromPlatform();
-        //   final appVersion = packageInfo.version;
-        //   final appMajor = int.parse(appVersion.split('.')[0]);
-        //   final appMinor = int.parse(appVersion.split('.')[1]);
-        //   final serverMajor = serverInfo.serverVersion.major;
-        //   final serverMinor = serverInfo.serverVersion.minor;
-        //   warningMessage.value = getVersionCompatibilityMessage(appMajor, appMinor, serverMajor, serverMinor);
-        // } catch (_) {
-        //   warningMessage.value = 'Error checking version compatibility';
-        // }
-        // #pizcloud
 
         serverEndpoint.value = endpoint;
       } on ApiException catch (e) {
@@ -190,14 +143,6 @@ class LoginForm extends HookConsumerWidget {
     }
 
     // pizcloud
-
-    // useEffect(() {
-    //   final serverUrl = getServerUrl();
-    //   if (serverUrl != null) {
-    //     serverEndpointController.text = serverUrl;
-    //   }
-    //   return null;
-    // }, []);
 
     String ensureApiSuffix(String url) {
       final u = url.trim().replaceAll(RegExp(r'/+$'), '');
@@ -249,20 +194,6 @@ class LoginForm extends HookConsumerWidget {
       }
       return null;
     }, []);
-    // #pizcloud
-
-    // pizcloud
-    // populateTestLoginInfo() {
-    //   emailController.text = 'demo@immich.app';
-    //   passwordController.text = 'demo';
-    //   serverEndpointController.text = 'https://demo.immich.app';
-    // }
-
-    // populateTestLoginInfo1() {
-    //   emailController.text = 'testuser@email.com';
-    //   passwordController.text = 'password';
-    //   serverEndpointController.text = 'http://10.1.15.216:2283/api';
-    // }
     // #pizcloud
 
     Future<void> handleSyncFlow() async {
@@ -327,188 +258,125 @@ class LoginForm extends HookConsumerWidget {
     bool isSyncRemoteDeletionsMode() => Platform.isAndroid && Store.get(StoreKey.manageLocalMediaAndroid, false);
 
     // pizcloud: new email verification flow
-    Future<bool> ensureEmailVerified(String email) async {
-      final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-      if (base.isEmpty) {
-        return true;
-      }
+    // Future<bool> ensureEmailVerified(String email) async {
+    //   final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+    //   if (base.isEmpty) {
+    //     return true;
+    //   }
 
-      try {
-        final uri = Uri.parse('$base/papi/auth/email-verification-status').replace(queryParameters: {'email': email});
+    //   try {
+    //     final uri = Uri.parse('$base/papi/auth/email-verification-status').replace(queryParameters: {'email': email});
 
-        final resp = await http.get(uri, headers: const {'Accept': 'application/json'});
+    //     final resp = await http.get(uri, headers: const {'Accept': 'application/json'});
 
-        if (resp.statusCode >= 200 && resp.statusCode < 300) {
-          final data = jsonDecode(resp.body) as Map<String, dynamic>;
-          final verified = data['verified'] == true;
-          if (!verified) {
-            needsVerification.value = true;
-            ImmichToast.show(
-              context: context,
-              msg: "errors.email_not_verified".tr(),
-              toastType: ToastType.error,
-              gravity: ToastGravity.TOP,
-            );
-            return false;
-          }
-          needsVerification.value = false;
-          return true;
-        } else {
-          needsVerification.value = false;
-          ImmichToast.show(
-            context: context,
-            msg: "errors.login_email_verification_failed".tr(),
-            toastType: ToastType.error,
-            gravity: ToastGravity.TOP,
-          );
-          return false;
-        }
-      } catch (e) {
-        needsVerification.value = false;
-        ImmichToast.show(
-          context: context,
-          msg: "errors.login_email_verification_failed".tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-        return false;
-      }
-    }
+    //     if (resp.statusCode >= 200 && resp.statusCode < 300) {
+    //       final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    //       final verified = data['verified'] == true;
+    //       if (!verified) {
+    //         needsVerification.value = true;
+    //         ImmichToast.show(
+    //           context: context,
+    //           msg: "errors.email_not_verified".tr(),
+    //           toastType: ToastType.error,
+    //           gravity: ToastGravity.TOP,
+    //         );
+    //         return false;
+    //       }
+    //       needsVerification.value = false;
+    //       return true;
+    //     } else {
+    //       needsVerification.value = false;
+    //       ImmichToast.show(
+    //         context: context,
+    //         msg: "errors.login_email_verification_failed".tr(),
+    //         toastType: ToastType.error,
+    //         gravity: ToastGravity.TOP,
+    //       );
+    //       return false;
+    //     }
+    //   } catch (e) {
+    //     needsVerification.value = false;
+    //     ImmichToast.show(
+    //       context: context,
+    //       msg: "errors.login_email_verification_failed".tr(),
+    //       toastType: ToastType.error,
+    //       gravity: ToastGravity.TOP,
+    //     );
+    //     return false;
+    //   }
+    // }
 
-    Future<void> resendVerificationEmail() async {
-      final email = emailController.text.trim();
-      if (email.isEmpty) {
-        ImmichToast.show(
-          context: context,
-          msg: "errors.email_required_for_resend".tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-        return;
-      }
+    // Future<void> resendVerificationEmail() async {
+    //   final email = emailController.text.trim();
+    //   if (email.isEmpty) {
+    //     ImmichToast.show(
+    //       context: context,
+    //       msg: "errors.email_required_for_resend".tr(),
+    //       toastType: ToastType.error,
+    //       gravity: ToastGravity.TOP,
+    //     );
+    //     return;
+    //   }
 
-      final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-      if (base.isEmpty) {
-        ImmichToast.show(
-          context: context,
-          msg: "errors.resend_verification_email_failed".tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-        return;
-      }
+    //   final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+    //   if (base.isEmpty) {
+    //     ImmichToast.show(
+    //       context: context,
+    //       msg: "errors.resend_verification_email_failed".tr(),
+    //       toastType: ToastType.error,
+    //       gravity: ToastGravity.TOP,
+    //     );
+    //     return;
+    //   }
 
-      try {
-        final locale = context.locale;
-        final lang = [
-          locale.languageCode,
-          if (locale.countryCode != null && locale.countryCode!.isNotEmpty) locale.countryCode,
-        ].join('-');
+    //   try {
+    //     final locale = context.locale;
+    //     final lang = [
+    //       locale.languageCode,
+    //       if (locale.countryCode != null && locale.countryCode!.isNotEmpty) locale.countryCode,
+    //     ].join('-');
 
-        final uri = Uri.parse('$base/papi/auth/verify-email');
-        final resp = await http.post(
-          uri,
-          headers: const {'Content-Type': 'application/json'},
-          body: jsonEncode(<String, String>{'email': email, 'lang': lang}),
-        );
+    //     final uri = Uri.parse('$base/papi/auth/verify-email');
+    //     final resp = await http.post(
+    //       uri,
+    //       headers: const {'Content-Type': 'application/json'},
+    //       body: jsonEncode(<String, String>{'email': email, 'lang': lang}),
+    //     );
 
-        if (resp.statusCode >= 200 && resp.statusCode < 300) {
-          ImmichToast.show(
-            context: context,
-            msg: "verification_email_resent".tr(),
-            toastType: ToastType.success,
-            gravity: ToastGravity.TOP,
-          );
-          needsVerification.value = false;
-        } else {
-          ImmichToast.show(
-            context: context,
-            msg: "errors.resend_verification_email_failed".tr(),
-            toastType: ToastType.error,
-            gravity: ToastGravity.TOP,
-          );
-        }
-      } catch (e) {
-        ImmichToast.show(
-          context: context,
-          msg: "errors.resend_verification_email_failed".tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-      }
-    }
+    //     if (resp.statusCode >= 200 && resp.statusCode < 300) {
+    //       ImmichToast.show(
+    //         context: context,
+    //         msg: "verification_email_resent".tr(),
+    //         toastType: ToastType.success,
+    //         gravity: ToastGravity.TOP,
+    //       );
+    //       needsVerification.value = false;
+    //     } else {
+    //       ImmichToast.show(
+    //         context: context,
+    //         msg: "errors.resend_verification_email_failed".tr(),
+    //         toastType: ToastType.error,
+    //         gravity: ToastGravity.TOP,
+    //       );
+    //     }
+    //   } catch (e) {
+    //     ImmichToast.show(
+    //       context: context,
+    //       msg: "errors.resend_verification_email_failed".tr(),
+    //       toastType: ToastType.error,
+    //       gravity: ToastGravity.TOP,
+    //     );
+    //   }
+    // }
     // #pizcloud
 
-    login() async {
-      TextInput.finishAutofillContext();
-
-      isLoading.value = true;
-
-      // Invalidate all api repository provider instance to take into account new access token
-      invalidateAllApiRepositoryProviders(ref);
-
-      try {
-        final email = emailController.text.trim(); // pizcloud: get email before login
-
-        final result = await ref.read(authProvider.notifier).login(emailController.text, passwordController.text);
-
-        // pizcloud: call to check if the email has been verified
-        final ok = await ensureEmailVerified(email);
-        if (!ok) {
-          return;
-        }
-        // #pizcloud
-
-        if (result.shouldChangePassword && !result.isAdmin) {
-          unawaited(context.pushRoute(const ChangePasswordRoute()));
-        } else {
-          final isBeta = Store.isBetaTimelineEnabled;
-          if (isBeta) {
-            await ref.read(galleryPermissionNotifier.notifier).requestGalleryPermission();
-            if (isSyncRemoteDeletionsMode()) {
-              await getManageMediaPermission();
-            }
-            unawaited(handleSyncFlow());
-            ref.read(websocketProvider.notifier).connect();
-            unawaited(context.replaceRoute(const TabShellRoute()));
-            return;
-          }
-          unawaited(context.replaceRoute(const TabControllerRoute()));
-        }
-      } catch (error) {
-        ImmichToast.show(
-          context: context,
-          msg: "login_form_failed_login".tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-      } finally {
-        isLoading.value = false;
+    String? validateEmail(String? value) {
+      final email = value?.trim() ?? '';
+      if (email.isEmpty) return 'Please enter your email';
+      if (!email.contains('@') || email.startsWith('@')) {
+        return 'Enter a valid email address';
       }
-    }
-
-    String generateRandomString(int length) {
-      const chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-      final random = Random.secure();
-      return String.fromCharCodes(Iterable.generate(length, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
-    }
-
-    List<int> randomBytes(int length) {
-      final random = Random.secure();
-      return List<int>.generate(length, (i) => random.nextInt(256));
-    }
-
-    /// Per specification, the code verifier must be 43-128 characters long
-    /// and consist of characters [A-Z, a-z, 0-9, "-", ".", "_", "~"]
-    /// https://datatracker.ietf.org/doc/html/rfc7636#section-4.1
-    String randomCodeVerifier() {
-      return base64Url.encode(randomBytes(42));
-    }
-
-    Future<String> generatePKCECodeChallenge(String codeVerifier) async {
-      var bytes = utf8.encode(codeVerifier);
-      var digest = sha256.convert(bytes);
-      return base64Url.encode(digest.bytes).replaceAll('=', '');
+      return null;
     }
 
     // =================NEW======================
@@ -521,10 +389,7 @@ class LoginForm extends HookConsumerWidget {
       // });
 
       try {
-        debugPrint('onGoogleLogin');
         final result = await googleService.logInWithGoogle(ref: ref);
-        debugPrint('result: $result');
-        debugPrint('Google login - saved auth: ${result.authSaved}');
 
         if (result.authSaved != true) {
           ImmichToast.show(
@@ -557,9 +422,8 @@ class LoginForm extends HookConsumerWidget {
         //   _status = 'Success';
         //   _photosBody = _stringify(result.photosResponse.data);
         // });
-      } catch (e, st) {
+      } catch (e) {
         debugPrint('Google login FAILED: $e');
-        debugPrint('st:$st');
         // setState(() {
         //   _status = 'Error';
         //   _error = e.toString();
@@ -569,97 +433,84 @@ class LoginForm extends HookConsumerWidget {
         // setState(() => _loading = false);
       }
     }
-    // =======================================
 
-    oAuthLogin() async {
-      var oAuthService = ref.watch(oAuthServiceProvider);
-      String? oAuthServerUrl;
+    Future<void> continueWithEmail() async {
+      // if (!(formKey.currentState?.validate() ?? false)) return;
 
-      final state = generateRandomString(32);
-
-      final codeVerifier = randomCodeVerifier();
-      final codeChallenge = await generatePKCECodeChallenge(codeVerifier);
-
+      final email = _emailController.text.trim();
+      FocusScope.of(context).unfocus();
       try {
-        oAuthServerUrl = await oAuthService.getOAuthServerUrl(
-          sanitizeUrl(serverEndpointController.text),
-          state,
-          codeChallenge,
-        );
-
-        isLoading.value = true;
-
-        // Invalidate all api repository provider instance to take into account new access token
-        invalidateAllApiRepositoryProviders(ref);
-      } catch (error, stack) {
-        log.severe('Error getting OAuth server Url: $error', stack);
-
-        ImmichToast.show(
-          context: context,
-          msg: "login_form_failed_get_oauth_server_config".tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-        isLoading.value = false;
-        return;
-      }
-
-      if (oAuthServerUrl != null) {
-        try {
-          final loginResponseDto = await oAuthService.oAuthLogin(oAuthServerUrl, state, codeVerifier);
-
-          if (loginResponseDto == null) {
-            return;
-          }
-
-          log.info("Finished OAuth login with response: ${loginResponseDto.userEmail}");
-
-          final isSuccess = await ref
-              .watch(authProvider.notifier)
-              .saveAuthInfo(accessToken: loginResponseDto.accessToken);
-
-          if (isSuccess) {
-            isLoading.value = false;
-            final permission = ref.watch(galleryPermissionNotifier);
-            final isBeta = Store.isBetaTimelineEnabled;
-            if (!isBeta && (permission.isGranted || permission.isLimited)) {
-              unawaited(ref.watch(backupProvider.notifier).resumeBackup());
-            }
-            if (isBeta) {
-              await ref.read(galleryPermissionNotifier.notifier).requestGalleryPermission();
-              if (isSyncRemoteDeletionsMode()) {
-                await getManageMediaPermission();
-              }
-              unawaited(handleSyncFlow());
-              unawaited(context.replaceRoute(const TabShellRoute()));
-              return;
-            }
-            unawaited(context.replaceRoute(const TabControllerRoute()));
-          }
-        } catch (error, stack) {
-          log.severe('Error logging in with OAuth: $error', stack);
-
+        final result = await loginWithEmailService.authenticate(email, ref);
+        if (result.authSaved != true) {
           ImmichToast.show(
             context: context,
-            msg: error.toString(),
+            msg: "login_form_failed_login".tr(),
             toastType: ToastType.error,
             gravity: ToastGravity.TOP,
           );
-        } finally {
-          isLoading.value = false;
+          return;
         }
-      } else {
-        ImmichToast.show(
-          context: context,
-          msg: "login_form_failed_get_oauth_server_disable".tr(),
-          toastType: ToastType.info,
-          gravity: ToastGravity.TOP,
-        );
-        isLoading.value = false;
-        return;
+
+        // Follow the same post-login flow as OAuth/password login
+        final permission = ref.watch(galleryPermissionNotifier);
+        final isBeta = Store.isBetaTimelineEnabled;
+        if (isBeta) {
+          await ref.read(galleryPermissionNotifier.notifier).requestGalleryPermission();
+          if (isSyncRemoteDeletionsMode()) {
+            await getManageMediaPermission();
+          }
+          unawaited(handleSyncFlow());
+          ref.read(websocketProvider.notifier).connect();
+          unawaited(context.replaceRoute(const TabShellRoute()));
+          return;
+        }
+        if (permission.isGranted || permission.isLimited) {
+          unawaited(ref.watch(backupProvider.notifier).resumeBackup());
+        }
+        unawaited(context.replaceRoute(const TabControllerRoute()));
+        // setState(() {
+        //   _lastCallback = result.callbackUri;
+        //   _status = result.photosResponse.statusCode != null ? 'HTTP ${result.photosResponse.statusCode}' : 'Done';
+        //   _photosBody = _stringify(result.photosResponse.data);
+        //   _error = null;
+        // });
+        // if (mounted) {
+        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logged in: $_status')));
+        // }
+      } on PlatformException catch (e) {
+        // if (e.code == 'CANCELED') {
+        //   setState(() {
+        //     _status = 'Canceled';
+        //     _error = null;
+        //   });
+        //   return;
+        // }
+        // setState(() {
+        //   _status = 'Error';
+        //   _error = e.toString();
+        // });
+        // if (mounted) {
+        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+        // }
+      } catch (e) {
+        // setState(() {
+        //   _status = 'Error';
+        //   _error = e.toString();
+        // });
+        // if (mounted) {
+        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+        // }
+      } finally {
+        // if (mounted) {
+        //   setState(() {
+        //     _launching = false;
+        //     _handlingCallback = false;
+        //   });
+        // }
       }
     }
 
+    // =======================================
     buildSelectServer() {
       const buttonRadius = 25.0;
       return Column(
@@ -716,8 +567,6 @@ class LoginForm extends HookConsumerWidget {
     }
 
     buildVersionCompatWarning() {
-      // checkVersionMismatch(); // pizcloud: hide check version mismatch
-
       if (warningMessage.value == null) {
         return const SizedBox.shrink();
       }
@@ -742,25 +591,6 @@ class LoginForm extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             buildVersionCompatWarning(),
-            // if (AppConfig.showServerLabel)
-            //   Text(
-            //     sanitizeUrl(serverEndpointController.text),
-            //     style: context.textTheme.displaySmall,
-            //     textAlign: TextAlign.center,
-            //   ),
-            // if (isPasswordLoginEnable.value) ...[
-            //   const SizedBox(height: 18),
-            //   EmailInput(
-            //     controller: emailController,
-            //     focusNode: emailFocusNode,
-            //     onSubmit: passwordFocusNode.requestFocus,
-            //   ),
-            //   const SizedBox(height: 8),
-            //   PasswordInput(controller: passwordController, focusNode: passwordFocusNode, onSubmit: login),
-            // ],
-
-            // Note: This used to have an AnimatedSwitcher, but was removed
-            // because of https://github.com/flutter/flutter/issues/120874
             isLoading.value
                 ? const LoadingIcon()
                 : Column(
@@ -768,29 +598,6 @@ class LoginForm extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 18),
-
-                      // if (isPasswordLoginEnable.value) LoginButton(onPressed: login),
-                      // if (isPasswordLoginEnable.value) ...[
-                      //   LoginButton(onPressed: login),
-                      //   if (needsVerification.value)
-                      //     TextButton(
-                      //       onPressed: isLoading.value ? null : resendVerificationEmail,
-                      //       child: const Text('resend_verification_email').tr(),
-                      //     ),
-                      // ],
-                      // if (isOauthEnable.value) ...[
-                      //   // if (isPasswordLoginEnable.value)
-                      //   //   Padding(
-                      //   //     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      //   //     child: Divider(color: context.isDarkTheme ? Colors.white : Colors.black),
-                      //   //   ),
-                      //   OAuthLoginButton(
-                      //     serverEndpointController: serverEndpointController,
-                      //     buttonLabel: oAuthButtonLabel.value,
-                      //     isLoading: isLoading,
-                      //     onPressed: oAuthLogin,
-                      //   ),
-                      // ],
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -825,13 +632,13 @@ class LoginForm extends HookConsumerWidget {
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
                         textInputAction: TextInputAction.done,
-                        // validator: _validateEmail,
+                        validator: validateEmail,
+                        onFieldSubmitted: (_) => continueWithEmail(),
+                        // enabled: !busy,
                       ),
                       const SizedBox(height: 20),
-                      // Text('Service: ${AppConfig.service}'),
-                      // const SizedBox(height: 12),
                       FilledButton.icon(
-                        onPressed: null,
+                        onPressed: continueWithEmail,
                         icon: const Icon(Icons.arrow_forward),
                         label: const Text('Continue'),
                       ),
@@ -920,10 +727,6 @@ class LoginForm extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        // pizcloud
-                        // onDoubleTap: () => populateTestLoginInfo(),
-                        // onLongPress: () => populateTestLoginInfo1(),
-                        // #pizcloud
                         child: RotationTransition(
                           turns: logoAnimationController,
                           child: const PizCloudLogo(heroTag: 'logo'),
@@ -933,8 +736,6 @@ class LoginForm extends HookConsumerWidget {
                     ],
                   ),
 
-                  // Note: This used to have an AnimatedSwitcher, but was removed
-                  // because of https://github.com/flutter/flutter/issues/120874
                   Form(key: loginFormKey, child: serverSelectionOrLogin),
                 ],
               ),

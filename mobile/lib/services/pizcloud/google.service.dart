@@ -88,16 +88,10 @@ class GoogleService {
 
     final cookies = await pizApiPersist.ApiPersistCookieJarService.loadCookiesFor(uri);
 
-    // for (final c in cookies) {
-    //   debugPrint('COOKIE: ${c.name}=${c.value}');
-    // }
-
     final sid = cookies.firstWhere((c) => c.name == 'sid', orElse: () => throw 'No access token cookie').value;
     final accessToken = cookies
         .firstWhere((c) => c.name == 'pizcloud_access_token', orElse: () => throw 'No access token cookie')
         .value;
-    debugPrint('Pizcloud SID: $sid');
-    debugPrint('Pizcloud Access Token: $accessToken');
 
     // Persist sid for future sessions and rehydrate cookie jar now
     await _persistSid(base, sid);
@@ -166,12 +160,5 @@ class LogInWithGoogleResult {
 
 Future<void> _persistSid(String baseUrl, String sid) async {
   await Store.put(StoreKey.pizcloudSid, sid);
-
-  final normalized = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
-  final uri = Uri.parse(normalized);
-  final cookie = Cookie('sid', sid)
-    ..domain = uri.host
-    ..path = '/';
-
   await pizApiPersist.ApiPersistCookieJarService.persistSid(baseUrl, sid);
 }

@@ -1,6 +1,3 @@
-/// Alternative API service that uses PersistCookieJar for durable cookies.
-/// Can be used as a drop-in replacement for ApiService where only simple GET/POST are needed.
-
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
@@ -32,10 +29,7 @@ class ApiPersistCookieJarService {
 
   static Future<PersistCookieJar> _initJar() async {
     final dir = await getApplicationSupportDirectory();
-    return PersistCookieJar(
-      ignoreExpires: false,
-      storage: FileStorage(p.join(dir.path, '.pizcloud_cookies')),
-    );
+    return PersistCookieJar(ignoreExpires: false, storage: FileStorage(p.join(dir.path, '.pizcloud_cookies')));
   }
 
   /// Singleton per baseUrl.
@@ -54,16 +48,14 @@ class ApiPersistCookieJarService {
     }
 
     final jar = await _getCookieJar();
-    final client = dio ??
+    final client =
+        dio ??
         Dio(
           BaseOptions(
             baseUrl: normalizedBase,
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 15),
-            headers: <String, dynamic>{
-              'Content-Type': 'application/json',
-              if (headers != null) ...headers,
-            },
+            headers: <String, dynamic>{'Content-Type': 'application/json', if (headers != null) ...headers},
           ),
         );
     client.interceptors.add(CookieManager(jar));

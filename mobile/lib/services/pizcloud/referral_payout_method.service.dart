@@ -13,25 +13,19 @@ class ReferralPayoutMethodService {
   late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
       pizPersist.ApiPersistCookieJarService.instance(baseUrl: _base, headers: authHeaders.authJson());
 
-  Uri _buildPayoutUri({String? email}) {
-    final uri = Uri.parse('$_base/papi/referral/payout-method');
-    if (email == null || email.isEmpty) {
-      return uri;
-    }
-    return uri.replace(queryParameters: {'email': email});
-  }
+  // Uri _buildPayoutUri({String? email}) {
+  //   final uri = Uri.parse('$_base/papi/referral/payout-method');
+  //   if (email == null || email.isEmpty) {
+  //     return uri;
+  //   }
+  //   return uri.replace(queryParameters: {'email': email});
+  // }
 
   /// load payout method for a given email
   Future<ReferralPayoutMethod?> loadPayoutMethod(String email) async {
     if (email.isEmpty) return null;
 
     await pizPersist.ApiPersistCookieJarService.ensureSidCookie(_base);
-
-    // Old http-based implementation (kept for reference)
-    // final uri = _buildPayoutUri(email: email);
-    // final uri = _buildPayoutUri();
-    // final jsonHeaders = authHeaders.authJson();
-    // final res = await http.get(uri, headers: jsonHeaders);
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
@@ -68,36 +62,6 @@ class ReferralPayoutMethodService {
     }
 
     await pizPersist.ApiPersistCookieJarService.ensureSidCookie(_base);
-
-    // Old http-based implementation (kept for reference)
-    // final uri = _buildPayoutUri();
-    // final jsonHeaders = authHeaders.authJson();
-    // final body = <String, dynamic>{
-    //   'email': email,
-    //   'method': method,
-    //   'bankName': bankName?.trim(),
-    //   'bankAccountNumber': bankAccountNumber?.trim(),
-    //   'bankAccountHolderName': bankAccountHolderName?.trim(),
-    //   'paypalEmail': paypalEmail?.trim(),
-    //   'paypalFullName': paypalFullName?.trim(),
-    // };
-    // final res = await http.post(uri, headers: jsonHeaders, body: jsonEncode(body));
-    // if (res.statusCode >= 200 && res.statusCode < 300) {
-    //   return null; // success
-    // }
-    // String? code;
-    // try {
-    //   final data = jsonDecode(res.body);
-    //   if (data is Map<String, dynamic>) {
-    //     final msg = data['message'];
-    //     if (msg is String) {
-    //       code = msg;
-    //     }
-    //   }
-    // } catch (_) {
-    //   // ignore
-    // }
-    // return code ?? 'UNKNOWN_ERROR';
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;

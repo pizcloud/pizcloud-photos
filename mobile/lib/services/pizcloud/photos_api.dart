@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:immich_mobile/config/app_config.dart';
 import 'api_persist_cookie_jar.service.dart';
@@ -10,9 +9,7 @@ class PhotosApi {
   ApiPersistCookieJarService? _api;
 
   Future<ApiPersistCookieJarService> _client() async {
-    _api ??= await ApiPersistCookieJarService.instance(
-      baseUrl: AppConfig.photosServiceBase,
-    );
+    _api ??= await ApiPersistCookieJarService.instance(baseUrl: AppConfig.photosServiceBase);
     return _api!;
   }
 

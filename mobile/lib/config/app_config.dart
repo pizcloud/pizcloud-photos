@@ -13,4 +13,7 @@ class AppConfig {
   static const String serverClientId = '118511362569-l7qp3v9b61ce6jpteg58pn38gviuam7v.apps.googleusercontent.com';
   static const String accountServiceBase = 'https://account.photocloudbox.com/api';
   static const String photosServiceBase = 'https://photos.photocloudbox.com/api';
+
+  static const String accountHost = 'account.photocloudbox.com';
+  static const String service = 'app_photos';
 }

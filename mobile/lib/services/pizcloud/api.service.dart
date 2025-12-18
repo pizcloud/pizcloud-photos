@@ -10,9 +10,6 @@ import 'package:immich_mobile/entities/store.entity.dart';
 class ApiService {
   static final CookieJar _sharedCookieJar = CookieJar();
   static CookieJar get sharedCookieJar => _sharedCookieJar;
-
-  // final cookieJar = PersistCookieJar(storage: FileStorage(appDocPath));
-
   ApiService({required String baseUrl, Dio? dio, Map<String, dynamic>? headers})
     : _dio =
           dio ??
@@ -25,39 +22,6 @@ class ApiService {
             ),
           ) {
     _dio.interceptors.add(CookieManager(_sharedCookieJar));
-
-    // _dio.interceptors.add(
-    //   InterceptorsWrapper(
-    //     onRequest: (options, handler) {
-    //       debugPrint('===== DIO REQUEST =====');
-    //       debugPrint('METHOD : ${options.method}');
-    //       debugPrint('URI    : ${options.uri}');
-    //       debugPrint('baseUrl: ${options.baseUrl}');
-    //       debugPrint('path   : ${options.path}');
-    //       debugPrint('query  : ${options.queryParameters}');
-    //       debugPrint('headers: ${options.headers}');
-    //       debugPrint('=======================');
-    //       handler.next(options);
-    //     },
-    //     onResponse: (response, handler) {
-    //       debugPrint('===== DIO RESPONSE =====');
-    //       debugPrint('STATUS : ${response.statusCode}');
-    //       debugPrint('URI    : ${response.requestOptions.uri}');
-    //       debugPrint('data   : ${response.data}');
-    //       debugPrint('========================');
-    //       handler.next(response);
-    //     },
-    //     onError: (e, handler) {
-    //       debugPrint('===== DIO ERROR =====');
-    //       debugPrint('STATUS : ${e.response?.statusCode}');
-    //       debugPrint('URI    : ${e.requestOptions.uri}');
-    //       debugPrint('message: ${e.message}');
-    //       debugPrint('data   : ${e.response?.data}');
-    //       debugPrint('=====================');
-    //       handler.next(e);
-    //     },
-    //   ),
-    // );
   }
 
   final Dio _dio;

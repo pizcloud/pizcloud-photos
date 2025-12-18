@@ -25,6 +25,7 @@ import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 // import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart';
+import 'package:immich_mobile/services/pizcloud/google.service.dart'; // pizcloud
 
 class ImmichAppBarDialog extends HookConsumerWidget {
   const ImmichAppBarDialog({super.key});
@@ -39,6 +40,8 @@ class ImmichAppBarDialog extends HookConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final isLoggingOut = useState(false);
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
+
+    final GoogleService googleService = GoogleService(); // pizcloud
 
     useEffect(() {
       ref.read(backupProvider.notifier).updateDiskInfo();
@@ -96,6 +99,10 @@ class ImmichAppBarDialog extends HookConsumerWidget {
         () => context.pushRoute(ReferralRoute(userEmail: user?.email)),
       );
     }
+
+    removeServerCookies() async {
+      await googleService.signOut();
+    }
     // #pizcloud
 
     buildAppLogButton() {
@@ -131,6 +138,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                     ref.read(backupProvider.notifier).cancelBackup();
                     unawaited(ref.read(assetProvider.notifier).clearAllAssets());
                     ref.read(websocketProvider.notifier).disconnect();
+                    await removeServerCookies(); // pizcloud
                     unawaited(context.replaceRoute(const LoginRoute()));
                   },
                 );

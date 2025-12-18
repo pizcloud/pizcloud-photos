@@ -9,15 +9,18 @@ class AccountApi {
   ApiPersistCookieJarService? _api;
 
   Future<ApiPersistCookieJarService> _client() async {
-    _api ??= await ApiPersistCookieJarService.instance(
-      baseUrl: AppConfig.accountServiceBase,
-    );
+    _api ??= await ApiPersistCookieJarService.instance(baseUrl: AppConfig.accountServiceBase);
     return _api!;
   }
 
   Future<Response<dynamic>> verifyIdToken(String idToken) async {
     final client = await _client();
     return client.post<dynamic>('/google/verify-id-token', data: {'id_token': idToken});
+  }
+
+  Future<Response<dynamic>> verifySSoToken(String ssoToken) async {
+    final client = await _client();
+    return client.post<dynamic>('/users/verify-sso-token', data: {'sso_token': ssoToken});
   }
 
   Future<Response<dynamic>> fetchProfile() async {

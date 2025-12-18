@@ -133,14 +133,6 @@ class ReferralPage extends HookConsumerWidget {
         // await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
         final api = await pizPersistApiFuture;
 
-        // Old http-based implementation (kept for reference)
-        // Uri uri = Uri.parse('$base/papi/referral/summary');
-        // if (userEmail != null && userEmail!.isNotEmpty) {
-        //   uri = uri.replace(queryParameters: {'email': userEmail!});
-        // }
-        // final jsonHeaders = authHeaders.authJson();
-        // final res = await http.get(uri, headers: jsonHeaders);
-
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final res = await api.client.get<dynamic>('/papi/referral/summary');
         debugPrint('referral summary response: ${res.statusCode} ${res.data}');
@@ -300,19 +292,6 @@ class ReferralPage extends HookConsumerWidget {
 
       try {
         // await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
-
-        // Old http-based implementation (kept for reference)
-        // final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-        // final uri = Uri.parse('$base/papi/referral/apply-code');
-        // final jsonHeaders = authHeaders.authJson();
-        // final res = await http.post(uri, headers: jsonHeaders, body: jsonEncode({'email': userEmail, 'code': code}));
-        // if (res.statusCode < 200 || res.statusCode >= 300) {
-        //   debugPrint('Failed to apply referral code: ${res.statusCode} ${res.body}');
-        //   applyError.value = 'referral.apply_unknown_error'.tr();
-        //   return;
-        // }
-        // final dynamic body = jsonDecode(res.body);
-
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final api = await pizPersistApiFuture;
         final res = await api.client.post<dynamic>(
@@ -487,22 +466,6 @@ class ReferralPage extends HookConsumerWidget {
 
                 try {
                   // await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
-
-                  // Old http-based implementation (kept for reference)
-                  // final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-                  // final uri = Uri.parse('$base/papi/referral/withdrawals');
-                  // final jsonHeaders = authHeaders.authJson();
-                  // final res = await http.post(
-                  //   uri,
-                  //   headers: jsonHeaders,
-                  //   body: jsonEncode({
-                  //     'email': userEmail,
-                  //     'amount': amount,
-                  //     'currency': currentCurrency,
-                  //     'method': withdrawMethod,
-                  //   }),
-                  // );
-
                   // New Dio-based implementation using PersistCookieJar (sid) + headers
                   final api = await pizPersistApiFuture;
                   final res = await api.client.post<dynamic>(
