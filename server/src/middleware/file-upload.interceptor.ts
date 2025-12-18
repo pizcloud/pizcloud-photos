@@ -116,7 +116,7 @@ export class FileUploadInterceptor implements NestInterceptor {
     );
   }
 
-  private handleFile(request: Request, file: Express.Multer.File, callback: Callback<Partial<ImmichFile>>) {
+  private handleFile(request: AuthRequest, file: Express.Multer.File, callback: Callback<Partial<ImmichFile>>) {
     (file as ImmichMulterFile).uuid = randomUUID();
 
     request.on('error', (error) => {
@@ -141,7 +141,7 @@ export class FileUploadInterceptor implements NestInterceptor {
     });
   }
 
-  private removeFile(request: Request, file: Express.Multer.File, callback: (error: Error | null) => void) {
+  private removeFile(request: AuthRequest, file: Express.Multer.File, callback: (error: Error | null) => void) {
     this.defaultStorage._removeFile(request, file, callback);
   }
 
