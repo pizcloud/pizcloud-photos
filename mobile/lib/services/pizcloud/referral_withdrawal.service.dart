@@ -11,18 +11,7 @@ class ReferralWithdrawalService {
   final String _base;
   final authHeaders = const AuthHeaderService();
   late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
-      pizPersist.ApiPersistCookieJarService.instance(baseUrl: _base, headers: authHeaders.authJson());
-
-  // Uri _buildUri({required String email, int? page, int? limit, String? status}) {
-  //   final base = Uri.parse('$_base/papi/referral/withdrawals');
-  //   final qp = <String, String>{'email': email};
-  //   if (page != null) qp['page'] = page.toString();
-  //   if (limit != null) qp['limit'] = limit.toString();
-  //   if (status != null && status.isNotEmpty) {
-  //     qp['status'] = status;
-  //   }
-  //   return base.replace(queryParameters: qp);
-  // }
+      pizPersist.ApiPersistCookieJarService.instance(baseUrl: _base);
 
   Future<ReferralWithdrawalListResponse> fetchWithdrawals({
     required String email,
@@ -34,7 +23,6 @@ class ReferralWithdrawalService {
       return ReferralWithdrawalListResponse.empty();
     }
 
-    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(_base);
     // New Dio-based implementation using PersistCookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.get<dynamic>(

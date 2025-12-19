@@ -711,6 +711,45 @@ class CropImageRouteArgs {
 }
 
 /// generated route for
+/// [DiscountCodePage]
+class DiscountCodeRoute extends PageRouteInfo<DiscountCodeRouteArgs> {
+  DiscountCodeRoute({
+    Key? key,
+    String? userEmail,
+    List<PageRouteInfo>? children,
+  }) : super(
+         DiscountCodeRoute.name,
+         args: DiscountCodeRouteArgs(key: key, userEmail: userEmail),
+         initialChildren: children,
+       );
+
+  static const String name = 'DiscountCodeRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<DiscountCodeRouteArgs>(
+        orElse: () => const DiscountCodeRouteArgs(),
+      );
+      return DiscountCodePage(key: args.key, userEmail: args.userEmail);
+    },
+  );
+}
+
+class DiscountCodeRouteArgs {
+  const DiscountCodeRouteArgs({this.key, this.userEmail});
+
+  final Key? key;
+
+  final String? userEmail;
+
+  @override
+  String toString() {
+    return 'DiscountCodeRouteArgs{key: $key, userEmail: $userEmail}';
+  }
+}
+
+/// generated route for
 /// [DownloadInfoPage]
 class DownloadInfoRoute extends PageRouteInfo<void> {
   const DownloadInfoRoute({List<PageRouteInfo>? children})
@@ -2466,6 +2505,59 @@ class ReferralRouteArgs {
   @override
   String toString() {
     return 'ReferralRouteArgs{key: $key, userEmail: $userEmail}';
+  }
+}
+
+/// generated route for
+/// [ReferralPayoutMethodPage]
+class ReferralPayoutMethodRoute
+    extends PageRouteInfo<ReferralPayoutMethodRouteArgs> {
+  ReferralPayoutMethodRoute({
+    Key? key,
+    required String userEmail,
+    VoidCallback? onSaved,
+    List<PageRouteInfo>? children,
+  }) : super(
+         ReferralPayoutMethodRoute.name,
+         args: ReferralPayoutMethodRouteArgs(
+           key: key,
+           userEmail: userEmail,
+           onSaved: onSaved,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'ReferralPayoutMethodRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ReferralPayoutMethodRouteArgs>();
+      return ReferralPayoutMethodPage(
+        key: args.key,
+        userEmail: args.userEmail,
+        onSaved: args.onSaved,
+      );
+    },
+  );
+}
+
+class ReferralPayoutMethodRouteArgs {
+  const ReferralPayoutMethodRouteArgs({
+    this.key,
+    required this.userEmail,
+    this.onSaved,
+  });
+
+  final Key? key;
+
+  final String userEmail;
+
+  final VoidCallback? onSaved;
+
+  @override
+  String toString() {
+    return 'ReferralPayoutMethodRouteArgs{key: $key, userEmail: $userEmail, onSaved: $onSaved}';
   }
 }
 

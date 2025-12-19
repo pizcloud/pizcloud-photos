@@ -7,7 +7,7 @@
   import { userInteraction } from '$lib/stores/user.svelte';
   import { getAboutInfo, type ServerAboutResponseDto } from '@immich/sdk';
   import { Button, Icon, IconButton, modalManager } from '@immich/ui';
-  import { mdiCog, mdiGift, mdiLogout, mdiPencil, mdiWrench } from '@mdi/js';
+  import { mdiAccountCash, mdiCog, mdiGift, mdiLogout, mdiPencil, mdiWrench } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
@@ -88,6 +88,20 @@
         <div class="flex place-content-center place-items-center text-center gap-2 px-2">
           <Icon icon={mdiGift} size="18" aria-hidden />
           {$t('referral_program')}
+        </div>
+      </Button>
+      <Button
+        href={AppRoute.DISCOUNT_CODE_ROUTE}
+        onclick={onClose}
+        size="small"
+        color="secondary"
+        variant="ghost"
+        shape="round"
+        class="border dark:border-immich-dark-gray dark:bg-gray-500 dark:hover:bg-immich-dark-primary/50 hover:bg-immich-primary/10 dark:text-white"
+      >
+        <div class="flex place-content-center place-items-center text-center gap-2 px-2">
+          <Icon icon={mdiAccountCash} size="18" aria-hidden />
+          {$t('referral.discount_code')}
         </div>
       </Button>
       <!-- #pizcloud -->

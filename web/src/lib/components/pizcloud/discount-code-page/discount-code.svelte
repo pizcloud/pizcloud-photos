@@ -288,29 +288,6 @@
     return !!payoutMethod.paypalEmail;
   }
 
-  function buildPayoutSummary(method: 'bank' | 'paypal'): string {
-    if (!payoutMethod) return $t('referral.withdraw_no_payout_info');
-
-    if (method === 'bank') {
-      if (!hasInfoFor('bank')) {
-        return $t('referral.withdraw_bank_info_required');
-      }
-      const parts = [
-        payoutMethod.bankName || '',
-        payoutMethod.bankAccountNumber || '',
-        payoutMethod.bankAccountHolderName || '',
-      ].filter(Boolean);
-      return parts.join(' • ');
-    }
-
-    // paypal
-    if (!hasInfoFor('paypal')) {
-      return $t('referral.withdraw_paypal_info_required');
-    }
-    const parts = [payoutMethod.paypalEmail || '', payoutMethod.paypalFullName || ''].filter(Boolean);
-    return parts.length ? parts.join(' • ') : $t('referral.withdraw_paypal_info_required');
-  }
-
   const currentBalance = () => {
     if (typeof availableBalance === 'number' && Number.isFinite(availableBalance)) {
       return availableBalance;
@@ -500,58 +477,24 @@
 <section class="referral">
   <!-- Header -->
   <header class="referral__header">
-    <h1 class="referral__title">{$t('referral.title')}</h1>
-    <p class="referral__subtitle">
-      {$t('referral.subtitle')}
-    </p>
+    <h1 class="referral__title">{$t('referral.discount_code')}</h1>
   </header>
 
-  <!-- Referral code card -->
-  <section class="referral__code-card">
-    <div class="referral__code-header">
-      <span class="referral__code-label">{$t('referral.code_label')}</span>
-    </div>
-
-    <div class="referral__code-body">
-      <div class="referral__code-box" aria-label={$t('referral.code_label')}>
-        <span class="referral__code-value">{referralCode}</span>
-      </div>
-
-      <div class="referral__code-actions">
-        <button type="button" class="referral__btn referral__btn--primary" onclick={handleCopy}>
-          {$t('referral.copy_code')}
-        </button>
-        <button type="button" class="referral__btn referral__btn--outline" onclick={handleShare}>
-          {$t('referral.share')}
-        </button>
-      </div>
-    </div>
-
-    {#if copyMessage}
-      <p class="referral__message referral__message--success">
-        {copyMessage}
-      </p>
-    {/if}
-
-    {#if shareMessage}
-      <p class="referral__message referral__message--info">
-        {shareMessage}
-      </p>
-    {/if}
-  </section>
-
   <!-- Referrer section -->
-  <!-- <section class="referral__referrer">
+  <section class="referral__referrer">
     {#if localReferrer}
       <div class="referral__referrer-card">
         <div class="referral__referrer-header">
           <span class="referral__referrer-label">
-            {$t('referral.referrer_applied_title')}
+            {$t('referral.your_discount_code')}
           </span>
         </div>
         <div class="referral__referrer-body">
           <div class="referral__referrer-email">
-            {localReferrer.email}
+            <span>{$t('referral.referrer_label')}:</span>
+            <span class="referral__referrer-code-value">
+              {localReferrer.email}
+            </span>
           </div>
           {#if localReferrer.referralCode}
             <div class="referral__referrer-code">
@@ -617,215 +560,7 @@
         {/if}
       </div>
     {/if}
-  </section> -->
-
-  <!-- Summary stats -->
-  <section class="referral__summary">
-    <div class="referral__stat-card">
-      <span class="referral__stat-label">{$t('referral.total_users')}</span>
-      <span class="referral__stat-value">{totalReferredUsers}</span>
-    </div>
-
-    <div class="referral__stat-card">
-      <span class="referral__stat-label">{$t('referral.total_commission')}</span>
-      <span class="referral__stat-value">{formatCurrency(totalCommission)}</span>
-    </div>
-
-    <div class="referral__stat-card">
-      <span class="referral__stat-label">
-        {$t('referral.withdraw_balance_label', {
-          values: { balance: '' },
-        })}
-      </span>
-      <span class="referral__stat-value">
-        {formatCurrency(currentBalance())}
-      </span>
-      {#if pendingWithdrawalAmount > 0}
-        <span class="referral__stat-hint">
-          {$t('referral.withdraw_pending_amount_label', {
-            values: { amount: formatCurrency(pendingWithdrawalAmount) },
-          })}
-        </span>
-      {/if}
-    </div>
   </section>
-
-  <section class="referral__withdraw">
-    <div class="referral__withdraw-header">
-      <div>
-        <h2 class="referral__withdraw-title">
-          {$t('referral.withdraw_section_title')}
-        </h2>
-        <p class="referral__withdraw-text">
-          {$t('referral.withdraw_section_hint', {
-            values: { min: minWithdrawAmount.toFixed(2) },
-          })}
-        </p>
-      </div>
-      <div class="referral__withdraw-actions">
-        <button
-          type="button"
-          class="referral__btn referral__btn--primary"
-          onclick={canWithdraw()
-            ? openWithdrawModal
-            : () =>
-                (withdrawError = $t('referral.withdraw_min_total_not_reached', {
-                  values: { min: minWithdrawAmount.toFixed(2) },
-                }))}
-        >
-          {$t('referral.withdraw_button')}
-        </button>
-
-        <a href={payoutMethodUrl} class="referral__btn referral__btn--outline referral__withdraw-secondary">
-          {$t('referral.withdraw_edit_payout_method')}
-        </a>
-      </div>
-    </div>
-
-    <div class="referral__withdraw-footer">
-      <a href={withdrawalHistoryUrl} class="referral__withdraw-history-link">
-        {$t('referral.withdraw_history_button')}
-      </a>
-    </div>
-
-    {#if withdrawError}
-      <p class="referral__apply-message referral__apply-message--error">
-        {withdrawError}
-      </p>
-    {/if}
-    {#if withdrawSuccess}
-      <p class="referral__apply-message referral__apply-message--success">
-        {withdrawSuccess}
-      </p>
-    {/if}
-  </section>
-
-  <!-- Empty state -->
-  {#if isEmptyState()}
-    <section class="referral__empty">
-      <h2 class="referral__empty-title">{$t('referral.empty_title')}</h2>
-      <p class="referral__empty-text">
-        {$t('referral.empty_text')}
-      </p>
-      <button type="button" class="referral__btn referral__btn--primary" onclick={handleCopy}>
-        {$t('referral.empty_cta')}
-      </button>
-    </section>
-  {/if}
-
-  <!-- Monthly stats table -->
-  {#if monthlyStats.length > 0}
-    <section class="referral__table-section">
-      <h2 class="referral__table-title">{$t('referral.table_title')}</h2>
-
-      <div class="referral__table-wrapper">
-        <table class="referral__table">
-          <thead>
-            <tr>
-              <th>{$t('referral.table_month')}</th>
-              <th>{$t('referral.table_commission')}</th>
-              <th>{$t('referral.table_active_users')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each monthlyStats as stat (stat.month)}
-              <tr>
-                <td>{formatMonth(stat.month)}</td>
-                <td>{formatCurrency(stat.commission)}</td>
-                <td>{stat.activeUsers}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  {/if}
-
-  <!-- Withdraw modal -->
-  {#if withdrawModalOpen}
-    <div
-      class="referral-modal-backdrop"
-      role="button"
-      tabindex="0"
-      aria-label={$t('cancel')}
-      onclick={closeWithdrawModal}
-      onkeydown={(event) => {
-        const key = event.key;
-        if (key === 'Enter' || key === ' ') {
-          event.preventDefault();
-          closeWithdrawModal();
-        }
-        if (key === 'Escape') {
-          event.preventDefault();
-          closeWithdrawModal();
-        }
-      }}
-    >
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <div class="referral-modal" role="dialog" aria-modal="true" tabindex="-1" onclick={stopModalClick}>
-        <div class="referral-modal__header">
-          <h2>{$t('referral.withdraw_title')}</h2>
-        </div>
-
-        <div class="referral-modal__body">
-          <p class="referral-modal__text">
-            {$t('referral.withdraw_description', {
-              values: { min: minWithdrawAmount.toFixed(2) },
-            })}
-          </p>
-
-          <p class="referral-modal__balance">
-            {$t('referral.withdraw_balance_label', {
-              values: { balance: formatCurrency(currentBalance()) },
-            })}
-          </p>
-
-          <div class="referral-modal__payout-summary">
-            <p class="referral-modal__payout-text">
-              {buildPayoutSummary(payoutMethod?.method === 'paypal' ? 'paypal' : 'bank')}
-            </p>
-            <a href={payoutMethodUrl} class="referral-modal__payout-link">
-              {$t('referral.withdraw_edit_payout_method')}
-            </a>
-          </div>
-
-          <label class="referral-modal__label">
-            <span>{$t('referral.withdraw_amount_label')}</span>
-            <input class="referral-modal__input" type="number" step="0.01" min="0" bind:value={withdrawAmount} />
-          </label>
-
-          {#if withdrawError}
-            <p class="referral__apply-message referral__apply-message--error referral-modal__error">
-              {withdrawError}
-            </p>
-          {/if}
-        </div>
-
-        <div class="referral-modal__footer">
-          <button
-            type="button"
-            class="referral__btn referral__btn--outline"
-            onclick={closeWithdrawModal}
-            disabled={withdrawSubmitting}
-          >
-            {$t('cancel')}
-          </button>
-          <button
-            type="button"
-            class="referral__btn referral__btn--primary"
-            onclick={submitWithdraw}
-            disabled={withdrawSubmitting}
-          >
-            {#if withdrawSubmitting}
-              {$t('referral.withdraw_submitting')}
-            {:else}
-              {$t('referral.withdraw_submit')}
-            {/if}
-          </button>
-        </div>
-      </div>
-    </div>
-  {/if}
 </section>
 
 <style>
@@ -846,63 +581,6 @@
     margin: 0;
     font-size: 1.75rem;
     font-weight: 600;
-  }
-
-  .referral__subtitle {
-    margin: 0;
-    font-size: 0.95rem;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  .referral__code-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1.25rem 1.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
-  }
-
-  .referral__code-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .referral__code-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  .referral__code-body {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .referral__code-box {
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    background: var(--immich-bg-subtle, #f8fafc);
-    border: 1px dashed var(--immich-border-subtle, #cbd5f5);
-    min-width: 200px;
-  }
-
-  .referral__code-value {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    letter-spacing: 0.08em;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  .referral__code-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
   }
 
   .referral__btn {
@@ -934,125 +612,8 @@
     background: var(--immich-accent-strong, #1d4ed8);
   }
 
-  .referral__btn--outline {
-    background: transparent;
-    color: var(--immich-accent, #2563eb);
-    border-color: var(--immich-accent, #2563eb);
-  }
-
-  .referral__btn--outline:hover {
-    background: rgba(37, 99, 235, 0.06);
-  }
-
-  .referral__message {
-    margin: 0;
-    font-size: 0.8rem;
-  }
-
-  .referral__message--success {
-    color: #16a34a;
-  }
-
-  .referral__message--info {
-    color: #2563eb;
-  }
-
-  .referral__summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
-
-  .referral__stat-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 1rem 1.25rem;
-    border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
-  }
-
-  .referral__stat-label {
-    font-size: 0.85rem;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  .referral__stat-value {
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-
-  .referral__empty {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 1.5rem 1.75rem;
-    border-radius: 0.75rem;
-    border: 1px dashed var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-subtle, #f8fafc);
-  }
-
-  .referral__empty-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .referral__empty-text {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.95rem;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  .referral__table-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .referral__table-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .referral__table-wrapper {
-    overflow-x: auto;
-    border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
-  }
-
-  .referral__table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-
-  .referral__table thead {
-    background: var(--immich-bg-subtle, #f8fafc);
-  }
-
-  .referral__table th,
-  .referral__table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--immich-border-subtle, #e2e8f0);
-  }
-
-  .referral__table th {
-    font-weight: 500;
-    color: var(--immich-fg-muted, #64748b);
-    white-space: nowrap;
-  }
-
-  .referral__table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
   /* Referrer block */
-  /* .referral__referrer {
+  .referral__referrer {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -1096,7 +657,7 @@
 
   .referral__referrer-email {
     font-size: 0.95rem;
-    font-weight: 500;
+    /* font-weight: 500; */
   }
 
   .referral__referrer-code {
@@ -1108,7 +669,8 @@
 
   .referral__referrer-code-value {
     font-weight: 500;
-    color: inherit;
+    color: #000000;
+    /* color: inherit; */
   }
 
   .referral__referrer-discount {
@@ -1133,18 +695,11 @@
     font-size: 0.9rem;
     outline: none;
   }
-  .referral__referrer-input-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .referral__input {
-    flex: none;
-  }
 
   .referral__input:focus {
     border-color: var(--immich-accent, #2563eb);
     box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
-  } */
+  }
 
   .referral__apply-message {
     margin: 0;
@@ -1164,9 +719,9 @@
       gap: 1.5rem;
     }
 
-    .referral__code-body {
+    .referral__referrer-input-row {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
     }
 
     .referral__btn {
@@ -1174,12 +729,8 @@
       justify-content: center;
       text-align: center;
     }
-    .referral__code-box {
-      width: 100%;
-    }
-    .referral__code-actions {
-      width: 100%;
-      flex-wrap: nowrap;
+    .referral__input {
+      flex: none;
     }
   }
 
@@ -1220,182 +771,6 @@
     }
   } */
 
-  .referral__stat-hint {
-    font-size: 0.8rem;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  /* Withdraw section */
-  .referral__withdraw {
-    padding: 1.25rem 1.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .referral__withdraw-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .referral__withdraw-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-  }
-
-  .referral__withdraw-text {
-    margin: 0.25rem 0 0;
-    font-size: 0.9rem;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  .referral__withdraw-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .referral__withdraw-secondary {
-    font-size: 0.85rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-  }
-
-  .referral__withdraw-footer {
-    margin-top: 0.25rem;
-  }
-
-  .referral__withdraw-history-link {
-    font-size: 0.85rem;
-    color: var(--immich-accent, #2563eb);
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-  /* Modal */
-  .referral-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.35);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-  }
-
-  .referral-modal {
-    width: min(420px, 100% - 2rem);
-    border-radius: 0.75rem;
-    padding: 1.25rem 1.5rem 1rem;
-    background: var(--immich-bg-elevated, #ffffff);
-    box-shadow:
-      0 10px 25px rgba(15, 23, 42, 0.12),
-      0 0 0 1px rgba(148, 163, 184, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .referral-modal__header h2 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .referral-modal__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .referral-modal__text {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  .referral-modal__balance {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-
-  .referral-modal__payout-summary {
-    font-size: 0.85rem;
-    text-align: center;
-  }
-
-  .referral-modal__payout-text {
-    margin: 0;
-    color: var(--immich-fg-muted, #64748b);
-  }
-
-  .referral-modal__payout-link {
-    display: inline-block;
-    margin-top: 0.25rem;
-    font-size: 0.85rem;
-    color: var(--immich-accent, #2563eb);
-    text-decoration: underline;
-  }
-
-  .referral-modal__label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-  }
-
-  .referral-modal__input {
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-subtle, #f8fafc);
-    font-size: 0.9rem;
-    outline: none;
-  }
-
-  .referral-modal__input:focus {
-    border-color: var(--immich-accent, #2563eb);
-    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
-  }
-
-  .referral-modal__error {
-    margin-top: 0.25rem;
-  }
-
-  .referral-modal__footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 0.25rem;
-  }
-
   @media (max-width: 640px) {
-    .referral__withdraw-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .referral-modal {
-      width: calc(100% - 2rem);
-    }
-
-    .referral__withdraw-actions {
-      width: 100%;
-    }
-
-    .referral__withdraw-actions .referral__btn {
-      flex: 1;
-      justify-content: center;
-    }
   }
 </style>

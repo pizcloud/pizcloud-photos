@@ -76,6 +76,7 @@ import 'package:immich_mobile/pages/search/map/map_location_picker.page.dart';
 import 'package:immich_mobile/pages/search/person_result.page.dart';
 import 'package:immich_mobile/pages/search/recently_taken.page.dart';
 import 'package:immich_mobile/pages/search/search.page.dart';
+import 'package:immich_mobile/pages/settings/pizcloud/referral_payout_method_page.dart';
 import 'package:immich_mobile/pages/settings/sync_status.page.dart';
 import 'package:immich_mobile/pages/share_intent/share_intent.page.dart';
 import 'package:immich_mobile/presentation/pages/dev/feat_in_development.page.dart';
@@ -128,6 +129,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 // pizcloud: new imports
 import '../pages/settings/pizcloud/billing_page.dart';
 import '../pages/settings/pizcloud/referral_page.dart';
+import '../pages/settings/pizcloud/discount_code_page.dart';
 import 'package:immich_mobile/pages/login/pizcloud/signup_page.dart';
 // #pizcloud
 
@@ -359,6 +361,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: BillingRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: SignupRoute.page),
     AutoRoute(page: ReferralRoute.page, guards: [_authGuard, _duplicateGuard]),
+    AutoRoute(page: DiscountCodeRoute.page, guards: [_authGuard, _duplicateGuard]),
     // #pizcloud
 
     // required to handle all deeplinks in deep_link.service.dart

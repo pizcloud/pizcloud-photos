@@ -11,8 +11,8 @@ import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizApiPersist;
-import 'account_api.dart';
-import 'photos_api.dart';
+import 'account_api.service.dart';
+import 'photos_api.service.dart';
 
 /// Thin wrapper around Google Sign-In (v7) to centralize initialization and
 /// requests.
@@ -80,27 +80,9 @@ class GoogleService {
 
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
     debugPrint('photosResponse: $photosResponse');
-    // ===============
 
-    final baseUrl = await _photosApi.baseUrl;
-    final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
-    final uri = Uri.parse(base).resolve('sso/callback');
-
-    final cookies = await pizApiPersist.ApiPersistCookieJarService.loadCookiesFor(uri);
-
-    final sid = cookies.firstWhere((c) => c.name == 'sid', orElse: () => throw 'No access token cookie').value;
-    final accessToken = cookies
-        .firstWhere((c) => c.name == 'pizcloud_access_token', orElse: () => throw 'No access token cookie')
-        .value;
-
-    // Persist sid for future sessions and rehydrate cookie jar now
-    await _persistSid(base, sid);
-
-    bool? authSaved;
-    if (ref != null) {
-      // Persist the Immich access token so subsequent OpenAPI calls are authenticated
-      authSaved = await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
-    }
+    final authTokens = await _loadAuthTokensFromCookies();
+    final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
 
     return LogInWithGoogleResult(
       account: account,
@@ -108,15 +90,14 @@ class GoogleService {
       verifyResponse: verifyResponse,
       ssoToken: ssoToken,
       photosResponse: photosResponse,
-      sid: sid,
-      accessToken: accessToken,
+      sid: authTokens.sid,
+      accessToken: authTokens.accessToken,
       authSaved: authSaved,
     );
   }
 
   Future<void> signOut() async {
     await _googleSignIn.signOut();
-    await _accountApi.logout();
     _currentUser = null;
   }
 
@@ -131,6 +112,29 @@ class GoogleService {
       if (token is String && token.isNotEmpty) return token;
     }
     return null;
+  }
+
+  Future<_AuthTokens> _loadAuthTokensFromCookies() async {
+    final baseUrl = await _photosApi.baseUrl;
+    final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
+    final uri = Uri.parse(base).resolve('sso/callback');
+
+    final cookies = await pizApiPersist.ApiPersistCookieJarService.loadCookiesFor(uri);
+
+    final sid = cookies.firstWhere((c) => c.name == 'sid', orElse: () => throw 'No access token cookie').value;
+    final accessToken = cookies
+        .firstWhere((c) => c.name == 'pizcloud_access_token', orElse: () => throw 'No access token cookie')
+        .value;
+
+    // Persist sid for future sessions and rehydrate cookie jar now
+    await _persistSid(base, sid);
+
+    return _AuthTokens(sid: sid, accessToken: accessToken);
+  }
+
+  Future<bool?> _saveAuthInfoIfNeeded(WidgetRef? ref, String accessToken) async {
+    if (ref == null) return null;
+    return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
   }
 }
 
@@ -156,6 +160,13 @@ class LogInWithGoogleResult {
 
   /// Result of calling `authProvider.saveAuthInfo`, if a ref was provided.
   final bool? authSaved;
+}
+
+class _AuthTokens {
+  _AuthTokens({required this.sid, required this.accessToken});
+
+  final String sid;
+  final String accessToken;
 }
 
 Future<void> _persistSid(String baseUrl, String sid) async {

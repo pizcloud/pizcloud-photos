@@ -111,11 +111,8 @@ class ReferralPage extends HookConsumerWidget {
 
     final payoutMethodState = useState<ReferralPayoutMethod?>(null);
 
-    final authHeaders = const AuthHeaderService();
-    final pizPersistApiFuture = pizPersist.ApiPersistCookieJarService.instance(
-      baseUrl: pizCloudServerUrl,
-      headers: authHeaders.authJson(),
-    );
+    // final authHeaders = const AuthHeaderService();
+    final pizPersistApiFuture = pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl);
 
     // Ensure sid cookie is restored after app restart before hitting APIs
     // useEffect(() {
@@ -130,12 +127,9 @@ class ReferralPage extends HookConsumerWidget {
       summaryError.value = null;
 
       try {
-        // await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
-        final api = await pizPersistApiFuture;
-
         // New Dio-based implementation using PersistCookieJar (sid) + headers
+        final api = await pizPersistApiFuture;
         final res = await api.client.get<dynamic>('/papi/referral/summary');
-        debugPrint('referral summary response: ${res.statusCode} ${res.data}');
         final status = res.statusCode ?? 0;
         if (status < 200 || status >= 300) {
           String? messageCode;
@@ -291,7 +285,6 @@ class ReferralPage extends HookConsumerWidget {
       applyLoading.value = true;
 
       try {
-        // await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final api = await pizPersistApiFuture;
         final res = await api.client.post<dynamic>(
@@ -465,7 +458,6 @@ class ReferralPage extends HookConsumerWidget {
                 });
 
                 try {
-                  // await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
                   // New Dio-based implementation using PersistCookieJar (sid) + headers
                   final api = await pizPersistApiFuture;
                   final res = await api.client.post<dynamic>(
@@ -727,15 +719,15 @@ class ReferralPage extends HookConsumerWidget {
             const SizedBox(height: 16),
 
             // Referrer section
-            _ReferrerSection(
-              localReferrer: localReferrer.value,
-              applyCodeController: applyCodeController,
-              applyLoading: applyLoading.value,
-              applyError: applyError.value,
-              applySuccess: applySuccess.value,
-              onApply: handleApplyReferrer,
-            ),
-            const SizedBox(height: 16),
+            // _ReferrerSection(
+            //   localReferrer: localReferrer.value,
+            //   applyCodeController: applyCodeController,
+            //   applyLoading: applyLoading.value,
+            //   applyError: applyError.value,
+            //   applySuccess: applySuccess.value,
+            //   onApply: handleApplyReferrer,
+            // ),
+            // const SizedBox(height: 16),
 
             // Summary stats
             _SummaryStats(

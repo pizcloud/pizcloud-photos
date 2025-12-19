@@ -25,7 +25,7 @@ import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 // import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart';
-import 'package:immich_mobile/services/pizcloud/google.service.dart'; // pizcloud
+import 'package:immich_mobile/services/pizcloud/account_api.service.dart'; // pizcloud
 
 class ImmichAppBarDialog extends HookConsumerWidget {
   const ImmichAppBarDialog({super.key});
@@ -41,7 +41,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
     final isLoggingOut = useState(false);
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
 
-    final GoogleService googleService = GoogleService(); // pizcloud
+    final AccountApi accountApiService = AccountApi(); // pizcloud
 
     useEffect(() {
       ref.read(backupProvider.notifier).updateDiskInfo();
@@ -100,8 +100,16 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
+    buildDiscountCodeButton() {
+      return buildActionButton(
+        Icons.price_check,
+        "referral.discount_code",
+        () => context.pushRoute(DiscountCodeRoute(userEmail: user?.email)),
+      );
+    }
+
     removeServerCookies() async {
-      await googleService.signOut();
+      await accountApiService.logout();
     }
     // #pizcloud
 
@@ -323,6 +331,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                 if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
                 if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
                 buildReferralProgramButton(), // pizcloud
+                buildDiscountCodeButton(), // pizcloud
                 buildSettingButton(),
                 buildSignOutButton(),
                 buildFooter(),

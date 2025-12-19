@@ -11,21 +11,11 @@ class ReferralPayoutMethodService {
   final String _base;
   final authHeaders = const AuthHeaderService();
   late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
-      pizPersist.ApiPersistCookieJarService.instance(baseUrl: _base, headers: authHeaders.authJson());
-
-  // Uri _buildPayoutUri({String? email}) {
-  //   final uri = Uri.parse('$_base/papi/referral/payout-method');
-  //   if (email == null || email.isEmpty) {
-  //     return uri;
-  //   }
-  //   return uri.replace(queryParameters: {'email': email});
-  // }
+      pizPersist.ApiPersistCookieJarService.instance(baseUrl: _base);
 
   /// load payout method for a given email
   Future<ReferralPayoutMethod?> loadPayoutMethod(String email) async {
     if (email.isEmpty) return null;
-
-    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(_base);
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
@@ -60,8 +50,6 @@ class ReferralPayoutMethodService {
     if (email.isEmpty) {
       return 'EMAIL_REQUIRED';
     }
-
-    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(_base);
 
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;

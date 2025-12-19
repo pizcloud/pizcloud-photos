@@ -4,8 +4,8 @@ import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:immich_mobile/config/app_config.dart';
-import 'account_api.dart';
-import 'photos_api.dart';
+import 'account_api.service.dart';
+import 'photos_api.service.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
@@ -56,8 +56,21 @@ class LoginWithEmailService {
 
     final accountResponse = await _accountApi.verifySSoToken(ssoToken);
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
-    // ===============
 
+    final accessToken = await _loadAccessTokenFromCookies();
+    final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
+
+    return LoginWithEmailResult(
+      authUri: authUri,
+      callbackUri: callbackUri,
+      ssoToken: ssoToken,
+      accountResponse: accountResponse,
+      photosResponse: photosResponse,
+      authSaved: authSaved,
+    );
+  }
+
+  Future<String> _loadAccessTokenFromCookies() async {
     final baseUrl = await _photosApi.baseUrl;
     final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
     final uri = Uri.parse(base).resolve('sso/callback');
@@ -70,31 +83,24 @@ class LoginWithEmailService {
         .value;
 
     await _persistSid(base, sid);
+    return accessToken;
+  }
 
-    bool? authSaved;
-    if (ref != null) {
-      // Ensure the Immich API endpoint is configured before saving auth info
-      final currentEndpoint = Store.tryGet(StoreKey.serverEndpoint);
-      if (currentEndpoint == null || currentEndpoint.isEmpty) {
-        try {
-          await ref.read(authProvider.notifier).validateServerUrl(AppConfig.defaultServer);
-        } catch (e) {
-          debugPrint('Failed to set server endpoint before saveAuthInfo: $e');
-        }
+  Future<bool?> _saveAuthInfoIfNeeded(WidgetRef? ref, String accessToken) async {
+    if (ref == null) return null;
+
+    // Ensure the Immich API endpoint is configured before saving auth info
+    final currentEndpoint = Store.tryGet(StoreKey.serverEndpoint);
+    if (currentEndpoint == null || currentEndpoint.isEmpty) {
+      try {
+        await ref.read(authProvider.notifier).validateServerUrl(AppConfig.defaultServer);
+      } catch (e) {
+        debugPrint('Failed to set server endpoint before saveAuthInfo: $e');
       }
-
-      // Persist the Immich access token so subsequent OpenAPI calls are authenticated
-      authSaved = await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
     }
 
-    return LoginWithEmailResult(
-      authUri: authUri,
-      callbackUri: callbackUri,
-      ssoToken: ssoToken,
-      accountResponse: accountResponse,
-      photosResponse: photosResponse,
-      authSaved: authSaved,
-    );
+    // Persist the Immich access token so subsequent OpenAPI calls are authenticated
+    return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
   }
 }
 

@@ -35,7 +35,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:immich_mobile/services/pizcloud/google.service.dart';
-import 'package:immich_mobile/services/pizcloud/login_with_email_service.dart';
+import 'package:immich_mobile/services/pizcloud/login_with_email.service.dart';
 
 final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // pizcloud
 
@@ -70,6 +70,15 @@ class LoginForm extends HookConsumerWidget {
     final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
 
     final needsVerification = useState<bool>(false); // pizcloud: new email verification state
+
+    // Validation states
+    // focus & busy states for login actions
+    final emailFocusNode = useFocusNode();
+    final isEmailBusy = useState<bool>(false);
+    final isGoogleBusy = useState<bool>(false);
+    final emailSubmitted = useState<bool>(false);
+
+    final bool isAnyBusy = isLoadingServer.value || isBootstrapping.value || isEmailBusy.value || isGoogleBusy.value;
 
     final GoogleService googleService = GoogleService();
     final LoginWithEmailService loginWithEmailService = LoginWithEmailService();
@@ -257,123 +266,12 @@ class LoginForm extends HookConsumerWidget {
 
     bool isSyncRemoteDeletionsMode() => Platform.isAndroid && Store.get(StoreKey.manageLocalMediaAndroid, false);
 
-    // pizcloud: new email verification flow
-    // Future<bool> ensureEmailVerified(String email) async {
-    //   final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-    //   if (base.isEmpty) {
-    //     return true;
-    //   }
-
-    //   try {
-    //     final uri = Uri.parse('$base/papi/auth/email-verification-status').replace(queryParameters: {'email': email});
-
-    //     final resp = await http.get(uri, headers: const {'Accept': 'application/json'});
-
-    //     if (resp.statusCode >= 200 && resp.statusCode < 300) {
-    //       final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    //       final verified = data['verified'] == true;
-    //       if (!verified) {
-    //         needsVerification.value = true;
-    //         ImmichToast.show(
-    //           context: context,
-    //           msg: "errors.email_not_verified".tr(),
-    //           toastType: ToastType.error,
-    //           gravity: ToastGravity.TOP,
-    //         );
-    //         return false;
-    //       }
-    //       needsVerification.value = false;
-    //       return true;
-    //     } else {
-    //       needsVerification.value = false;
-    //       ImmichToast.show(
-    //         context: context,
-    //         msg: "errors.login_email_verification_failed".tr(),
-    //         toastType: ToastType.error,
-    //         gravity: ToastGravity.TOP,
-    //       );
-    //       return false;
-    //     }
-    //   } catch (e) {
-    //     needsVerification.value = false;
-    //     ImmichToast.show(
-    //       context: context,
-    //       msg: "errors.login_email_verification_failed".tr(),
-    //       toastType: ToastType.error,
-    //       gravity: ToastGravity.TOP,
-    //     );
-    //     return false;
-    //   }
-    // }
-
-    // Future<void> resendVerificationEmail() async {
-    //   final email = emailController.text.trim();
-    //   if (email.isEmpty) {
-    //     ImmichToast.show(
-    //       context: context,
-    //       msg: "errors.email_required_for_resend".tr(),
-    //       toastType: ToastType.error,
-    //       gravity: ToastGravity.TOP,
-    //     );
-    //     return;
-    //   }
-
-    //   final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-    //   if (base.isEmpty) {
-    //     ImmichToast.show(
-    //       context: context,
-    //       msg: "errors.resend_verification_email_failed".tr(),
-    //       toastType: ToastType.error,
-    //       gravity: ToastGravity.TOP,
-    //     );
-    //     return;
-    //   }
-
-    //   try {
-    //     final locale = context.locale;
-    //     final lang = [
-    //       locale.languageCode,
-    //       if (locale.countryCode != null && locale.countryCode!.isNotEmpty) locale.countryCode,
-    //     ].join('-');
-
-    //     final uri = Uri.parse('$base/papi/auth/verify-email');
-    //     final resp = await http.post(
-    //       uri,
-    //       headers: const {'Content-Type': 'application/json'},
-    //       body: jsonEncode(<String, String>{'email': email, 'lang': lang}),
-    //     );
-
-    //     if (resp.statusCode >= 200 && resp.statusCode < 300) {
-    //       ImmichToast.show(
-    //         context: context,
-    //         msg: "verification_email_resent".tr(),
-    //         toastType: ToastType.success,
-    //         gravity: ToastGravity.TOP,
-    //       );
-    //       needsVerification.value = false;
-    //     } else {
-    //       ImmichToast.show(
-    //         context: context,
-    //         msg: "errors.resend_verification_email_failed".tr(),
-    //         toastType: ToastType.error,
-    //         gravity: ToastGravity.TOP,
-    //       );
-    //     }
-    //   } catch (e) {
-    //     ImmichToast.show(
-    //       context: context,
-    //       msg: "errors.resend_verification_email_failed".tr(),
-    //       toastType: ToastType.error,
-    //       gravity: ToastGravity.TOP,
-    //     );
-    //   }
-    // }
-    // #pizcloud
-
     String? validateEmail(String? value) {
-      final email = value?.trim() ?? '';
+      final email = (value ?? '').trim();
       if (email.isEmpty) return 'Please enter your email';
-      if (!email.contains('@') || email.startsWith('@')) {
+
+      final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+      if (!emailRegex.hasMatch(email)) {
         return 'Enter a valid email address';
       }
       return null;
@@ -381,13 +279,9 @@ class LoginForm extends HookConsumerWidget {
 
     // =================NEW======================
     Future<void> onGoogleLogin() async {
-      // setState(() {
-      //   _loading = true;
-      //   _status = 'Signing in...';
-      //   _error = null;
-      //   _photosBody = '';
-      // });
+      if (isGoogleBusy.value || isAnyBusy) return;
 
+      isGoogleBusy.value = true;
       try {
         final result = await googleService.logInWithGoogle(ref: ref);
 
@@ -418,29 +312,38 @@ class LoginForm extends HookConsumerWidget {
           unawaited(ref.watch(backupProvider.notifier).resumeBackup());
         }
         unawaited(context.replaceRoute(const TabControllerRoute()));
-        // setState(() {
-        //   _status = 'Success';
-        //   _photosBody = _stringify(result.photosResponse.data);
-        // });
       } catch (e) {
-        debugPrint('Google login FAILED: $e');
-        // setState(() {
-        //   _status = 'Error';
-        //   _error = e.toString();
-        //   // print(_error);
-        // });
+        if (!context.mounted) return;
+        ImmichToast.show(
+          context: context,
+          msg: 'login_form_failed_login'.tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
       } finally {
-        // setState(() => _loading = false);
+        if (context.mounted) isGoogleBusy.value = false;
       }
     }
 
     Future<void> continueWithEmail() async {
-      // if (!(formKey.currentState?.validate() ?? false)) return;
+      if (isEmailBusy.value || isAnyBusy) return;
+
+      emailSubmitted.value = true;
+      final isValid = loginFormKey.currentState?.validate() ?? false;
+      if (!isValid) {
+        emailFocusNode.requestFocus();
+        return;
+      }
 
       final email = _emailController.text.trim();
       FocusScope.of(context).unfocus();
+
+      isEmailBusy.value = true;
       try {
         final result = await loginWithEmailService.authenticate(email, ref);
+
+        if (!context.mounted) return;
+
         if (result.authSaved != true) {
           ImmichToast.show(
             context: context,
@@ -468,45 +371,22 @@ class LoginForm extends HookConsumerWidget {
           unawaited(ref.watch(backupProvider.notifier).resumeBackup());
         }
         unawaited(context.replaceRoute(const TabControllerRoute()));
-        // setState(() {
-        //   _lastCallback = result.callbackUri;
-        //   _status = result.photosResponse.statusCode != null ? 'HTTP ${result.photosResponse.statusCode}' : 'Done';
-        //   _photosBody = _stringify(result.photosResponse.data);
-        //   _error = null;
-        // });
-        // if (mounted) {
-        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logged in: $_status')));
-        // }
       } on PlatformException catch (e) {
-        // if (e.code == 'CANCELED') {
-        //   setState(() {
-        //     _status = 'Canceled';
-        //     _error = null;
-        //   });
-        //   return;
-        // }
-        // setState(() {
-        //   _status = 'Error';
-        //   _error = e.toString();
-        // });
-        // if (mounted) {
-        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: $e')));
-        // }
+        if (!context.mounted) return;
+        // final msg = (e.message?.isNotEmpty ?? false) ? e.message! : 'login_form_failed_login'.tr();
+        // ImmichToast.show(context: context, msg: msg, toastType: ToastType.error, gravity: ToastGravity.TOP);
       } catch (e) {
-        // setState(() {
-        //   _status = 'Error';
-        //   _error = e.toString();
-        // });
-        // if (mounted) {
-        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: $e')));
-        // }
+        if (!context.mounted) return;
+        ImmichToast.show(
+          context: context,
+          msg: 'login_form_failed_login'.tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
       } finally {
-        // if (mounted) {
-        //   setState(() {
-        //     _launching = false;
-        //     _handlingCallback = false;
-        //   });
-        // }
+        if (context.mounted) {
+          isEmailBusy.value = false;
+        }
       }
     }
 
@@ -600,19 +480,16 @@ class LoginForm extends HookConsumerWidget {
                       const SizedBox(height: 18),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Log in or sign up",
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                          ).tr(),
-                        ],
+                        children: [const Text("log_in_or_sign_up", style: TextStyle(fontSize: 24)).tr()],
                       ),
                       const SizedBox(height: 18),
 
                       ElevatedButton.icon(
-                        icon: const Icon(Icons.login),
-                        label: const Text('Continue with Google'),
-                        onPressed: () => onGoogleLogin(),
+                        icon: isGoogleBusy.value
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.login),
+                        label: Text(isGoogleBusy.value ? 'please_wait'.tr() : 'continue_with_google'.tr()),
+                        onPressed: isAnyBusy ? null : () => onGoogleLogin(),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
@@ -628,19 +505,35 @@ class LoginForm extends HookConsumerWidget {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(labelText: 'Email', hintText: 'you@example.com'),
+                        focusNode: emailFocusNode,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          hintText: 'you@example.com',
+                          suffixIcon: _emailController.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  onPressed: isAnyBusy
+                                      ? null
+                                      : () {
+                                          _emailController.clear();
+                                        },
+                                  icon: const Icon(Icons.clear),
+                                ),
+                        ),
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
                         textInputAction: TextInputAction.done,
+                        enabled: !isAnyBusy,
                         validator: validateEmail,
                         onFieldSubmitted: (_) => continueWithEmail(),
-                        // enabled: !busy,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 8),
                       FilledButton.icon(
-                        onPressed: continueWithEmail,
-                        icon: const Icon(Icons.arrow_forward),
-                        label: const Text('Continue'),
+                        onPressed: isAnyBusy ? null : continueWithEmail,
+                        icon: isEmailBusy.value
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.arrow_forward),
+                        label: Text(isEmailBusy.value ? 'please_wait'.tr() : 'continue'.tr()),
                       ),
                       const SizedBox(height: 16),
 
@@ -662,7 +555,7 @@ class LoginForm extends HookConsumerWidget {
             if (!AppConfig.lockServer)
               TextButton.icon(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => serverEndpoint.value = null,
+                onPressed: (isAnyBusy || AppConfig.lockServer) ? null : () => serverEndpoint.value = null,
                 label: const Text('back').tr(),
               ),
           ],
@@ -736,7 +629,13 @@ class LoginForm extends HookConsumerWidget {
                     ],
                   ),
 
-                  Form(key: loginFormKey, child: serverSelectionOrLogin),
+                  Form(
+                    key: loginFormKey,
+                    autovalidateMode: emailSubmitted.value
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
+                    child: serverSelectionOrLogin,
+                  ),
                 ],
               ),
             ),

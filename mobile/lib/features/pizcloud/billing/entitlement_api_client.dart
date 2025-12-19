@@ -17,7 +17,7 @@ class EntitlementApiClient {
   final UserDto userEntity;
   final authHeaders = const AuthHeaderService();
   late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
-      pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl, headers: authHeaders.authJson());
+      pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl);
   // final String billingBaseUrl;
 
   String _join(String base, String path) {
@@ -52,19 +52,6 @@ class EntitlementApiClient {
 
   Future<Map<String, dynamic>?> getReferralSummary() async {
     String path = 'papi/referral/summary';
-    // String email = userEntity.email;
-    // if (email != '' && email.trim().isNotEmpty) {
-    //   final encoded = Uri.encodeQueryComponent(email.trim());
-    //   path = '$path?email=$encoded';
-    // }
-
-    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
-
-    // Old http-based implementation (kept for reference)
-    // final jsonHeaders = authHeaders.authJson();
-    // final url = _join(pizCloudServerUrl, path);
-    // final res = await http.get(Uri.parse(url), headers: jsonHeaders);
-
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.get<dynamic>('/$path');
@@ -87,20 +74,6 @@ class EntitlementApiClient {
   }
 
   Future<void> verifyIosReceipt({required String productId, required String receiptBase64}) async {
-    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
-
-    // Old http-based implementation (kept for reference)
-    // final url = _join(pizCloudServerUrl, 'papi/iap/ios/verify');
-    // final jsonHeaders = authHeaders.authJson();
-    // final res = await http.post(
-    //   Uri.parse(url),
-    //   headers: jsonHeaders,
-    //   body: jsonEncode({'productId': productId, 'receiptData': receiptBase64}),
-    // );
-    // if (res.statusCode < 200 || res.statusCode >= 300) {
-    //   throw Exception('iOS verify failed: ${res.statusCode} ${res.body}');
-    // }
-
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
@@ -118,20 +91,6 @@ class EntitlementApiClient {
     required String purchaseToken,
     required String packageName,
   }) async {
-    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
-
-    // Old http-based implementation (kept for reference)
-    // final url = _join(pizCloudServerUrl, 'papi/iap/android/verify');
-    // final jsonHeaders = authHeaders.authJson();
-    // final res = await http.post(
-    //   Uri.parse(url),
-    //   headers: jsonHeaders,
-    //   body: jsonEncode({'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName}),
-    // );
-    // if (res.statusCode < 200 || res.statusCode >= 300) {
-    //   throw Exception('Android verify failed: ${res.statusCode} ${res.body}');
-    // }
-
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
@@ -148,20 +107,6 @@ class EntitlementApiClient {
     required String productId,
     required String platform, // 'android' | 'ios'
   }) async {
-    await pizPersist.ApiPersistCookieJarService.ensureSidCookie(pizCloudServerUrl);
-
-    // Old http-based implementation (kept for reference)
-    // final url = _join(pizCloudServerUrl, 'papi/billing/verify-success');
-    // final jsonHeaders = authHeaders.authJson();
-    // final res = await http.post(
-    //   Uri.parse(url),
-    //   headers: jsonHeaders,
-    //   body: jsonEncode({'productId': productId, 'platform': platform}),
-    // );
-    // if (res.statusCode < 200 || res.statusCode >= 300) {
-    //   throw Exception('Notify verified purchase failed: ${res.statusCode} ${res.body}');
-    // }
-
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
