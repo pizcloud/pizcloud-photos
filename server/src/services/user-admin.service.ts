@@ -50,6 +50,13 @@ export class UserAdminService extends BaseService {
     return mapUserAdmin(user);
   }
 
+  // pizcloud
+  async getById(id: string): Promise<UserAdminResponseDto> {
+    const user = await this.findOrFail(id, { withDeleted: true });
+    return mapUserAdmin(user);
+  }
+  // #pizcloud
+
   async update(auth: AuthDto, id: string, dto: UserAdminUpdateDto): Promise<UserAdminResponseDto> {
     const user = await this.findOrFail(id, {});
 

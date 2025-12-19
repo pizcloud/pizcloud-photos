@@ -19,6 +19,11 @@ import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
 import 'package:immich_mobile/utils/debug_print.dart';
 
+import 'package:immich_mobile/services/pizcloud/push_notification.service.dart'; // pizcloud
+import 'package:immich_mobile/config/app_config.dart'; // pizcloud
+
+final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // pizcloud
+
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     ref.watch(authServiceProvider),
@@ -132,6 +137,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       final serverUser = await _userService.refreshMyUser().timeout(_timeoutDuration);
+
+      await PushNotificationService.initAndRegister(baseUrl: pizCloudServerUrl, authToken: accessToken); // pizcloud
+
       if (serverUser == null) {
         _log.severe("Unable to get user information from the server.");
       } else {

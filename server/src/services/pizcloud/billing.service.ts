@@ -1,5 +1,5 @@
 // server/src/services/billing.service.ts
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { AuthDto } from 'src/dtos/auth.dto';
 import { getGoogleAccessToken } from 'src/services/pizcloud/google-auth';
@@ -113,7 +113,32 @@ export class BillingService {
 
   async getUsage(auth: AuthDto) {
     const me = await this.userAdmin.get(auth, auth.user.id);
-    const stats = await this.userAdmin.getStatistics(auth, auth.user.id, {} as any);
+    // const stats = await this.userAdmin.getStatistics(auth, auth.user.id, {} as any);
+
+    const usage = me.quotaUsageInBytes ?? 0;
+    const limit = me.quotaSizeInBytes; // null = unlimited
+
+    const percent = limit && limit > 0 ? Math.min(100, Math.round((usage / limit) * 100)) : 0;
+
+    let state: 'ok' | 'warn' | 'critical' | 'blocked' = 'ok';
+    if (limit && limit > 0) {
+      if (percent >= 100) state = 'blocked';
+      else if (percent >= 90) state = 'critical';
+      else if (percent >= 80) state = 'warn';
+    }
+
+    return {
+      used_bytes: usage,
+      limit_bytes: limit, // number | null
+      used_gb: (usage / (1024 ** 3)).toFixed(2),
+      limit_gb: limit != null ? (limit / (1024 ** 3)).toFixed(0) : null,
+      percent,
+      state,
+    };
+  }
+
+  async getUsageByUserId(userId: string) {
+    const me = await this.userAdmin.getById(userId);
 
     const usage = me.quotaUsageInBytes ?? 0;
     const limit = me.quotaSizeInBytes; // null = unlimited
@@ -347,11 +372,11 @@ export class BillingService {
 
   async handleEntitlementWebhook(body: EntitlementWebhookBody,): Promise<{ ok: true }> {
 
-    const { signature, ...payloadWithoutSignature } = body;
-    const secret = process.env.ENTITLEMENT_HMAC_SECRET;
-    if (!secret) {
-      throw new UnauthorizedException('HMAC secret not configured');
-    }
+    const { ...payloadWithoutSignature } = body;
+    // const secret = process.env.ENTITLEMENT_HMAC_SECRET;
+    // if (!secret) {
+    //   throw new UnauthorizedException('HMAC secret not configured');
+    // }
 
     const quotaSizeInBytes = this.computeQuotaBytes(body.storageLimitGb);
     await this.userAdmin.updateUserQuota(body.userId, quotaSizeInBytes);

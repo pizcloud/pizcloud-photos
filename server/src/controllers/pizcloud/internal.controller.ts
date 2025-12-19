@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { InternalJwtGuard } from 'src/pizcloud/internal-auth/internal-jwt.guard';
 import { BillingService, EntitlementWebhookBody } from 'src/services/pizcloud/billing.service';
 
@@ -10,8 +10,13 @@ export class InternalController {
 
   @Post('entitlements/webhook')
   entitlementsWebhook(@Body() body: EntitlementWebhookBody, @Req() req: any) {
-
     return this.billingService.handleEntitlementWebhook(body);
+  }
+
+  @Get('user-usage')
+  async usage(@Req() req: Request) {
+    const userId = (req as any)?.userId;
+    return this.billingService.getUsageByUserId(userId);
   }
 
   @Post('test-webhook')
