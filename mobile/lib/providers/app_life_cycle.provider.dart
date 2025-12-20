@@ -23,6 +23,7 @@ import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/services/background.service.dart';
+import 'package:immich_mobile/services/pizcloud/photos_api_url_refresher.service.dart'; //pizcloud
 import 'package:isar/isar.dart';
 import 'package:logging/logging.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -32,6 +33,7 @@ enum AppLifeCycleEnum { active, inactive, paused, resumed, detached, hidden }
 class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
   final Ref _ref;
   bool _wasPaused = false;
+  final PhotosApiUrlRefresher _photosApiUrlRefresher; // pizcloud
 
   // Add operation coordination
   Completer<void>? _resumeOperation;
@@ -39,7 +41,9 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
 
   final _log = Logger("AppLifeCycleNotifier");
 
-  AppLifeCycleNotifier(this._ref) : super(AppLifeCycleEnum.active);
+  AppLifeCycleNotifier(this._ref)
+    : _photosApiUrlRefresher = PhotosApiUrlRefresher(_ref), // pizcloud
+      super(AppLifeCycleEnum.active);
 
   AppLifeCycleEnum getAppState() {
     return state;
@@ -47,6 +51,14 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
 
   void handleAppResume() async {
     state = AppLifeCycleEnum.resumed;
+
+    // pizcloud: keep Photos API URL refreshed while the app is active.
+    if (_ref.read(authProvider).isAuthenticated) {
+      unawaited(_photosApiUrlRefresher.start());
+    } else {
+      _photosApiUrlRefresher.stop();
+    }
+    // #pizcloud
 
     // Prevent overlapping resume operations
     if (_resumeOperation != null && !_resumeOperation!.isCompleted) {
@@ -200,6 +212,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
   Future<void> handleAppPause() async {
     state = AppLifeCycleEnum.paused;
     _wasPaused = true;
+    _photosApiUrlRefresher.stop(); // pizcloud: stop periodic refresh when app is backgrounded.
 
     // Prevent overlapping pause operations
     if (_pauseOperation != null && !_pauseOperation!.isCompleted) {
@@ -248,6 +261,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
 
   Future<void> handleAppDetached() async {
     state = AppLifeCycleEnum.detached;
+    _photosApiUrlRefresher.stop(); // pizcloud: stop periodic refresh when app is detached.
 
     if (Store.isBetaTimelineEnabled) {
       unawaited(_ref.read(backgroundWorkerLockServiceProvider).unlock());
@@ -280,6 +294,15 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
     state = AppLifeCycleEnum.hidden;
     // do not stop/clean up anything on inactivity: issued on every orientation change
   }
+
+  // pizcloud
+  @override
+  void dispose() {
+    _photosApiUrlRefresher.stop();
+    super.dispose();
+  }
+
+  // #pizcloud
 }
 
 final appStateProvider = StateNotifierProvider<AppLifeCycleNotifier, AppLifeCycleEnum>((ref) {
