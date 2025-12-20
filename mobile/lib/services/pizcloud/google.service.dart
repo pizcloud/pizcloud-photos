@@ -10,6 +10,7 @@ import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/services/pizcloud/photos_base_url.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizApiPersist;
 import 'account_api.service.dart';
 import 'photos_api.service.dart';
@@ -34,6 +35,7 @@ class GoogleService {
   final AccountApi _accountApi;
   final PhotosApi _photosApi;
   final String _serverClientId;
+  final PhotosBaseUrlService photoBaseUrlService = PhotosBaseUrlService();
 
   Stream<GoogleSignInAuthenticationEvent> get events => _googleSignIn.authenticationEvents;
 
@@ -72,6 +74,9 @@ class GoogleService {
     }
 
     final verifyResponse = await _accountApi.verifyIdToken(idToken);
+
+    await photoBaseUrlService.fetchApiUrl(ref);
+
     final ssoToken = _extractSsoToken(verifyResponse.data);
     debugPrint('ssoToken: $ssoToken');
     if (ssoToken == null || ssoToken.isEmpty) {

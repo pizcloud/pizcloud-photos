@@ -10,6 +10,7 @@ import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizApiPersist;
+import 'package:immich_mobile/services/pizcloud/photos_base_url.service.dart';
 
 class LoginWithEmailResult {
   const LoginWithEmailResult({
@@ -36,6 +37,7 @@ class LoginWithEmailService {
 
   final PhotosApi _photosApi;
   final AccountApi _accountApi;
+  final PhotosBaseUrlService photoBaseUrlService = PhotosBaseUrlService();
 
   Uri buildAuthUri(String email) {
     return Uri.https(AppConfig.accountHost, '/continue-with-email', {'email': email, 'service': AppConfig.service});
@@ -55,6 +57,9 @@ class LoginWithEmailService {
     }
 
     final accountResponse = await _accountApi.verifySSoToken(ssoToken);
+
+    await photoBaseUrlService.fetchApiUrl(ref);
+
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
 
     final accessToken = await _loadAccessTokenFromCookies();

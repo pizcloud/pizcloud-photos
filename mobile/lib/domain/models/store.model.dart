@@ -84,7 +84,10 @@ enum StoreKey<T> {
   shouldResetSync<bool>._(1007),
 
   // Pizcloud session cookie
-  pizcloudSid<String>._(1008);
+  pizcloudSid<String>._(1008),
+
+  // Pizcloud Photos API base URL
+  pizcloudPhotosApiUrl<String>._(1009);
 
   const StoreKey._(this.id);
   final int id;

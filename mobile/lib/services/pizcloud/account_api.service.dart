@@ -28,6 +28,12 @@ class AccountApi {
     return client.get<dynamic>('/users/me');
   }
 
+  Future<Response<dynamic>> getPhotosApiUrl() async {
+    final client = await _client();
+    final serviceName = Uri.encodeQueryComponent(AppConfig.serverName);
+    return client.get<dynamic>('/health/service?service=$serviceName');
+  }
+
   Future<Response<dynamic>> logout() async {
     final client = await _client();
     return client.get<dynamic>('/users/logout');
