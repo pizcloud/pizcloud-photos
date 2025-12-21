@@ -137,11 +137,41 @@ export class BillingService {
     };
   }
 
-  async getUsageByUserId(userId: string) {
-    const me = await this.userAdmin.getById(userId);
+  // async getUsageByUserId(userId: string) {
+  //   const me = await this.userAdmin.get(userId);
 
-    const usage = me.quotaUsageInBytes ?? 0;
-    const limit = me.quotaSizeInBytes; // null = unlimited
+  //   const usage = me.quotaUsageInBytes ?? 0;
+  //   console.log('usageusage', usage)
+  //   const limit = me.quotaSizeInBytes; // null = unlimited
+  //   console.log('limitlimit', limit)
+
+  //   const percent = limit && limit > 0 ? Math.min(100, Math.round((usage / limit) * 100)) : 0;
+
+  //   let state: 'ok' | 'warn' | 'critical' | 'blocked' = 'ok';
+  //   if (limit && limit > 0) {
+  //     if (percent >= 100) state = 'blocked';
+  //     else if (percent >= 90) state = 'critical';
+  //     else if (percent >= 80) state = 'warn';
+  //   }
+
+  //   return {
+  //     used_bytes: usage,
+  //     limit_bytes: limit, // number | null
+  //     used_gb: (usage / (1024 ** 3)).toFixed(2),
+  //     limit_gb: limit != null ? (limit / (1024 ** 3)).toFixed(0) : null,
+  //     percent,
+  //     state,
+  //   };
+  // }
+
+  async getUsageByUserEmail(email: string) {
+    const user = await this.userAdmin.getByEmail(email);
+    // console.log('user', user)
+
+    const usage = user?.quotaUsageInBytes ?? 0;
+    // console.log('usage', usage)
+    const limit = user?.quotaSizeInBytes; // null = unlimited
+    // console.log('limit', limit)
 
     const percent = limit && limit > 0 ? Math.min(100, Math.round((usage / limit) * 100)) : 0;
 

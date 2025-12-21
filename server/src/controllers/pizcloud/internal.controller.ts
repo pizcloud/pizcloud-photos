@@ -14,8 +14,8 @@ export class InternalController {
   }
 
   @Get('user-usage')
-  async usage(@Query('userId') userId: string) {
-    return this.billingService.getUsageByUserId(userId);
+  async usage(@Query('email') email: string) {
+    return this.billingService.getUsageByUserEmail(email);
   }
 
   @Post('test-webhook')
