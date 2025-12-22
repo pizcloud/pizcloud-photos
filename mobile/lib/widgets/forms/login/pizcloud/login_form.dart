@@ -192,17 +192,18 @@ class LoginForm extends HookConsumerWidget {
       isBootstrapping.value = false;
     }
 
-    useEffect(() {
-      final stored = getServerUrl();
-      final fallback = AppConfig.defaultServer.trim();
-      final start = (stored != null && stored.isNotEmpty) ? stored : (fallback.isNotEmpty ? fallback : null);
-      if (start != null) {
-        Future.microtask(() async {
-          await bootstrapWithUrl(start);
-        });
-      }
-      return null;
-    }, []);
+    // pizcloud: no defaultServer and no manual server selection for now.
+    // useEffect(() {
+    //   final stored = getServerUrl();
+    //   final fallback = AppConfig.defaultServer.trim();
+    //   final start = (stored != null && stored.isNotEmpty) ? stored : (fallback.isNotEmpty ? fallback : null);
+    //   if (start != null) {
+    //     Future.microtask(() async {
+    //       await bootstrapWithUrl(start);
+    //     });
+    //   }
+    //   return null;
+    // }, []);
     // #pizcloud
 
     Future<void> handleSyncFlow() async {
@@ -563,45 +564,46 @@ class LoginForm extends HookConsumerWidget {
       );
     }
 
-    // pizcloud
-    // final serverSelectionOrLogin = serverEndpoint.value == null ? buildSelectServer() : buildLogin();
+    // pizcloud: no manual server selection; login is always shown.
+    Widget serverSelectionOrLogin = buildLogin();
 
-    final bool hasDefault = AppConfig.defaultServer.trim().isNotEmpty;
-    Widget serverSelectionOrLogin;
-
-    if (serverEndpoint.value == null) {
-      final isAutoMode = (getServerUrl() != null && getServerUrl()!.isNotEmpty) || (hasDefault && AppConfig.lockServer);
-
-      if (isAutoMode) {
-        serverSelectionOrLogin = Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (isBootstrapping.value) const LoadingIcon(),
-            if (!isBootstrapping.value && lastBootstrapFailed.value)
-              ElevatedButton.icon(
-                onPressed: isLoadingServer.value
-                    ? null
-                    : () async {
-                        final stored = getServerUrl();
-                        final fallback = AppConfig.defaultServer.trim();
-                        final start = (stored != null && stored.isNotEmpty)
-                            ? stored
-                            : (fallback.isNotEmpty ? fallback : null);
-                        if (start != null) {
-                          await bootstrapWithUrl(start);
-                        }
-                      },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-          ],
-        );
-      } else {
-        serverSelectionOrLogin = buildSelectServer();
-      }
-    } else {
-      serverSelectionOrLogin = buildLogin();
-    }
+    // Previous server selection flow (kept for reference).
+    // final bool hasDefault = AppConfig.defaultServer.trim().isNotEmpty;
+    // Widget serverSelectionOrLogin;
+    //
+    // if (serverEndpoint.value == null) {
+    //   final isAutoMode = (getServerUrl() != null && getServerUrl()!.isNotEmpty) || (hasDefault && AppConfig.lockServer);
+    //
+    //   if (isAutoMode) {
+    //     serverSelectionOrLogin = Column(
+    //       crossAxisAlignment: CrossAxisAlignment.center,
+    //       children: [
+    //         if (isBootstrapping.value) const LoadingIcon(),
+    //         if (!isBootstrapping.value && lastBootstrapFailed.value)
+    //           ElevatedButton.icon(
+    //             onPressed: isLoadingServer.value
+    //                 ? null
+    //                 : () async {
+    //                     final stored = getServerUrl();
+    //                     final fallback = AppConfig.defaultServer.trim();
+    //                     final start = (stored != null && stored.isNotEmpty)
+    //                         ? stored
+    //                         : (fallback.isNotEmpty ? fallback : null);
+    //                     if (start != null) {
+    //                       await bootstrapWithUrl(start);
+    //                     }
+    //                   },
+    //             icon: const Icon(Icons.refresh),
+    //             label: const Text('Retry'),
+    //           ),
+    //       ],
+    //     );
+    //   } else {
+    //     serverSelectionOrLogin = buildSelectServer();
+    //   }
+    // } else {
+    //   serverSelectionOrLogin = buildLogin();
+    // }
     // #pizcloud
 
     return LayoutBuilder(

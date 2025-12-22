@@ -75,7 +75,11 @@ class GoogleService {
 
     final verifyResponse = await _accountApi.verifyIdToken(idToken);
 
-    await photoBaseUrlService.fetchApiUrl(ref);
+    // pizcloud: ensure API base URL is resolved and validated before any API calls.
+    final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
+    if (!apiReady) {
+      throw StateError('Failed to resolve photos API base URL');
+    }
 
     final ssoToken = _extractSsoToken(verifyResponse.data);
     debugPrint('ssoToken: $ssoToken');
@@ -139,6 +143,21 @@ class GoogleService {
 
   Future<bool?> _saveAuthInfoIfNeeded(WidgetRef? ref, String accessToken) async {
     if (ref == null) return null;
+
+    final currentEndpoint = Store.tryGet(StoreKey.serverEndpoint);
+    debugPrint('currentEndpoint: $currentEndpoint');
+    if (currentEndpoint == null || currentEndpoint.isEmpty) {
+      // pizcloud: do not fallback to defaultServer anymore.
+      // try {
+      //   debugPrint('re-validateServerUrl');
+      //   // await photoBaseUrlService.fetchApiUrl(ref);
+      //   await ref.read(authProvider.notifier).validateServerUrl(AppConfig.defaultServer);
+      // } catch (e) {
+      //   debugPrint('Failed to set server endpoint before saveAuthInfo: $e');
+      // }
+      debugPrint('Missing server endpoint before saveAuthInfo');
+      return false;
+    }
     return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
   }
 }

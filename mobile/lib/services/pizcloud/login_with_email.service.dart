@@ -58,7 +58,11 @@ class LoginWithEmailService {
 
     final accountResponse = await _accountApi.verifySSoToken(ssoToken);
 
-    await photoBaseUrlService.fetchApiUrl(ref);
+    // pizcloud: ensure API base URL is resolved and validated before any API calls.
+    final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
+    if (!apiReady) {
+      throw StateError('Failed to resolve photos API base URL');
+    }
 
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
 
@@ -94,17 +98,19 @@ class LoginWithEmailService {
   Future<bool?> _saveAuthInfoIfNeeded(WidgetRef? ref, String accessToken) async {
     if (ref == null) return null;
 
-    // Ensure the Immich API endpoint is configured before saving auth info
     final currentEndpoint = Store.tryGet(StoreKey.serverEndpoint);
     if (currentEndpoint == null || currentEndpoint.isEmpty) {
-      try {
-        await ref.read(authProvider.notifier).validateServerUrl(AppConfig.defaultServer);
-      } catch (e) {
-        debugPrint('Failed to set server endpoint before saveAuthInfo: $e');
-      }
+      // pizcloud: do not fallback to defaultServer anymore.
+      // try {
+      //   await ref.read(authProvider.notifier).validateServerUrl(AppConfig.defaultServer);
+      // } catch (e) {
+      //   debugPrint('Failed to set server endpoint before saveAuthInfo: $e');
+      // }
+      debugPrint('Missing server endpoint before saveAuthInfo');
+      return false;
     }
 
-    // Persist the Immich access token so subsequent OpenAPI calls are authenticated
+    // Persist the access token so subsequent OpenAPI calls are authenticated
     return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
   }
 }

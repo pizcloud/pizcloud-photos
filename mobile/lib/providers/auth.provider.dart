@@ -138,8 +138,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final serverUser = await _userService.refreshMyUser().timeout(_timeoutDuration);
 
-      await PushNotificationService.initAndRegister(baseUrl: pizCloudServerUrl, authToken: accessToken); // pizcloud
-
       if (serverUser == null) {
         _log.severe("Unable to get user information from the server.");
       } else {
@@ -150,6 +148,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await Store.put(StoreKey.deviceIdHash, fastHash(deviceId));
         await Store.put(StoreKey.accessToken, accessToken);
       }
+      await PushNotificationService.initAndRegister(baseUrl: pizCloudServerUrl, authToken: accessToken); // pizcloud
     } on ApiException catch (error, stackTrace) {
       if (error.code == 401) {
         _log.severe("Unauthorized access, token likely expired. Logging out.");
