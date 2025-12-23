@@ -70,7 +70,9 @@ class BillingController extends StateNotifier<BillingState> {
     }
   }
 
-  Future<void> buy(ProductDetails p) => repo.purchase(p);
+  // OLD:
+  // Future<void> buy(ProductDetails p) => repo.purchase(p);
+  Future<void> buy(ProductDetails p, {String? offerToken}) => repo.purchase(p, offerToken: offerToken);
   Future<void> refreshUsage() async {
     final usage = await repo.loadUsage();
     final referral = await repo.loadReferralSummary();

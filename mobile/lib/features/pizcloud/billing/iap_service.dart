@@ -7,7 +7,7 @@ class IapService {
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _sub;
 
-  static const productIds = <String>{
+  static const List<String> productIdOrder = [
     'storage_50gb_monthly',
     'storage_50gb_yearly',
     'storage_100g_monthly',
@@ -18,7 +18,8 @@ class IapService {
     'storage_1tb_yearly',
     'storage_2tb_monthly',
     'storage_2tb_yearly',
-  };
+  ];
+  static final Set<String> productIds = productIdOrder.toSet();
 
   Future<bool> isAvailable() => _iap.isAvailable();
 
@@ -33,13 +34,31 @@ class IapService {
     });
   }
 
-  Future<void> buy(ProductDetails p) async {
+  // OLD:
+  // Future<void> buy(ProductDetails p) async {
+  //   if (Platform.isAndroid && p is GooglePlayProductDetails) {
+  //     final googleProduct = p;
+  //     final String? offerToken = googleProduct.offerToken;
+  //
+  //     if (offerToken != null && offerToken.isNotEmpty) {
+  //       final param = GooglePlayPurchaseParam(productDetails: googleProduct, offerToken: offerToken);
+  //       await _iap.buyNonConsumable(purchaseParam: param);
+  //       return;
+  //     }
+  //   }
+  //
+  //   final param = PurchaseParam(productDetails: p);
+  //   await _iap.buyNonConsumable(purchaseParam: param);
+  // }
+  Future<void> buy(ProductDetails p, {String? offerToken}) async {
     if (Platform.isAndroid && p is GooglePlayProductDetails) {
       final googleProduct = p;
-      final String? offerToken = googleProduct.offerToken;
+      final String? resolvedToken = (offerToken != null && offerToken.isNotEmpty)
+          ? offerToken
+          : googleProduct.offerToken;
 
-      if (offerToken != null && offerToken.isNotEmpty) {
-        final param = GooglePlayPurchaseParam(productDetails: googleProduct, offerToken: offerToken);
+      if (resolvedToken != null && resolvedToken.isNotEmpty) {
+        final param = GooglePlayPurchaseParam(productDetails: googleProduct, offerToken: resolvedToken);
         await _iap.buyNonConsumable(purchaseParam: param);
         return;
       }

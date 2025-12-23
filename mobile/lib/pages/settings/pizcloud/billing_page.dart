@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:immich_mobile/features/pizcloud/billing/android_offer_utils.dart';
 // import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
 import 'package:immich_mobile/providers/pizcloud/billing.provider.dart';
+import 'package:immich_mobile/features/pizcloud/billing/iap_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -113,6 +114,19 @@ bool _isLargePlan(String idOrTitleOrDesc) {
       s.contains('100g');
 }
 
+String _androidOfferDisplayPrice(AndroidOfferInfo info) {
+  final offer = info.offer;
+  if (offer == null || offer.pricingPhases.isEmpty) return info.product.price;
+
+  // Prefer the last non-zero phase to avoid showing a free trial as the price.
+  for (var i = offer.pricingPhases.length - 1; i >= 0; i -= 1) {
+    final phase = offer.pricingPhases[i];
+    if (phase.priceAmountMicros > 0) return phase.formattedPrice;
+  }
+
+  return offer.pricingPhases.last.formattedPrice;
+}
+
 class PlanDisplay {
   final String id;
   final String title; // Basic / Pro / Premium
@@ -123,6 +137,7 @@ class PlanDisplay {
   final ProductDetails? raw; // null if fake
 
   final bool referralDiscountApplied;
+  final String? offerToken;
 
   const PlanDisplay({
     required this.id,
@@ -133,6 +148,7 @@ class PlanDisplay {
     required this.highlighted,
     required this.raw,
     this.referralDiscountApplied = false,
+    this.offerToken,
   });
 }
 
@@ -417,13 +433,14 @@ class BillingPage extends HookConsumerWidget {
             highlighted: _isMostPopular('${p.id} ${p.title}'),
             raw: null,
             referralDiscountApplied: referralStillValid && largePlan,
+            offerToken: null,
           ),
         );
       }
     } else {
       if (Platform.isAndroid) {
         // ANDROID: Use offer token, select the referral-30 offer if it is still valid
-        final androidOffers = extractAndroidOffers(realProducts);
+        final androidOffers = extractAndroidOffers(realProducts, preferReferral: referralStillValid);
 
         final Map<String, AndroidOfferInfo> selectedByKey = {};
 
@@ -465,12 +482,17 @@ class BillingPage extends HookConsumerWidget {
             PlanDisplay(
               id: p.id,
               title: _planShortTitle(p.title, p.id),
-              price: p.price,
+              // OLD:
+              // price: p.price,
+              price: _androidOfferDisplayPrice(entry.value),
               isMonthly: resolvedMonthly,
               features: _featuresFor('${p.id} ${p.title} ${p.description}'),
               highlighted: _isMostPopular('${p.id} ${p.title}'),
               raw: p,
-              referralDiscountApplied: referralStillValid && largePlan,
+              // OLD:
+              // referralDiscountApplied: referralStillValid && largePlan,
+              referralDiscountApplied: referralStillValid && entry.value.isReferralOffer,
+              offerToken: entry.value.offerToken,
             ),
           );
         }
@@ -492,6 +514,7 @@ class BillingPage extends HookConsumerWidget {
               highlighted: _isMostPopular('${p.id} ${p.title}'),
               raw: p,
               referralDiscountApplied: referralStillValid && largePlan,
+              offerToken: null,
             ),
           );
         }
@@ -517,15 +540,23 @@ class BillingPage extends HookConsumerWidget {
     // Filter by current period
     final filtered = items.where((e) => period.value == BillingPeriod.monthly ? e.isMonthly : !e.isMonthly).toList();
 
-    // Sort Basic → Pro → Premium
-    int rank(String t) {
-      final s = t.toLowerCase();
-      if (s.contains('premium') || s.contains('2tb')) return 3;
-      if (s.contains('pro') || s.contains('500')) return 2;
-      return 1;
+    // OLD: Sort Basic → Pro → Premium
+    // int rank(String t) {
+    //   final s = t.toLowerCase();
+    //   if (s.contains('premium') || s.contains('2tb')) return 3;
+    //   if (s.contains('pro') || s.contains('500')) return 2;
+    //   return 1;
+    // }
+    //
+    // filtered.sort((a, b) => rank(a.title).compareTo(rank(b.title)));
+    final orderIndex = <String, int>{};
+    for (var i = 0; i < IapService.productIdOrder.length; i += 1) {
+      orderIndex[IapService.productIdOrder[i]] = i;
     }
 
-    filtered.sort((a, b) => rank(a.title).compareTo(rank(b.title)));
+    filtered.sort(
+      (a, b) => (orderIndex[a.id] ?? 1 << 30).compareTo(orderIndex[b.id] ?? 1 << 30),
+    );
 
     useEffect(() {
       selectedPlan.value = null;
@@ -578,7 +609,7 @@ class BillingPage extends HookConsumerWidget {
                           final plan = selectedPlan.value!;
                           if (plan.raw != null) {
                             // Real purchase
-                            ref.read(billingControllerProvider.notifier).buy(plan.raw!);
+                            ref.read(billingControllerProvider.notifier).buy(plan.raw!, offerToken: plan.offerToken);
                           } else {
                             try {
                               await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
