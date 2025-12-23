@@ -70,7 +70,7 @@
     class={[
       'grid',
       multiRow && 'grid-cols-[100%] md:grid-cols-[25%_50%_25%]',
-      !multiRow && 'grid-cols-[10%_80%_10%] sm:grid-cols-[25%_50%_25%]',
+      !multiRow && 'grid-cols-[auto_1fr_auto] sm:grid-cols-[25%_50%_25%]',
       'justify-between lg:grid-cols-[25%_50%_25%]',
       appBarBorder,
       'mx-2 my-2 place-items-center rounded-lg p-2 max-md:p-0 transition-all',

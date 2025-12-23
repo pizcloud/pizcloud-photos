@@ -2,6 +2,6 @@
   import PizcloudLogo from '$lib/components/shared-components/pizcloud/pizcloud-logo.svelte';
 </script>
 
-<a data-sveltekit-preload-data="hover" class="ms-4" href="/">
+<a data-sveltekit-preload-data="hover" class="flex items-center justify-center" href="/">
   <PizcloudLogo class="w-40 h-auto" />
 </a>
