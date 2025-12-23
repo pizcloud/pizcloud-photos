@@ -113,7 +113,7 @@
 </script>
 
 <!-- Filter Albums by Sharing Status (All, Owned, Shared) -->
-<div class="hidden xl:block h-10">
+<div class="hidden 2xl:block h-10">
   <GroupTab
     label={$t('show_albums')}
     filters={Object.values(albumFilterNames)}
@@ -123,7 +123,7 @@
 </div>
 
 <!-- Search Albums -->
-<div class="hidden xl:block h-10 xl:w-60 2xl:w-80">
+<div class="hidden 2xl:block h-10 xl:w-60 2xl:w-60">
   <SearchBar placeholder={$t('search_albums')} bind:name={searchQuery} showLoadingSpinner={false} />
 </div>
 

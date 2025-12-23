@@ -31,7 +31,7 @@
       />
       <label
         for="{id}-{index}"
-        class="flex h-full cursor-pointer items-center px-4 text-sm hover:bg-gray-300 group-first-of-type:rounded-s-2xl group-last-of-type:rounded-e-2xl peer-checked:bg-gray-300 dark:hover:bg-gray-800 peer-checked:dark:bg-gray-700"
+        class="flex h-full cursor-pointer items-center px-4 text-sm whitespace-nowrap hover:bg-gray-300 group-first-of-type:rounded-s-2xl group-last-of-type:rounded-e-2xl peer-checked:bg-gray-300 dark:hover:bg-gray-800 peer-checked:dark:bg-gray-700"
       >
         {labels?.[index] ?? filter}
       </label>

@@ -10,6 +10,7 @@
   import { AlbumFilter, albumViewSettings } from '$lib/stores/preferences.store';
   import { createAlbumAndRedirect } from '$lib/utils/album-utils';
   import { t } from 'svelte-i18n';
+  import { findFilterOption } from '../../../lib/utils/album-utils';
   import type { PageData } from './$types';
 
   interface Props {
@@ -20,6 +21,18 @@
 
   let searchQuery = $state('');
   let albumGroups: string[] = $state([]);
+
+  let albumFilterNames: Record<AlbumFilter, string> = $derived({
+    [AlbumFilter.All]: $t('all'),
+    [AlbumFilter.Owned]: $t('owned'),
+    [AlbumFilter.Shared]: $t('shared'),
+  });
+  let selectedFilterOption = $derived(albumFilterNames[findFilterOption($albumViewSettings.filter)]);
+
+  const handleChangeAlbumFilter = (filter: string, defaultFilter: AlbumFilter) => {
+    $albumViewSettings.filter =
+      Object.keys(albumFilterNames).find((key) => albumFilterNames[key as AlbumFilter] === filter) ?? defaultFilter;
+  };
 </script>
 
 <UserPageLayout title={data.meta.title} use={[[scrollMemory, { routeStartsWith: AppRoute.ALBUMS }]]}>
@@ -29,13 +42,13 @@
     </div>
   {/snippet}
 
-  <div class="xl:hidden">
+  <div class="2xl:hidden">
     <div class="w-fit h-14 dark:text-immich-dark-fg py-2">
       <GroupTab
         label={$t('show_albums')}
-        filters={Object.keys(AlbumFilter)}
-        selected={$albumViewSettings.filter}
-        onSelect={(selected) => ($albumViewSettings.filter = selected)}
+        filters={Object.values(albumFilterNames)}
+        selected={selectedFilterOption}
+        onSelect={(selected) => handleChangeAlbumFilter(selected, AlbumFilter.All)}
       />
     </div>
     <div class="w-60">

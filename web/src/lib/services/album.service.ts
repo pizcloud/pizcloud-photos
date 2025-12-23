@@ -15,7 +15,7 @@ export const handleDeleteAlbum = async (album: AlbumResponseDto, options?: { pro
         ? $t('album_delete_confirmation', { values: { album: album.albumName } })
         : $t('unnamed_album_delete_confirmation');
     const description = $t('album_delete_confirmation_description');
-    const success = await modalManager.showDialog({ prompt: `${confirmation} ${description}` });
+    const success = await modalManager.showDialog({ prompt: `${confirmation} ${description}`, icon: false });
     if (!success) {
       return false;
     }
