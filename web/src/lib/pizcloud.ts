@@ -1,7 +1,8 @@
 import { PUBLIC_MAIN_DOMAIN } from '$env/static/public';
+import { getBaseUrl as getSdkBaseUrl } from '@immich/sdk';
 
 export const getBaseUrl = () => {
-  return '/api';
+  return getSdkBaseUrl();
 };
 
 export function getAccountUrl() {

@@ -10,7 +10,8 @@ export const csr = true;
 export const load = (async ({ fetch, url }) => {
   let error;
   try {
-    await init(fetch);
+    // await init(fetch);
+    await init(fetch, url);
 
     if (maintenanceShouldRedirect(serverConfigManager.value.maintenanceMode, url)) {
       await goto(
