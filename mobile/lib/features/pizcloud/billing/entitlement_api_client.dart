@@ -52,24 +52,29 @@ class EntitlementApiClient {
 
   Future<Map<String, dynamic>?> getReferralSummary() async {
     String path = 'papi/referral/summary';
-    // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.get<dynamic>('/$path');
 
     final status = res.statusCode ?? 0;
-    if (status == 200) {
+    if (status >= 200 && status < 300) {
       final data = res.data;
       if (data is Map<String, dynamic>) {
+        final wrapped = data['data'];
+        if (wrapped is Map<String, dynamic>) return wrapped;
         return data;
       }
       try {
         if (data is String) {
-          return jsonDecode(data) as Map<String, dynamic>;
+          final decoded = jsonDecode(data);
+          if (decoded is Map<String, dynamic>) {
+            final wrapped = decoded['data'];
+            if (wrapped is Map<String, dynamic>) return wrapped;
+            return decoded;
+          }
         }
       } catch (_) {}
     }
 
-    debugPrint('getReferralSummary failed: ${res.statusCode} ${res.data}');
     return null;
   }
 

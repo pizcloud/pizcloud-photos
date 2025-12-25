@@ -200,44 +200,53 @@ class _PlanCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                        const SizedBox(width: 8),
-                        if (data.highlighted)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'Most Popular',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w700,
+                        Row(
+                          children: [
+                            Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+
+                            const SizedBox(width: 8),
+
+                            if (data.highlighted)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Most Popular',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        if (selected) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'Selected',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w700,
+
+                            if (selected) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Selected',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
+                            ],
+                          ],
+                        ),
+
                         if (data.referralDiscountApplied) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -245,11 +254,12 @@ class _PlanCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.local_offer, size: 14, color: Colors.green[700]),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '-30% referral',
+                                  '-30%',
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: Colors.green[700],
                                     fontWeight: FontWeight.w700,
@@ -260,44 +270,71 @@ class _PlanCard extends StatelessWidget {
                           ),
                         ],
                       ],
-                      // children: [
-                      //   Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                      //   const SizedBox(width: 8),
-                      //   if (data.highlighted)
-                      //     Container(
-                      //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      //       decoration: BoxDecoration(
-                      //         color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                      //         borderRadius: BorderRadius.circular(12),
-                      //       ),
-                      //       child: Text(
-                      //         'Most Popular',
-                      //         style: theme.textTheme.labelSmall?.copyWith(
-                      //           color: theme.colorScheme.primary,
-                      //           fontWeight: FontWeight.w700,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   if (selected) ...[
-                      //     const SizedBox(width: 8),
-                      //     Container(
-                      //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      //       decoration: BoxDecoration(
-                      //         color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                      //         borderRadius: BorderRadius.circular(12),
-                      //       ),
-                      //       child: Text(
-                      //         'Selected',
-                      //         style: theme.textTheme.labelSmall?.copyWith(
-                      //           color: theme.colorScheme.primary,
-                      //           fontWeight: FontWeight.w700,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ],
                     ),
                   ),
+                  // Expanded(
+                  //   child: Row(
+                  //     children: [
+                  //       Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  //       const SizedBox(width: 8),
+                  //       if (data.highlighted)
+                  //         Container(
+                  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  //           decoration: BoxDecoration(
+                  //             color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  //             borderRadius: BorderRadius.circular(12),
+                  //           ),
+                  //           child: Text(
+                  //             'Most Popular',
+                  //             style: theme.textTheme.labelSmall?.copyWith(
+                  //               color: theme.colorScheme.primary,
+                  //               fontWeight: FontWeight.w700,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       if (selected) ...[
+                  //         const SizedBox(width: 8),
+                  //         Container(
+                  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  //           decoration: BoxDecoration(
+                  //             color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  //             borderRadius: BorderRadius.circular(12),
+                  //           ),
+                  //           child: Text(
+                  //             'Selected',
+                  //             style: theme.textTheme.labelSmall?.copyWith(
+                  //               color: theme.colorScheme.primary,
+                  //               fontWeight: FontWeight.w700,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ],
+                  //       if (data.referralDiscountApplied) ...[
+                  //         const SizedBox(width: 8),
+                  //         Container(
+                  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  //           decoration: BoxDecoration(
+                  //             color: Colors.green.withValues(alpha: 0.12),
+                  //             borderRadius: BorderRadius.circular(12),
+                  //           ),
+                  //           child: Row(
+                  //             children: [
+                  //               Icon(Icons.local_offer, size: 14, color: Colors.green[700]),
+                  //               const SizedBox(width: 4),
+                  //               Text(
+                  //                 '-30%',
+                  //                 style: theme.textTheme.labelSmall?.copyWith(
+                  //                   color: Colors.green[700],
+                  //                   fontWeight: FontWeight.w700,
+                  //                 ),
+                  //               ),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ],
+                  //   ),
+                  // ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -489,9 +526,7 @@ class BillingPage extends HookConsumerWidget {
               features: _featuresFor('${p.id} ${p.title} ${p.description}'),
               highlighted: _isMostPopular('${p.id} ${p.title}'),
               raw: p,
-              // OLD:
-              // referralDiscountApplied: referralStillValid && largePlan,
-              referralDiscountApplied: referralStillValid && entry.value.isReferralOffer,
+              referralDiscountApplied: referralStillValid && largePlan,
               offerToken: entry.value.offerToken,
             ),
           );
@@ -554,9 +589,7 @@ class BillingPage extends HookConsumerWidget {
       orderIndex[IapService.productIdOrder[i]] = i;
     }
 
-    filtered.sort(
-      (a, b) => (orderIndex[a.id] ?? 1 << 30).compareTo(orderIndex[b.id] ?? 1 << 30),
-    );
+    filtered.sort((a, b) => (orderIndex[a.id] ?? 1 << 30).compareTo(orderIndex[b.id] ?? 1 << 30));
 
     useEffect(() {
       selectedPlan.value = null;
