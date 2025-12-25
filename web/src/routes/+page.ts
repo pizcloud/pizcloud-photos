@@ -9,9 +9,10 @@ import type { PageLoad } from './$types';
 export const ssr = false;
 export const csr = true;
 
-export const load = (async ({ fetch }) => {
+export const load = (async ({ fetch, url }) => {
   try {
-    await init(fetch);
+    // await init(fetch);
+    await init(fetch, url);
 
     if (serverConfigManager.value.maintenanceMode) {
       redirect(302, AppRoute.MAINTENANCE);

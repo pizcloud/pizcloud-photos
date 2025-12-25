@@ -551,14 +551,14 @@ class LoginForm extends HookConsumerWidget {
                       // ),
                     ],
                   ),
-            if (!isOauthEnable.value && !isPasswordLoginEnable.value) Center(child: const Text('login_disabled').tr()),
-            const SizedBox(height: 12),
-            if (!AppConfig.lockServer)
-              TextButton.icon(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: (isAnyBusy || AppConfig.lockServer) ? null : () => serverEndpoint.value = null,
-                label: const Text('back').tr(),
-              ),
+            // if (!isOauthEnable.value && !isPasswordLoginEnable.value) Center(child: const Text('login_disabled').tr()),
+            // const SizedBox(height: 12),
+            // if (!AppConfig.lockServer)
+            //   TextButton.icon(
+            //     icon: const Icon(Icons.arrow_back),
+            //     onPressed: (isAnyBusy || AppConfig.lockServer) ? null : () => serverEndpoint.value = null,
+            //     label: const Text('back').tr(),
+            //   ),
           ],
         ),
       );

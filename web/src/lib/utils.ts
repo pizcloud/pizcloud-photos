@@ -11,7 +11,7 @@ import {
   getAssetOriginalPath,
   getAssetPlaybackPath,
   getAssetThumbnailPath,
-  // getBaseUrl, // pizcloud
+  getBaseUrl,
   getPeopleThumbnailPath,
   getUserProfileImagePath,
   linkOAuthAccount,
@@ -23,8 +23,7 @@ import {
   type SharedLinkResponseDto,
   type UserResponseDto,
 } from '@immich/sdk';
-
-import { getBaseUrl } from '$lib/pizcloud'; // pizcloud
+// import { getBaseUrl } from '$lib/pizcloud'; // pizcloud
 
 import { toastManager } from '@immich/ui';
 import { mdiCogRefreshOutline, mdiDatabaseRefreshOutline, mdiHeadSyncOutline, mdiImageRefreshOutline } from '@mdi/js';

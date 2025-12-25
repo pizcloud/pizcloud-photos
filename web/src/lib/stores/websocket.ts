@@ -2,6 +2,7 @@ import { page } from '$app/state';
 import { AppRoute } from '$lib/constants';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { notificationManager } from '$lib/stores/notification-manager.svelte';
+import { apiOriginStore, getApiOrigin } from '$lib/utils/api-base';
 import { createEventEmitter } from '$lib/utils/eventemitter';
 import { type AssetResponseDto, type NotificationDto, type ServerVersionResponseDto } from '@immich/sdk';
 import { io, type Socket } from 'socket.io-client';
@@ -39,7 +40,10 @@ export interface Events {
   AppRestartV1: (event: AppRestartEvent) => void;
 }
 
-const websocket: Socket<Events> = io({
+// const websocket: Socket<Events> = io({
+const initialOrigin = getApiOrigin();
+let currentOrigin = initialOrigin;
+const websocket: Socket<Events> = io(initialOrigin || undefined, {
   path: '/api/socket.io',
   transports: ['websocket'],
   reconnection: true,
@@ -65,6 +69,23 @@ websocket
   .on('on_session_delete', () => authManager.logout())
   .on('on_notification', () => notificationManager.refresh())
   .on('connect_error', (e) => console.log('Websocket Connect Error', e));
+
+apiOriginStore.subscribe((nextOrigin) => {
+  if (!nextOrigin || nextOrigin === currentOrigin) {
+    return;
+  }
+
+  currentOrigin = nextOrigin;
+
+  // Update the socket.io manager URI so future connects use the latest API host.
+  const manager = websocket.io as unknown as { uri?: string };
+  manager.uri = nextOrigin;
+
+  if (websocket.connected) {
+    websocket.disconnect();
+    websocket.connect();
+  }
+});
 
 export const openWebsocketConnection = () => {
   try {

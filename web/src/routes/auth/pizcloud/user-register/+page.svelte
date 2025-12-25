@@ -46,6 +46,8 @@
 
   const registerRequest = async (payload: RegisterPayload) => {
     const res = await fetch('/api/auth/register', {
+      // const apiBaseUrl = getBaseUrl().replace(/\/+$/, '');
+      // const res = await fetch(`${apiBaseUrl}/auth/register`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
