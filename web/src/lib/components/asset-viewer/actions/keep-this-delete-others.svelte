@@ -19,6 +19,7 @@
 
   const handleKeepThisDeleteOthers = async () => {
     const isConfirmed = await modalManager.showDialog({
+      icon: false,
       title: $t('keep_this_delete_others'),
       prompt: $t('confirm_keep_this_delete_others'),
       confirmText: $t('delete_others'),

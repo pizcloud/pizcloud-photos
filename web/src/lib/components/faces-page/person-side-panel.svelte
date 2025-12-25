@@ -167,6 +167,7 @@
       }
 
       const isConfirmed = await modalManager.showDialog({
+        icon: false,
         prompt: $t('confirm_delete_face', { values: { name: face.person.name } }),
       });
       if (!isConfirmed) {

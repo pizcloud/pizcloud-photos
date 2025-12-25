@@ -54,12 +54,14 @@
     // eslint-disable-next-line unicorn/prefer-ternary
     if (userId === 'me') {
       confirmed = await modalManager.showDialog({
+        icon: false,
         title: $t('album_leave'),
         prompt: $t('album_leave_confirmation', { values: { album: album.albumName } }),
         confirmText: $t('leave'),
       });
     } else {
       confirmed = await modalManager.showDialog({
+        icon: false,
         title: $t('album_remove_user'),
         prompt: $t('album_remove_user_confirmation', { values: { user: user.name } }),
         confirmText: $t('remove_user'),

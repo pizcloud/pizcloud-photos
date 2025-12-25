@@ -63,6 +63,7 @@
   const removeIndividualProductKey = async () => {
     try {
       const isConfirmed = await modalManager.showDialog({
+        icon: false,
         title: $t('purchase_remove_product_key'),
         prompt: $t('purchase_remove_product_key_prompt'),
         confirmText: $t('remove'),
@@ -82,6 +83,7 @@
   const removeServerProductKey = async () => {
     try {
       const isConfirmed = await modalManager.showDialog({
+        icon: false,
         title: $t('purchase_remove_server_product_key'),
         prompt: $t('purchase_remove_server_product_key_prompt'),
         confirmText: $t('remove'),

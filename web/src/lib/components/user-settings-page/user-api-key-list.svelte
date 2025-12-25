@@ -43,7 +43,7 @@
   };
 
   const handleDelete = async (key: ApiKeyResponseDto) => {
-    const isConfirmed = await modalManager.showDialog({ prompt: $t('delete_api_key_prompt') });
+    const isConfirmed = await modalManager.showDialog({ icon: false, prompt: $t('delete_api_key_prompt') });
     if (!isConfirmed) {
       return;
     }

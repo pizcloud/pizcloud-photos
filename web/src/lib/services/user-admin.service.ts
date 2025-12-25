@@ -192,7 +192,7 @@ const generatePassword = (length: number = 16) => {
 export const handleResetPasswordUserAdmin = async (user: UserAdminResponseDto) => {
   const $t = await getFormatter();
   const prompt = $t('admin.confirm_user_password_reset', { values: { user: user.name } });
-  const success = await modalManager.showDialog({ prompt });
+  const success = await modalManager.showDialog({ icon: false, prompt });
   if (!success) {
     return false;
   }
@@ -213,7 +213,7 @@ export const handleResetPasswordUserAdmin = async (user: UserAdminResponseDto) =
 export const handleResetPinCodeUserAdmin = async (user: UserAdminResponseDto) => {
   const $t = await getFormatter();
   const prompt = $t('admin.confirm_user_pin_code_reset', { values: { user: user.name } });
-  const success = await modalManager.showDialog({ prompt });
+  const success = await modalManager.showDialog({ icon: false, prompt });
   if (!success) {
     return false;
   }

@@ -74,7 +74,7 @@
   let hasDuplicates = $derived(duplicates.length > 0);
   const withConfirmation = async (callback: () => Promise<void>, prompt?: string, confirmText?: string) => {
     if (prompt && confirmText) {
-      const isConfirmed = await modalManager.showDialog({ prompt, confirmText });
+      const isConfirmed = await modalManager.showDialog({ icon: false, prompt, confirmText });
       if (!isConfirmed) {
         return;
       }

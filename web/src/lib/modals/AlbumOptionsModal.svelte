@@ -75,6 +75,7 @@
 
   const handleRemoveUser = async (user: UserResponseDto): Promise<void> => {
     const confirmed = await modalManager.showDialog({
+      icon: false,
       title: $t('album_remove_user'),
       prompt: $t('album_remove_user_confirmation', { values: { user: user.name } }),
       confirmText: $t('remove_user'),

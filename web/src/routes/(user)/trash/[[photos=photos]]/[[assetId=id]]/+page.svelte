@@ -37,7 +37,7 @@
   }
 
   const handleEmptyTrash = async () => {
-    const isConfirmed = await modalManager.showDialog({ prompt: $t('empty_trash_confirmation') });
+    const isConfirmed = await modalManager.showDialog({ icon: false, prompt: $t('empty_trash_confirmation') });
     if (!isConfirmed) {
       return;
     }
@@ -51,7 +51,7 @@
   };
 
   const handleRestoreTrash = async () => {
-    const isConfirmed = await modalManager.showDialog({ prompt: $t('assets_restore_confirmation') });
+    const isConfirmed = await modalManager.showDialog({ icon: false, prompt: $t('assets_restore_confirmation') });
     if (!isConfirmed) {
       return;
     }

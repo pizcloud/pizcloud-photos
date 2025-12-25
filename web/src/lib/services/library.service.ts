@@ -179,6 +179,7 @@ const handleDeleteLibrary = async (library: LibraryResponseDto) => {
   const $t = await getFormatter();
 
   const confirmed = await modalManager.showDialog({
+    icon: false,
     prompt: $t('admin.confirm_delete_library', { values: { library: library.name } }),
   });
 
@@ -188,6 +189,7 @@ const handleDeleteLibrary = async (library: LibraryResponseDto) => {
 
   if (library.assetCount > 0) {
     const isConfirmed = await modalManager.showDialog({
+      icon: false,
       prompt: $t('admin.confirm_delete_library_assets', { values: { count: library.assetCount } }),
     });
     if (!isConfirmed) {
@@ -252,6 +254,7 @@ const handleDeleteLibraryFolder = async (library: LibraryResponseDto, folder: st
   const $t = await getFormatter();
 
   const confirmed = await modalManager.showDialog({
+    icon: false,
     prompt: $t('admin.library_remove_folder_prompt'),
     confirmText: $t('remove'),
   });
@@ -328,7 +331,7 @@ export const handleEditExclusionPattern = async (
 const handleDeleteExclusionPattern = async (library: LibraryResponseDto, exclusionPattern: string) => {
   const $t = await getFormatter();
 
-  const confirmed = await modalManager.showDialog({ prompt: $t('admin.library_remove_exclusion_pattern_prompt') });
+  const confirmed = await modalManager.showDialog({ icon: false, prompt: $t('admin.library_remove_exclusion_pattern_prompt') });
 
   if (!confirmed) {
     return false;

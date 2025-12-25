@@ -102,6 +102,7 @@ export const handleUpdateSharedLink = async (sharedLink: SharedLinkResponseDto, 
 export const handleDeleteSharedLink = async (sharedLink: SharedLinkResponseDto): Promise<boolean> => {
   const $t = await getFormatter();
   const success = await modalManager.showDialog({
+    icon: false,
     title: $t('delete_shared_link'),
     prompt: $t('confirm_delete_shared_link'),
     confirmText: $t('delete'),
@@ -124,6 +125,7 @@ export const handleDeleteSharedLink = async (sharedLink: SharedLinkResponseDto):
 export const handleRemoveSharedLinkAssets = async (sharedLink: SharedLinkResponseDto, assetIds: string[]) => {
   const $t = await getFormatter();
   const success = await modalManager.showDialog({
+    icon: false,
     title: $t('remove_assets_title'),
     prompt: $t('remove_assets_shared_link_confirmation', { values: { count: assetIds.length } }),
     confirmText: $t('remove'),

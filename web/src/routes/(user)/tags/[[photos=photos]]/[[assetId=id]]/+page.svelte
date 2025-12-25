@@ -64,6 +64,7 @@
     }
 
     const isConfirm = await modalManager.showDialog({
+      icon: false,
       title: $t('delete_tag'),
       prompt: $t('delete_tag_confirmation_prompt', { values: { tagName: tag.value } }),
       confirmText: $t('delete'),

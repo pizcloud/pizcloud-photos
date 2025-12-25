@@ -19,6 +19,7 @@
 
   const removeFromAlbum = async () => {
     const isConfirmed = await modalManager.showDialog({
+      icon: false,
       prompt: $t('remove_assets_album_confirmation', { values: { count: getAssets().length } }),
     });
 

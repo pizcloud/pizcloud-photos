@@ -62,7 +62,7 @@
   };
 
   const handleMerge = async () => {
-    const isConfirm = await modalManager.showDialog({ prompt: $t('merge_people_prompt') });
+    const isConfirm = await modalManager.showDialog({ icon: false, prompt: $t('merge_people_prompt') });
     if (!isConfirm) {
       return;
     }

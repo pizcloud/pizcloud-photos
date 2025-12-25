@@ -50,6 +50,7 @@
   const handleConfirmCommand = async (jobId: QueueName, dto: QueueCommandDto) => {
     if (dto.force) {
       const isConfirmed = await modalManager.showDialog({
+        icon: false,
         prompt: $t('admin.confirm_reprocess_all_faces'),
       });
 

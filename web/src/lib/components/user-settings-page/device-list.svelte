@@ -17,7 +17,7 @@
   let otherSessions = $derived(devices.filter((device) => !device.current));
 
   const handleDelete = async (device: SessionResponseDto) => {
-    const isConfirmed = await modalManager.showDialog({ prompt: $t('logout_this_device_confirmation') });
+    const isConfirmed = await modalManager.showDialog({ icon: false, prompt: $t('logout_this_device_confirmation') });
     if (!isConfirmed) {
       return;
     }
@@ -33,7 +33,7 @@
   };
 
   const handleDeleteAll = async () => {
-    const isConfirmed = await modalManager.showDialog({ prompt: $t('logout_all_device_confirmation') });
+    const isConfirmed = await modalManager.showDialog({ icon: false, prompt: $t('logout_all_device_confirmation') });
     if (!isConfirmed) {
       return;
     }
