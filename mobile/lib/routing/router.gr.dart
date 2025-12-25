@@ -1560,6 +1560,44 @@ class DriftUploadDetailRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [DriftUserEmailSelectionPage]
+class DriftUserEmailSelectionRoute
+    extends PageRouteInfo<DriftUserEmailSelectionRouteArgs> {
+  DriftUserEmailSelectionRoute({
+    Key? key,
+    required RemoteAlbum album,
+    List<PageRouteInfo>? children,
+  }) : super(
+         DriftUserEmailSelectionRoute.name,
+         args: DriftUserEmailSelectionRouteArgs(key: key, album: album),
+         initialChildren: children,
+       );
+
+  static const String name = 'DriftUserEmailSelectionRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<DriftUserEmailSelectionRouteArgs>();
+      return DriftUserEmailSelectionPage(key: args.key, album: args.album);
+    },
+  );
+}
+
+class DriftUserEmailSelectionRouteArgs {
+  const DriftUserEmailSelectionRouteArgs({this.key, required this.album});
+
+  final Key? key;
+
+  final RemoteAlbum album;
+
+  @override
+  String toString() {
+    return 'DriftUserEmailSelectionRouteArgs{key: $key, album: $album}';
+  }
+}
+
+/// generated route for
 /// [DriftUserSelectionPage]
 class DriftUserSelectionRoute
     extends PageRouteInfo<DriftUserSelectionRouteArgs> {
@@ -2558,6 +2596,44 @@ class ReferralPayoutMethodRouteArgs {
   @override
   String toString() {
     return 'ReferralPayoutMethodRouteArgs{key: $key, userEmail: $userEmail, onSaved: $onSaved}';
+  }
+}
+
+/// generated route for
+/// [ReferralWithdrawalsPage]
+class ReferralWithdrawalsRoute
+    extends PageRouteInfo<ReferralWithdrawalsRouteArgs> {
+  ReferralWithdrawalsRoute({
+    Key? key,
+    required String userEmail,
+    List<PageRouteInfo>? children,
+  }) : super(
+         ReferralWithdrawalsRoute.name,
+         args: ReferralWithdrawalsRouteArgs(key: key, userEmail: userEmail),
+         initialChildren: children,
+       );
+
+  static const String name = 'ReferralWithdrawalsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ReferralWithdrawalsRouteArgs>();
+      return ReferralWithdrawalsPage(key: args.key, userEmail: args.userEmail);
+    },
+  );
+}
+
+class ReferralWithdrawalsRouteArgs {
+  const ReferralWithdrawalsRouteArgs({this.key, required this.userEmail});
+
+  final Key? key;
+
+  final String userEmail;
+
+  @override
+  String toString() {
+    return 'ReferralWithdrawalsRouteArgs{key: $key, userEmail: $userEmail}';
   }
 }
 

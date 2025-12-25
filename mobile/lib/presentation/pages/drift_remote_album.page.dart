@@ -69,7 +69,8 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
   }
 
   Future<void> addUsers(BuildContext context) async {
-    final newUsers = await context.pushRoute<List<String>>(DriftUserSelectionRoute(album: _album));
+    final newUsers = await context.pushRoute<List<String>>(DriftUserEmailSelectionRoute(album: _album)); // pizcloud
+    // final newUsers = await context.pushRoute<List<String>>(DriftUserSelectionRoute(album: _album));
 
     if (newUsers == null || newUsers.isEmpty) {
       return;
