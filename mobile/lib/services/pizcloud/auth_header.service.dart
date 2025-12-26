@@ -15,7 +15,7 @@ class AuthHeaderService {
     final token = Store.tryGet(StoreKey.accessToken);
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
-      headers['x-att-user-token'] = headers['x-att-user-token'] ?? token;
+      headers['x-immich-user-token'] = headers['x-immich-user-token'] ?? token;
     }
 
     if (json) {

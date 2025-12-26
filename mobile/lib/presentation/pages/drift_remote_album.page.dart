@@ -8,11 +8,13 @@ import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
+import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart'; // pizcloud
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/remote_album_bottom_sheet.widget.dart';
 import 'package:immich_mobile/presentation/widgets/remote_album/drift_album_option.widget.dart';
 import 'package:immich_mobile/presentation/widgets/timeline/timeline.widget.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/current_album.provider.dart';
+import 'package:immich_mobile/providers/infrastructure/db.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
@@ -69,20 +71,44 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
   }
 
   Future<void> addUsers(BuildContext context) async {
-    final newUsers = await context.pushRoute<List<String>>(DriftUserEmailSelectionRoute(album: _album)); // pizcloud
+    // pizcloud
+    // Old flow: pick users from Drift and add directly by userId.
     // final newUsers = await context.pushRoute<List<String>>(DriftUserSelectionRoute(album: _album));
+    // if (newUsers == null || newUsers.isEmpty) {
+    //   return;
+    // }
+    // await ref.read(remoteAlbumProvider.notifier).addUsers(_album.id, newUsers);
 
-    if (newUsers == null || newUsers.isEmpty) {
+    final selectedEmails = await context.pushRoute<List<String>>(DriftUserEmailSelectionRoute(album: _album));
+
+    if (selectedEmails == null || selectedEmails.isEmpty) {
       return;
     }
 
     try {
-      await ref.read(remoteAlbumProvider.notifier).addUsers(_album.id, newUsers);
+      final drift = ref.read(driftProvider);
+      final resolution = await resolveShareUserIdsByEmail(drift: drift, emails: selectedEmails);
+      final sharedUsers = await ref.read(remoteAlbumSharedUsersProvider(_album.id).future);
+      final existingIds = {...sharedUsers.map((user) => user.id), _album.ownerId};
+      final userIdsToAdd = resolution.userIds.where((id) => !existingIds.contains(id)).toList();
 
-      if (newUsers.isNotEmpty) {
+      if (resolution.missingEmails.isNotEmpty) {
+        final preview = resolution.missingEmails.take(3).join(', ');
+        final suffix = resolution.missingEmails.length > 3 ? '...' : '';
+        ImmichToast.show(context: context, msg: 'Not found in Pizcloud: $preview$suffix', toastType: ToastType.info);
+      }
+
+      if (userIdsToAdd.isEmpty) {
+        ImmichToast.show(context: context, msg: 'No new users to add from selected emails.', toastType: ToastType.info);
+        return;
+      }
+
+      await ref.read(remoteAlbumProvider.notifier).addUsers(_album.id, userIdsToAdd);
+
+      if (userIdsToAdd.isNotEmpty) {
         ImmichToast.show(
           context: context,
-          msg: "users_added_to_album_count".t(context: context, args: {'count': newUsers.length}),
+          msg: "users_added_to_album_count".t(context: context, args: {'count': userIdsToAdd.length}),
           toastType: ToastType.success,
         );
       }
@@ -95,6 +121,7 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
         toastType: ToastType.error,
       );
     }
+    // #pizcloud
   }
 
   Future<void> toggleAlbumOrder() async {

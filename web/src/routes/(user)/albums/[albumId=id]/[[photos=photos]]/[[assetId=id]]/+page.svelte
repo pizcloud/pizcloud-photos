@@ -34,7 +34,8 @@
   import { TimelineManager } from '$lib/managers/timeline-manager/timeline-manager.svelte';
   import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
   import AlbumOptionsModal from '$lib/modals/AlbumOptionsModal.svelte';
-  import AlbumShareModal from '$lib/modals/AlbumShareModal.svelte';
+  // import AlbumShareModal from '$lib/modals/AlbumShareModal.svelte'; // pizcloud
+  import AlbumShareUserEmailModal from '$lib/modals/pizcloud/AlbumShareUserEmailModal.svelte'; // pizcloud
   import AlbumUsersModal from '$lib/modals/AlbumUsersModal.svelte';
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
   import { handleDeleteAlbum, handleDownloadAlbum } from '$lib/services/album.service';
@@ -348,8 +349,11 @@
   );
 
   const handleShare = async () => {
-    const result = await modalManager.show(AlbumShareModal, { album });
-
+    // pizcloud
+    // Old modal: uses full user list from Immich.
+    // const result = await modalManager.show(AlbumShareModal, { album });
+    const result = await modalManager.show(AlbumShareUserEmailModal, { album });
+    // #pizcloud
     switch (result?.action) {
       case 'sharedLink': {
         await handleShareLink();
@@ -360,6 +364,12 @@
         await handleAddUsers(result.data);
         return;
       }
+      // pizcloud
+      case 'refreshAlbum': {
+        await refreshAlbum();
+        return;
+      }
+      // #pizcloud
     }
   };
 

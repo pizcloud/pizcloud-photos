@@ -9,7 +9,8 @@
   import ToastAction from '$lib/components/ToastAction.svelte';
   import { AppRoute } from '$lib/constants';
   import AlbumEditModal from '$lib/modals/AlbumEditModal.svelte';
-  import AlbumShareModal from '$lib/modals/AlbumShareModal.svelte';
+  // import AlbumShareModal from '$lib/modals/AlbumShareModal.svelte'; // pizcloud
+  import AlbumShareUserEmailModal from '$lib/modals/pizcloud/AlbumShareUserEmailModal.svelte'; // pizcloud
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
   import { handleDeleteAlbum, handleDownloadAlbum } from '$lib/services/album.service';
   import {
@@ -27,7 +28,7 @@
   import type { ContextMenuPosition } from '$lib/utils/context-menu';
   import { handleError } from '$lib/utils/handle-error';
   import { normalizeSearchString } from '$lib/utils/string-utils';
-  import { addUsersToAlbum, type AlbumResponseDto, type AlbumUserAddDto } from '@immich/sdk';
+  import { addUsersToAlbum, getAlbumInfo, type AlbumResponseDto, type AlbumUserAddDto } from '@immich/sdk';
   import { modalManager, toastManager } from '@immich/ui';
   import { mdiDeleteOutline, mdiDownload, mdiRenameOutline, mdiShareVariantOutline } from '@mdi/js';
   import { groupBy } from 'lodash-es';
@@ -228,7 +229,11 @@
       }
 
       case 'share': {
-        const result = await modalManager.show(AlbumShareModal, { album: selectedAlbum });
+        // pizcloud
+        // Old modal: uses full user list from Immich.
+        // const result = await modalManager.show(AlbumShareModal, { album: selectedAlbum });
+        const result = await modalManager.show(AlbumShareUserEmailModal, { album: selectedAlbum });
+        // #pizcloud
         switch (result?.action) {
           case 'sharedUsers': {
             await handleAddUsers(result.data);
@@ -244,6 +249,13 @@
             }
             break;
           }
+          // pizcloud
+          case 'refreshAlbum': {
+            const refreshed = await getAlbumInfo({ id: selectedAlbum.id, withoutAssets: true });
+            updateAlbumInfo(refreshed);
+            break;
+          }
+          // #pizcloud
         }
         break;
       }
