@@ -14,7 +14,8 @@ import 'package:immich_mobile/presentation/widgets/remote_album/drift_album_opti
 import 'package:immich_mobile/presentation/widgets/timeline/timeline.widget.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/current_album.provider.dart';
-import 'package:immich_mobile/providers/infrastructure/db.provider.dart'; // pizcloud
+// import 'package:immich_mobile/providers/infrastructure/db.provider.dart'; // pizcloud
+import 'package:immich_mobile/providers/api.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
@@ -86,8 +87,14 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
     }
 
     try {
-      final drift = ref.read(driftProvider);
-      final resolution = await resolveShareUserIdsByEmail(drift: drift, emails: selectedEmails);
+      // final drift = ref.read(driftProvider);
+      // final resolution = await resolveShareUserIdsByEmail(drift: drift, emails: selectedEmails);
+      final apiService = ref.read(apiServiceProvider);
+      final resolution = await resolveShareUserIdsByEmail(
+        apiService: apiService,
+        albumId: _album.id,
+        emails: selectedEmails,
+      );
       final sharedUsers = await ref.read(remoteAlbumSharedUsersProvider(_album.id).future);
       final existingIds = {...sharedUsers.map((user) => user.id), _album.ownerId};
       final userIdsToAdd = resolution.userIds.where((id) => !existingIds.contains(id)).toList();

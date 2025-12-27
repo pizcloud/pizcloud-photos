@@ -16,7 +16,8 @@ import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart'; 
 import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/current_album.provider.dart';
-import 'package:immich_mobile/providers/infrastructure/db.provider.dart'; // pizcloud
+// import 'package:immich_mobile/providers/infrastructure/db.provider.dart'; // pizcloud // UPDATE
+import 'package:immich_mobile/providers/api.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
@@ -81,8 +82,14 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
       }
 
       try {
-        final drift = ref.read(driftProvider);
-        final resolution = await resolveShareUserIdsByEmail(drift: drift, emails: selectedEmails);
+        // final drift = ref.read(driftProvider);
+        // final resolution = await resolveShareUserIdsByEmail(drift: drift, emails: selectedEmails);
+        final apiService = ref.read(apiServiceProvider);
+        final resolution = await resolveShareUserIdsByEmail(
+          apiService: apiService,
+          albumId: album.id,
+          emails: selectedEmails,
+        );
         final sharedUsers = await ref.read(remoteAlbumSharedUsersProvider(album.id).future);
         final existingIds = {...sharedUsers.map((user) => user.id), album.ownerId};
         final userIdsToAdd = resolution.userIds.where((id) => !existingIds.contains(id)).toList();
