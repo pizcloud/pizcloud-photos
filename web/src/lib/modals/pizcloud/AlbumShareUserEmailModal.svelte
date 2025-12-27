@@ -2,12 +2,13 @@
   import AlbumSharedLink from '$lib/components/album-page/album-shared-link.svelte';
   import { AppRoute } from '$lib/constants';
   import { addSharedEmail, getSharedEmails, removeSharedEmail } from '$lib/services/pizcloud/album-share-email.service';
+  import { resolveAlbumShareEmails } from '$lib/services/pizcloud/album-share-resolve.service';
   import { handleError } from '$lib/utils/handle-error';
   import {
     AlbumUserRole,
     getAllSharedLinks,
     removeUserFromAlbum,
-    searchUsers,
+    // searchUsers,
     type AlbumResponseDto,
     type AlbumUserAddDto,
     type SharedLinkResponseDto,
@@ -199,22 +200,28 @@
 
     try {
       isSubmitting = true;
-      const users = await searchUsers();
-      const userByEmail = new Map(users.map((user) => [normalizeEmail(user.email), user]));
+      // const users = await searchUsers();
+      // const userByEmail = new Map(users.map((user) => [normalizeEmail(user.email), user]));
       const existingIds = new Set([album.ownerId, ...album.albumUsers.map((entry) => entry.user.id)]);
-      const albumUsers: AlbumUserAddDto[] = [];
-      const missingEmails: string[] = [];
+      // const albumUsers: AlbumUserAddDto[] = [];
+      // const missingEmails: string[] = [];
+      // for (const email of selected) {
+      //   const user = userByEmail.get(email);
+      //   if (!user) {
+      //     missingEmails.push(email);
+      //     continue;
+      //   }
+      //   if (!existingIds.has(user.id)) {
+      //     albumUsers.push({ userId: user.id, role: AlbumUserRole.Editor });
+      //   }
+      // }
 
-      for (const email of selected) {
-        const user = userByEmail.get(email);
-        if (!user) {
-          missingEmails.push(email);
-          continue;
-        }
-        if (!existingIds.has(user.id)) {
-          albumUsers.push({ userId: user.id, role: AlbumUserRole.Editor });
-        }
-      }
+      const resolution = await resolveAlbumShareEmails(album.id, selected);
+      const uniqueUserIds = [...new Set(resolution.userIds)];
+      const albumUsers: AlbumUserAddDto[] = uniqueUserIds
+        .filter((userId) => !existingIds.has(userId))
+        .map((userId) => ({ userId, role: AlbumUserRole.Editor }));
+      const missingEmails = resolution.missingEmails;
 
       if (missingEmails.length > 0) {
         const preview = missingEmails.slice(0, 3).join(', ');
@@ -243,18 +250,17 @@
   onClose={() => onClose(didChange ? { action: 'refreshAlbum' } : undefined)}
 >
   <ModalBody>
-    <Text size="small" color="muted">Save email to the list, then select and tap Share to invite to the album.</Text>
+    <Text size="small" color="muted">{$t('save_email_then_share_hint')}</Text>
 
-    <div class="mt-4 flex gap-2">
+    <div class="mt-4 flex items-center gap-2">
       <Input
         bind:value={emailInput}
         type="email"
         placeholder={$t('email')}
         onkeydown={(event) => event.key === 'Enter' && onSaveEmail()}
       />
-      <Button size="small" shape="round" disabled={isSubmitting} onclick={onSaveEmail}>
-        <Icon icon={mdiPlus} size="18" />
-        <span class="ml-1">{$t('save')}</span>
+      <Button leadingIcon={mdiPlus} size="small" shape="round" disabled={isSubmitting} onclick={onSaveEmail}>
+        {$t('save')}
       </Button>
     </div>
 
@@ -309,7 +315,7 @@
                 icon={mdiDeleteOutline}
                 size="small"
                 color="secondary"
-                aria-label={$t('remove')}
+                aria-label={$t('remove_from_list')}
                 onclick={() => onRemoveEmail(item.email)}
               />
             </div>

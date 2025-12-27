@@ -4,6 +4,8 @@ import { Endpoint, HistoryBuilder } from 'src/decorators';
 import {
   AddUsersDto,
   AlbumInfoDto,
+  AlbumResolveEmailsDto, // pizcloud
+  AlbumResolveEmailsResponseDto, // pizcloud
   AlbumResponseDto,
   AlbumsAddAssetsDto,
   AlbumsAddAssetsResponseDto,
@@ -23,7 +25,7 @@ import { ParseMeUUIDPipe, UUIDParamDto } from 'src/validation';
 @ApiTags(ApiTag.Albums)
 @Controller('albums')
 export class AlbumController {
-  constructor(private service: AlbumService) {}
+  constructor(private service: AlbumService) { }
 
   @Get()
   @Authenticated({ permission: Permission.AlbumRead })
@@ -157,6 +159,23 @@ export class AlbumController {
   ): Promise<AlbumResponseDto> {
     return this.service.addUsers(auth, id, dto);
   }
+
+  // pizcloud
+  @Post(':id/resolve-emails')
+  @Authenticated({ permission: Permission.AlbumUserCreate })
+  @Endpoint({
+    summary: 'Resolve album share emails',
+    description: 'Resolve a list of emails to user IDs for album sharing.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  resolveShareEmails(
+    @Auth() auth: AuthDto,
+    @Param() { id }: UUIDParamDto,
+    @Body() dto: AlbumResolveEmailsDto,
+  ): Promise<AlbumResolveEmailsResponseDto> {
+    return this.service.resolveShareEmails(auth, id, dto);
+  }
+  // #pizcloud
 
   @Put(':id/user/:userId')
   @Authenticated({ permission: Permission.AlbumUserUpdate })

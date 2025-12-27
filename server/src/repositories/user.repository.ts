@@ -130,6 +130,19 @@ export class UserRepository {
       .executeTakeFirst();
   }
 
+  // pizcloud
+  @GenerateSql({ params: [[DummyValue.EMAIL]] })
+  getByEmails(emails: string[]) {
+    return this.db
+      .selectFrom('user')
+      .select(columns.userAdmin)
+      .select(withMetadata)
+      .where('email', 'in', emails)
+      .where('user.deletedAt', 'is', null)
+      .execute();
+  }
+  // #pizcloud
+
   @GenerateSql({ params: [DummyValue.STRING] })
   getByStorageLabel(storageLabel: string) {
     return this.db

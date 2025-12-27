@@ -2,6 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   AddUsersDto,
   AlbumInfoDto,
+  AlbumResolveEmailsDto, // pizcloud
+  AlbumResolveEmailsResponseDto, // pizcloud
   AlbumResponseDto,
   AlbumsAddAssetsDto,
   AlbumsAddAssetsResponseDto,
@@ -295,6 +297,42 @@ export class AlbumService extends BaseService {
 
     return this.findOrFail(id, { withAssets: true }).then(mapAlbumWithoutAssets);
   }
+
+  // pizcloud
+  async resolveShareEmails(
+    auth: AuthDto,
+    id: string,
+    dto: AlbumResolveEmailsDto,
+  ): Promise<AlbumResolveEmailsResponseDto> {
+    await this.requireAccess({ auth, permission: Permission.AlbumShare, ids: [id] });
+
+    const normalizedEmails = dto.emails
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => email.length > 0);
+
+    const uniqueEmails = [...new Set(normalizedEmails)];
+    if (uniqueEmails.length === 0) {
+      return { userIds: [], missingEmails: [] };
+    }
+
+    const users = await this.userRepository.getByEmails(uniqueEmails);
+    const idByEmail = new Map(users.map((user) => [user.email.toLowerCase(), user.id]));
+
+    const userIds: string[] = [];
+    const missingEmails: string[] = [];
+
+    for (const email of uniqueEmails) {
+      const userId = idByEmail.get(email);
+      if (userId) {
+        userIds.push(userId);
+      } else {
+        missingEmails.push(email);
+      }
+    }
+
+    return { userIds, missingEmails };
+  }
+  // #pizcloud
 
   async removeUser(auth: AuthDto, id: string, userId: string | 'me'): Promise<void> {
     if (userId === 'me') {

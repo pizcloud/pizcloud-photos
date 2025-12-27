@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayNotEmpty, IsArray, IsString, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayNotEmpty, IsArray, IsEmail, IsString, ValidateNested } from 'class-validator'; // UPDATE
 import _ from 'lodash';
 import { AlbumUser, AuthSharedLink, User } from 'src/database';
 import { BulkIdErrorReason } from 'src/dtos/asset-ids.response.dto';
@@ -27,6 +27,24 @@ export class AddUsersDto {
   @ArrayNotEmpty()
   albumUsers!: AlbumUserAddDto[];
 }
+
+// pizcloud
+// New DTOs for resolving share emails without exposing all users.
+export class AlbumResolveEmailsDto {
+  @ArrayNotEmpty()
+  @ArrayMaxSize(50)
+  @IsEmail({ require_tld: false }, { each: true })
+  emails!: string[];
+}
+
+export class AlbumResolveEmailsResponseDto {
+  @ApiProperty({ type: [String] })
+  userIds!: string[];
+
+  @ApiProperty({ type: [String] })
+  missingEmails!: string[];
+}
+// #pizcloud
 
 export class AlbumUserCreateDto {
   @ValidateUUID()

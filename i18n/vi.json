@@ -1669,6 +1669,7 @@
   "remove_failed": "Xoá thất bại. Vui lòng thử lại.",
   "remove_from_album": "Xóa khỏi album",
   "remove_from_favorites": "Xóa khỏi Mục yêu thích",
+  "remove_from_list": "Xóa khỏi danh sách",
   "remove_from_lock_folder_action_prompt": "{count} đã được xóa khỏi thư mục Khóa",
   "remove_from_locked_folder": "Xóa khỏi thư mục Khóa",
   "remove_from_locked_folder_confirmation": "Bạn có chắc chắn muốn di chuyển ảnh và video này khỏi thư mục Khóa không? Chúng sẽ hiện trong thư viện của bạn.",
