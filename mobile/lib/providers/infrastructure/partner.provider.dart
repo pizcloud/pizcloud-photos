@@ -46,6 +46,23 @@ class PartnerNotifier extends Notifier<List<PartnerUserDto>> {
     ref.invalidate(driftSharedByPartnerProvider);
   }
 
+  // pizcloud: Add partners by userId list (email selection flow).
+  Future<void> addPartnersById(List<String> partnerIds) async {
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null || partnerIds.isEmpty) {
+      return;
+    }
+
+    for (final partnerId in partnerIds) {
+      await _driftPartnerService.addPartner(partnerId, currentUser.id);
+    }
+
+    await _loadPartners();
+    ref.invalidate(driftAvailablePartnerProvider);
+    ref.invalidate(driftSharedByPartnerProvider);
+  }
+  // #pizcloud
+
   Future<void> removePartner(PartnerUserDto partner) async {
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) {
