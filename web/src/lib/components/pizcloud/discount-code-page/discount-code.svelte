@@ -492,14 +492,14 @@
         <div class="referral__referrer-body">
           <div class="referral__referrer-email">
             <span>{$t('referral.referrer_label')}:</span>
-            <span class="referral__referrer-code-value">
+            <span class="referral__referrer-code-value code-bold-value">
               {localReferrer.email}
             </span>
           </div>
           {#if localReferrer.referralCode}
             <div class="referral__referrer-code">
               <span>{$t('referral.referrer_code')}</span>
-              <span class="referral__referrer-code-value">
+              <span class="referral__referrer-code-value code-bold-value">
                 {localReferrer.referralCode}
               </span>
             </div>
@@ -657,7 +657,7 @@
 
   .referral__referrer-email {
     font-size: 0.95rem;
-    /* font-weight: 500; */
+    color: var(--immich-fg-muted, #64748b);
   }
 
   .referral__referrer-code {
@@ -669,8 +669,11 @@
 
   .referral__referrer-code-value {
     font-weight: 500;
+    color: inherit;
+  }
+
+  .code-bold-value {
     color: #000000;
-    /* color: inherit; */
   }
 
   .referral__referrer-discount {
@@ -734,42 +737,42 @@
     }
   }
 
-  /* Dark mode tweaks */
-  /* @media (prefers-color-scheme: dark) {
-    .referral__code-card,
-    .referral__stat-card,
-    .referral__empty,
-    .referral__table-wrapper,
-    .referral__referrer-card {
-      background: var(--immich-bg-elevated, #020617);
-      border-color: var(--immich-border-subtle, #1e293b);
-    }
+  /* dark mode styles */
+  :global(.dark) .referral {
+    color: rgb(var(--immich-dark-fg, 229 231 235));
+  }
 
-    .referral__code-box {
-      background: var(--immich-bg-subtle, #0b1120);
-      border-color: var(--immich-border-subtle, #1f2937);
-    }
+  :global(.dark) .referral__referrer-card {
+    background: rgb(var(--immich-dark-gray, 33 33 33));
+    border-color: rgba(148, 163, 184, 0.2);
+  }
 
-    .referral__subtitle,
-    .referral__stat-label,
-    .referral__empty-text,
-    .referral__table th,
-    .referral__referrer-hint,
-    .referral__referrer-discount,
-    .referral__referrer-code {
-      color: var(--immich-fg-muted, #9ca3af);
-    }
+  :global(.dark) .referral__input {
+    background: rgb(var(--immich-dark-bg, 10 10 10));
+    border-color: rgba(148, 163, 184, 0.25);
+    color: rgb(var(--immich-dark-fg, 229 231 235));
+  }
 
-    .referral__input {
-      background: var(--immich-bg-subtle, #020617);
-      border-color: var(--immich-border-subtle, #1f2937);
-      color: var(--immich-fg, #e5e7eb);
-    }
+  :global(.dark) .referral__referrer-hint,
+  :global(.dark) .referral__referrer-discount,
+  :global(.dark) .referral__referrer-code,
+  :global(.dark) .referral__referrer-email {
+    color: rgba(229, 231, 235, 0.7);
+  }
 
-    .referral__table thead {
-      background: var(--immich-bg-subtle, #020617);
-    }
-  } */
+  :global(.dark) .referral__btn--primary {
+    background: rgb(var(--immich-dark-primary, 172 203 250));
+    color: rgb(var(--immich-dark-bg, 10 10 10));
+    border-color: rgb(var(--immich-dark-primary, 172 203 250));
+  }
+
+  :global(.dark) .referral__btn--primary:hover {
+    background: rgba(172, 203, 250, 0.9);
+  }
+
+  :global(.dark) .code-bold-value {
+    color: rgb(var(--immich-dark-fg, 229 231 235));
+  }
 
   @media (max-width: 640px) {
   }
