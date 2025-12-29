@@ -35,6 +35,32 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
     final userId = ref.watch(authProvider).userId;
     final activityEnabled = useState(album.isActivityEnabled);
     final isOwner = album.ownerId == userId;
+    // pizcloud: For shared viewers, mask names/emails in Options.
+    final maskForSharedViewer = !isOwner;
+
+    String maskEmail(String email) {
+      final normalized = email.trim().toLowerCase();
+      final atIndex = normalized.indexOf('@');
+      if (atIndex <= 0) {
+        return '****@';
+      }
+      return '****@${normalized.substring(atIndex + 1)}';
+    }
+
+    String displayName(UserDto user) {
+      if (!maskForSharedViewer || user.id == userId) {
+        return user.name;
+      }
+      return '****';
+    }
+
+    String displayEmail(UserDto user) {
+      if (!maskForSharedViewer || user.id == userId) {
+        return user.email;
+      }
+      return maskEmail(user.email);
+    }
+    // #pizcloud
 
     void showErrorMessage() {
       context.pop();
@@ -172,9 +198,14 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
       if (isOwner) {
         final owner = ref.watch(currentUserProvider);
         return ListTile(
+          // pizcloud
           leading: owner != null ? UserCircleAvatar(user: owner) : const SizedBox(),
           title: Text(album.ownerName, style: const TextStyle(fontWeight: FontWeight.w500)),
           subtitle: Text(owner?.email ?? "", style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+          // Old behavior: always show full owner name/email.
+          // title: Text(album.ownerName, style: const TextStyle(fontWeight: FontWeight.w500)),
+          // subtitle: Text(owner?.email ?? "", style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+          // #pizcloud
           trailing: Text("owner", style: context.textTheme.labelLarge).t(context: context),
         );
       } else {
@@ -188,9 +219,14 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
             }
 
             return ListTile(
+              // pizcloud
               leading: UserCircleAvatar(user: user, radius: 22),
-              title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.w500)),
-              subtitle: Text(user.email, style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+              title: Text(displayName(user), style: const TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text(displayEmail(user), style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+              // Old behavior: always show full owner name/email.
+              // title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+              // subtitle: Text(user.email, style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+              // #pizcloud
               trailing: Text("owner", style: context.textTheme.labelLarge).t(context: context),
             );
           },
@@ -209,8 +245,13 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
             final user = sharedUsers[index];
             return ListTile(
               leading: UserCircleAvatar(user: user, radius: 22),
-              title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.w500)),
-              subtitle: Text(user.email, style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+              // pizcloud
+              title: Text(displayName(user), style: const TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text(displayEmail(user), style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+              // Old behavior: always show full name/email.
+              // title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+              // subtitle: Text(user.email, style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
+              // #pizcloud
               trailing: userId == user.id || isOwner ? const Icon(Icons.more_horiz_rounded) : const SizedBox(),
               onTap: userId == user.id || isOwner ? () => handleUserClick(user) : null,
             );
