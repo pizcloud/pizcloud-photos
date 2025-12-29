@@ -30,10 +30,16 @@ class EntitlementApiClient {
     final url = _join(immichBaseUrl, 'billing/entitlements');
     final oHeaders = authHeaders.authOnly();
     final res = await http.get(Uri.parse(url), headers: oHeaders);
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      return null;
     }
-    return null;
+
+    if (res.statusCode == 204 || res.body.isEmpty || res.body == 'null') {
+      return null;
+    }
+
+    final json = jsonDecode(res.body);
+    return json is Map<String, dynamic> ? json : null;
   }
 
   Future<Map<String, dynamic>> getUsage() async {

@@ -112,14 +112,11 @@
       return '0';
     }
 
-    try {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency,
-      }).format(amount);
-    } catch {
-      return `${amount.toLocaleString('vi-VN')} ${currency}`;
-    }
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'USD',
+      currencyDisplay: 'code',
+    }).format(amount);
   }
 
   function formatDate(dateStr: string | null | undefined): string {

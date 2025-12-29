@@ -1,5 +1,5 @@
 // server/src/controllers/pizcloud/billing.controller.ts
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, UnauthorizedException } from '@nestjs/common';
 import { AuthDto } from 'src/dtos/auth.dto';
 import { Auth, Authenticated } from 'src/middleware/auth.guard';
 import { BillingService } from 'src/services/pizcloud/billing.service';
@@ -18,8 +18,9 @@ export class BillingController {
 
   // GET /api/billing/entitlements
   @Get('entitlements')
-  async getEntitlement(@Req() req: Request) {
-    const userId = (req as any)?.user?.id as string | undefined;
+  @Authenticated()
+  async getEntitlement(@Auth() auth: AuthDto) {
+    const userId = auth.user.id;
     if (!userId) {
       throw new UnauthorizedException('No authenticated user');
     }
