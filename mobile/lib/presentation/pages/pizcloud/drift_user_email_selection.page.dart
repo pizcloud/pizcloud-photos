@@ -164,8 +164,8 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
                 onPressed: isSubmitting.value ? null : onApply,
                 icon: isSubmitting.value
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.save_outlined),
-                label: Text('save'.tr()),
+                    : const Icon(Icons.add_rounded),
+                label: Text('add'.tr()),
               ),
             ),
           ],
@@ -303,7 +303,7 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Text(
                   'save_email_then_share_hint'.tr(),
-                  style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 61, 60, 60)),
+                  style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 112, 111, 111)),
                 ),
               ),
               buildInput(),

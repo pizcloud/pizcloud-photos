@@ -78,7 +78,6 @@ const applyApiBaseUrl = (baseUrl: string, serviceName?: string) => {
 };
 
 const resolveServiceName = (url: URL) => {
-  console.log('PUBLIC_DEFAULT_SERVICE_NAME', PUBLIC_DEFAULT_SERVICE_NAME)
   const paramServiceName = url.searchParams.get('service') || '';
   return paramServiceName || readCachedServiceName() || PUBLIC_DEFAULT_SERVICE_NAME;
 };

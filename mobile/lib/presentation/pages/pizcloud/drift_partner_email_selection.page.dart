@@ -140,8 +140,8 @@ class DriftPartnerEmailSelectionPage extends HookConsumerWidget {
                 onPressed: isSubmitting.value ? null : onSave,
                 icon: isSubmitting.value
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.save_outlined),
-                label: Text('save'.tr()),
+                    : const Icon(Icons.add_rounded),
+                label: Text('add'.tr()),
               ),
             ),
           ],

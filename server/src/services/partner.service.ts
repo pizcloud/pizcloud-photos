@@ -1,7 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Partner } from 'src/database';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { PartnerCreateDto, PartnerResponseDto, PartnerSearchDto, PartnerUpdateDto } from 'src/dtos/partner.dto';
+import {
+  PartnerCreateDto,
+  PartnerResolveEmailsDto, // pizcloud
+  PartnerResolveEmailsResponseDto, // pizcloud
+  PartnerResponseDto,
+  PartnerSearchDto,
+  PartnerUpdateDto,
+} from 'src/dtos/partner.dto';
 import { mapUser } from 'src/dtos/user.dto';
 import { Permission } from 'src/enum';
 import { PartnerDirection, PartnerIds } from 'src/repositories/partner.repository';
@@ -46,6 +53,39 @@ export class PartnerService extends BaseService {
     const entity = await this.partnerRepository.update(partnerId, { inTimeline: dto.inTimeline });
     return this.mapPartner(entity, PartnerDirection.SharedWith);
   }
+
+  // pizcloud
+  async resolveShareEmails(
+    auth: AuthDto,
+    dto: PartnerResolveEmailsDto,
+  ): Promise<PartnerResolveEmailsResponseDto> {
+    const normalizedEmails = dto.emails
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => email.length > 0);
+
+    const uniqueEmails = [...new Set(normalizedEmails)];
+    if (uniqueEmails.length === 0) {
+      return { userIds: [], missingEmails: [] };
+    }
+
+    const users = await this.userRepository.getByEmails(uniqueEmails);
+    const idByEmail = new Map(users.map((user) => [user.email.toLowerCase(), user.id]));
+
+
+    const userIds: string[] = [];
+    const missingEmails: string[] = [];
+
+    for (const email of uniqueEmails) {
+      const userId = idByEmail.get(email);
+      if (userId) {
+        userIds.push(userId);
+      } else {
+        missingEmails.push(email);
+      }
+    }
+    return { userIds, missingEmails };
+  }
+  // #pizcloud
 
   private mapPartner(partner: Partner, direction: PartnerDirection): PartnerResponseDto {
     // this is opposite to return the non-me user of the "partner"

@@ -260,7 +260,7 @@
         onkeydown={(event) => event.key === 'Enter' && onSaveEmail()}
       />
       <Button leadingIcon={mdiPlus} size="small" shape="round" disabled={isSubmitting} onclick={onSaveEmail}>
-        {$t('save')}
+        {$t('add')}
       </Button>
     </div>
 
