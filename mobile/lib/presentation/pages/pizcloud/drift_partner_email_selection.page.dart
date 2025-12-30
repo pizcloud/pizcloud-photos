@@ -258,7 +258,7 @@ class DriftPartnerEmailSelectionPage extends HookConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Text(
                   'save_email_then_share_hint'.tr(),
-                  style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 61, 60, 60)),
+                  style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 112, 111, 111)),
                 ),
               ),
               buildInput(),
