@@ -5,9 +5,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/drift_partner_email_selection.page.dart'; // pizcloud
 import 'package:immich_mobile/presentation/widgets/people/partner_user_avatar.widget.dart';
+import 'package:immich_mobile/presentation/utils/partner_share_email.utils.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/partner.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/user.provider.dart';
+import 'package:immich_mobile/providers/api.provider.dart'; // pizcloud
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 
@@ -17,41 +20,78 @@ class DriftPartnerPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final potentialPartnersAsync = ref.watch(driftAvailablePartnerProvider);
+    // final potentialPartnersAsync = ref.watch(driftAvailablePartnerProvider); // pizcloud
 
     addNewUsersHandler() async {
-      final potentialPartners = potentialPartnersAsync.value;
-      if (potentialPartners == null || potentialPartners.isEmpty) {
-        ImmichToast.show(context: context, msg: "partner_page_no_more_users".tr());
+      // pizcloud: email-based partner selection.
+      final selectedEmails = await showDialog<List<String>>(
+        context: context,
+        builder: (context) => const Dialog(insetPadding: EdgeInsets.zero, child: DriftPartnerEmailSelectionPage()),
+      );
+
+      if (selectedEmails == null || selectedEmails.isEmpty) {
         return;
       }
 
-      final selectedUser = await showDialog<PartnerUserDto>(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            title: const Text("partner_page_select_partner").tr(),
-            children: [
-              for (PartnerUserDto partner in potentialPartners)
-                SimpleDialogOption(
-                  onPressed: () => context.pop(partner),
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: PartnerUserAvatar(partner: partner),
-                      ),
-                      Text(partner.name),
-                    ],
-                  ),
-                ),
-            ],
+      try {
+        final apiService = ref.read(apiServiceProvider);
+        final resolution = await resolvePartnerUserIdsByEmail(apiService: apiService, emails: selectedEmails);
+        final existingPartners = await ref.read(driftSharedByPartnerProvider.future);
+        final existingIds = {...existingPartners.map((partner) => partner.id)};
+        final userIdsToAdd = resolution.userIds.where((id) => !existingIds.contains(id)).toList();
+
+        if (resolution.missingEmails.isNotEmpty) {
+          final preview = resolution.missingEmails.take(3).join(', ');
+          final suffix = resolution.missingEmails.length > 3 ? '...' : '';
+          ImmichToast.show(context: context, msg: 'Not found in Pizcloud: $preview$suffix', toastType: ToastType.info);
+        }
+
+        if (userIdsToAdd.isEmpty) {
+          ImmichToast.show(
+            context: context,
+            msg: 'No new users to add from selected emails.',
+            toastType: ToastType.info,
           );
-        },
-      );
-      if (selectedUser != null) {
-        await ref.read(partnerUsersProvider.notifier).addPartner(selectedUser);
+          return;
+        }
+
+        await ref.read(partnerUsersProvider.notifier).addPartnersById(userIdsToAdd);
+      } catch (_) {
+        ImmichToast.show(context: context, msg: "partner_page_partner_add_failed".tr(), toastType: ToastType.error);
       }
+      // Old flow: show all users and select from the system list.
+      // final potentialPartners = potentialPartnersAsync.value;
+      // if (potentialPartners == null || potentialPartners.isEmpty) {
+      //   ImmichToast.show(context: context, msg: "partner_page_no_more_users".tr());
+      //   return;
+      // }
+      // final selectedUser = await showDialog<PartnerUserDto>(
+      //   context: context,
+      //   builder: (context) {
+      //     return SimpleDialog(
+      //       title: const Text("partner_page_select_partner").tr(),
+      //       children: [
+      //         for (PartnerUserDto partner in potentialPartners)
+      //           SimpleDialogOption(
+      //             onPressed: () => context.pop(partner),
+      //             child: Row(
+      //               children: [
+      //                 Padding(
+      //                   padding: const EdgeInsets.only(right: 8),
+      //                   child: PartnerUserAvatar(partner: partner),
+      //                 ),
+      //                 Text(partner.name),
+      //               ],
+      //             ),
+      //           ),
+      //       ],
+      //     );
+      //   },
+      // );
+      // if (selectedUser != null) {
+      //   await ref.read(partnerUsersProvider.notifier).addPartner(selectedUser);
+      // }
+      // #pizcloud
     }
 
     onDeleteUser(PartnerUserDto partner) {
@@ -74,7 +114,8 @@ class DriftPartnerPage extends HookConsumerWidget {
         centerTitle: false,
         actions: [
           IconButton(
-            onPressed: potentialPartnersAsync.whenOrNull(data: (data) => addNewUsersHandler),
+            // onPressed: potentialPartnersAsync.whenOrNull(data: (data) => addNewUsersHandler), // pizcloud
+            onPressed: addNewUsersHandler, // pizcloud
             icon: const Icon(Icons.person_add),
             tooltip: "add_partner".tr(),
           ),

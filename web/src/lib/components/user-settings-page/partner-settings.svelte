@@ -95,16 +95,17 @@
     }
   };
 
+  // pizcloud
   const handleCreatePartners = async () => {
-    const users = await modalManager.show(PartnerSelectionModal, { user });
+    const userIds = await modalManager.show(PartnerSelectionModal, { user });
 
-    if (!users) {
+    if (!userIds || userIds.length === 0) {
       return;
     }
 
     try {
-      for (const user of users) {
-        await createPartner({ partnerCreateDto: { sharedWithId: user.id } });
+      for (const userId of userIds) {
+        await createPartner({ partnerCreateDto: { sharedWithId: userId } });
       }
 
       await refreshPartners();
@@ -112,6 +113,22 @@
       handleError(error, $t('errors.unable_to_add_partners'));
     }
   };
+  // Old flow: PartnerSelectionModal returned UserResponseDto[].
+  // const handleCreatePartners = async () => {
+  //   const users = await modalManager.show(PartnerSelectionModal, { user });
+  //   if (!users) {
+  //     return;
+  //   }
+  //   try {
+  //     for (const user of users) {
+  //       await createPartner({ partnerCreateDto: { sharedWithId: user.id } });
+  //     }
+  //     await refreshPartners();
+  //   } catch (error) {
+  //     handleError(error, $t('errors.unable_to_add_partners'));
+  //   }
+  // };
+  // #pizcloud
 
   const handleShowOnTimelineChanged = async (partner: PartnerSharing, inTimeline: boolean) => {
     try {

@@ -2,7 +2,14 @@ import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, 
 import { ApiTags } from '@nestjs/swagger';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { PartnerCreateDto, PartnerResponseDto, PartnerSearchDto, PartnerUpdateDto } from 'src/dtos/partner.dto';
+import {
+  PartnerCreateDto,
+  PartnerResolveEmailsDto, // pizcloud
+  PartnerResolveEmailsResponseDto, // pizcloud
+  PartnerResponseDto,
+  PartnerSearchDto,
+  PartnerUpdateDto,
+} from 'src/dtos/partner.dto';
 import { ApiTag, Permission } from 'src/enum';
 import { Auth, Authenticated } from 'src/middleware/auth.guard';
 import { PartnerService } from 'src/services/partner.service';
@@ -11,7 +18,7 @@ import { UUIDParamDto } from 'src/validation';
 @ApiTags(ApiTag.Partners)
 @Controller('partners')
 export class PartnerController {
-  constructor(private service: PartnerService) {}
+  constructor(private service: PartnerService) { }
 
   @Get()
   @Authenticated({ permission: Permission.PartnerRead })
@@ -34,6 +41,22 @@ export class PartnerController {
   createPartner(@Auth() auth: AuthDto, @Body() dto: PartnerCreateDto): Promise<PartnerResponseDto> {
     return this.service.create(auth, dto);
   }
+
+  // pizcloud
+  @Post('resolve-emails')
+  @Authenticated({ permission: Permission.PartnerCreate })
+  @Endpoint({
+    summary: 'Resolve partner share emails',
+    description: 'Resolve a list of emails to user IDs for partner sharing.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  resolveShareEmails(
+    @Auth() auth: AuthDto,
+    @Body() dto: PartnerResolveEmailsDto,
+  ): Promise<PartnerResolveEmailsResponseDto> {
+    return this.service.resolveShareEmails(auth, dto);
+  }
+  // #pizcloud
 
   @Post(':id')
   @Endpoint({

@@ -3,21 +3,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/album/pizcloud/shared_email.model.dart';
-import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
-import 'package:immich_mobile/providers/pizcloud/album_share_email.provider.dart';
-import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
-import 'package:immich_mobile/services/pizcloud/album_share_email_api.service.dart';
-import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/partner_share_email.provider.dart';
+import 'package:immich_mobile/services/pizcloud/partner_share_email_api.service.dart';
+import 'package:immich_mobile/providers/infrastructure/partner.provider.dart';
 
 @RoutePage()
-class DriftUserEmailSelectionPage extends HookConsumerWidget {
-  final RemoteAlbum album;
-
-  const DriftUserEmailSelectionPage({super.key, required this.album});
+class DriftPartnerEmailSelectionPage extends HookConsumerWidget {
+  const DriftPartnerEmailSelectionPage({super.key});
 
   bool _isValidEmail(String value) {
     final email = value.trim();
@@ -31,8 +26,8 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sharedEmailsAsync = ref.watch(albumSharedEmailsProvider(album.id));
-    final sharedUsersAsync = ref.watch(remoteAlbumSharedUsersProvider(album.id));
+    final sharedEmailsAsync = ref.watch(partnerSharedEmailsProvider);
+    final sharedPartnersAsync = ref.watch(driftSharedByPartnerProvider);
 
     final emailController = useTextEditingController();
     final isSubmitting = useState(false);
@@ -58,27 +53,22 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
       if (sharedItems == null) {
         return null;
       }
-
-      final sharedUsers = sharedUsersAsync.asData?.value ?? const <UserDto>[];
-      final sharedUserEmails = sharedUsers.map((user) => normalizeEmail(user.email)).toSet();
       final available = sharedItems.map((item) => normalizeEmail(item.email)).toSet();
-      if (selectedEmails.value.isEmpty && available.isNotEmpty) {
-        selectedEmails.value = available.intersection(sharedUserEmails);
-      } else if (selectedEmails.value.isNotEmpty) {
+      final partnerEmails =
+          sharedPartnersAsync.asData?.value.map((partner) => normalizeEmail(partner.email)).toSet() ?? const <String>{};
+
+      if (selectedEmails.value.isEmpty) {
+        selectedEmails.value = available.intersection(partnerEmails);
+      } else {
         final next = selectedEmails.value.intersection(available);
         if (next.length != selectedEmails.value.length) {
           selectedEmails.value = next;
         }
       }
-
       return null;
-    }, [sharedItems, sharedUsersAsync.asData?.value]);
-    // Old behavior: auto-select all saved emails on first load.
-    // if (selectedEmails.value.isEmpty && available.isNotEmpty) {
-    //   selectedEmails.value = available;
-    // }
+    }, [sharedItems, sharedPartnersAsync.asData?.value]);
 
-    Future<void> onApply() async {
+    Future<void> onSave() async {
       final raw = emailController.text.trim();
       final email = raw.toLowerCase();
 
@@ -93,11 +83,10 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
 
       try {
         isSubmitting.value = true;
-        await AlbumShareEmailApiService.addSharedEmail(albumId: album.id, email: email);
-
+        await PartnerShareEmailApiService.addSharedEmail(email: email);
         emailController.clear();
         selectedEmails.value = {...selectedEmails.value, email};
-        ref.invalidate(albumSharedEmailsProvider(album.id));
+        ref.invalidate(partnerSharedEmailsProvider);
         _toast(context, 'shared_successfully'.tr());
       } catch (_) {
         _toast(context, 'share_failed'.tr());
@@ -109,22 +98,9 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
     Future<void> onRemove(String email) async {
       try {
         isSubmitting.value = true;
-        await AlbumShareEmailApiService.removeSharedEmail(albumId: album.id, email: email);
+        await PartnerShareEmailApiService.removeSharedEmail(email: email);
         selectedEmails.value = {...selectedEmails.value}..remove(normalizeEmail(email));
-        ref.invalidate(albumSharedEmailsProvider(album.id));
-        _toast(context, 'removed'.tr());
-      } catch (_) {
-        _toast(context, 'remove_failed'.tr());
-      } finally {
-        isSubmitting.value = false;
-      }
-    }
-
-    Future<void> onUnshare(UserDto user) async {
-      try {
-        isSubmitting.value = true;
-        await ref.read(remoteAlbumProvider.notifier).removeUser(album.id, user.id);
-        ref.invalidate(remoteAlbumSharedUsersProvider(album.id));
+        ref.invalidate(partnerSharedEmailsProvider);
         _toast(context, 'removed'.tr());
       } catch (_) {
         _toast(context, 'remove_failed'.tr());
@@ -148,7 +124,7 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.done,
-                onSubmitted: (_) => onApply(),
+                onSubmitted: (_) => onSave(),
                 decoration: InputDecoration(
                   isDense: true,
                   hintText: 'enter_email_to_share'.tr(),
@@ -161,7 +137,7 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
             SizedBox(
               height: 30,
               child: ElevatedButton.icon(
-                onPressed: isSubmitting.value ? null : onApply,
+                onPressed: isSubmitting.value ? null : onSave,
                 icon: isSubmitting.value
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.add_rounded),
@@ -202,7 +178,7 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
       );
     }
 
-    Widget buildList(List<SharedEmailDto> items, Map<String, UserDto> sharedUserByEmail) {
+    Widget buildList(List<SharedEmailDto> items) {
       return ListView.separated(
         padding: const EdgeInsets.only(bottom: 24),
         itemCount: items.length,
@@ -210,7 +186,6 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
         itemBuilder: (context, index) {
           final item = items[index];
           final selected = isSelected(item.email);
-          final sharedUser = sharedUserByEmail[normalizeEmail(item.email)];
           return ListTile(
             leading: CircleAvatar(
               backgroundColor: context.primaryColor.withValues(alpha: 0.12),
@@ -228,12 +203,6 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (sharedUser != null)
-                  IconButton(
-                    icon: const Icon(Icons.link_off_rounded),
-                    onPressed: isSubmitting.value ? null : () => onUnshare(sharedUser),
-                    tooltip: 'remove_user'.tr(),
-                  ),
                 Icon(
                   selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                   color: selected ? context.primaryColor : Colors.grey,
@@ -258,20 +227,11 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('invite_to_album').tr(),
+        title: const Text('add_partner').tr(),
         elevation: 0,
         centerTitle: false,
         leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => context.maybePop(null)),
         actions: [
-          // TextButton(
-          //   onPressed: canDone
-          //       ? () {
-          //           final items = sharedEmailsAsync.value ?? const <SharedEmailDto>[];
-          //           onDone(items);
-          //         }
-          //       : null,
-          //   child: const Text("share", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),
-          // ),
           SizedBox(
             height: 36,
             child: ElevatedButton.icon(
@@ -291,11 +251,6 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
       ),
       body: sharedEmailsAsync.widgetWhen(
         onData: (items) {
-          final sharedUserByEmail = sharedUsersAsync.maybeWhen(
-            data: (users) => {for (final user in users) normalizeEmail(user.email): user},
-            orElse: () => <String, UserDto>{},
-          );
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -316,7 +271,7 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
               ),
               buildChips(items),
               const Divider(height: 1),
-              Expanded(child: buildList(items, sharedUserByEmail)),
+              Expanded(child: buildList(items)),
             ],
           );
         },

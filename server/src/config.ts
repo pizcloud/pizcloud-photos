@@ -362,7 +362,8 @@ export const defaults = Object.freeze<SystemConfig>({
   server: {
     externalDomain: '',
     loginPageMessage: '',
-    publicUsers: true,
+    // publicUsers: true, // pizcloud
+    publicUsers: false, // pizcloud
   },
   notifications: {
     smtp: {
