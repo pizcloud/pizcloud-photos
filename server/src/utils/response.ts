@@ -36,7 +36,9 @@ export const respondWithCookie = <T>(res: Response, body: T, { isSecure, values 
 
 export const respondWithoutCookie = <T>(res: Response, body: T, cookies: ImmichCookie[]) => {
   for (const cookie of cookies) {
-    res.clearCookie(cookie);
+    res.clearCookie(cookie, {
+      domain: '.' + MAIN_DOMAIN, // pizcloud
+    });
   }
 
   return body;

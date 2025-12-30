@@ -106,6 +106,7 @@ export class AuthController {
       ImmichCookie.AccessToken,
       ImmichCookie.AuthType,
       ImmichCookie.IsAuthenticated,
+      ImmichCookie.UserId
     ]);
   }
 
