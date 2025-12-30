@@ -1,4 +1,4 @@
-import { PUBLIC_MAIN_DOMAIN } from '$env/static/public';
+import { PUBLIC_DEFAULT_SERVICE_NAME, PUBLIC_MAIN_DOMAIN } from '$env/static/public';
 import { getBaseUrl as getSdkBaseUrl } from '@immich/sdk';
 
 export const getBaseUrl = () => {
@@ -10,8 +10,8 @@ export function getAccountUrl() {
 }
 
 export async function logOut() {
-  const url = getAccountUrl() + '/api/users/logout?service=photos_dev';
-  const res = await fetch(url);
+  const url = getAccountUrl() + `/api/users/logout?service=${PUBLIC_DEFAULT_SERVICE_NAME}`;
+  const res = await fetch(url, { credentials: 'include' });
   const jsonRes = await res.json();
   if (jsonRes.redirectUri) {
     globalThis.location.href = jsonRes.redirectUri;
