@@ -1,5 +1,5 @@
 // server/src/controllers/pizcloud/billing.controller.ts
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, UnauthorizedException } from '@nestjs/common';
 import { AuthDto } from 'src/dtos/auth.dto';
 import { Auth, Authenticated } from 'src/middleware/auth.guard';
 import { BillingService } from 'src/services/pizcloud/billing.service';
@@ -28,19 +28,19 @@ export class BillingController {
     return this.billingService.getEntitlement(userId);
   }
 
-  // =========================================================
-  //  POST /api/billing/iap/android/rtdn
-  //  → RTDN endpoint (Google Pub/Sub push) for Android
-  // =========================================================
-  @Post('iap/android/rtdn')
-  @HttpCode(HttpStatus.OK)
-  async handleAndroidRtdn(
-    @Body() body: any,
-    @Headers('x-goog-resource-state') resourceState: string,
-  ) {
-    await this.billingService.handleAndroidRtdn(body);
-    return { ok: true };
-  }
+  // // =========================================================
+  // //  POST /api/billing/iap/android/rtdn
+  // //  → RTDN endpoint (Google Pub/Sub push) for Android
+  // // =========================================================
+  // @Post('iap/android/rtdn')
+  // @HttpCode(HttpStatus.OK)
+  // async handleAndroidRtdn(
+  //   @Body() body: any,
+  //   @Headers('x-goog-resource-state') resourceState: string,
+  // ) {
+  //   await this.billingService.handleAndroidRtdn(body);
+  //   return { ok: true };
+  // }
 
   // // POST /api/billing/iap/android/verify
   // @Post('iap/android/verify')
