@@ -88,7 +88,7 @@ class EntitlementApiClient {
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
-      '/iap/ios/verify',
+      '/billing/iap/ios/verify',
       data: {'productId': productId, 'receiptData': receiptBase64},
     );
     final status = res.statusCode ?? 0;
@@ -105,7 +105,7 @@ class EntitlementApiClient {
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
-      '/iap/android/verify',
+      '/billing/iap/android/verify',
       data: {'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName},
     );
     final status = res.statusCode ?? 0;

@@ -10,6 +10,11 @@ class AppConfig {
 
   static const String serverName = String.fromEnvironment('SERVER_NAME', defaultValue: 'photos_dev');
 
+  static const String androidPackageName = String.fromEnvironment(
+    'ANDROID_PACKAGE_NAME',
+    defaultValue: 'com.pizcloud.photos',
+  );
+
   static const double minReferralWithdrawAmount = 5.0;
 
   static const String serverClientId = '118511362569-l7qp3v9b61ce6jpteg58pn38gviuam7v.apps.googleusercontent.com';

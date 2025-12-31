@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 
+import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/features/pizcloud/billing/entitlement_api_client.dart';
 import 'package:immich_mobile/features/pizcloud/billing/iap_service.dart';
 import 'package:immich_mobile/features/pizcloud/billing/billing_repository.dart';
@@ -18,7 +19,7 @@ class BillingConfig {
 
 final billingConfigProvider = Provider<BillingConfig>((ref) {
   return const BillingConfig(
-    androidPackageName: '', // Ex: com.<brand>.<proj>
+    androidPackageName: AppConfig.androidPackageName,
   );
 });
 
