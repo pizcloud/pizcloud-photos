@@ -11,7 +11,7 @@ class PartnerShareEmailApiService {
 
   static Future<List<SharedEmailDto>> getSharedEmails() async {
     final api = await _apiFuture;
-    final res = await api.client.get<dynamic>('/papi/partners/shared-emails');
+    final res = await api.client.get<dynamic>('/partners/shared-emails');
 
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {
@@ -26,7 +26,7 @@ class PartnerShareEmailApiService {
   static Future<List<SharedEmailDto>> addSharedEmail({required String email}) async {
     debugPrint('partner email: $email');
     final api = await _apiFuture;
-    final res = await api.client.post<dynamic>('/papi/partners/shared-emails', data: {'email': email});
+    final res = await api.client.post<dynamic>('/partners/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {
@@ -40,7 +40,7 @@ class PartnerShareEmailApiService {
 
   static Future<List<SharedEmailDto>> removeSharedEmail({required String email}) async {
     final api = await _apiFuture;
-    final res = await api.client.delete<dynamic>('/papi/partners/shared-emails', data: {'email': email});
+    final res = await api.client.delete<dynamic>('/partners/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {

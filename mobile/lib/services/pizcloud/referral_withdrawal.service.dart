@@ -26,7 +26,7 @@ class ReferralWithdrawalService {
     // New Dio-based implementation using PersistCookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.get<dynamic>(
-      '/papi/referral/withdrawals',
+      '/referral/withdrawals',
       queryParameters: {
         'email': email,
         'page': page,

@@ -80,7 +80,7 @@
     const trimmed = code.trim();
 
     const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
-    const res = await fetch(`${baseUrl}/papi/external/referral/validate`, {
+    const res = await fetch(`${baseUrl}/external/referral/validate`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -185,7 +185,7 @@
     try {
       const syncBody = buildReferralSyncBody(email, referralCode);
 
-      const res = await fetch(`${baseUrl}/papi/auth/on-register`, {
+      const res = await fetch(`${baseUrl}/auth/on-register`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(syncBody),
@@ -201,7 +201,7 @@
 
   const sendVerificationEmail = async (baseUrl: string, email: string, lang: string): Promise<'ok' | 'failed'> => {
     try {
-      const res = await fetch(`${baseUrl}/papi/auth/verify-email`, {
+      const res = await fetch(`${baseUrl}/auth/verify-email`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email, lang }),
@@ -329,7 +329,7 @@
   //     try {
   //       const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
   //       const currentLocale = $locale || 'en';
-  //       const res = await fetch(`${baseUrl}/papi/auth/verify-email`, {
+  //       const res = await fetch(`${baseUrl}/auth/verify-email`, {
   //         method: 'POST',
   //         headers: { 'content-type': 'application/json' },
   //         body: JSON.stringify({ email, lang: currentLocale }),

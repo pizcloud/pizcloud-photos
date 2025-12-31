@@ -16,7 +16,7 @@ class NotificationApiClient {
     debugPrint('registerDevice-baseUrl: $baseUrl');
     // Old http-based implementation (kept for reference)
     // final res = await http.post(
-    //   Uri.parse('$baseUrl/papi/notifications/devices'),
+    //   Uri.parse('$baseUrl/notifications/devices'),
     //   headers: {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json'},
     //   body: jsonEncode({
     //     'token': token,
@@ -36,7 +36,7 @@ class NotificationApiClient {
       // headers: {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json'},
     );
     final res = await client.client.post<dynamic>(
-      '/papi/notifications/devices',
+      '/notifications/devices',
       data: {
         'token': token,
         'deviceId': deviceId,
@@ -54,7 +54,7 @@ class NotificationApiClient {
   Future<void> unregisterDevice({required String deviceId}) async {
     // Old http-based implementation (kept for reference)
     // final res = await http.delete(
-    //   Uri.parse('$baseUrl/papi/notifications/devices/$deviceId'),
+    //   Uri.parse('$baseUrl/notifications/devices/$deviceId'),
     //   headers: {'Authorization': 'Bearer $authToken'},
     // );
     // if (res.statusCode != 200) {
@@ -66,7 +66,7 @@ class NotificationApiClient {
       baseUrl: baseUrl,
       // headers: {'Authorization': 'Bearer $authToken'},
     );
-    final res = await client.client.delete<dynamic>('/papi/notifications/devices/$deviceId');
+    final res = await client.client.delete<dynamic>('/notifications/devices/$deviceId');
     final status = res.statusCode ?? 0;
     if (status != 200) {
       throw Exception('Failed to unregister device: $status ${res.data}');
