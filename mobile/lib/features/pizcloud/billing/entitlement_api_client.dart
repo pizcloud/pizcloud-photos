@@ -57,7 +57,7 @@ class EntitlementApiClient {
   }
 
   Future<Map<String, dynamic>?> getReferralSummary() async {
-    String path = 'papi/referral/summary';
+    String path = 'referral/summary';
     final api = await _pizApiService;
     final res = await api.client.get<dynamic>('/$path');
 
@@ -88,7 +88,7 @@ class EntitlementApiClient {
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
-      '/papi/iap/ios/verify',
+      '/iap/ios/verify',
       data: {'productId': productId, 'receiptData': receiptBase64},
     );
     final status = res.statusCode ?? 0;
@@ -105,7 +105,7 @@ class EntitlementApiClient {
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
-      '/papi/iap/android/verify',
+      '/iap/android/verify',
       data: {'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName},
     );
     final status = res.statusCode ?? 0;
@@ -121,7 +121,7 @@ class EntitlementApiClient {
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
-      '/papi/billing/verify-success',
+      '/billing/verify-success',
       data: {'productId': productId, 'platform': platform},
     );
     final status = res.statusCode ?? 0;

@@ -96,7 +96,7 @@ class SignupPage extends HookConsumerWidget {
       referralLoading.value = true;
       try {
         final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
-        final uri = Uri.parse('$base/papi/external/referral/validate');
+        final uri = Uri.parse('$base/external/referral/validate');
 
         final email = emailCtl.text.trim();
         final body = <String, dynamic>{'code': code};
@@ -166,7 +166,7 @@ class SignupPage extends HookConsumerWidget {
 
     Future<void> syncReferralOnRegister(String base, String email, String referralCode) async {
       try {
-        final uri = Uri.parse('$base/papi/auth/on-register');
+        final uri = Uri.parse('$base/auth/on-register');
 
         final code = referralCode.trim();
         final body = <String, dynamic>{'email': email};
@@ -213,7 +213,7 @@ class SignupPage extends HookConsumerWidget {
           if (locale.countryCode != null && locale.countryCode!.isNotEmpty) locale.countryCode,
         ].join('-');
 
-        final uri = Uri.parse('$base/papi/auth/verify-email');
+        final uri = Uri.parse('$base/auth/verify-email');
 
         http.Response response;
         try {

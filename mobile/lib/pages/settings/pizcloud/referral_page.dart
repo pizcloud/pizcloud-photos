@@ -129,7 +129,7 @@ class ReferralPage extends HookConsumerWidget {
       try {
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final api = await pizPersistApiFuture;
-        final res = await api.client.get<dynamic>('/papi/referral/summary');
+        final res = await api.client.get<dynamic>('/referral/summary');
         final status = res.statusCode ?? 0;
         if (status < 200 || status >= 300) {
           String? messageCode;
@@ -287,10 +287,7 @@ class ReferralPage extends HookConsumerWidget {
       try {
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final api = await pizPersistApiFuture;
-        final res = await api.client.post<dynamic>(
-          '/papi/referral/apply-code',
-          data: {'email': userEmail, 'code': code},
-        );
+        final res = await api.client.post<dynamic>('/referral/apply-code', data: {'email': userEmail, 'code': code});
 
         final status = res.statusCode ?? 0;
         if (status < 200 || status >= 300) {
@@ -461,7 +458,7 @@ class ReferralPage extends HookConsumerWidget {
                   // New Dio-based implementation using PersistCookieJar (sid) + headers
                   final api = await pizPersistApiFuture;
                   final res = await api.client.post<dynamic>(
-                    '/papi/referral/withdrawals',
+                    '/referral/withdrawals',
                     data: {'email': userEmail, 'amount': amount, 'currency': currentCurrency, 'method': withdrawMethod},
                   );
 

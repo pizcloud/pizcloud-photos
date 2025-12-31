@@ -16,8 +16,8 @@
 //       throw new UnauthorizedException('Referral upstream is not configured');
 //     }
 
-//     // Upstream currently exposes /papi/referral/summary
-//     const url = `${base.replace(/\/+$/, '')}/papi/referral/summary`;
+//     // Upstream currently exposes /referral/summary
+//     const url = `${base.replace(/\/+$/, '')}/referral/summary`;
 //     const internalKey = process.env.PIZCLOUD_INTERNAL_KEY;
 
 //     if (!internalKey) {
@@ -58,7 +58,7 @@
 //       throw new UnauthorizedException('Referral upstream is not configured');
 //     }
 
-//     const url = `${base.replace(/\/+$/, '')}/papi/referral/apply-code`;
+//     const url = `${base.replace(/\/+$/, '')}/referral/apply-code`;
 //     const internalKey = process.env.PIZCLOUD_INTERNAL_KEY;
 
 //     if (!internalKey) {
@@ -106,7 +106,7 @@
 //       throw new UnauthorizedException('Referral upstream is not configured');
 //     }
 
-//     const url = `${base.replace(/\/+$/, '')}/papi/referral/payout-method`;
+//     const url = `${base.replace(/\/+$/, '')}/referral/payout-method`;
 //     const internalKey = process.env.PIZCLOUD_INTERNAL_KEY;
 
 //     if (!internalKey) {
@@ -161,7 +161,7 @@
 //       throw new UnauthorizedException('Referral upstream is not configured');
 //     }
 
-//     const url = `${base.replace(/\/+$/, '')}/papi/referral/payout-method`;
+//     const url = `${base.replace(/\/+$/, '')}/referral/payout-method`;
 //     const internalKey = process.env.PIZCLOUD_INTERNAL_KEY;
 
 //     if (!internalKey) {
@@ -216,7 +216,7 @@
 //       throw new UnauthorizedException('Referral upstream is not configured');
 //     }
 
-//     const url = `${base.replace(/\/+$/, '')}/papi/referral/withdrawals`;
+//     const url = `${base.replace(/\/+$/, '')}/referral/withdrawals`;
 //     const internalKey = process.env.PIZCLOUD_INTERNAL_KEY;
 
 //     if (!internalKey) {
@@ -273,7 +273,7 @@
 //       throw new UnauthorizedException('Referral upstream is not configured');
 //     }
 
-//     const url = `${base.replace(/\/+$/, '')}/papi/referral/withdrawals`;
+//     const url = `${base.replace(/\/+$/, '')}/referral/withdrawals`;
 //     const internalKey = process.env.PIZCLOUD_INTERNAL_KEY;
 
 //     if (!internalKey) {

@@ -325,7 +325,7 @@ class LoginForm extends HookConsumerWidget {
       }
 
       try {
-        final uri = Uri.parse('$base/papi/auth/email-verification-status').replace(queryParameters: {'email': email});
+        final uri = Uri.parse('$base/auth/email-verification-status').replace(queryParameters: {'email': email});
 
         final resp = await http.get(uri, headers: const {'Accept': 'application/json'});
 
@@ -396,7 +396,7 @@ class LoginForm extends HookConsumerWidget {
           if (locale.countryCode != null && locale.countryCode!.isNotEmpty) locale.countryCode,
         ].join('-');
 
-        final uri = Uri.parse('$base/papi/auth/verify-email');
+        final uri = Uri.parse('$base/auth/verify-email');
         final resp = await http.post(
           uri,
           headers: const {'Content-Type': 'application/json'},

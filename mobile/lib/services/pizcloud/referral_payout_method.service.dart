@@ -20,7 +20,7 @@ class ReferralPayoutMethodService {
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.get<dynamic>(
-      '/papi/referral/payout-method',
+      '/referral/payout-method',
       // queryParameters: {'email': email}, // backend may infer from token; keep commented parity
     );
 
@@ -54,7 +54,7 @@ class ReferralPayoutMethodService {
     // New Dio-based implementation using shared CookieJar (sid) + headers
     final api = await _pizApiService;
     final res = await api.client.post<dynamic>(
-      '/papi/referral/payout-method',
+      '/referral/payout-method',
       data: {
         'email': email,
         'method': method,
