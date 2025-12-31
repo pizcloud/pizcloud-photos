@@ -7,6 +7,7 @@ export type Period = 'monthly' | 'yearly';
 
 export type EntitlementWebhookBody = {
   userId: string;
+  email: string;
   productId: string;
   planCode: string;
   storageLimitGb: number;
@@ -170,19 +171,31 @@ export class BillingService {
   async handleEntitlementWebhook(body: EntitlementWebhookBody,): Promise<{ ok: true }> {
 
     const { ...payloadWithoutSignature } = body;
-    // const secret = process.env.ENTITLEMENT_HMAC_SECRET;
-    // if (!secret) {
-    //   throw new UnauthorizedException('HMAC secret not configured');
-    // }
 
     const quotaSizeInBytes = this.computeQuotaBytes(body.storageLimitGb);
-    await this.userAdmin.updateUserQuota(body.userId, quotaSizeInBytes);
+    // NOTE: previous logic used body.userId directly.
+    // await this.userAdmin.updateUserQuota(body.userId, quotaSizeInBytes);
+
+    // NOTE: new logic resolves the Immich user by email.
+    const user = await this.userAdmin.getByEmail(body.email);
+    if (!user) {
+      this.logger.warn(`Entitlement webhook: user not found for email=${body.email}`);
+      return { ok: true };
+    }
+
+    const resolvedUserId = user.id;
+    await this.userAdmin.updateUserQuota(resolvedUserId, quotaSizeInBytes);
 
     const entitlement: EntitlementData = {
       ...payloadWithoutSignature,
+      // NOTE: ensure we store the Immich user id, not the external one.
+      userId: resolvedUserId,
+      userEmail: body.email,
     };
 
-    this.entitlements.set(body.userId, entitlement);
+    // NOTE: previous logic stored by body.userId.
+    // this.entitlements.set(body.userId, entitlement);
+    this.entitlements.set(resolvedUserId, entitlement);
 
     return { ok: true };
   }
