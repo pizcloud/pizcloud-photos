@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation'; // pizcloud
   import { locale } from '$lib/stores/preferences.store';
   import { user } from '$lib/stores/user.store';
   import { userInteraction } from '$lib/stores/user.svelte';
@@ -30,6 +31,12 @@
 
     return 'bg-primary';
   };
+
+  // pizcloud
+  const onUpgradeClick = () => {
+    goto('/upgrade');
+  };
+  // #pizcloud
 
   $effect(() => {
     if ($user) {
@@ -69,6 +76,22 @@
     <div class="mt-4 h-[7px] w-full rounded-full bg-gray-200 dark:bg-gray-700">
       <div class="h-[7px] rounded-full {usageClasses}" style="width: {usedPercentage}%"></div>
     </div>
+
+    <!-- pizcloud -->
+    <div class="mt-3 flex items-center justify-between gap-2">
+      <p class="text-xs text-gray-500 dark:text-gray-300">
+        {$t('billing.storage_upgrade_cta')}
+      </p>
+
+      <button
+        type="button"
+        class="inline-flex items-center rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+        onclick={onUpgradeClick}
+      >
+        {$t('upgrade')}
+      </button>
+    </div>
+    <!-- #pizcloud -->
   {:else}
     <div class="mt-2">
       <LoadingSpinner />

@@ -27,7 +27,7 @@ class FakeProduct {
 
 const List<FakeProduct> kFakeProducts = [
   FakeProduct('storage_50gb_monthly', 'Basic', '50 GB cloud storage billed monthly', '\$0.2'),
-  FakeProduct('storage_50gb_yearly', 'Basic', '50 GB cloud storage billed yearly', '\$2,4'),
+  FakeProduct('storage_50gb_yearly', 'Basic', '50 GB cloud storage billed yearly', '\$2.4'),
   FakeProduct('storage_100g_monthly', 'Pro1', '100 GB cloud storage billed monthly', '\$0.4'),
   FakeProduct('storage_100g_yearly', 'Pro1', '100 GB cloud storage billed yearly', '\$4.8'),
   FakeProduct('storage_500gb_monthly', 'Pro2', '500 GB cloud storage billed monthly', '\$5'),
