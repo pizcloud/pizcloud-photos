@@ -1,5 +1,5 @@
 import { PUBLIC_DEFAULT_SERVICE_NAME, PUBLIC_MAIN_DOMAIN } from '$env/static/public';
-import { setBaseUrl } from '@immich/sdk';
+import { defaults, setBaseUrl } from '@immich/sdk';
 import { get, writable } from 'svelte/store';
 
 type Fetch = typeof fetch;
@@ -71,7 +71,17 @@ const readCachedServiceName = () => {
 
 const applyApiBaseUrl = (baseUrl: string, serviceName?: string) => {
   const normalized = normalizeApiBaseUrl(baseUrl);
+  if (!defaults.fetch) {
+    defaults.fetch = fetch;
+  }
+  const originalFetch = defaults.fetch;
+  defaults.fetch = (input, init) =>
+    originalFetch(input, {
+      ...init,
+      credentials: init?.credentials ?? 'include',
+    });
   setBaseUrl(normalized);
+
   apiBaseUrlStore.set(normalized);
   apiOriginStoreInternal.set(toOrigin(normalized));
   cacheApiBaseUrl(normalized, serviceName);
