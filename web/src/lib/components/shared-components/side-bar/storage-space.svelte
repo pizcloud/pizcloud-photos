@@ -33,9 +33,10 @@
   };
 
   // pizcloud
-  const onUpgradeClick = () => {
-    goto('/upgrade');
-  };
+  // const onUpgradeClick = () => {
+  //   goto('/upgrade');
+  // };
+  const onUpgrade = () => goto('/pizcloud/upgrade');
   // #pizcloud
 
   $effect(() => {
@@ -85,11 +86,18 @@
 
       <button
         type="button"
-        class="inline-flex items-center rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
-        onclick={onUpgradeClick}
+        class="mt-4 w-full rounded-md bg-primary px-3 py-2 text-white font-medium hover:opacity-90 active:opacity-80 transition"
+        onclick={onUpgrade}
       >
         {$t('upgrade')}
       </button>
+      <!-- <button
+        type="button"
+        class="inline-flex items-center rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+        onclick={onUpgrade}
+      >
+        {$t('upgrade')}
+      </button> -->
     </div>
     <!-- #pizcloud -->
   {:else}

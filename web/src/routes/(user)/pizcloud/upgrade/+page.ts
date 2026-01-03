@@ -1,21 +1,33 @@
 // web/src/routes/(user)/pizcloud/upgrade/+page.ts
-import type { StoragePlan } from '$lib/models/pizcloud/billing';
+
+import { user } from '$lib/stores/user.store';
+import { authenticate } from '$lib/utils/auth';
+import { getFormatter } from '$lib/utils/i18n';
+import { getBillingProducts } from '$lib/utils/pizcloud/billing-api';
+import { getApiKeys, getSessions } from '@immich/sdk';
+import { get } from 'svelte/store';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch }) => {
-  const res = await fetch('/api/billing/plans');
+export const load = (async ({ url }) => {
+  await authenticate(url);
 
-  if (!res.ok) {
-    return {
-      plans: [] as StoragePlan[],
-      loadError: true,
-    };
-  }
+  const [$t, keys, sessions] = await Promise.all([
+    getFormatter(),
+    getApiKeys(),
+    getSessions(),
+  ]);
 
-  const plans = (await res.json()) as StoragePlan[];
+  const userEmail = get(user).email;
+  const products = await getBillingProducts(fetch);
 
   return {
-    plans,
-    loadError: false,
+    keys,
+    sessions,
+    userEmail,
+    meta: {
+      title: $t('billing.upgrade_storage'),
+    },
+    products
   };
-};
+}) satisfies PageLoad;
+
