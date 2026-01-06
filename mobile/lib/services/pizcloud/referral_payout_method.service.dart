@@ -1,17 +1,21 @@
 import 'dart:convert';
 
-import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
 class ReferralPayoutMethodService {
-  ReferralPayoutMethodService() : _base = AppConfig.pizCloudServerUrl.trim().replaceAll(RegExp(r'/+$'), '');
+  ReferralPayoutMethodService();
 
-  final String _base;
+  final PizcloudBaseUrlService _baseUrlService = PizcloudBaseUrlService();
   final authHeaders = const AuthHeaderService();
-  late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
-      pizPersist.ApiPersistCookieJarService.instance(baseUrl: _base);
+  late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService = _initPizApiService();
+
+  Future<pizPersist.ApiPersistCookieJarService> _initPizApiService() async {
+    final baseUrl = await _baseUrlService.resolveBaseUrl();
+    return pizPersist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+  }
 
   /// load payout method for a given email
   Future<ReferralPayoutMethod?> loadPayoutMethod(String email) async {

@@ -3,12 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:immich_mobile/domain/models/user.model.dart';
 
-import 'package:immich_mobile/config/app_config.dart';
-import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+// final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // deprecated
 
 class EntitlementApiClient {
   EntitlementApiClient({required this.immichBaseUrl, required this.userEntity});
@@ -16,9 +15,14 @@ class EntitlementApiClient {
   final String immichBaseUrl;
   final UserDto userEntity;
   final authHeaders = const AuthHeaderService();
-  late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService =
-      pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl);
+  final PizcloudBaseUrlService _baseUrlService = PizcloudBaseUrlService();
+  late final Future<pizPersist.ApiPersistCookieJarService> _pizApiService = _initPizApiService();
   // final String billingBaseUrl;
+
+  Future<pizPersist.ApiPersistCookieJarService> _initPizApiService() async {
+    final baseUrl = await _baseUrlService.resolveBaseUrl();
+    return pizPersist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+  }
 
   String _join(String base, String path) {
     if (base.endsWith('/')) base = base.substring(0, base.length - 1);

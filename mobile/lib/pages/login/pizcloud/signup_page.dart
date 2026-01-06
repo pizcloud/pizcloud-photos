@@ -9,18 +9,10 @@ import 'package:immich_mobile/widgets/forms/login/password_input.dart';
 import 'package:immich_mobile/widgets/forms/login/loading_icon.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
-// import 'package:immich_mobile/providers/gallery_permission.provider.dart';
-// import 'package:immich_mobile/providers/background_sync.provider.dart';
-// import 'package:immich_mobile/providers/websocket.provider.dart';
-// import 'package:immich_mobile/routing/router.dart';
-// import 'package:immich_mobile/domain/models/store.model.dart';
-// import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:openapi/api.dart';
-import 'package:immich_mobile/config/app_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
 @RoutePage()
 class SignupPage extends HookConsumerWidget {
@@ -65,6 +57,7 @@ class SignupPage extends HookConsumerWidget {
     final referralLoading = useState<bool>(false);
     final referralError = useState<String?>(null);
     final referralInfo = useState<String?>(null);
+    final baseUrlService = useMemoized(() => PizcloudBaseUrlService());
 
     String? confirmValidator(String? value) {
       if (value == null || value.isEmpty) {
@@ -95,7 +88,7 @@ class SignupPage extends HookConsumerWidget {
 
       referralLoading.value = true;
       try {
-        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        final base = await baseUrlService.resolveBaseUrl();
         final uri = Uri.parse('$base/external/referral/validate');
 
         final email = emailCtl.text.trim();
@@ -202,7 +195,8 @@ class SignupPage extends HookConsumerWidget {
         // Register
         await ref.read(authProvider.notifier).register(email, password);
 
-        final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        // final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+        final base = await baseUrlService.resolveBaseUrl();
 
         await syncReferralOnRegister(base, email, referralCtl.text);
 

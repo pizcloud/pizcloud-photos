@@ -132,7 +132,7 @@ class ReferralWithdrawalsPage extends HookConsumerWidget {
       error.value = null;
 
       try {
-        final statusValue = statusFilter.value == 'all' ? null : statusFilter.value; // New
+        final statusValue = statusFilter.value == 'all' ? null : statusFilter.value;
 
         final resp = await referralWithdrawalService.fetchWithdrawals(
           email: userEmail,

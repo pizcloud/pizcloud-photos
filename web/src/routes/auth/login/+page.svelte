@@ -7,6 +7,7 @@
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
   import { oauth } from '$lib/utils';
+  import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
   import { login, type LoginResponseDto } from '@immich/sdk';
   import { Alert, Button, Field, Input, PasswordInput, Stack } from '@immich/ui';
@@ -87,7 +88,7 @@
 
   // pizcloud
   const checkEmailVerification = async (): Promise<boolean> => {
-    const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+    const baseUrl = (getPizcloudApiBaseUrl() || PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
     if (!baseUrl || !email) {
       return true;
     }
@@ -125,7 +126,7 @@
         return;
       }
 
-      const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+      const baseUrl = (getPizcloudApiBaseUrl() || PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
       if (!baseUrl) {
         errorMessage = $t('errors.resend_verification_email_failed');
         return;

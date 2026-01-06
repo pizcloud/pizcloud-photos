@@ -40,10 +40,9 @@ import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
 // import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
 import 'package:http/http.dart' as http;
-
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // pizcloud
 
 class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});
@@ -74,6 +73,7 @@ class LoginForm extends HookConsumerWidget {
     final warningMessage = useState<String?>(null);
     final loginFormKey = GlobalKey<FormState>();
     final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
+    final baseUrlService = useMemoized(() => PizcloudBaseUrlService());
 
     final needsVerification = useState<bool>(false); // pizcloud: new email verification state
 
@@ -319,7 +319,20 @@ class LoginForm extends HookConsumerWidget {
 
     // pizcloud: new email verification flow
     Future<bool> ensureEmailVerified(String email) async {
-      final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+      // final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+      String base = '';
+      try {
+        base = await baseUrlService.resolveBaseUrl();
+      } catch (_) {
+        needsVerification.value = false;
+        ImmichToast.show(
+          context: context,
+          msg: "errors.login_email_verification_failed".tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
+        return false;
+      }
       if (base.isEmpty) {
         return true;
       }
@@ -378,7 +391,19 @@ class LoginForm extends HookConsumerWidget {
         return;
       }
 
-      final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+      // final base = pizCloudServerUrl.replaceAll(RegExp(r'/+$'), '');
+      String base = '';
+      try {
+        base = await baseUrlService.resolveBaseUrl();
+      } catch (_) {
+        ImmichToast.show(
+          context: context,
+          msg: "errors.resend_verification_email_failed".tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
+        return;
+      }
       if (base.isEmpty) {
         ImmichToast.show(
           context: context,

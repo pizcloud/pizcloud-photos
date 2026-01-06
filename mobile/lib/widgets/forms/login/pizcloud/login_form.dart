@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -36,8 +35,6 @@ import 'package:http/http.dart' as http;
 
 import 'package:immich_mobile/services/pizcloud/google.service.dart';
 import 'package:immich_mobile/services/pizcloud/login_with_email.service.dart';
-
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // pizcloud
 
 class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});

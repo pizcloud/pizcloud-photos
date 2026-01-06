@@ -1,16 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
-import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/domain/models/album/pizcloud/shared_email.model.dart';
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
 class PartnerShareEmailApiService {
   PartnerShareEmailApiService._();
 
-  static final String _baseUrl = AppConfig.pizCloudServerUrl.trim();
-  static final _apiFuture = pizPersist.ApiPersistCookieJarService.instance(baseUrl: _baseUrl);
+  static final PizcloudBaseUrlService _baseUrlService = PizcloudBaseUrlService();
+  static Future<pizPersist.ApiPersistCookieJarService> _apiFuture() async {
+    final baseUrl = await _baseUrlService.resolveBaseUrl();
+    return pizPersist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+  }
 
   static Future<List<SharedEmailDto>> getSharedEmails() async {
-    final api = await _apiFuture;
+    final api = await _apiFuture();
     final res = await api.client.get<dynamic>('/partners/shared-emails');
 
     final status = res.statusCode ?? 0;
@@ -24,8 +27,7 @@ class PartnerShareEmailApiService {
   }
 
   static Future<List<SharedEmailDto>> addSharedEmail({required String email}) async {
-    debugPrint('partner email: $email');
-    final api = await _apiFuture;
+    final api = await _apiFuture();
     final res = await api.client.post<dynamic>('/partners/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;
@@ -39,7 +41,7 @@ class PartnerShareEmailApiService {
   }
 
   static Future<List<SharedEmailDto>> removeSharedEmail({required String email}) async {
-    final api = await _apiFuture;
+    final api = await _apiFuture();
     final res = await api.client.delete<dynamic>('/partners/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;

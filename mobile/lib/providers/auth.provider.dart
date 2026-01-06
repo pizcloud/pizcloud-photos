@@ -20,9 +20,7 @@ import 'package:openapi/api.dart';
 import 'package:immich_mobile/utils/debug_print.dart';
 
 import 'package:immich_mobile/services/pizcloud/push_notification.service.dart'; // pizcloud
-import 'package:immich_mobile/config/app_config.dart'; // pizcloud
-
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // pizcloud
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart'; // pizcloud
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
@@ -148,7 +146,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await Store.put(StoreKey.deviceIdHash, fastHash(deviceId));
         await Store.put(StoreKey.accessToken, accessToken);
       }
-      await PushNotificationService.initAndRegister(baseUrl: pizCloudServerUrl, authToken: accessToken); // pizcloud
+      final pizcloudBaseUrl = await PizcloudBaseUrlService().resolveBaseUrl();
+      await PushNotificationService.initAndRegister(baseUrl: pizcloudBaseUrl, authToken: accessToken);
     } on ApiException catch (error, stackTrace) {
       if (error.code == 401) {
         _log.severe("Unauthorized access, token likely expired. Logging out.");
