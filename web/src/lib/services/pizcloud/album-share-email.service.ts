@@ -1,11 +1,17 @@
 import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
 
 export type SharedEmailDto = {
   email: string;
   createdAt: string;
 };
 
-const normalizeBaseUrl = () => (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+const normalizeBaseUrl = () => {
+  // prefer health-check pizcloudApi, fallback to env
+  const healthBaseUrl = getPizcloudApiBaseUrl();
+  const fallbackBaseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+  return (healthBaseUrl || fallbackBaseUrl).replace(/\/+$/, '');
+};
 
 const request = async (path: string, init?: RequestInit) => {
   const baseUrl = normalizeBaseUrl();

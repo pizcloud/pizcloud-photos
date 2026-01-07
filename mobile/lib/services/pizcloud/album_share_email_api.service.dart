@@ -1,17 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
-import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/domain/models/album/pizcloud/shared_email.model.dart';
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
 class AlbumShareEmailApiService {
   AlbumShareEmailApiService._();
 
-  static final String _baseUrl = AppConfig.pizCloudServerUrl.trim();
-  static final _apiFuture = pizPersist.ApiPersistCookieJarService.instance(baseUrl: _baseUrl);
+  static final PizcloudBaseUrlService _baseUrlService = PizcloudBaseUrlService();
+  static Future<pizPersist.ApiPersistCookieJarService> _apiFuture() async {
+    final baseUrl = await _baseUrlService.resolveBaseUrl();
+    return pizPersist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+  }
 
   static Future<List<SharedEmailDto>> getSharedEmails({required String albumId}) async {
     debugPrint('albumId: $albumId');
-    final api = await _apiFuture;
+    final api = await _apiFuture();
     final res = await api.client.get<dynamic>('/albums/$albumId/shared-emails');
     debugPrint('res.statusCode: ${res.statusCode}');
 
@@ -26,7 +29,7 @@ class AlbumShareEmailApiService {
   }
 
   static Future<List<SharedEmailDto>> addSharedEmail({required String albumId, required String email}) async {
-    final api = await _apiFuture;
+    final api = await _apiFuture();
     final res = await api.client.post<dynamic>('/albums/$albumId/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;
@@ -40,7 +43,7 @@ class AlbumShareEmailApiService {
   }
 
   static Future<List<SharedEmailDto>> removeSharedEmail({required String albumId, required String email}) async {
-    final api = await _apiFuture;
+    final api = await _apiFuture();
     final res = await api.client.delete<dynamic>('/albums/$albumId/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;

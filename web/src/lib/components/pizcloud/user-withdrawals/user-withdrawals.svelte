@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+  import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
 
@@ -42,7 +43,7 @@
   let total = $state(0);
   let selectedStatus = $state<'all' | ReferralWithdrawStatus>('all');
 
-  const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+  const baseUrl = (getPizcloudApiBaseUrl() || PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
 
   function canLoadMore() {
     return items.length < total;

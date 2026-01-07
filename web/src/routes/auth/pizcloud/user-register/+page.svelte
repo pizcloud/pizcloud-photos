@@ -3,6 +3,7 @@
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { AppRoute } from '$lib/constants';
+  import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
   import { Alert, Button, Field, Input, PasswordInput, Stack } from '@immich/ui';
   import { locale, t } from 'svelte-i18n';
@@ -44,6 +45,9 @@
     discountPercent?: number;
   }
 
+  const resolvePizcloudApiBaseUrl = () =>
+    (getPizcloudApiBaseUrl() || PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+
   const registerRequest = async (payload: RegisterPayload) => {
     const res = await fetch('/api/auth/register', {
       // const apiBaseUrl = getBaseUrl().replace(/\/+$/, '');
@@ -79,7 +83,7 @@
   const validateReferralCode = async (code: string, email?: string): Promise<ReferralValidationResponse> => {
     const trimmed = code.trim();
 
-    const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+    const baseUrl = resolvePizcloudApiBaseUrl();
     const res = await fetch(`${baseUrl}/external/referral/validate`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -271,7 +275,7 @@
       const payload = buildRegisterPayload(email, password, referralCode);
       await registerRequest(payload);
 
-      const baseUrl = normalizeBaseUrl(PUBLIC_PIZCLOUD_SERVER_URL);
+      const baseUrl = normalizeBaseUrl(resolvePizcloudApiBaseUrl());
       const currentLocale = $locale || 'en';
 
       await syncReferralOnRegister(baseUrl, email, referralCode);

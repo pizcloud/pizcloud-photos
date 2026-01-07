@@ -38,7 +38,7 @@ class PhotosApi {
       throw StateError('Unexpected data type for photos API URL: ${data.runtimeType}');
     }
 
-    final url = (data['url'] as String?)?.trim() ?? '';
+    final url = (data['photoApi'] as String?)?.trim() ?? '';
     if (url.isEmpty) {
       throw StateError('Empty photos API URL from account service');
     }

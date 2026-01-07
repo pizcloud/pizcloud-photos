@@ -83,11 +83,13 @@ enum StoreKey<T> {
   // TODO: Remove this after patching open-api
   shouldResetSync<bool>._(1007),
 
-  // Pizcloud session cookie
+  // pizcloud session cookie
   pizcloudSid<String>._(1008),
 
-  // Pizcloud Photos API base URL
-  pizcloudPhotosApiUrl<String>._(1009);
+  // pizcloud Photos API base URL
+  pizcloudPhotosApiUrl<String>._(1009),
+  // pizcloud API base URL
+  pizcloudApiUrl<String>._(1010);
 
   const StoreKey._(this.id);
   final int id;

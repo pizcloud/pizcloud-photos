@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+  import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
 
@@ -91,7 +92,7 @@
   let withdrawSuccess = $state('');
   let withdrawSubmitting = $state(false);
 
-  const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+  const baseUrl = (getPizcloudApiBaseUrl() || PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
 
   function isEmptyState() {
     return totalReferredUsers === 0 && totalCommission === 0 && monthlyStats.length === 0;

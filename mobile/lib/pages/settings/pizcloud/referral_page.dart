@@ -15,8 +15,7 @@ import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.d
 import 'package:immich_mobile/pages/settings/pizcloud/referral_withdrawals_page.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
-
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
 class MonthlyStat {
   final String month;
@@ -112,7 +111,10 @@ class ReferralPage extends HookConsumerWidget {
     final payoutMethodState = useState<ReferralPayoutMethod?>(null);
 
     // final authHeaders = const AuthHeaderService();
-    final pizPersistApiFuture = pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl);
+    final pizPersistApiFuture = useMemoized(() async {
+      final baseUrl = await PizcloudBaseUrlService().resolveBaseUrl();
+      return pizPersist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+    });
 
     // Ensure sid cookie is restored after app restart before hitting APIs
     // useEffect(() {

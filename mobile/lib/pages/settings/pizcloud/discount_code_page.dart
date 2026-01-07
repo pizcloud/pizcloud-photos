@@ -4,12 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
 import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
-
-final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim();
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
 class MonthlyStat {
   final String month;
@@ -97,7 +95,11 @@ class DiscountCodePage extends HookConsumerWidget {
 
     final payoutMethodState = useState<ReferralPayoutMethod?>(null);
 
-    final pizPersistApiFuture = pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl);
+    // final pizPersistApiFuture = pizPersist.ApiPersistCookieJarService.instance(baseUrl: pizCloudServerUrl);
+    final pizPersistApiFuture = useMemoized(() async {
+      final baseUrl = await PizcloudBaseUrlService().resolveBaseUrl();
+      return pizPersist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+    });
 
     Future<void> loadSummary() async {
       summaryLoading.value = true;

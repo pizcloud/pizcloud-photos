@@ -1,5 +1,6 @@
 import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
 import { user } from '$lib/stores/user.store';
+import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
 import { authenticate } from '$lib/utils/auth';
 import { getFormatter } from '$lib/utils/i18n';
 import { getApiKeys, getSessions } from '@immich/sdk';
@@ -50,7 +51,7 @@ export const load = (async ({ url, fetch }) => {
   let referral: ReferralSummary | null = null;
 
   if (userEmail) {
-    const baseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+    const baseUrl = (getPizcloudApiBaseUrl() || PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
     try {
       const res = await fetch(
         `${baseUrl}/referral/summary`,
