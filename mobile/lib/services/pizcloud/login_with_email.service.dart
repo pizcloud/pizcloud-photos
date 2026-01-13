@@ -100,6 +100,15 @@ class LoginWithEmailService {
 
     final currentEndpoint = Store.tryGet(StoreKey.serverEndpoint);
     if (currentEndpoint == null || currentEndpoint.isEmpty) {
+      // Attempt to bootstrap endpoint again before failing login
+      final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
+      if (apiReady) {
+        final refreshedEndpoint = Store.tryGet(StoreKey.serverEndpoint);
+        if (refreshedEndpoint != null && refreshedEndpoint.isNotEmpty) {
+          return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
+        }
+        debugPrint('Missing server endpoint after re-fetch');
+      }
       // pizcloud: do not fallback to defaultServer anymore.
       // try {
       //   await ref.read(authProvider.notifier).validateServerUrl(AppConfig.defaultServer);

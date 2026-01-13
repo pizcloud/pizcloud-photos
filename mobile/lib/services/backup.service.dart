@@ -67,6 +67,8 @@ class BackupService {
     final String deviceId = Store.get(StoreKey.deviceId);
 
     try {
+      // return await _apiService.assetsApi.getAllUserAssetsByDeviceId(deviceId); // pizcloud
+      _apiService.ensureEndpointFromStore(); // pizcloud
       return await _apiService.assetsApi.getAllUserAssetsByDeviceId(deviceId);
     } catch (e) {
       dPrint(() => 'Error [getDeviceBackupAsset] ${e.toString()}');
@@ -180,6 +182,12 @@ class BackupService {
     final Set<String> existing = {};
     try {
       final String deviceId = Store.get(StoreKey.deviceId);
+      // pizcloud
+      // final CheckExistingAssetsResponseDto? duplicates = await _apiService.assetsApi.checkExistingAssets(
+      //   CheckExistingAssetsDto(deviceAssetIds: candidates.map((c) => c.asset.localId!).toList(), deviceId: deviceId),
+      // );
+      _apiService.ensureEndpointFromStore();
+      // #pizcloud
       final CheckExistingAssetsResponseDto? duplicates = await _apiService.assetsApi.checkExistingAssets(
         CheckExistingAssetsDto(deviceAssetIds: candidates.map((c) => c.asset.localId!).toList(), deviceId: deviceId),
       );

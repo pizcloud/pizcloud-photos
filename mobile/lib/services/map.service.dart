@@ -28,6 +28,8 @@ class MapService with ErrorLoggerMixin {
   }) async {
     return logError(
       () async {
+        // final markers = await _apiService.mapApi.getMapMarkers(
+        _apiService.ensureEndpointFromStore(); // pizcloud
         final markers = await _apiService.mapApi.getMapMarkers(
           isFavorite: isFavorite,
           isArchived: withArchived,

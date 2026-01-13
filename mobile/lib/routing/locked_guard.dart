@@ -22,6 +22,8 @@ class LockedGuard extends AutoRouteGuard {
 
   @override
   void onNavigation(NavigationResolver resolver, StackRouter router) async {
+    // final authStatus = await _apiService.authenticationApi.getAuthStatus(); // pizcloud
+    _apiService.ensureEndpointFromStore(); // pizcloud
     final authStatus = await _apiService.authenticationApi.getAuthStatus();
 
     if (authStatus == null) {
@@ -55,6 +57,8 @@ class LockedGuard extends AutoRouteGuard {
         return;
       }
 
+      // await _apiService.authenticationApi.unlockAuthSession(SessionUnlockDto(pinCode: securePinCode)); // pizcloud
+      _apiService.ensureEndpointFromStore(); // pizcloud
       await _apiService.authenticationApi.unlockAuthSession(SessionUnlockDto(pinCode: securePinCode));
 
       resolver.next(true);

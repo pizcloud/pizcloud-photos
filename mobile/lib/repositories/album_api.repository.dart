@@ -7,22 +7,33 @@ import 'package:immich_mobile/infrastructure/entities/user.entity.dart' as entit
 import 'package:immich_mobile/infrastructure/utils/user.converter.dart';
 import 'package:immich_mobile/providers/api.provider.dart';
 import 'package:immich_mobile/repositories/api.repository.dart';
+import 'package:immich_mobile/services/api.service.dart'; // pizcloud
 import 'package:openapi/api.dart';
 
-final albumApiRepositoryProvider = Provider((ref) => AlbumApiRepository(ref.watch(apiServiceProvider).albumsApi));
+final albumApiRepositoryProvider = Provider((ref) => AlbumApiRepository(ref.watch(apiServiceProvider))); // pizcloud
+// final albumApiRepositoryProvider = Provider((ref) => AlbumApiRepository(ref.watch(apiServiceProvider).albumsApi)); // pizcloud
 
 class AlbumApiRepository extends ApiRepository {
-  final AlbumsApi _api;
+  // pizcloud
+  final ApiService _apiService;
+  // old: held a snapshot of AlbumsApi
+  // final AlbumsApi _api;
 
-  AlbumApiRepository(this._api);
+  AlbumApiRepository(this._apiService);
+  // AlbumApiRepository(this._api);
+
+  AlbumsApi get _api => _apiService.albumsApi;
+  // #pizcloud
 
   Future<Album> get(String id) async {
-    final dto = await checkNull(_api.getAlbumInfo(id));
+    // final dto = await checkNull(_api.getAlbumInfo(id)); // pizcloud
+    final dto = await checkNullWithService(_apiService, () => _api.getAlbumInfo(id)); // pizcloud
     return _toAlbum(dto);
   }
 
   Future<List<Album>> getAll({bool? shared}) async {
-    final dtos = await checkNull(_api.getAllAlbums(shared: shared));
+    // final dtos = await checkNull(_api.getAllAlbums(shared: shared)); // pizcloud
+    final dtos = await checkNullWithService(_apiService, () => _api.getAllAlbums(shared: shared)); // pizcloud
     return dtos.map(_toAlbum).toList();
   }
 
@@ -33,8 +44,20 @@ class AlbumApiRepository extends ApiRepository {
     String? description,
   }) async {
     final users = sharedUserIds.map((id) => AlbumUserCreateDto(userId: id, role: AlbumUserRole.editor));
-    final responseDto = await checkNull(
-      _api.createAlbum(
+    // pizcloud
+    // final responseDto = await checkNull(
+    //   _api.createAlbum(
+    //     CreateAlbumDto(
+    //       albumName: name,
+    //       description: description,
+    //       assetIds: assetIds.toList(),
+    //       albumUsers: users.toList(),
+    //     ),
+    //   ),
+    // );
+    final responseDto = await checkNullWithService(
+      _apiService,
+      () => _api.createAlbum(
         CreateAlbumDto(
           albumName: name,
           description: description,
@@ -43,14 +66,21 @@ class AlbumApiRepository extends ApiRepository {
         ),
       ),
     );
+    // #pizcloud
     return _toAlbum(responseDto);
   }
 
   // TODO: Change name after removing old method
   Future<RemoteAlbum> createDriftAlbum(String name, {required Iterable<String> assetIds, String? description}) async {
-    final responseDto = await checkNull(
-      _api.createAlbum(CreateAlbumDto(albumName: name, description: description, assetIds: assetIds.toList())),
+    // pizcloud
+    // final responseDto = await checkNull(
+    //   _api.createAlbum(CreateAlbumDto(albumName: name, description: description, assetIds: assetIds.toList())),
+    // );
+    final responseDto = await checkNullWithService(
+      _apiService,
+      () => _api.createAlbum(CreateAlbumDto(albumName: name, description: description, assetIds: assetIds.toList())),
     );
+    // #pizcloud
 
     return _toRemoteAlbum(responseDto);
   }
@@ -68,8 +98,22 @@ class AlbumApiRepository extends ApiRepository {
       order = sortOrder == SortOrder.asc ? AssetOrder.asc : AssetOrder.desc;
     }
 
-    final response = await checkNull(
-      _api.updateAlbumInfo(
+    // pizcloud
+    // final response = await checkNull(
+    //   _api.updateAlbumInfo(
+    //     albumId,
+    //     UpdateAlbumDto(
+    //       albumName: name,
+    //       albumThumbnailAssetId: thumbnailAssetId,
+    //       description: description,
+    //       isActivityEnabled: activityEnabled,
+    //       order: order,
+    //     ),
+    //   ),
+    // );
+    final response = await checkNullWithService(
+      _apiService,
+      () => _api.updateAlbumInfo(
         albumId,
         UpdateAlbumDto(
           albumName: name,
@@ -80,16 +124,25 @@ class AlbumApiRepository extends ApiRepository {
         ),
       ),
     );
+    // #pizcloud
 
     return _toAlbum(response);
   }
 
   Future<void> delete(String albumId) {
+    // return _api.deleteAlbum(albumId); // pizcloud
+    ensureEndpoint(_apiService); // pizcloud
     return _api.deleteAlbum(albumId);
   }
 
   Future<({List<String> added, List<String> duplicates})> addAssets(String albumId, Iterable<String> assetIds) async {
-    final response = await checkNull(_api.addAssetsToAlbum(albumId, BulkIdsDto(ids: assetIds.toList())));
+    // pizcloud
+    // final response = await checkNull(_api.addAssetsToAlbum(albumId, BulkIdsDto(ids: assetIds.toList())));
+    final response = await checkNullWithService(
+      _apiService,
+      () => _api.addAssetsToAlbum(albumId, BulkIdsDto(ids: assetIds.toList())),
+    );
+    // #pizcloud
 
     final List<String> added = [];
     final List<String> duplicates = [];
@@ -105,7 +158,13 @@ class AlbumApiRepository extends ApiRepository {
   }
 
   Future<({List<String> removed, List<String> failed})> removeAssets(String albumId, Iterable<String> assetIds) async {
-    final response = await checkNull(_api.removeAssetFromAlbum(albumId, BulkIdsDto(ids: assetIds.toList())));
+    // pizcloud
+    // final response = await checkNull(_api.removeAssetFromAlbum(albumId, BulkIdsDto(ids: assetIds.toList())));
+    final response = await checkNullWithService(
+      _apiService,
+      () => _api.removeAssetFromAlbum(albumId, BulkIdsDto(ids: assetIds.toList())),
+    );
+    // #pizcloud
     final List<String> removed = [], failed = [];
     for (final dto in response) {
       if (dto.success) {
@@ -119,11 +178,19 @@ class AlbumApiRepository extends ApiRepository {
 
   Future<Album> addUsers(String albumId, Iterable<String> userIds) async {
     final albumUsers = userIds.map((userId) => AlbumUserAddDto(userId: userId)).toList();
-    final response = await checkNull(_api.addUsersToAlbum(albumId, AddUsersDto(albumUsers: albumUsers)));
+    // pizcloud
+    // final response = await checkNull(_api.addUsersToAlbum(albumId, AddUsersDto(albumUsers: albumUsers)));
+    final response = await checkNullWithService(
+      _apiService,
+      () => _api.addUsersToAlbum(albumId, AddUsersDto(albumUsers: albumUsers)),
+    );
+    // #pizcloud
     return _toAlbum(response);
   }
 
   Future<void> removeUser(String albumId, {required String userId}) {
+    // return _api.removeUserFromAlbum(albumId, userId); // pizcloud
+    ensureEndpoint(_apiService); // pizcloud
     return _api.removeUserFromAlbum(albumId, userId);
   }
 

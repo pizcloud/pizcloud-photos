@@ -1,14 +1,22 @@
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart' hide AssetVisibility;
 import 'package:immich_mobile/infrastructure/repositories/api.repository.dart';
 import 'package:immich_mobile/models/search/search_filter.model.dart';
+import 'package:immich_mobile/services/api.service.dart'; // pizcloud
 import 'package:openapi/api.dart';
 
 class SearchApiRepository extends ApiRepository {
-  final SearchApi _api;
+  // pizcloud
+  final ApiService _apiService;
+  const SearchApiRepository(this._apiService);
+  // final SearchApi _api;
+  // const SearchApiRepository(this._api);
 
-  const SearchApiRepository(this._api);
+  SearchApi get _api => _apiService.searchApi;
+  // #pizcloud
 
   Future<SearchResponseDto?> search(SearchFilter filter, int page) {
+    // return _api.searchSmart(...); // pizcloud
+    ensureEndpoint(_apiService); // pizcloud
     AssetTypeEnum? type;
     if (filter.mediaType.index == AssetType.image.index) {
       type = AssetTypeEnum.IMAGE;
@@ -70,5 +78,11 @@ class SearchApiRepository extends ApiRepository {
     String? state,
     String? make,
     String? model,
-  }) => _api.getSearchSuggestions(type, country: country, state: state, make: make, model: model);
+  }) {
+    // pizcloud
+    // return _api.getSearchSuggestions(type, country: country, state: state, make: make, model: model);
+    ensureEndpoint(_apiService);
+    return _api.getSearchSuggestions(type, country: country, state: state, make: make, model: model);
+    // #pizcloud
+  }
 }

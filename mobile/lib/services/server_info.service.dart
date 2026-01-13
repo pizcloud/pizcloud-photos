@@ -16,6 +16,8 @@ class ServerInfoService {
 
   Future<ServerDiskInfo?> getDiskInfo() async {
     try {
+      // final dto = await _apiService.serverInfoApi.getStorage();
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final dto = await _apiService.serverInfoApi.getStorage();
       if (dto != null) {
         return ServerDiskInfo.fromDto(dto);
@@ -28,6 +30,8 @@ class ServerInfoService {
 
   Future<ServerVersion?> getServerVersion() async {
     try {
+      // final dto = await _apiService.serverInfoApi.getServerVersion();
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final dto = await _apiService.serverInfoApi.getServerVersion();
       if (dto != null) {
         return ServerVersion.fromDto(dto);
@@ -40,6 +44,8 @@ class ServerInfoService {
 
   Future<ServerFeatures?> getServerFeatures() async {
     try {
+      // final dto = await _apiService.serverInfoApi.getServerFeatures();
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final dto = await _apiService.serverInfoApi.getServerFeatures();
       if (dto != null) {
         return ServerFeatures.fromDto(dto);
@@ -52,6 +58,8 @@ class ServerInfoService {
 
   Future<ServerConfig?> getServerConfig() async {
     try {
+      // final dto = await _apiService.serverInfoApi.getServerConfig();
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final dto = await _apiService.serverInfoApi.getServerConfig();
       if (dto != null) {
         return ServerConfig.fromDto(dto);

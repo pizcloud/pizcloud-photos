@@ -13,13 +13,21 @@ class AuthApiRepository extends ApiRepository {
   AuthApiRepository(this._apiService);
 
   Future<void> changePassword(String newPassword) async {
+    // await _apiService.usersApi.updateMyUser(UserUpdateMeDto(password: newPassword));
+    ensureEndpoint(_apiService); // pizcloud
     await _apiService.usersApi.updateMyUser(UserUpdateMeDto(password: newPassword));
   }
 
   Future<LoginResponse> login(String email, String password) async {
-    final loginResponseDto = await checkNull(
-      _apiService.authenticationApi.login(LoginCredentialDto(email: email, password: password)),
+    // pizcloud
+    // final loginResponseDto = await checkNull(
+    //   _apiService.authenticationApi.login(LoginCredentialDto(email: email, password: password)),
+    // );
+    final loginResponseDto = await checkNullWithService(
+      _apiService,
+      () => _apiService.authenticationApi.login(LoginCredentialDto(email: email, password: password)),
     );
+    // #pizcloud
 
     return _mapLoginReponse(loginResponseDto);
   }
@@ -27,6 +35,8 @@ class AuthApiRepository extends ApiRepository {
   Future<void> logout() async {
     if (_apiService.apiClient.basePath.isEmpty) return;
 
+    // await _apiService.authenticationApi.logout().timeout(const Duration(seconds: 7));
+    ensureEndpoint(_apiService); // pizcloud
     await _apiService.authenticationApi.logout().timeout(const Duration(seconds: 7));
   }
 
@@ -44,6 +54,8 @@ class AuthApiRepository extends ApiRepository {
 
   Future<bool> unlockPinCode(String pinCode) async {
     try {
+      // await _apiService.authenticationApi.unlockAuthSession(SessionUnlockDto(pinCode: pinCode));
+      ensureEndpoint(_apiService); // pizcloud
       await _apiService.authenticationApi.unlockAuthSession(SessionUnlockDto(pinCode: pinCode));
       return true;
     } catch (_) {
@@ -52,10 +64,14 @@ class AuthApiRepository extends ApiRepository {
   }
 
   Future<void> setupPinCode(String pinCode) {
+    // return _apiService.authenticationApi.setupPinCode(PinCodeSetupDto(pinCode: pinCode));
+    ensureEndpoint(_apiService); // pizcloud
     return _apiService.authenticationApi.setupPinCode(PinCodeSetupDto(pinCode: pinCode));
   }
 
   Future<void> lockPinCode() {
+    // return _apiService.authenticationApi.lockAuthSession();
+    ensureEndpoint(_apiService); // pizcloud
     return _apiService.authenticationApi.lockAuthSession();
   }
 }

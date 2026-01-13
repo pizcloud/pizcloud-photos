@@ -68,6 +68,8 @@ class SearchService {
 
   Future<List<SearchExploreResponseDto>?> getExploreData() async {
     try {
+      // return await _apiService.searchApi.getExploreData();
+      _apiService.ensureEndpointFromStore(); // pizcloud
       return await _apiService.searchApi.getExploreData();
     } catch (error, stackTrace) {
       _log.severe("Failed to getExploreData", error, stackTrace);
@@ -77,6 +79,8 @@ class SearchService {
 
   Future<List<AssetResponseDto>?> getAllPlaces() async {
     try {
+      // return await _apiService.searchApi.getAssetsByCity();
+      _apiService.ensureEndpointFromStore(); // pizcloud
       return await _apiService.searchApi.getAssetsByCity();
     } catch (error, stackTrace) {
       _log.severe("Failed to getAllPlaces", error, stackTrace);

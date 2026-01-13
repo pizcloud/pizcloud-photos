@@ -36,6 +36,8 @@ class OAuthService {
       result = result.replaceAll('app.immich:/oauth-callback', 'app.immich:///oauth-callback');
     }
 
+    // return await _apiService.oAuthApi.finishOAuth(
+    _apiService.ensureEndpointFromStore(); // pizcloud
     return await _apiService.oAuthApi.finishOAuth(
       OAuthCallbackDto(url: result, state: state, codeVerifier: codeVerifier),
     );

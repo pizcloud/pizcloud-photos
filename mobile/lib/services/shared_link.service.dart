@@ -15,6 +15,8 @@ class SharedLinkService {
 
   Future<AsyncValue<List<SharedLink>>> getAllSharedLinks() async {
     try {
+      // final list = await _apiService.sharedLinksApi.getAllSharedLinks();
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final list = await _apiService.sharedLinksApi.getAllSharedLinks();
       return list != null ? AsyncData(list.map(SharedLink.fromDto).toList()) : const AsyncData([]);
     } catch (e, stack) {
@@ -25,6 +27,8 @@ class SharedLinkService {
 
   Future<void> deleteSharedLink(String id) async {
     try {
+      // return await _apiService.sharedLinksApi.removeSharedLink(id);
+      _apiService.ensureEndpointFromStore(); // pizcloud
       return await _apiService.sharedLinksApi.removeSharedLink(id);
     } catch (e) {
       _log.severe("Failed to delete shared link id - $id", e);
@@ -69,6 +73,8 @@ class SharedLinkService {
       }
 
       if (dto != null) {
+        // final responseDto = await _apiService.sharedLinksApi.createSharedLink(dto);
+        _apiService.ensureEndpointFromStore(); // pizcloud
         final responseDto = await _apiService.sharedLinksApi.createSharedLink(dto);
         if (responseDto != null) {
           return SharedLink.fromDto(responseDto);
@@ -91,6 +97,8 @@ class SharedLinkService {
     DateTime? expiresAt,
   }) async {
     try {
+      // final responseDto = await _apiService.sharedLinksApi.updateSharedLink(
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final responseDto = await _apiService.sharedLinksApi.updateSharedLink(
         id,
         SharedLinkEditDto(

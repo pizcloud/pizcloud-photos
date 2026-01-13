@@ -23,6 +23,8 @@ class AuthGuard extends AutoRouteGuard {
       Store.get(StoreKey.accessToken);
 
       // Validate the access token with the server
+      // final res = await _apiService.authenticationApi.validateAccessToken(); // pizcloud
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final res = await _apiService.authenticationApi.validateAccessToken();
       if (res == null || res.authStatus != true) {
         // If the access token is invalid, take user back to login

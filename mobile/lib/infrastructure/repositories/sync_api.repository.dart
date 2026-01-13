@@ -14,8 +14,24 @@ class SyncApiRepository {
   final Logger _logger = Logger('SyncApiRepository');
   final ApiService _api;
   SyncApiRepository(this._api);
+  // pizcloud
+  void _ensureEndpoint() {
+    final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+    if (endpoint == null || endpoint.isEmpty) {
+      return;
+    }
+    if (_api.apiClient.basePath == endpoint) {
+      return;
+    }
+    // old: no endpoint safeguard for sync calls
+    // _api.apiClient.basePath = endpoint;
+    _api.setEndpoint(endpoint);
+  }
+  // #pizcloud
 
   Future<void> ack(List<String> data) {
+    // return _api.syncApi.sendSyncAck(SyncAckSetDto(acks: data)); // pizcloud
+    _ensureEndpoint(); // pizcloud
     return _api.syncApi.sendSyncAck(SyncAckSetDto(acks: data));
   }
 
@@ -25,6 +41,8 @@ class SyncApiRepository {
     int batchSize = kSyncEventBatchSize,
     http.Client? httpClient,
   }) async {
+    // final endpoint = "${_api.apiClient.basePath}/sync/stream"; // pizcloud
+    _ensureEndpoint(); // pizcloud
     final stopwatch = Stopwatch()..start();
     final client = httpClient ?? http.Client();
     final endpoint = "${_api.apiClient.basePath}/sync/stream";

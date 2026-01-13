@@ -18,7 +18,8 @@ part 'user.provider.g.dart';
 IsarUserRepository userRepository(Ref ref) => IsarUserRepository(ref.watch(isarProvider));
 
 @Riverpod(keepAlive: true)
-UserApiRepository userApiRepository(Ref ref) => UserApiRepository(ref.watch(apiServiceProvider).usersApi);
+UserApiRepository userApiRepository(Ref ref) => UserApiRepository(ref.watch(apiServiceProvider)); // pizcloud
+// UserApiRepository userApiRepository(Ref ref) => UserApiRepository(ref.watch(apiServiceProvider).usersApi); // pizcloud
 
 @Riverpod(keepAlive: true)
 UserService userService(Ref ref) => UserService(

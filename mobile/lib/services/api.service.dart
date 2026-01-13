@@ -48,6 +48,31 @@ class ApiService implements Authentication {
   String? _accessToken;
   final _log = Logger("ApiService");
 
+  // pizcloud
+  void ensureEndpointFromStore() {
+    final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+    if (endpoint == null || endpoint.isEmpty) {
+      final fallback = Store.tryGet(StoreKey.pizcloudPhotosApiUrl);
+      if (fallback == null || fallback.isEmpty) {
+        return;
+      }
+      if (_apiClient.basePath == fallback) {
+        return;
+      }
+      // setEndpoint(fallback);
+      setEndpoint(fallback);
+      // Keep StoreKey.serverEndpoint aligned with the pizcloud photos API URL
+      unawaited(Store.put(StoreKey.serverEndpoint, fallback));
+      return;
+    }
+    if (_apiClient.basePath == endpoint) {
+      return;
+    }
+    // setEndpoint(endpoint);
+    setEndpoint(endpoint);
+  }
+  // #pizcloud
+
   setEndpoint(String endpoint) {
     _apiClient = ApiClient(basePath: endpoint, authentication: this);
     _setUserAgentHeader();

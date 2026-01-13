@@ -27,6 +27,14 @@ class PhotosBaseUrlService {
 
   final AccountApi _accountApi;
 
+  // pizcloud
+  String _ensureApiPath(String value) {
+    final normalized = _normalizeBaseUrl(value);
+    if (normalized.isEmpty) return normalized;
+    return normalized.endsWith('/api') ? normalized : '$normalized/api';
+  }
+  // #pizcloud
+
   String _normalizeBaseUrl(String value) {
     return value.trim().replaceAll(RegExp(r'/+$'), '');
   }
@@ -59,16 +67,28 @@ class PhotosBaseUrlService {
         debugPrint('Empty url from API');
         return false;
       }
-
-      await Store.put(StoreKey.pizcloudPhotosApiUrl, url);
+      // pizcloud
+      final apiUrl = _ensureApiPath(url);
+      if (apiUrl.isEmpty) {
+        debugPrint('Empty apiUrl after normalization');
+        return false;
+      }
+      // #pizcloud
+      await Store.put(StoreKey.pizcloudPhotosApiUrl, apiUrl);
       if (pizcloudUrl.isNotEmpty) {
         await Store.put(StoreKey.pizcloudApiUrl, pizcloudUrl);
       }
-      if (ref is Ref) {
-        await ref.read(authProvider.notifier).validateServerUrl(url);
-      } else if (ref is WidgetRef) {
-        await ref.read(authProvider.notifier).validateServerUrl(url);
+      // pizcloud
+      final parsedUrl = Uri.tryParse(url);
+      if (parsedUrl == null || parsedUrl.host.isEmpty) {
+        debugPrint('Invalid url from API (no host): $url');
+        return false;
       }
+      final ensured = await _ensureServerEndpoint(ref, url, apiUrl);
+      if (!ensured) {
+        return false;
+      }
+      // #pizcloud
       return true;
     } catch (e, st) {
       debugPrint('fetchAndValidateServerUrl failed: $e');
@@ -76,4 +96,45 @@ class PhotosBaseUrlService {
       return false;
     }
   }
+
+  // pizcloud
+  Future<bool> _ensureServerEndpoint(Object? ref, String url, String apiUrl) async {
+    if (apiUrl.isEmpty) {
+      debugPrint('Empty apiUrl while ensuring server endpoint');
+      return false;
+    }
+
+    // Prefer validateServerUrl to populate StoreKey.serverUrl and serverEndpoint.
+    if (ref is Ref || ref is WidgetRef) {
+      for (var attempt = 0; attempt < 2; attempt++) {
+        if (ref is Ref) {
+          await ref.read(authProvider.notifier).validateServerUrl(url);
+        } else if (ref is WidgetRef) {
+          await ref.read(authProvider.notifier).validateServerUrl(url);
+        }
+
+        final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+        if (endpoint != null && endpoint.isNotEmpty) {
+          return true;
+        }
+        // Small retry window for the store cache to update
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    } else {
+      // old: no endpoint fallback without ref
+      // await Store.put(StoreKey.serverEndpoint, apiUrl);
+      await Store.put(StoreKey.serverEndpoint, apiUrl);
+      await Store.put(StoreKey.serverUrl, url);
+      return true;
+    }
+
+    // Fallback: if validateServerUrl did not set serverEndpoint, align it with apiUrl.
+    final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+    if (endpoint == null || endpoint.isEmpty) {
+      await Store.put(StoreKey.serverEndpoint, apiUrl);
+    }
+    return true;
+  }
+
+  // #pizcloud
 }

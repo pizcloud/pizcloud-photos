@@ -24,6 +24,8 @@ class TrashService {
 
   Future<void> restoreAssets(Iterable<Asset> assetList) async {
     final remoteAssets = assetList.where((a) => a.isRemote);
+    // await _apiService.trashApi.restoreAssets(BulkIdsDto(ids: remoteAssets.map((e) => e.remoteId!).toList()));
+    _apiService.ensureEndpointFromStore(); // pizcloud
     await _apiService.trashApi.restoreAssets(BulkIdsDto(ids: remoteAssets.map((e) => e.remoteId!).toList()));
 
     final updatedAssets = remoteAssets.map((asset) {
@@ -37,6 +39,8 @@ class TrashService {
   Future<void> emptyTrash() async {
     final user = _userService.getMyUser();
 
+    // await _apiService.trashApi.emptyTrash();
+    _apiService.ensureEndpointFromStore(); // pizcloud
     await _apiService.trashApi.emptyTrash();
 
     final trashedAssets = await _assetRepository.getTrashAssets(user.id);
@@ -62,6 +66,8 @@ class TrashService {
   Future<void> restoreTrash() async {
     final user = _userService.getMyUser();
 
+    // await _apiService.trashApi.restoreTrash();
+    _apiService.ensureEndpointFromStore(); // pizcloud
     await _apiService.trashApi.restoreTrash();
 
     final trashedAssets = await _assetRepository.getTrashAssets(user.id);

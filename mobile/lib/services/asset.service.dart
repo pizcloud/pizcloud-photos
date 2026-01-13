@@ -97,6 +97,8 @@ class AssetService {
     DateTime since,
   ) async {
     final dto = AssetDeltaSyncDto(updatedAfter: since, userIds: users.map((e) => e.id).toList());
+    // final changes = await _apiService.syncApi.getDeltaSync(dto); // pizcloud
+    _apiService.ensureEndpointFromStore(); // pizcloud
     final changes = await _apiService.syncApi.getDeltaSync(dto);
     return changes == null || changes.needsFullSync
         ? (null, null)
@@ -107,6 +109,8 @@ class AssetService {
   // If the server is not reachable `null` is returned.
   Future<List<PersonWithFacesResponseDto>?> getRemotePeopleOfAsset(String remoteId) async {
     try {
+      // final AssetResponseDto? dto = await _apiService.assetsApi.getAssetInfo(remoteId); // pizcloud
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final AssetResponseDto? dto = await _apiService.assetsApi.getAssetInfo(remoteId);
 
       return dto?.people;
@@ -127,6 +131,8 @@ class AssetService {
       while (true) {
         final dto = AssetFullSyncDto(limit: chunkSize, updatedUntil: until, lastId: lastId, userId: user.id);
         log.fine("Requesting $chunkSize assets from $lastId");
+        // final List<AssetResponseDto>? assets = await _apiService.syncApi.getFullSyncForUser(dto);
+        _apiService.ensureEndpointFromStore(); // pizcloud
         final List<AssetResponseDto>? assets = await _apiService.syncApi.getFullSyncForUser(dto);
         if (assets == null) return null;
         log.fine("Received ${assets.length} assets from ${assets.firstOrNull?.id} to ${assets.lastOrNull?.id}");
@@ -148,6 +154,8 @@ class AssetService {
     // fileSize is always filled on the server but not set on client
     if (a.exifInfo?.fileSize == null) {
       if (a.isRemote) {
+        // final dto = await _apiService.assetsApi.getAssetInfo(a.remoteId!);
+        _apiService.ensureEndpointFromStore(); // pizcloud
         final dto = await _apiService.assetsApi.getAssetInfo(a.remoteId!);
         if (dto != null && dto.exifInfo != null) {
           final newExif = Asset.remote(dto).exifInfo!.copyWith(assetId: a.id);
@@ -168,6 +176,8 @@ class AssetService {
   }
 
   Future<void> updateAssets(List<Asset> assets, UpdateAssetDto updateAssetDto) async {
+    // return await _apiService.assetsApi.updateAssets(
+    _apiService.ensureEndpointFromStore(); // pizcloud
     return await _apiService.assetsApi.updateAssets(
       AssetBulkUpdateDto(
         ids: assets.map((e) => e.remoteId!).toList(),
@@ -389,6 +399,8 @@ class AssetService {
       return;
     }
 
+    // await _apiService.assetsApi.deleteAssets(
+    _apiService.ensureEndpointFromStore(); // pizcloud
     await _apiService.assetsApi.deleteAssets(
       AssetBulkDeleteDto(ids: candidates.map((a) => a.remoteId!).toList(), force: shouldDeletePermanently),
     );

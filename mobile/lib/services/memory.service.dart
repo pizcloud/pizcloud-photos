@@ -21,6 +21,8 @@ class MemoryService {
   Future<List<Memory>?> getMemoryLane() async {
     try {
       final now = DateTime.now();
+      // final data = await _apiService.memoriesApi.searchMemories(
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final data = await _apiService.memoriesApi.searchMemories(
         for_: DateTime.utc(now.year, now.month, now.day, 0, 0, 0),
       );
@@ -49,6 +51,8 @@ class MemoryService {
 
   Future<Memory?> getMemoryById(String id) async {
     try {
+      // final memoryResponse = await _apiService.memoriesApi.getMemory(id);
+      _apiService.ensureEndpointFromStore(); // pizcloud
       final memoryResponse = await _apiService.memoriesApi.getMemory(id);
 
       if (memoryResponse == null) {

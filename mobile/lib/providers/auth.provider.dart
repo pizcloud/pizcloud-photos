@@ -134,6 +134,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     UserDto? user = _userService.tryGetMyUser();
 
     try {
+      await _ensureApiEndpointReady(); // pizcloud
+      // final serverUser = await _userService.refreshMyUser().timeout(_timeoutDuration); // pizcloud
       final serverUser = await _userService.refreshMyUser().timeout(_timeoutDuration);
 
       if (serverUser == null) {
@@ -165,6 +167,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
 
+    // pizcloud Ensure ApiService is bound to the stored endpoint after login succeeds
+    final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+    if (endpoint != null && endpoint.isNotEmpty) {
+      // _apiService.setEndpoint(endpoint);
+      _apiService.setEndpoint(endpoint);
+    }
+    // #pizcloud
+
     state = state.copyWith(
       deviceId: deviceId,
       userId: user.id,
@@ -176,6 +186,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     return true;
   }
+
+  // pizcloud
+  Future<void> _ensureApiEndpointReady() async {
+    final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+    if (endpoint == null || endpoint.isEmpty) {
+      return;
+    }
+
+    final current = _apiService.usersApi.apiClient.basePath;
+    if (current == endpoint) {
+      return;
+    }
+
+    // old: no explicit setEndpoint safeguard before refreshMyUser
+    // _apiService.setEndpoint(endpoint);
+    _apiService.setEndpoint(endpoint);
+  }
+  // #pizcloud
 
   Future<void> saveWifiName(String wifiName) async {
     await Store.put(StoreKey.preferredWifiName, wifiName);

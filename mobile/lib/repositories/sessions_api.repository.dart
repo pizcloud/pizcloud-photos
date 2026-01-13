@@ -2,21 +2,34 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/models/sessions/session_create_response.model.dart';
 import 'package:immich_mobile/providers/api.provider.dart';
 import 'package:immich_mobile/repositories/api.repository.dart';
+import 'package:immich_mobile/services/api.service.dart'; // pizcloud
 import 'package:openapi/api.dart';
 
 final sessionsAPIRepositoryProvider = Provider(
-  (ref) => SessionsAPIRepository(ref.watch(apiServiceProvider).sessionsApi),
+  (ref) => SessionsAPIRepository(ref.watch(apiServiceProvider)), // pizcloud
 );
 
 class SessionsAPIRepository extends ApiRepository {
-  final SessionsApi _api;
+  // pizcloud
+  final ApiService _apiService;
+  // final SessionsApi _api;
 
-  SessionsAPIRepository(this._api);
+  SessionsAPIRepository(this._apiService);
+  // SessionsAPIRepository(this._api);
+
+  SessionsApi get _api => _apiService.sessionsApi;
+  // #pizcloud
 
   Future<SessionCreateResponse> createSession(String deviceType, String deviceOS, {int? duration}) async {
-    final dto = await checkNull(
-      _api.createSession(SessionCreateDto(deviceType: deviceType, deviceOS: deviceOS, duration: duration)),
+    // pizcloud
+    // final dto = await checkNull(
+    //   _api.createSession(SessionCreateDto(deviceType: deviceType, deviceOS: deviceOS, duration: duration)),
+    // );
+    final dto = await checkNullWithService(
+      _apiService,
+      () => _api.createSession(SessionCreateDto(deviceType: deviceType, deviceOS: deviceOS, duration: duration)),
     );
+    // #pizcloud
 
     return SessionCreateResponse(
       id: dto.id,

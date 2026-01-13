@@ -1,7 +1,22 @@
 // import 'package:immich_mobile/infrastructure/repositories/db.repository.dart';
 import 'dart:convert';
+import 'package:immich_mobile/domain/models/store.model.dart'; // pizcloud
+import 'package:immich_mobile/entities/store.entity.dart'; // pizcloud
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:openapi/api.dart';
+
+// pizcloud
+void _ensureEndpoint(ApiService apiService) {
+  final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+  if (endpoint == null || endpoint.isEmpty) {
+    return;
+  }
+  if (apiService.apiClient.basePath == endpoint) {
+    return;
+  }
+  apiService.setEndpoint(endpoint);
+}
+// #pizcloud
 
 ({List<String> userIds, List<String> missingEmails}) _emptyResolution() =>
     (userIds: const <String>[], missingEmails: const <String>[]);
@@ -45,6 +60,8 @@ Future<({List<String> userIds, List<String> missingEmails})> resolveShareUserIds
     return _emptyResolution();
   }
 
+  // final response = await apiService.apiClient.invokeAPI( // pizcloud
+  _ensureEndpoint(apiService); // pizcloud
   final response = await apiService.apiClient.invokeAPI(
     '/albums/$albumId/resolve-emails',
     'POST',

@@ -3,19 +3,27 @@ import 'package:immich_mobile/infrastructure/utils/user.converter.dart';
 import 'package:immich_mobile/models/activities/activity.model.dart';
 import 'package:immich_mobile/providers/api.provider.dart';
 import 'package:immich_mobile/repositories/api.repository.dart';
+import 'package:immich_mobile/services/api.service.dart'; // pizcloud
 import 'package:openapi/api.dart';
 
-final activityApiRepositoryProvider = Provider(
-  (ref) => ActivityApiRepository(ref.watch(apiServiceProvider).activitiesApi),
-);
+final activityApiRepositoryProvider = Provider((ref) => ActivityApiRepository(ref.watch(apiServiceProvider)));
 
 class ActivityApiRepository extends ApiRepository {
-  final ActivitiesApi _api;
+  // pizcloud
+  final ApiService _apiService;
+  // final ActivitiesApi _api;
 
-  ActivityApiRepository(this._api);
+  ActivityApiRepository(this._apiService);
+  // ActivityApiRepository(this._api);
+
+  ActivitiesApi get _api => _apiService.activitiesApi;
+  // #pizcloud
 
   Future<List<Activity>> getAll(String albumId, {String? assetId}) async {
-    final response = await checkNull(_api.getActivities(albumId, assetId: assetId));
+    // pizcloud
+    // final response = await checkNull(_api.getActivities(albumId, assetId: assetId));
+    final response = await checkNullWithService(_apiService, () => _api.getActivities(albumId, assetId: assetId));
+    // pizcloud
     return response.map(_toActivity).toList();
   }
 
@@ -26,16 +34,24 @@ class ActivityApiRepository extends ApiRepository {
       assetId: assetId,
       comment: comment,
     );
-    final response = await checkNull(_api.createActivity(dto));
+    // final response = await checkNull(_api.createActivity(dto)); // pizcloud
+    final response = await checkNullWithService(_apiService, () => _api.createActivity(dto)); // pizcloud
     return _toActivity(response);
   }
 
   Future<void> delete(String id) {
-    return checkNull(_api.deleteActivity(id));
+    // return checkNull(_api.deleteActivity(id)); // pizcloud
+    return checkNullWithService(_apiService, () => _api.deleteActivity(id)); // pizcloud
   }
 
   Future<ActivityStats> getStats(String albumId, {String? assetId}) async {
-    final response = await checkNull(_api.getActivityStatistics(albumId, assetId: assetId));
+    // pizcloud
+    // final response = await checkNull(_api.getActivityStatistics(albumId, assetId: assetId));
+    final response = await checkNullWithService(
+      _apiService,
+      () => _api.getActivityStatistics(albumId, assetId: assetId),
+    );
+    // #pizcloud
     return ActivityStats(comments: response.comments);
   }
 
