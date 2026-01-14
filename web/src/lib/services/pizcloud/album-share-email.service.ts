@@ -33,7 +33,7 @@ const request = async (path: string, init?: RequestInit) => {
 };
 
 export const getSharedEmails = async (albumId: string): Promise<SharedEmailDto[]> => {
-  const data = await request(`/albums/${albumId}/shared-emails`, {
+  const data = await request(`/albums/shared-emails`, {
     method: 'GET',
     headers: { accept: 'application/json' },
   });
@@ -46,7 +46,7 @@ export const getSharedEmails = async (albumId: string): Promise<SharedEmailDto[]
 };
 
 export const addSharedEmail = async (albumId: string, email: string): Promise<SharedEmailDto[]> => {
-  const data = await request(`/albums/${albumId}/shared-emails`, {
+  const data = await request(`/albums/shared-emails`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({ email }),
@@ -60,7 +60,7 @@ export const addSharedEmail = async (albumId: string, email: string): Promise<Sh
 };
 
 export const removeSharedEmail = async (albumId: string, email: string): Promise<SharedEmailDto[]> => {
-  const data = await request(`/albums/${albumId}/shared-emails`, {
+  const data = await request(`/albums/shared-emails`, {
     method: 'DELETE',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({ email }),

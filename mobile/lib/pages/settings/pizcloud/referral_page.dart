@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_payout_method_page.dart';
-import 'package:scroll_date_picker/scroll_date_picker.dart';
+// import 'package:scroll_date_picker/scroll_date_picker.dart';
 // import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -13,7 +13,7 @@ import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
 import 'package:immich_mobile/services/pizcloud/referral_payout_method.service.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_withdrawals_page.dart';
-import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
+// import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
@@ -101,10 +101,10 @@ class ReferralPage extends HookConsumerWidget {
     final summaryError = useState<String?>(null);
 
     // Apply-referrer input
-    final applyCodeController = useTextEditingController();
-    final applyLoading = useState<bool>(false);
-    final applyError = useState<String?>(null);
-    final applySuccess = useState<String?>(null);
+    // final applyCodeController = useTextEditingController();
+    // final applyLoading = useState<bool>(false);
+    // final applyError = useState<String?>(null);
+    // final applySuccess = useState<String?>(null);
 
     final minWithdrawAmount = AppConfig.minReferralWithdrawAmount;
 
@@ -268,91 +268,91 @@ class ReferralPage extends HookConsumerWidget {
       }
     }
 
-    Future<void> handleApplyReferrer() async {
-      applyError.value = null;
-      applySuccess.value = null;
+    // Future<void> handleApplyReferrer() async {
+    //   applyError.value = null;
+    //   applySuccess.value = null;
 
-      final code = applyCodeController.text.trim();
+    //   final code = applyCodeController.text.trim();
 
-      if (code.isEmpty) {
-        applyError.value = 'referral.apply_empty_error'.tr();
-        return;
-      }
+    //   if (code.isEmpty) {
+    //     applyError.value = 'referral.apply_empty_error'.tr();
+    //     return;
+    //   }
 
-      if (userEmail == null || userEmail!.isEmpty) {
-        applyError.value = 'referral.apply_missing_email'.tr();
-        return;
-      }
+    //   if (userEmail == null || userEmail!.isEmpty) {
+    //     applyError.value = 'referral.apply_missing_email'.tr();
+    //     return;
+    //   }
 
-      applyLoading.value = true;
+    //   applyLoading.value = true;
 
-      try {
-        // New Dio-based implementation using PersistCookieJar (sid) + headers
-        final api = await pizPersistApiFuture;
-        final res = await api.client.post<dynamic>('/referral/apply-code', data: {'email': userEmail, 'code': code});
+    //   try {
+    //     // New Dio-based implementation using PersistCookieJar (sid) + headers
+    //     final api = await pizPersistApiFuture;
+    //     final res = await api.client.post<dynamic>('/referral/apply-code', data: {'email': userEmail, 'code': code});
 
-        final status = res.statusCode ?? 0;
-        if (status < 200 || status >= 300) {
-          debugPrint('Failed to apply referral code: $status ${res.data}');
-          applyError.value = 'referral.apply_unknown_error'.tr();
-          return;
-        }
+    //     final status = res.statusCode ?? 0;
+    //     if (status < 200 || status >= 300) {
+    //       debugPrint('Failed to apply referral code: $status ${res.data}');
+    //       applyError.value = 'referral.apply_unknown_error'.tr();
+    //       return;
+    //     }
 
-        final dynamic body = res.data;
-        if (body is! Map<String, dynamic>) {
-          applyError.value = 'referral.apply_unknown_error'.tr();
-          return;
-        }
+    //     final dynamic body = res.data;
+    //     if (body is! Map<String, dynamic>) {
+    //       applyError.value = 'referral.apply_unknown_error'.tr();
+    //       return;
+    //     }
 
-        final success = body['success'] == true;
-        if (!success) {
-          final reason = (body['reason'] ?? '').toString().toUpperCase();
+    //     final success = body['success'] == true;
+    //     if (!success) {
+    //       final reason = (body['reason'] ?? '').toString().toUpperCase();
 
-          switch (reason) {
-            case 'NOT_FOUND':
-              applyError.value = 'referral.apply_not_found'.tr();
-              break;
-            case 'OWN_CODE':
-              applyError.value = 'referral.apply_own_code'.tr();
-              break;
-            case 'ALREADY_HAS_REFERRER':
-              applyError.value = 'referral.apply_already_has_referrer'.tr();
-              break;
-            case 'EMPTY_CODE':
-              applyError.value = 'referral.apply_empty_error'.tr();
-              break;
-            case 'USER_NOT_FOUND':
-            case 'EMAIL_REQUIRED':
-              applyError.value = 'referral.apply_missing_email'.tr();
-              break;
-            default:
-              applyError.value = 'referral.apply_unknown_error'.tr();
-          }
-          return;
-        }
+    //       switch (reason) {
+    //         case 'NOT_FOUND':
+    //           applyError.value = 'referral.apply_not_found'.tr();
+    //           break;
+    //         case 'OWN_CODE':
+    //           applyError.value = 'referral.apply_own_code'.tr();
+    //           break;
+    //         case 'ALREADY_HAS_REFERRER':
+    //           applyError.value = 'referral.apply_already_has_referrer'.tr();
+    //           break;
+    //         case 'EMPTY_CODE':
+    //           applyError.value = 'referral.apply_empty_error'.tr();
+    //           break;
+    //         case 'USER_NOT_FOUND':
+    //         case 'EMAIL_REQUIRED':
+    //           applyError.value = 'referral.apply_missing_email'.tr();
+    //           break;
+    //         default:
+    //           applyError.value = 'referral.apply_unknown_error'.tr();
+    //       }
+    //       return;
+    //     }
 
-        final refData = body['referrer'];
-        if (refData is Map<String, dynamic>) {
-          final info = ReferrerInfo(
-            email: (refData['email'] ?? '').toString(),
-            referralCode: refData['referralCode']?.toString(),
-            discountStartAt: refData['discountStartAt']?.toString(),
-            discountEndAt: refData['discountEndAt']?.toString(),
-          );
+    //     final refData = body['referrer'];
+    //     if (refData is Map<String, dynamic>) {
+    //       final info = ReferrerInfo(
+    //         email: (refData['email'] ?? '').toString(),
+    //         referralCode: refData['referralCode']?.toString(),
+    //         discountStartAt: refData['discountStartAt']?.toString(),
+    //         discountEndAt: refData['discountEndAt']?.toString(),
+    //       );
 
-          localReferrer.value = info;
-          applyCodeController.clear();
-          applySuccess.value = 'referral.apply_success'.tr(namedArgs: {'email': info.email});
-        } else {
-          applyError.value = 'referral.apply_unknown_error'.tr();
-        }
-      } catch (e, s) {
-        debugPrint('Error applying referral code: $e\n$s');
-        applyError.value = 'referral.apply_unknown_error'.tr();
-      } finally {
-        applyLoading.value = false;
-      }
-    }
+    //       localReferrer.value = info;
+    //       applyCodeController.clear();
+    //       applySuccess.value = 'referral.apply_success'.tr(namedArgs: {'email': info.email});
+    //     } else {
+    //       applyError.value = 'referral.apply_unknown_error'.tr();
+    //     }
+    //   } catch (e, s) {
+    //     debugPrint('Error applying referral code: $e\n$s');
+    //     applyError.value = 'referral.apply_unknown_error'.tr();
+    //   } finally {
+    //     applyLoading.value = false;
+    //   }
+    // }
 
     final isEmptyState =
         !summaryLoading.value &&
@@ -917,143 +917,143 @@ class _ReferralCodeCard extends StatelessWidget {
   }
 }
 
-class _ReferrerSection extends StatelessWidget {
-  const _ReferrerSection({
-    required this.localReferrer,
-    required this.applyCodeController,
-    required this.applyLoading,
-    required this.applyError,
-    required this.applySuccess,
-    required this.onApply,
-  });
+// class _ReferrerSection extends StatelessWidget {
+//   const _ReferrerSection({
+//     required this.localReferrer,
+//     required this.applyCodeController,
+//     required this.applyLoading,
+//     required this.applyError,
+//     required this.applySuccess,
+//     required this.onApply,
+//   });
 
-  final ReferrerInfo? localReferrer;
-  final TextEditingController applyCodeController;
-  final bool applyLoading;
-  final String? applyError;
-  final String? applySuccess;
-  final VoidCallback onApply;
+//   final ReferrerInfo? localReferrer;
+//   final TextEditingController applyCodeController;
+//   final bool applyLoading;
+//   final String? applyError;
+//   final String? applySuccess;
+//   final VoidCallback onApply;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dividerColor = theme.dividerColor.withValues(alpha: 0.4);
+//   @override
+//   Widget build(BuildContext context) {
+//     final theme = Theme.of(context);
+//     final dividerColor = theme.dividerColor.withValues(alpha: 0.4);
 
-    if (localReferrer != null) {
-      final info = localReferrer!;
-      final hasDiscountRange = (info.discountStartAt ?? '').isNotEmpty && (info.discountEndAt ?? '').isNotEmpty;
+//     if (localReferrer != null) {
+//       final info = localReferrer!;
+//       final hasDiscountRange = (info.discountStartAt ?? '').isNotEmpty && (info.discountEndAt ?? '').isNotEmpty;
 
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: dividerColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'referral.referrer_applied_title'.tr(),
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Text(info.email, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-            if (info.referralCode != null && info.referralCode!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    'referral.referrer_code'.tr(),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(info.referralCode!, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ],
-            if (hasDiscountRange) ...[
-              const SizedBox(height: 4),
-              Text(
-                'referral.referrer_discount_range'.tr(
-                  namedArgs: {'start': formatDate(info.discountStartAt), 'end': formatDate(info.discountEndAt)},
-                ),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ],
-        ),
-      );
-    }
+//       return Container(
+//         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+//         decoration: BoxDecoration(
+//           color: theme.colorScheme.surface,
+//           borderRadius: BorderRadius.circular(12),
+//           border: Border.all(color: dividerColor),
+//         ),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text(
+//               'referral.referrer_applied_title'.tr(),
+//               style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+//             ),
+//             const SizedBox(height: 8),
+//             Text(info.email, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+//             if (info.referralCode != null && info.referralCode!.isNotEmpty) ...[
+//               const SizedBox(height: 4),
+//               Row(
+//                 children: [
+//                   Text(
+//                     'referral.referrer_code'.tr(),
+//                     style: theme.textTheme.bodySmall?.copyWith(
+//                       color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
+//                     ),
+//                   ),
+//                   const SizedBox(width: 4),
+//                   Text(info.referralCode!, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+//                 ],
+//               ),
+//             ],
+//             if (hasDiscountRange) ...[
+//               const SizedBox(height: 4),
+//               Text(
+//                 'referral.referrer_discount_range'.tr(
+//                   namedArgs: {'start': formatDate(info.discountStartAt), 'end': formatDate(info.discountEndAt)},
+//                 ),
+//                 style: theme.textTheme.bodySmall?.copyWith(
+//                   color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
+//                 ),
+//               ),
+//             ],
+//           ],
+//         ),
+//       );
+//     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: dividerColor, style: BorderStyle.solid),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'referral.referrer_label'.tr(),
-            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'referral.referrer_hint'.tr(),
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8)),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: applyCodeController,
-                  decoration: InputDecoration(
-                    hintText: 'referral.apply_referrer_placeholder'.tr(),
-                    isDense: true,
-                    filled: true,
-                    fillColor: theme.colorScheme.surfaceContainerHighest,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(999),
-                      borderSide: BorderSide(color: dividerColor),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  ),
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => onApply(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 36,
-                child: _PillButton(
-                  label: applyLoading ? 'referral.apply_loading'.tr() : 'referral.apply_referrer_button'.tr(),
-                  onPressed: onApply,
-                  primary: true,
-                  isBusy: applyLoading,
-                ),
-              ),
-            ],
-          ),
-          if (applyError != null && applyError!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(applyError!, style: theme.textTheme.bodySmall?.copyWith(color: Colors.red.shade500)),
-          ] else if (applySuccess != null && applySuccess!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(applySuccess!, style: theme.textTheme.bodySmall?.copyWith(color: Colors.green.shade600)),
-          ],
-        ],
-      ),
-    );
-  }
-}
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+//       decoration: BoxDecoration(
+//         color: theme.colorScheme.surface,
+//         borderRadius: BorderRadius.circular(12),
+//         border: Border.all(color: dividerColor, style: BorderStyle.solid),
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Text(
+//             'referral.referrer_label'.tr(),
+//             style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+//           ),
+//           const SizedBox(height: 4),
+//           Text(
+//             'referral.referrer_hint'.tr(),
+//             style: theme.textTheme.bodySmall?.copyWith(color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8)),
+//           ),
+//           const SizedBox(height: 12),
+//           Row(
+//             children: [
+//               Expanded(
+//                 child: TextField(
+//                   controller: applyCodeController,
+//                   decoration: InputDecoration(
+//                     hintText: 'referral.apply_referrer_placeholder'.tr(),
+//                     isDense: true,
+//                     filled: true,
+//                     fillColor: theme.colorScheme.surfaceContainerHighest,
+//                     border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(999),
+//                       borderSide: BorderSide(color: dividerColor),
+//                     ),
+//                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+//                   ),
+//                   textInputAction: TextInputAction.done,
+//                   onSubmitted: (_) => onApply(),
+//                 ),
+//               ),
+//               const SizedBox(width: 8),
+//               SizedBox(
+//                 height: 36,
+//                 child: _PillButton(
+//                   label: applyLoading ? 'referral.apply_loading'.tr() : 'referral.apply_referrer_button'.tr(),
+//                   onPressed: onApply,
+//                   primary: true,
+//                   isBusy: applyLoading,
+//                 ),
+//               ),
+//             ],
+//           ),
+//           if (applyError != null && applyError!.isNotEmpty) ...[
+//             const SizedBox(height: 8),
+//             Text(applyError!, style: theme.textTheme.bodySmall?.copyWith(color: Colors.red.shade500)),
+//           ] else if (applySuccess != null && applySuccess!.isNotEmpty) ...[
+//             const SizedBox(height: 8),
+//             Text(applySuccess!, style: theme.textTheme.bodySmall?.copyWith(color: Colors.green.shade600)),
+//           ],
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class _SummaryStats extends StatelessWidget {
   const _SummaryStats({

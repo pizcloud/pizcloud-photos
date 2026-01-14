@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidate } from '$app/navigation'; // pizcloud
   import { resolve } from '$app/paths';
   import AlbumCardGroup from '$lib/components/album-page/album-card-group.svelte';
   import AlbumsTable from '$lib/components/album-page/albums-table.svelte';
@@ -195,7 +195,8 @@
 
   onMount(async () => {
     if (allowEdit) {
-      await removeAlbumsIfEmpty();
+      await invalidate('app:albums');
+      // await removeAlbumsIfEmpty();
     }
   });
 
@@ -272,10 +273,19 @@
     }
   };
 
-  const removeAlbumsIfEmpty = async () => {
-    const albumsToRemove = ownedAlbums.filter((album) => album.assetCount === 0 && !album.albumName);
-    await Promise.allSettled(albumsToRemove.map((album) => handleDeleteAlbum(album, { prompt: false, notify: false })));
-  };
+  // pizcloud
+  // const removeAlbumsIfEmpty = async () => {
+  //   const albumsToRemove = ownedAlbums.filter((album) => album.assetCount === 0 && !album.albumName);
+  //   if (albumsToRemove.length === 0) {
+  //     return;
+  //   }
+  //
+  //   await Promise.allSettled(
+  //     albumsToRemove.map((album) => handleDeleteAlbum(album, { prompt: false, notify: false })),
+  //   );
+  //   await invalidate('app:albums'); // pizcloud
+  // };
+  // #pizcloud
 
   const updateAlbumInfo = (album: AlbumResponseDto) => {
     ownedAlbums[ownedAlbums.findIndex(({ id }) => id === album.id)] = album;

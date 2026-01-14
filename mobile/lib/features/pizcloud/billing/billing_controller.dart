@@ -3,7 +3,6 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'billing_state.dart';
 import 'billing_repository.dart';
 import 'iap_service.dart';
-import 'package:flutter/foundation.dart';
 
 class BillingController extends StateNotifier<BillingState> {
   BillingController({required this.repo, required this.iap}) : super(BillingState.initial());

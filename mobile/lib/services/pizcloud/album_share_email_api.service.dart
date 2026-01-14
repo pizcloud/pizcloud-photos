@@ -15,7 +15,7 @@ class AlbumShareEmailApiService {
   static Future<List<SharedEmailDto>> getSharedEmails({required String albumId}) async {
     debugPrint('albumId: $albumId');
     final api = await _apiFuture();
-    final res = await api.client.get<dynamic>('/albums/$albumId/shared-emails');
+    final res = await api.client.get<dynamic>('/albums/shared-emails');
     debugPrint('res.statusCode: ${res.statusCode}');
 
     final status = res.statusCode ?? 0;
@@ -30,7 +30,7 @@ class AlbumShareEmailApiService {
 
   static Future<List<SharedEmailDto>> addSharedEmail({required String albumId, required String email}) async {
     final api = await _apiFuture();
-    final res = await api.client.post<dynamic>('/albums/$albumId/shared-emails', data: {'email': email});
+    final res = await api.client.post<dynamic>('/albums/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {
@@ -44,7 +44,7 @@ class AlbumShareEmailApiService {
 
   static Future<List<SharedEmailDto>> removeSharedEmail({required String albumId, required String email}) async {
     final api = await _apiFuture();
-    final res = await api.client.delete<dynamic>('/albums/$albumId/shared-emails', data: {'email': email});
+    final res = await api.client.delete<dynamic>('/albums/shared-emails', data: {'email': email});
 
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {
