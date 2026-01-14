@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
@@ -12,29 +12,31 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
-import 'package:immich_mobile/providers/auth.provider.dart';
+// import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/backup/backup.provider.dart';
 import 'package:immich_mobile/providers/gallery_permission.provider.dart';
-import 'package:immich_mobile/providers/server_info.provider.dart';
+// import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/repositories/local_files_manager.repository.dart';
 import 'package:immich_mobile/routing/router.dart';
-import 'package:immich_mobile/utils/url_helper.dart';
+// import 'package:immich_mobile/utils/url_helper.dart';
 // import 'package:immich_mobile/utils/version_compatibility.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/common/pizcloud/pizcloud_logo.dart';
 import 'package:immich_mobile/widgets/forms/login/loading_icon.dart';
-import 'package:immich_mobile/widgets/forms/login/server_endpoint_input.dart';
+// import 'package:immich_mobile/widgets/forms/login/server_endpoint_input.dart';
 import 'package:logging/logging.dart';
-import 'package:openapi/api.dart';
+// import 'package:openapi/api.dart';
 // import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
+import 'package:flutter/gestures.dart';
 
 import 'package:immich_mobile/services/pizcloud/google.service.dart';
 import 'package:immich_mobile/services/pizcloud/login_with_email.service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});
@@ -49,24 +51,24 @@ class LoginForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final emailController = useTextEditingController.fromValue(TextEditingValue.empty);
+    // final emailController = useTextEditingController.fromValue(TextEditingValue.empty);
     // final passwordController = useTextEditingController.fromValue(TextEditingValue.empty);
-    final serverEndpointController = useTextEditingController.fromValue(TextEditingValue.empty);
+    // final serverEndpointController = useTextEditingController.fromValue(TextEditingValue.empty);
     // final emailFocusNode = useFocusNode();
     // final passwordFocusNode = useFocusNode();
-    final serverEndpointFocusNode = useFocusNode();
+    // final serverEndpointFocusNode = useFocusNode();
     final isLoading = useState<bool>(false);
     final isLoadingServer = useState<bool>(false);
-    final isOauthEnable = useState<bool>(false);
-    final isPasswordLoginEnable = useState<bool>(false);
-    final oAuthButtonLabel = useState<String>('OAuth');
+    // final isOauthEnable = useState<bool>(false);
+    // final isPasswordLoginEnable = useState<bool>(false);
+    // final oAuthButtonLabel = useState<String>('OAuth');
     final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
     // final serverInfo = ref.watch(serverInfoProvider);
     final warningMessage = useState<String?>(null);
     final loginFormKey = GlobalKey<FormState>();
-    final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
+    // final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
 
-    final needsVerification = useState<bool>(false); // pizcloud: new email verification state
+    // final needsVerification = useState<bool>(false); // pizcloud: new email verification state
 
     // Validation states
     // focus & busy states for login actions
@@ -79,115 +81,115 @@ class LoginForm extends HookConsumerWidget {
 
     final GoogleService googleService = GoogleService();
     final LoginWithEmailService loginWithEmailService = LoginWithEmailService();
-    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    // final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     /// Fetch the server login credential and enables oAuth login if necessary
     /// Returns true if successful, false otherwise
-    Future<void> getServerAuthSettings() async {
-      final sanitizeServerUrl = sanitizeUrl(serverEndpointController.text);
-      final serverUrl = punycodeEncodeUrl(sanitizeServerUrl);
+    // Future<void> getServerAuthSettings() async {
+    //   final sanitizeServerUrl = sanitizeUrl(serverEndpointController.text);
+    //   final serverUrl = punycodeEncodeUrl(sanitizeServerUrl);
 
-      // Guard empty URL
-      if (serverUrl.isEmpty) {
-        ImmichToast.show(context: context, msg: "login_form_server_empty".tr(), toastType: ToastType.error);
-      }
+    //   // Guard empty URL
+    //   if (serverUrl.isEmpty) {
+    //     ImmichToast.show(context: context, msg: "login_form_server_empty".tr(), toastType: ToastType.error);
+    //   }
 
-      try {
-        isLoadingServer.value = true;
+    //   try {
+    //     isLoadingServer.value = true;
 
-        warningMessage.value = null; // pizcloud
+    //     warningMessage.value = null; // pizcloud
 
-        final endpoint = await ref.read(authProvider.notifier).validateServerUrl(serverUrl);
+    //     final endpoint = await ref.read(authProvider.notifier).validateServerUrl(serverUrl);
 
-        // Fetch and load server config and features
-        await ref.read(serverInfoProvider.notifier).getServerInfo();
+    //     // Fetch and load server config and features
+    //     await ref.read(serverInfoProvider.notifier).getServerInfo();
 
-        final serverInfo = ref.read(serverInfoProvider);
-        final features = serverInfo.serverFeatures;
-        final config = serverInfo.serverConfig;
+    //     final serverInfo = ref.read(serverInfoProvider);
+    //     final features = serverInfo.serverFeatures;
+    //     final config = serverInfo.serverConfig;
 
-        isOauthEnable.value = features.oauthEnabled;
-        isPasswordLoginEnable.value = features.passwordLogin;
-        oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty ? config.oauthButtonText : 'OAuth';
+    //     isOauthEnable.value = features.oauthEnabled;
+    //     isPasswordLoginEnable.value = features.passwordLogin;
+    //     oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty ? config.oauthButtonText : 'OAuth';
 
-        serverEndpoint.value = endpoint;
-      } on ApiException catch (e) {
-        lastBootstrapFailed.value = true; // pizcloud
+    //     serverEndpoint.value = endpoint;
+    //   } on ApiException catch (e) {
+    //     lastBootstrapFailed.value = true; // pizcloud
 
-        ImmichToast.show(
-          context: context,
-          msg: e.message ?? 'login_form_api_exception'.tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-        isOauthEnable.value = false;
-        isPasswordLoginEnable.value = true;
-        isLoadingServer.value = false;
-      } on HandshakeException {
-        ImmichToast.show(
-          context: context,
-          msg: 'login_form_handshake_exception'.tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-        isOauthEnable.value = false;
-        isPasswordLoginEnable.value = true;
-        isLoadingServer.value = false;
-      } catch (e) {
-        ImmichToast.show(
-          context: context,
-          msg: 'login_form_server_error'.tr(),
-          toastType: ToastType.error,
-          gravity: ToastGravity.TOP,
-        );
-        isOauthEnable.value = false;
-        isPasswordLoginEnable.value = true;
-        isLoadingServer.value = false;
-      }
+    //     ImmichToast.show(
+    //       context: context,
+    //       msg: e.message ?? 'login_form_api_exception'.tr(),
+    //       toastType: ToastType.error,
+    //       gravity: ToastGravity.TOP,
+    //     );
+    //     isOauthEnable.value = false;
+    //     isPasswordLoginEnable.value = true;
+    //     isLoadingServer.value = false;
+    //   } on HandshakeException {
+    //     ImmichToast.show(
+    //       context: context,
+    //       msg: 'login_form_handshake_exception'.tr(),
+    //       toastType: ToastType.error,
+    //       gravity: ToastGravity.TOP,
+    //     );
+    //     isOauthEnable.value = false;
+    //     isPasswordLoginEnable.value = true;
+    //     isLoadingServer.value = false;
+    //   } catch (e) {
+    //     ImmichToast.show(
+    //       context: context,
+    //       msg: 'login_form_server_error'.tr(),
+    //       toastType: ToastType.error,
+    //       gravity: ToastGravity.TOP,
+    //     );
+    //     isOauthEnable.value = false;
+    //     isPasswordLoginEnable.value = true;
+    //     isLoadingServer.value = false;
+    //   }
 
-      isLoadingServer.value = false;
-    }
+    //   isLoadingServer.value = false;
+    // }
 
     // pizcloud
 
-    String ensureApiSuffix(String url) {
-      final u = url.trim().replaceAll(RegExp(r'/+$'), '');
-      if (u.endsWith('/api')) return u;
-      return '$u/api';
-    }
+    // String ensureApiSuffix(String url) {
+    //   final u = url.trim().replaceAll(RegExp(r'/+$'), '');
+    //   if (u.endsWith('/api')) return u;
+    //   return '$u/api';
+    // }
 
-    Future<bool> tryValidateUrl(String candidate) async {
-      serverEndpointController.text = candidate;
-      try {
-        await getServerAuthSettings();
-        return serverEndpoint.value != null;
-      } catch (_) {
-        return false;
-      }
-    }
+    // Future<bool> tryValidateUrl(String candidate) async {
+    //   serverEndpointController.text = candidate;
+    //   try {
+    //     await getServerAuthSettings();
+    //     return serverEndpoint.value != null;
+    //   } catch (_) {
+    //     return false;
+    //   }
+    // }
 
-    Future<void> bootstrapWithUrl(String start) async {
-      isBootstrapping.value = true;
-      lastBootstrapFailed.value = false;
+    // Future<void> bootstrapWithUrl(String start) async {
+    //   isBootstrapping.value = true;
+    //   lastBootstrapFailed.value = false;
 
-      final candidates = <String>[start, ensureApiSuffix(start)];
-      final backoffs = <int>[0, 800, 1500, 2500];
+    //   final candidates = <String>[start, ensureApiSuffix(start)];
+    //   final backoffs = <int>[0, 800, 1500, 2500];
 
-      bool done = false;
-      for (final delayMs in backoffs) {
-        if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
-        for (final c in candidates) {
-          if (await tryValidateUrl(c)) {
-            done = true;
-            break;
-          }
-        }
-        if (done) break;
-      }
+    //   bool done = false;
+    //   for (final delayMs in backoffs) {
+    //     if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
+    //     for (final c in candidates) {
+    //       if (await tryValidateUrl(c)) {
+    //         done = true;
+    //         break;
+    //       }
+    //     }
+    //     if (done) break;
+    //   }
 
-      if (!done) lastBootstrapFailed.value = true;
-      isBootstrapping.value = false;
-    }
+    //   if (!done) lastBootstrapFailed.value = true;
+    //   isBootstrapping.value = false;
+    // }
 
     // pizcloud: no defaultServer and no manual server selection for now.
     // useEffect(() {
@@ -389,60 +391,60 @@ class LoginForm extends HookConsumerWidget {
     }
 
     // =======================================
-    buildSelectServer() {
-      const buttonRadius = 25.0;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ServerEndpointInput(
-            controller: serverEndpointController,
-            focusNode: serverEndpointFocusNode,
-            onSubmit: getServerAuthSettings,
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(buttonRadius),
-                        bottomLeft: Radius.circular(buttonRadius),
-                      ),
-                    ),
-                  ),
-                  onPressed: () => context.pushRoute(const SettingsRoute()),
-                  icon: const Icon(Icons.settings_rounded),
-                  label: const Text(""),
-                ),
-              ),
-              const SizedBox(width: 1),
-              Expanded(
-                flex: 3,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(buttonRadius),
-                        bottomRight: Radius.circular(buttonRadius),
-                      ),
-                    ),
-                  ),
-                  onPressed: isLoadingServer.value ? null : getServerAuthSettings,
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('next', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          if (isLoadingServer.value) const LoadingIcon(),
-        ],
-      );
-    }
+    // buildSelectServer() {
+    //   const buttonRadius = 25.0;
+    //   return Column(
+    //     crossAxisAlignment: CrossAxisAlignment.stretch,
+    //     children: [
+    //       ServerEndpointInput(
+    //         controller: serverEndpointController,
+    //         focusNode: serverEndpointFocusNode,
+    //         onSubmit: getServerAuthSettings,
+    //       ),
+    //       const SizedBox(height: 18),
+    //       Row(
+    //         children: [
+    //           Expanded(
+    //             child: ElevatedButton.icon(
+    //               style: ElevatedButton.styleFrom(
+    //                 padding: const EdgeInsets.symmetric(vertical: 12),
+    //                 shape: const RoundedRectangleBorder(
+    //                   borderRadius: BorderRadius.only(
+    //                     topLeft: Radius.circular(buttonRadius),
+    //                     bottomLeft: Radius.circular(buttonRadius),
+    //                   ),
+    //                 ),
+    //               ),
+    //               onPressed: () => context.pushRoute(const SettingsRoute()),
+    //               icon: const Icon(Icons.settings_rounded),
+    //               label: const Text(""),
+    //             ),
+    //           ),
+    //           const SizedBox(width: 1),
+    //           Expanded(
+    //             flex: 3,
+    //             child: ElevatedButton.icon(
+    //               style: ElevatedButton.styleFrom(
+    //                 padding: const EdgeInsets.symmetric(vertical: 12),
+    //                 shape: const RoundedRectangleBorder(
+    //                   borderRadius: BorderRadius.only(
+    //                     topRight: Radius.circular(buttonRadius),
+    //                     bottomRight: Radius.circular(buttonRadius),
+    //                   ),
+    //                 ),
+    //               ),
+    //               onPressed: isLoadingServer.value ? null : getServerAuthSettings,
+    //               icon: const Icon(Icons.arrow_forward_rounded),
+    //               label: const Text('next', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),
+    //             ),
+    //           ),
+    //         ],
+    //       ),
+    //       const SizedBox(height: 18),
+    //       if (isLoadingServer.value) const LoadingIcon(),
+    //     ],
+    //   );
+    // }
 
     buildVersionCompatWarning() {
       if (warningMessage.value == null) {
@@ -497,7 +499,18 @@ class LoginForm extends HookConsumerWidget {
                       const SizedBox(height: 16),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Divider(color: context.isDarkTheme ? Colors.white : Colors.black),
+                        child: Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              child: Text('OR', style: Theme.of(context).textTheme.labelMedium),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        // child: Divider(color: context.isDarkTheme ? Colors.white : Colors.black),
                       ),
 
                       const SizedBox(height: 16),
@@ -534,7 +547,46 @@ class LoginForm extends HookConsumerWidget {
                         label: Text(isEmailBusy.value ? 'please_wait'.tr() : 'continue'.tr()),
                       ),
                       const SizedBox(height: 16),
-
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: Theme.of(context).textTheme.bodySmall,
+                            children: [
+                              TextSpan(text: 'auth_agreement_prefix'.tr()),
+                              TextSpan(
+                                text: 'auth_terms_of_service'.tr(),
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    Future.microtask(() {
+                                      launchUrl(
+                                        Uri.parse('https://pizcloud.com/en/terms/'),
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    });
+                                  },
+                              ),
+                              TextSpan(text: 'auth_agreement_and'.tr()),
+                              TextSpan(
+                                text: 'auth_privacy_policy'.tr(),
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    Future.microtask(() {
+                                      launchUrl(
+                                        Uri.parse('https://pizcloud.com/en/privacy/'),
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    });
+                                  },
+                              ),
+                              const TextSpan(text: '.'),
+                            ],
+                          ),
+                        ),
+                      ),
                       // const SizedBox(height: 12),
                       // Row(
                       //   mainAxisAlignment: MainAxisAlignment.center,

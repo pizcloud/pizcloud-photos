@@ -1,5 +1,5 @@
 <!-- web/src/routes/auth/pizcloud/user-register/+page.svelte -->
-<script lang="ts">
+<!-- <script lang="ts">
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { AppRoute } from '$lib/constants';
@@ -411,7 +411,6 @@
         <PasswordInput id="confirm-password" bind:value={confirm} autocomplete="new-password" />
       </Field>
 
-      <!-- Referral / discount code -->
       <Field label={$t('register_referral.label')}>
         <div class="flex flex-col gap-1">
           <div class="flex gap-2 items-stretch">
@@ -464,4 +463,4 @@
       <a class="underline" href={AppRoute.AUTH_LOGIN}>{$t('to_login')}</a>
     </div>
   </Stack>
-</AuthPageLayout>
+</AuthPageLayout> -->

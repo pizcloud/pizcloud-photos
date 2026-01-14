@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import AuthPageLayout from '$lib/components/layouts/AuthPageLayout.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { user } from '$lib/stores/user.store';
@@ -50,4 +50,4 @@
       >{$t('to_change_password')}</Button
     >
   </form>
-</AuthPageLayout>
+</AuthPageLayout> -->

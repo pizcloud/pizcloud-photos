@@ -46,7 +46,8 @@ export enum AppRoute {
   BUY = '/buy',
 
   // AUTH_LOGIN = '/auth/login',
-  AUTH_LOGIN = 'https://account.photocloudbox.com/login?service=photos_dev', // pizcloud
+  // AUTH_LOGIN = 'https://account.photocloudbox.com/login?service=photos', // pizcloud
+  AUTH_LOGIN = 'https://account.pizcloud.com/login?service=photos', // pizcloud
   AUTH_REGISTER = '/auth/register',
   AUTH_CHANGE_PASSWORD = '/auth/change-password',
   AUTH_ONBOARDING = '/auth/onboarding',
