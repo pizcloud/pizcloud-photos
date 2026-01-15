@@ -385,7 +385,7 @@ class LoginForm extends HookConsumerWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               color: Theme.of(context).scaffoldBackgroundColor,
-                              child: Text('OR', style: Theme.of(context).textTheme.labelMedium),
+                              child: Text('or_login_type', style: Theme.of(context).textTheme.labelMedium).tr(),
                             ),
                             const Expanded(child: Divider()),
                           ],

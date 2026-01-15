@@ -170,7 +170,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // pizcloud Ensure ApiService is bound to the stored endpoint after login succeeds
     final endpoint = Store.tryGet(StoreKey.serverEndpoint);
     if (endpoint != null && endpoint.isNotEmpty) {
-      // _apiService.setEndpoint(endpoint);
       _apiService.setEndpoint(endpoint);
     }
     // #pizcloud
@@ -199,8 +198,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
 
-    // old: no explicit setEndpoint safeguard before refreshMyUser
-    // _apiService.setEndpoint(endpoint);
     _apiService.setEndpoint(endpoint);
   }
   // #pizcloud

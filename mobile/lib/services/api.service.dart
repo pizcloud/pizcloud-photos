@@ -59,7 +59,6 @@ class ApiService implements Authentication {
       if (_apiClient.basePath == fallback) {
         return;
       }
-      // setEndpoint(fallback);
       setEndpoint(fallback);
       // Keep StoreKey.serverEndpoint aligned with the pizcloud photos API URL
       unawaited(Store.put(StoreKey.serverEndpoint, fallback));
@@ -68,7 +67,6 @@ class ApiService implements Authentication {
     if (_apiClient.basePath == endpoint) {
       return;
     }
-    // setEndpoint(endpoint);
     setEndpoint(endpoint);
   }
   // #pizcloud
@@ -181,6 +179,8 @@ class ApiService implements Authentication {
       }
     } catch (e) {
       dPrint(() => "Could not locate /.well-known/immich at $baseUrl");
+    } finally {
+      client.close(); // pizcloud
     }
 
     return "";

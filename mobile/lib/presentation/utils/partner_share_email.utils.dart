@@ -13,7 +13,6 @@ void _ensureEndpoint(ApiService apiService) {
   if (apiService.apiClient.basePath == endpoint) {
     return;
   }
-  // old: no endpoint safeguard before invokeAPI
   // apiService.apiClient.basePath = endpoint;
   apiService.setEndpoint(endpoint);
 }

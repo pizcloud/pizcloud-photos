@@ -23,7 +23,6 @@ class SyncApiRepository {
     if (_api.apiClient.basePath == endpoint) {
       return;
     }
-    // old: no endpoint safeguard for sync calls
     // _api.apiClient.basePath = endpoint;
     _api.setEndpoint(endpoint);
   }
