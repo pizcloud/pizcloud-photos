@@ -93,6 +93,11 @@ class GoogleService {
     final authTokens = await _loadAuthTokensFromCookies();
     final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
 
+    final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
+    if (!ensured) {
+      throw StateError('Failed to ensure server endpoint');
+    }
+
     return LogInWithGoogleResult(
       account: account,
       idToken: idToken,
@@ -150,6 +155,11 @@ class GoogleService {
       // Attempt to bootstrap endpoint again before failing login
       final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
       if (apiReady) {
+        final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
+        if (!ensured) {
+          debugPrint('Failed to ensure server endpoint after re-fetch');
+          return false;
+        }
         final refreshedEndpoint = Store.tryGet(StoreKey.serverEndpoint);
         if (refreshedEndpoint != null && refreshedEndpoint.isNotEmpty) {
           return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);

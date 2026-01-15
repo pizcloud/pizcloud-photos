@@ -44,6 +44,8 @@ class LoginWithEmailService {
   }
 
   Future<LoginWithEmailResult> authenticate(String email, WidgetRef? ref) async {
+    await Store.put(StoreKey.serverEndpoint, '');
+    await Store.put(StoreKey.serverUrl, '');
     final authUri = buildAuthUri(email.trim());
     final callbackUrl = await FlutterWebAuth2.authenticate(
       url: authUri.toString(),
@@ -63,11 +65,18 @@ class LoginWithEmailService {
     if (!apiReady) {
       throw StateError('Failed to resolve photos API base URL');
     }
-
+    debugPrint('callback');
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
 
     final accessToken = await _loadAccessTokenFromCookies();
     final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
+    debugPrint('end-callback');
+
+    final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
+    if (!ensured) {
+      throw StateError('Failed to ensure server endpoint');
+    }
+    debugPrint('ensured');
 
     return LoginWithEmailResult(
       authUri: authUri,
@@ -103,9 +112,14 @@ class LoginWithEmailService {
       // Attempt to bootstrap endpoint again before failing login
       final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
       if (apiReady) {
+        final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
+        if (!ensured) {
+          debugPrint('Failed to ensure server endpoint after re-fetch');
+          return false;
+        }
         final refreshedEndpoint = Store.tryGet(StoreKey.serverEndpoint);
         if (refreshedEndpoint != null && refreshedEndpoint.isNotEmpty) {
-          return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
+          return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
         }
         debugPrint('Missing server endpoint after re-fetch');
       }
@@ -120,7 +134,7 @@ class LoginWithEmailService {
     }
 
     // Persist the access token so subsequent OpenAPI calls are authenticated
-    return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
+    return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
   }
 }
 

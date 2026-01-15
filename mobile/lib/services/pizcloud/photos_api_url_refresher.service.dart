@@ -9,7 +9,7 @@ class PhotosApiUrlRefresher {
   PhotosApiUrlRefresher(
     this._ref, {
     PhotosBaseUrlService? baseUrlService,
-    Duration interval = const Duration(minutes: 1),
+    Duration interval = const Duration(minutes: 3),
   }) : _baseUrlService = baseUrlService ?? PhotosBaseUrlService(),
        _interval = interval;
 
@@ -41,6 +41,7 @@ class PhotosApiUrlRefresher {
     _isRefreshing = true;
     try {
       await _baseUrlService.fetchApiUrlFromRef(_ref);
+      await _baseUrlService.ensureServerEndpoint(_ref);
     } catch (e) {
       dPrint(() => 'PhotosApiUrlRefresher refresh failed: $e');
     } finally {

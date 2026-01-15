@@ -74,6 +74,7 @@ class PhotosBaseUrlService {
         return false;
       }
       await Store.put(StoreKey.pizcloudPhotosApiUrl, apiUrl);
+      await Store.put(StoreKey.serverUrl, url);
       if (pizcloudUrl.isNotEmpty) {
         await Store.put(StoreKey.pizcloudApiUrl, pizcloudUrl);
       }
@@ -83,16 +84,42 @@ class PhotosBaseUrlService {
         debugPrint('Invalid url from API (no host): $url');
         return false;
       }
-      final ensured = await _ensureServerEndpoint(ref, url, apiUrl);
-      if (!ensured) {
-        return false;
-      }
+      // NOTE: moved ensure server endpoint logic out for explicit call sites.
+      // final ensured = await _ensureServerEndpoint(ref, url, apiUrl);
+      // if (!ensured) {
+      //   return false;
+      // }
       return true;
     } catch (e, st) {
       debugPrint('fetchAndValidateServerUrl failed: $e');
       debugPrint('$st');
       return false;
     }
+  }
+
+  // pizcloud: ensure server endpoint using stored URLs after fetchApiUrl.
+  Future<bool> ensureServerEndpoint(Object? ref) async {
+    final apiUrl = Store.tryGet(StoreKey.pizcloudPhotosApiUrl);
+    if (apiUrl == null || apiUrl.isEmpty) {
+      debugPrint('Missing pizcloudPhotosApiUrl while ensuring server endpoint');
+      return false;
+    }
+
+    var url = Store.tryGet(StoreKey.serverUrl);
+    if (url == null || url.isEmpty) {
+      url = apiUrl.endsWith('/api') ? apiUrl.substring(0, apiUrl.length - 4) : apiUrl;
+      url = _normalizeBaseUrl(url);
+    }
+    if (url.isEmpty) {
+      debugPrint('Missing serverUrl while ensuring server endpoint');
+      return false;
+    }
+
+    final ensured = await _ensureServerEndpoint(ref, url, apiUrl);
+    if (!ensured) {
+      return false;
+    }
+    return true;
   }
 
   Future<bool> _ensureServerEndpoint(Object? ref, String url, String apiUrl) async {
