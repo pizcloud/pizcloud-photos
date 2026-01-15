@@ -67,18 +67,17 @@ class PhotosBaseUrlService {
         debugPrint('Empty url from API');
         return false;
       }
-      // pizcloud
+
       final apiUrl = _ensureApiPath(url);
       if (apiUrl.isEmpty) {
         debugPrint('Empty apiUrl after normalization');
         return false;
       }
-      // #pizcloud
       await Store.put(StoreKey.pizcloudPhotosApiUrl, apiUrl);
       if (pizcloudUrl.isNotEmpty) {
         await Store.put(StoreKey.pizcloudApiUrl, pizcloudUrl);
       }
-      // pizcloud
+
       final parsedUrl = Uri.tryParse(url);
       if (parsedUrl == null || parsedUrl.host.isEmpty) {
         debugPrint('Invalid url from API (no host): $url');
@@ -88,7 +87,6 @@ class PhotosBaseUrlService {
       if (!ensured) {
         return false;
       }
-      // #pizcloud
       return true;
     } catch (e, st) {
       debugPrint('fetchAndValidateServerUrl failed: $e');
@@ -97,7 +95,6 @@ class PhotosBaseUrlService {
     }
   }
 
-  // pizcloud
   Future<bool> _ensureServerEndpoint(Object? ref, String url, String apiUrl) async {
     if (apiUrl.isEmpty) {
       debugPrint('Empty apiUrl while ensuring server endpoint');
@@ -115,14 +112,16 @@ class PhotosBaseUrlService {
 
         final endpoint = Store.tryGet(StoreKey.serverEndpoint);
         if (endpoint != null && endpoint.isNotEmpty) {
+          // Ensure endpoint is aligned with pizcloudPhotosApiUrl (/api)
+          if (endpoint != apiUrl) {
+            await Store.put(StoreKey.serverEndpoint, apiUrl);
+          }
           return true;
         }
         // Small retry window for the store cache to update
         await Future<void>.delayed(const Duration(milliseconds: 50));
       }
     } else {
-      // old: no endpoint fallback without ref
-      // await Store.put(StoreKey.serverEndpoint, apiUrl);
       await Store.put(StoreKey.serverEndpoint, apiUrl);
       await Store.put(StoreKey.serverUrl, url);
       return true;

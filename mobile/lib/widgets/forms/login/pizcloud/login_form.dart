@@ -51,24 +51,12 @@ class LoginForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // final emailController = useTextEditingController.fromValue(TextEditingValue.empty);
-    // final passwordController = useTextEditingController.fromValue(TextEditingValue.empty);
-    // final serverEndpointController = useTextEditingController.fromValue(TextEditingValue.empty);
-    // final emailFocusNode = useFocusNode();
-    // final passwordFocusNode = useFocusNode();
-    // final serverEndpointFocusNode = useFocusNode();
     final isLoading = useState<bool>(false);
     final isLoadingServer = useState<bool>(false);
-    // final isOauthEnable = useState<bool>(false);
-    // final isPasswordLoginEnable = useState<bool>(false);
-    // final oAuthButtonLabel = useState<String>('OAuth');
     final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
     // final serverInfo = ref.watch(serverInfoProvider);
     final warningMessage = useState<String?>(null);
     final loginFormKey = GlobalKey<FormState>();
-    // final ValueNotifier<String?> serverEndpoint = useState<String?>(null);
-
-    // final needsVerification = useState<bool>(false); // pizcloud: new email verification state
 
     // Validation states
     // focus & busy states for login actions
@@ -83,127 +71,19 @@ class LoginForm extends HookConsumerWidget {
     final LoginWithEmailService loginWithEmailService = LoginWithEmailService();
     // final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-    /// Fetch the server login credential and enables oAuth login if necessary
-    /// Returns true if successful, false otherwise
-    // Future<void> getServerAuthSettings() async {
-    //   final sanitizeServerUrl = sanitizeUrl(serverEndpointController.text);
-    //   final serverUrl = punycodeEncodeUrl(sanitizeServerUrl);
-
-    //   // Guard empty URL
-    //   if (serverUrl.isEmpty) {
-    //     ImmichToast.show(context: context, msg: "login_form_server_empty".tr(), toastType: ToastType.error);
-    //   }
-
-    //   try {
-    //     isLoadingServer.value = true;
-
-    //     warningMessage.value = null; // pizcloud
-
-    //     final endpoint = await ref.read(authProvider.notifier).validateServerUrl(serverUrl);
-
-    //     // Fetch and load server config and features
-    //     await ref.read(serverInfoProvider.notifier).getServerInfo();
-
-    //     final serverInfo = ref.read(serverInfoProvider);
-    //     final features = serverInfo.serverFeatures;
-    //     final config = serverInfo.serverConfig;
-
-    //     isOauthEnable.value = features.oauthEnabled;
-    //     isPasswordLoginEnable.value = features.passwordLogin;
-    //     oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty ? config.oauthButtonText : 'OAuth';
-
-    //     serverEndpoint.value = endpoint;
-    //   } on ApiException catch (e) {
-    //     lastBootstrapFailed.value = true; // pizcloud
-
-    //     ImmichToast.show(
-    //       context: context,
-    //       msg: e.message ?? 'login_form_api_exception'.tr(),
-    //       toastType: ToastType.error,
-    //       gravity: ToastGravity.TOP,
-    //     );
-    //     isOauthEnable.value = false;
-    //     isPasswordLoginEnable.value = true;
-    //     isLoadingServer.value = false;
-    //   } on HandshakeException {
-    //     ImmichToast.show(
-    //       context: context,
-    //       msg: 'login_form_handshake_exception'.tr(),
-    //       toastType: ToastType.error,
-    //       gravity: ToastGravity.TOP,
-    //     );
-    //     isOauthEnable.value = false;
-    //     isPasswordLoginEnable.value = true;
-    //     isLoadingServer.value = false;
-    //   } catch (e) {
-    //     ImmichToast.show(
-    //       context: context,
-    //       msg: 'login_form_server_error'.tr(),
-    //       toastType: ToastType.error,
-    //       gravity: ToastGravity.TOP,
-    //     );
-    //     isOauthEnable.value = false;
-    //     isPasswordLoginEnable.value = true;
-    //     isLoadingServer.value = false;
-    //   }
-
-    //   isLoadingServer.value = false;
-    // }
-
-    // pizcloud
-
-    // String ensureApiSuffix(String url) {
-    //   final u = url.trim().replaceAll(RegExp(r'/+$'), '');
-    //   if (u.endsWith('/api')) return u;
-    //   return '$u/api';
-    // }
-
-    // Future<bool> tryValidateUrl(String candidate) async {
-    //   serverEndpointController.text = candidate;
-    //   try {
-    //     await getServerAuthSettings();
-    //     return serverEndpoint.value != null;
-    //   } catch (_) {
-    //     return false;
-    //   }
-    // }
-
-    // Future<void> bootstrapWithUrl(String start) async {
-    //   isBootstrapping.value = true;
-    //   lastBootstrapFailed.value = false;
-
-    //   final candidates = <String>[start, ensureApiSuffix(start)];
-    //   final backoffs = <int>[0, 800, 1500, 2500];
-
-    //   bool done = false;
-    //   for (final delayMs in backoffs) {
-    //     if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
-    //     for (final c in candidates) {
-    //       if (await tryValidateUrl(c)) {
-    //         done = true;
-    //         break;
-    //       }
+    // Future<bool> waitForAccessTokenReady() async {
+    //   const retries = 20;
+    //   const delay = Duration(milliseconds: 100);
+    //   for (var i = 0; i < retries; i++) {
+    //     final token = Store.tryGet(StoreKey.accessToken);
+    //     debugPrint('token: $token');
+    //     if (token != null && token.isNotEmpty) {
+    //       return true;
     //     }
-    //     if (done) break;
+    //     await Future<void>.delayed(delay);
     //   }
-
-    //   if (!done) lastBootstrapFailed.value = true;
-    //   isBootstrapping.value = false;
+    //   return false;
     // }
-
-    // pizcloud: no defaultServer and no manual server selection for now.
-    // useEffect(() {
-    //   final stored = getServerUrl();
-    //   final fallback = AppConfig.defaultServer.trim();
-    //   final start = (stored != null && stored.isNotEmpty) ? stored : (fallback.isNotEmpty ? fallback : null);
-    //   if (start != null) {
-    //     Future.microtask(() async {
-    //       await bootstrapWithUrl(start);
-    //     });
-    //   }
-    //   return null;
-    // }, []);
-    // #pizcloud
 
     Future<void> handleSyncFlow() async {
       final backgroundManager = ref.read(backgroundSyncProvider);
@@ -303,6 +183,7 @@ class LoginForm extends HookConsumerWidget {
           if (isSyncRemoteDeletionsMode()) {
             await getManageMediaPermission();
           }
+          // await waitForAccessTokenReady();
           unawaited(handleSyncFlow());
           ref.read(websocketProvider.notifier).connect();
           unawaited(context.replaceRoute(const TabShellRoute()));
@@ -362,6 +243,7 @@ class LoginForm extends HookConsumerWidget {
           if (isSyncRemoteDeletionsMode()) {
             await getManageMediaPermission();
           }
+          // await waitForAccessTokenReady();
           unawaited(handleSyncFlow());
           ref.read(websocketProvider.notifier).connect();
           unawaited(context.replaceRoute(const TabShellRoute()));

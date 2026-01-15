@@ -42,11 +42,61 @@ class SyncStreamService {
 
   bool get isCancelled => _cancelChecker?.call() ?? false;
 
+  // pizcloud
+  // String _tokenSummary(String? token) {
+  //   if (token == null || token.isEmpty) return 'empty';
+  //   if (token.length <= 12) return 'len=${token.length}, token=$token';
+  //   final head = token.substring(0, 6);
+  //   final tail = token.substring(token.length - 6);
+  //   return 'len=${token.length}, token=$head...$tail';
+  // }
+
+  Future<bool> _waitForAccessToken() async {
+    const retries = 30;
+    const delay = Duration(milliseconds: 100);
+    for (var i = 0; i < retries; i++) {
+      // Refresh cache to pick up tokens persisted after isolate start
+      await Store.populateCache();
+      final token = Store.tryGet(StoreKey.accessToken);
+      if (token != null && token.isNotEmpty) {
+        return true;
+      }
+      await Future<void>.delayed(delay);
+    }
+    return false;
+  }
+  // #pizcloud
+
   Future<bool> sync() async {
     _logger.info("Remote sync request for user");
-    // Start the sync stream and handle events
+    // pizcloud
     bool shouldReset = false;
-    await _syncApiRepository.streamChanges(_handleEvents, onReset: () => shouldReset = true);
+    // await _syncApiRepository.streamChanges(_handleEvents, onReset: () => shouldReset = true);
+    final tokenReady = await _waitForAccessToken();
+    if (!tokenReady) {
+      _logger.warning("Skipping sync stream start: access token not ready");
+      return false;
+    }
+    // Ensure cache reflects the latest persisted token before sync stream
+    await Store.populateCache();
+    // final token = Store.tryGet(StoreKey.accessToken);
+    // _logger.info("Sync stream token (store): ${_tokenSummary(token)}");
+    // Start the sync stream and handle events
+    // await _syncApiRepository.streamChanges(_handleEvents, onReset: () => shouldReset = true);
+    try {
+      await _syncApiRepository.streamChanges(_handleEvents, onReset: () => shouldReset = true);
+    } on ApiException catch (error) {
+      if (error.code != 401) {
+        rethrow;
+      }
+      _logger.warning("Sync stream unauthorized, retrying after token refresh");
+      await Store.populateCache();
+      // final refreshedToken = Store.tryGet(StoreKey.accessToken);
+      // _logger.info("Sync retry token (store): ${_tokenSummary(refreshedToken)}");
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await _syncApiRepository.streamChanges(_handleEvents, onReset: () => shouldReset = true);
+    }
+    // #pizcloud
     if (shouldReset) {
       _logger.info("Resetting sync state as requested by server");
       await _syncApiRepository.streamChanges(_handleEvents);
