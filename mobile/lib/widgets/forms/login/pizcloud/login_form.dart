@@ -87,7 +87,7 @@ class LoginForm extends HookConsumerWidget {
 
     Future<void> handleSyncFlow() async {
       final backgroundManager = ref.read(backgroundSyncProvider);
-
+      await backgroundManager.cancel();
       await backgroundManager.syncLocal(full: true);
       await backgroundManager.syncRemote();
       await backgroundManager.hashAssets();
@@ -223,8 +223,7 @@ class LoginForm extends HookConsumerWidget {
       try {
         final result = await loginWithEmailService.authenticate(email, ref);
 
-        if (!context.mounted) return;
-
+        // if (!context.mounted) return;
         if (result.authSaved != true) {
           ImmichToast.show(
             context: context,
@@ -234,7 +233,6 @@ class LoginForm extends HookConsumerWidget {
           );
           return;
         }
-
         // Follow the same post-login flow as OAuth/password login
         final permission = ref.watch(galleryPermissionNotifier);
         final isBeta = Store.isBetaTimelineEnabled;

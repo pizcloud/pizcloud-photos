@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/domain/utils/sync_linked_album.dart';
+import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/providers/infrastructure/sync.provider.dart';
 import 'package:immich_mobile/utils/isolate.dart';
 import 'package:worker_manager/worker_manager.dart';
@@ -146,7 +148,10 @@ class BackgroundSyncManager {
   }
 
   Future<bool> syncRemote() {
-    if (_syncTask != null) {
+    final token = Store.tryGet<String>(StoreKey.accessToken); // pizcloud
+    final hasToken = token?.isNotEmpty == true; // pizcloud
+
+    if (_syncTask != null || !hasToken) {
       return _syncTask!.future.then((result) => result ?? false).catchError((_) => false);
     }
 
