@@ -56,7 +56,7 @@ class BackgroundWorker(context: Context, params: WorkerParameters) :
   private var foregroundFuture: ListenableFuture<Void>? = null
 
   companion object {
-    private const val NOTIFICATION_CHANNEL_ID = "immich::background_worker::notif"
+    private const val NOTIFICATION_CHANNEL_ID = "pizcloud::background_worker::notif"
     private const val NOTIFICATION_ID = 100
   }
 

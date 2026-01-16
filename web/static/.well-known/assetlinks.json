@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "pizcloud_android_app",
+      "package_name": "com.pizcloud.photos",
+      "sha256_cert_fingerprints": [
+        "D1:F3:FA:D2:02:A3:83:83:15:08:7A:27:9E:FB:BA:EF:43:15:B0:2E:1C:87:D3:DD:20:85:CC:2C:6C:16:C1:27"
+      ]
+    }
+  }
+]

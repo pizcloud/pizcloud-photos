@@ -87,9 +87,9 @@ class DriftPartnerEmailSelectionPage extends HookConsumerWidget {
         emailController.clear();
         selectedEmails.value = {...selectedEmails.value, email};
         ref.invalidate(partnerSharedEmailsProvider);
-        _toast(context, 'shared_successfully'.tr());
+        _toast(context, 'add_successfully'.tr());
       } catch (_) {
-        _toast(context, 'share_failed'.tr());
+        _toast(context, 'add_failed'.tr());
       } finally {
         isSubmitting.value = false;
       }

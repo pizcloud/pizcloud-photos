@@ -64,19 +64,24 @@ void _snack(BuildContext c, String msg) => ScaffoldMessenger.of(c).showSnackBar(
 
 List<String> _featuresFor(String idOrTitle) {
   final s = idOrTitle.toLowerCase();
+  final common = [
+    'billing.file_sync_across_devices'.tr(),
+    'billing.multi_device_sync'.tr(),
+    'billing.advanced_file_sharing'.tr(),
+  ];
   if (s.contains('2tb') || s.contains('premium')) {
-    return const ['2 TB Storage', 'Team Collaboration', '24/7 Premium Support', 'Advanced Security', 'Admin Controls'];
+    return ['billing.storage_2tb'.tr(), ...common];
   }
   if (s.contains('1tb') || s.contains('pro3')) {
-    return const ['1 TB Storage', 'Team Collaboration', '24/7 Premium Support', 'Advanced Security', 'Admin Controls'];
+    return ['billing.storage_1tb'.tr(), ...common];
   }
   if (s.contains('500') || s.contains('pro2')) {
-    return const ['500 GB Storage', 'Advanced File Sharing', 'Priority Support', 'Version History'];
+    return ['billing.storage_500gb'.tr(), ...common];
   }
   if (s.contains('100') || s.contains('pro1')) {
-    return const ['100 GB Storage', 'Multi-device Sync', 'Priority Support'];
+    return ['billing.storage_100gb'.tr(), ...common];
   }
-  return const ['50 GB Storage', 'File Sync Across Devices', 'Basic Support'];
+  return ['billing.storage_50gb'.tr(), ...common];
 }
 
 bool _isMostPopular(String idOrTitle) {
@@ -217,7 +222,7 @@ class _PlanCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  'Most Popular',
+                                  'billing.most_popular'.tr(),
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.w700,
@@ -234,7 +239,7 @@ class _PlanCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  'Selected',
+                                  'selected'.tr(),
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.w700,
@@ -340,7 +345,7 @@ class _PlanCard extends StatelessWidget {
                     children: [
                       Text(data.price, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                       Text(
-                        period == BillingPeriod.monthly ? '/month' : '/year',
+                        period == BillingPeriod.monthly ? '/${'month'.tr()}' : '/${'year'.tr()}',
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
@@ -391,14 +396,14 @@ class _PlanCard extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Select Plan'),
+                        child: const Text('billing.select_plan').tr(),
                       )
                     : OutlinedButton(
                         onPressed: onSelect,
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Select Plan'),
+                        child: const Text('billing.select_plan').tr(),
                       ),
               ),
             ],
@@ -804,25 +809,25 @@ class BillingPage extends HookConsumerWidget {
                     subtitle: 'subscription.why_sync_sub'.tr(),
                   ),
                   const SizedBox(height: 10),
-                  _WhyRow(
-                    icon: Icons.history_outlined,
-                    title: 'subscription.why_history_title'.tr(),
-                    subtitle: 'subscription.why_history_sub'.tr(),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(Icons.verified, size: 18, color: Colors.green[600]),
-                      const SizedBox(width: 6),
-                      Text(
-                        'subscription.guarantee'.tr(),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.green[700],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // _WhyRow(
+                  //   icon: Icons.history_outlined,
+                  //   title: 'subscription.why_history_title'.tr(),
+                  //   subtitle: 'subscription.why_history_sub'.tr(),
+                  // ),
+                  // const SizedBox(height: 10),
+                  // Row(
+                  //   children: [
+                  //     Icon(Icons.verified, size: 18, color: Colors.green[600]),
+                  //     const SizedBox(width: 6),
+                  //     Text(
+                  //       'subscription.guarantee'.tr(),
+                  //       style: theme.textTheme.bodyMedium?.copyWith(
+                  //         color: Colors.green[700],
+                  //         fontWeight: FontWeight.w600,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               ),
             ),
@@ -830,18 +835,18 @@ class BillingPage extends HookConsumerWidget {
             const SizedBox(height: 12),
 
             // Restore purchases
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  if (isFakeMode) {
-                    _snack(context, 'subscription.pretend_restore'.tr());
-                  } else {
-                    ctl.restore();
-                  }
-                },
-                child: Text('subscription.restore_purchases'.tr()),
-              ),
-            ),
+            // Center(
+            //   child: TextButton(
+            //     onPressed: () {
+            //       if (isFakeMode) {
+            //         _snack(context, 'subscription.pretend_restore'.tr());
+            //       } else {
+            //         ctl.restore();
+            //       }
+            //     },
+            //     child: Text('subscription.restore_purchases'.tr()),
+            //   ),
+            // ),
             SizedBox(
               width: double.infinity,
               height: 44,

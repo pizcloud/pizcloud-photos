@@ -306,18 +306,20 @@
                 <IconButton
                   icon={mdiLinkOff}
                   size="small"
-                  color="secondary"
+                  color="danger"
                   aria-label={$t('remove_user')}
                   onclick={() => onUnshareUser(sharedUser)}
                 />
               {/if}
-              <IconButton
-                icon={mdiDeleteOutline}
-                size="small"
-                color="secondary"
-                aria-label={$t('remove_from_list')}
-                onclick={() => onRemoveEmail(item.email)}
-              />
+              {#if !sharedUser}
+                <IconButton
+                  icon={mdiDeleteOutline}
+                  size="small"
+                  color="primary"
+                  aria-label={$t('remove_from_list')}
+                  onclick={() => onRemoveEmail(item.email)}
+                />
+              {/if}
             </div>
           {/each}
         </div>
