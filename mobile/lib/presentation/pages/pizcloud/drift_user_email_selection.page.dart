@@ -98,9 +98,9 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
         emailController.clear();
         selectedEmails.value = {...selectedEmails.value, email};
         ref.invalidate(albumSharedEmailsProvider(album.id));
-        _toast(context, 'shared_successfully'.tr());
+        _toast(context, 'add_successfully'.tr());
       } catch (_) {
-        _toast(context, 'share_failed'.tr());
+        _toast(context, 'add_failed'.tr());
       } finally {
         isSubmitting.value = false;
       }
@@ -234,15 +234,17 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
                     onPressed: isSubmitting.value ? null : () => onUnshare(sharedUser),
                     tooltip: 'remove_user'.tr(),
                   ),
-                Icon(
-                  selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                  color: selected ? context.primaryColor : Colors.grey,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  onPressed: isSubmitting.value ? null : () => onRemove(item.email),
-                  tooltip: 'remove'.tr(),
-                ),
+                if (sharedUser == null)
+                  Icon(
+                    selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                    color: selected ? context.primaryColor : Colors.grey,
+                  ),
+                if (sharedUser == null)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    onPressed: isSubmitting.value ? null : () => onRemove(item.email),
+                    tooltip: 'remove'.tr(),
+                  ),
               ],
             ),
             onTap: () => toggleSelection(item.email),
@@ -272,19 +274,23 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
           //       : null,
           //   child: const Text("share", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),
           // ),
-          SizedBox(
-            height: 36,
-            child: ElevatedButton.icon(
-              onPressed: canDone
-                  ? () {
-                      final items = sharedEmailsAsync.value ?? const <SharedEmailDto>[];
-                      onDone(items);
-                    }
-                  : null,
-              icon: isSubmitting.value
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.send_rounded),
-              label: Text('share'.tr()),
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: SizedBox(
+              height: 32,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 15)),
+                onPressed: canDone
+                    ? () {
+                        final items = sharedEmailsAsync.value ?? const <SharedEmailDto>[];
+                        onDone(items);
+                      }
+                    : null,
+                icon: isSubmitting.value
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.send_rounded),
+                label: Text('share'.tr()),
+              ),
             ),
           ),
         ],

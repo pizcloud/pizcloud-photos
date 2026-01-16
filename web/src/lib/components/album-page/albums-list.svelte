@@ -237,7 +237,8 @@
         // #pizcloud
         switch (result?.action) {
           case 'sharedUsers': {
-            await handleAddUsers(result.data);
+            await handleAddUsers(selectedAlbum, result.data);
+            await invalidate('app:albums');
             break;
           }
 
@@ -254,6 +255,7 @@
           case 'refreshAlbum': {
             const refreshed = await getAlbumInfo({ id: selectedAlbum.id, withoutAssets: true });
             updateAlbumInfo(refreshed);
+            await invalidate('app:albums');
             break;
           }
           // #pizcloud
@@ -322,7 +324,8 @@
     updateRecentAlbumInfo(album);
   };
 
-  const handleAddUsers = async (albumUsers: AlbumUserAddDto[]) => {
+  const handleAddUsers = async (selectedAlbum: AlbumResponseDto, albumUsers: AlbumUserAddDto[]) => {
+    albumToShare = selectedAlbum; // pizcloud
     if (!albumToShare) {
       return;
     }
