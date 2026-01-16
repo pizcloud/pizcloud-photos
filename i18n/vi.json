@@ -1628,7 +1628,7 @@
     "withdraw_method_label": "Phương thức rút tiền",
     "withdraw_method_paypal": "PayPal",
     "withdraw_min_error": "Số tiền rút tối thiểu là {min}.",
-    "withdraw_min_total_not_reached": "Bạn cần đạt tối thiểu {{min}} hoa hồng để có thể yêu cầu rút.",
+    "withdraw_min_total_not_reached": "Bạn cần đạt tối thiểu {min} USD hoa hồng để có thể yêu cầu rút.",
     "withdraw_missing_email": "Không tìm thấy email người dùng. Vui lòng đăng nhập lại.",
     "withdraw_no_payout_info": "Bạn chưa thiết lập phương thức thanh toán.",
     "withdraw_paypal_email_hint": "Nhập email tài khoản PayPal",
