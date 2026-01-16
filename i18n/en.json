@@ -1801,7 +1801,7 @@
     "withdraw_method_label": "Withdrawal method",
     "withdraw_method_paypal": "PayPal",
     "withdraw_min_error": "Minimum withdrawal amount is {min}.",
-    "withdraw_min_total_not_reached": "You need at least {min} in commission to request a payout.",
+    "withdraw_min_total_not_reached": "You need at least {min} USD in commission to request a payout.",
     "withdraw_missing_email": "User email is missing. Please sign in again.",
     "withdraw_no_payout_info": "You haven't set up a payout method yet.",
     "withdraw_paypal_email_hint": "Enter your PayPal email",
