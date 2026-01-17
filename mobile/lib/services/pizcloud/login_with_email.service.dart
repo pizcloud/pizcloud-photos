@@ -50,7 +50,8 @@ class LoginWithEmailService {
     final callbackUrl = await FlutterWebAuth2.authenticate(
       url: authUri.toString(),
       callbackUrlScheme: 'pizcloud',
-      options: const FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags),
+      options: const FlutterWebAuth2Options(),
+      // options: const FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags),
     );
     final callbackUri = Uri.parse(callbackUrl);
     final ssoToken = callbackUri.queryParameters['sso_token'];
