@@ -114,6 +114,7 @@ export const downloadRequest = <TBody = unknown>(options: DownloadRequestOptions
 
   return new Promise<{ data: Blob; status: number }>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+    xhr.withCredentials = true; // pizcloud
 
     xhr.addEventListener('error', (error) => reject(error));
     xhr.addEventListener('abort', () => reject(new AbortError()));
