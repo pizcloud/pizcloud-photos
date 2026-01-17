@@ -8,7 +8,7 @@ const DEFAULT_API_BASE_URL = '/api';
 const API_BASE_URL_STORAGE_KEY = 'pizcloud.apiBaseUrl';
 const PIZCLOUD_API_STORAGE_KEY = 'pizcloud.pizcloudApi';
 const API_SERVICE_STORAGE_KEY = 'pizcloud.apiServiceName';
-const API_REFRESH_INTERVAL_MS = 1 * 60 * 1000;
+const API_REFRESH_INTERVAL_MS = 3 * 60 * 1000;
 
 const getDefaultOrigin = () => {
   if (typeof globalThis !== 'undefined' && 'location' in globalThis && globalThis.location?.origin) {
