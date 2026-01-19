@@ -4,13 +4,13 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:my.immich.app</string>
+		<string>applinks:my.photos.com</string>
 	</array>
 	<key>com.apple.developer.networking.wifi-info</key>
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.app.immich.share</string>
+		<string>group.com.pizcloud.share</string>
 	</array>
 </dict>
 </plist>
