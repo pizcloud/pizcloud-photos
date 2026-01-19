@@ -17,9 +17,9 @@ class AppConfig {
 
   static const double minReferralWithdrawAmount = 5.0;
 
-  static const String serverClientId = '369001896165-rrv3pvpor3g5h424q1rcgdiuepmv14dd.apps.googleusercontent.com';
-  static const String accountServiceBase = 'https://account.photocloudbox.com/api';
+  static const String serverClientId = '68363837894-ukp9akn9uujb481sgpubbt9nq8s9c843.apps.googleusercontent.com';
+  static const String accountServiceBase = 'https://account.pizcloud.com/api';
 
-  static const String accountHost = 'account.photocloudbox.com';
+  static const String accountHost = 'account.pizcloud.com';
   static const String service = 'app_photos';
 }
