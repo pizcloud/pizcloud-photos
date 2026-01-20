@@ -50,7 +50,7 @@ export class AssetMediaController {
   constructor(
     private logger: LoggingRepository,
     private service: AssetMediaService,
-  ) {}
+  ) { }
 
   @Post()
   @Authenticated({ permission: Permission.AssetUpload, sharedLink: true })
@@ -96,8 +96,10 @@ export class AssetMediaController {
     @Param() { id }: UUIDParamDto,
     @Res() res: Response,
     @Next() next: NextFunction,
+    @Query('download') download?: string, // pizcloud
   ) {
-    await sendFile(res, next, () => this.service.downloadOriginal(auth, id), this.logger);
+    const isDownload = download === '1' || download === 'true'; // pizcloud
+    await sendFile(res, next, () => this.service.downloadOriginal(auth, id, isDownload), this.logger); // pizcloud
   }
 
   @Put(':id/original')

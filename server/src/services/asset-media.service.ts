@@ -184,7 +184,7 @@ export class AssetMediaService extends BaseService {
     }
   }
 
-  async downloadOriginal(auth: AuthDto, id: string): Promise<ImmichFileResponse> {
+  async downloadOriginal(auth: AuthDto, id: string, isDownload = false): Promise<ImmichFileResponse> { // pizcloud
     await this.requireAccess({ auth, permission: Permission.AssetDownload, ids: [id] });
 
     const asset = await this.findOrFail(id);
@@ -194,6 +194,7 @@ export class AssetMediaService extends BaseService {
       fileName: asset.originalFileName,
       contentType: mimeTypes.lookup(asset.originalPath),
       cacheControl: CacheControl.PrivateWithCache,
+      isDownload,  // pizcloud
     });
   }
 

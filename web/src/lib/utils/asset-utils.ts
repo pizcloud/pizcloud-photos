@@ -268,7 +268,13 @@ export const downloadFile = async (asset: AssetResponseDto) => {
 
     try {
       toastManager.success($t('downloading_asset_filename', { values: { filename: asset.originalFileName } }));
-      downloadUrl(getBaseUrl() + `/assets/${id}/original` + (queryParams ? `?${queryParams}` : ''), filename);
+      // pizcloud
+      // downloadUrl(getBaseUrl() + `/assets/${id}/original` + (queryParams ? `?${queryParams}` : ''), filename);
+      const downloadParams = new URLSearchParams(queryParams);
+      downloadParams.set('download', '1');
+      const downloadUrlWithParams = getBaseUrl() + `/assets/${id}/original?${downloadParams.toString()}`;
+      downloadUrl(downloadUrlWithParams, filename);
+      // #pizcloud
     } catch (error) {
       handleError(error, $t('errors.error_downloading', { values: { filename } }));
     }

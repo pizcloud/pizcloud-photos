@@ -44,8 +44,6 @@ class LoginWithEmailService {
   }
 
   Future<LoginWithEmailResult> authenticate(String email, WidgetRef? ref) async {
-    // await Store.put(StoreKey.serverEndpoint, '');
-    // await Store.put(StoreKey.serverUrl, '');
     final authUri = buildAuthUri(email.trim());
     final callbackUrl = await FlutterWebAuth2.authenticate(
       url: authUri.toString(),

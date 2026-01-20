@@ -25,6 +25,7 @@ export class ImmichFileResponse {
   public readonly contentType!: string;
   public readonly cacheControl!: CacheControl;
   public readonly fileName?: string;
+  public readonly isDownload?: boolean;
 
   constructor(response: ImmichFileResponse) {
     Object.assign(this, response);
@@ -59,7 +60,11 @@ export const sendFile = async (
 
     res.header('Content-Type', file.contentType);
     if (file.fileName) {
-      res.header('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(file.fileName)}`);
+      // pizcloud
+      // res.header('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(file.fileName)}`);
+      const disposition = file.isDownload ? 'attachment' : 'inline';
+      res.header('Content-Disposition', `${disposition}; filename*=UTF-8''${encodeURIComponent(file.fileName)}`);
+      // #pizcloud
     }
 
     await access(file.path, constants.R_OK);

@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/config/app_config.dart'; // pizcloud
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/models/backup/backup_state.model.dart';
@@ -26,6 +27,7 @@ import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/account_api.service.dart'; // pizcloud
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart'; // pizcloud
 
 class ImmichAppBarDialog extends HookConsumerWidget {
   const ImmichAppBarDialog({super.key});
@@ -92,6 +94,18 @@ class ImmichAppBarDialog extends HookConsumerWidget {
     }
 
     // pizcloud
+    buildManageAccountButton() {
+      return buildActionButton(Icons.manage_accounts, "manage_account", () async {
+        try {
+          final uri = Uri.https(AppConfig.accountHost, '');
+          await FlutterWebAuth2.authenticate(url: uri.toString(), callbackUrlScheme: 'pizcloud');
+        } catch (e, s) {
+          debugPrint('Open manage account failed: $e');
+          debugPrintStack(stackTrace: s);
+        }
+      });
+    }
+
     buildReferralProgramButton() {
       return buildActionButton(
         Icons.wallet_giftcard,
@@ -343,6 +357,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                 buildReferralProgramButton(), // pizcloud
                 buildDiscountCodeButton(), // pizcloud
                 buildSettingButton(),
+                buildManageAccountButton(), // pizcloud
                 buildSignOutButton(),
                 buildFooter(),
               ],

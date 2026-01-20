@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { PUBLIC_ACCOUNT_SERVER_URL } from '$env/static/public';
   import { focusTrap } from '$lib/actions/focus-trap';
   import { AppRoute } from '$lib/constants';
   import AvatarEditModal from '$lib/modals/AvatarEditModal.svelte';
@@ -7,7 +8,7 @@
   import { userInteraction } from '$lib/stores/user.svelte';
   import { getAboutInfo, type ServerAboutResponseDto } from '@immich/sdk';
   import { Button, Icon, IconButton, modalManager } from '@immich/ui';
-  import { mdiAccountCash, mdiCog, mdiGift, mdiLogout, mdiPencil, mdiWrench } from '@mdi/js';
+  import { mdiAccountCash, mdiAccountCog, mdiCog, mdiGift, mdiLogout, mdiPencil, mdiWrench } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
@@ -25,6 +26,8 @@
   onMount(async () => {
     info = userInteraction.aboutInfo ?? (await getAboutInfo());
   });
+
+  const accountUrl = PUBLIC_ACCOUNT_SERVER_URL; // pizcloud
 </script>
 
 <div
@@ -61,20 +64,6 @@
     </div>
 
     <div class="flex flex-col gap-1">
-      <Button
-        href={AppRoute.USER_SETTINGS}
-        onclick={onClose}
-        size="small"
-        color="secondary"
-        variant="ghost"
-        shape="round"
-        class="border dark:border-immich-dark-gray dark:bg-gray-500 dark:hover:bg-immich-dark-primary/50 hover:bg-immich-primary/10 dark:text-white"
-      >
-        <div class="flex place-content-center place-items-center text-center gap-2 px-2">
-          <Icon icon={mdiCog} size="18" aria-hidden />
-          {$t('account_settings')}
-        </div>
-      </Button>
       <!-- pizcloud -->
       <Button
         href={AppRoute.REFERRAL_PROGRAM}
@@ -105,6 +94,35 @@
         </div>
       </Button>
       <!-- #pizcloud -->
+      <Button
+        href={AppRoute.USER_SETTINGS}
+        onclick={onClose}
+        size="small"
+        color="secondary"
+        variant="ghost"
+        shape="round"
+        class="border dark:border-immich-dark-gray dark:bg-gray-500 dark:hover:bg-immich-dark-primary/50 hover:bg-immich-primary/10 dark:text-white"
+      >
+        <div class="flex place-content-center place-items-center text-center gap-2 px-2">
+          <Icon icon={mdiCog} size="18" aria-hidden />
+          {$t('account_settings')}
+        </div>
+      </Button>
+      <Button
+        href={accountUrl}
+        onclick={onClose}
+        target="_self"
+        size="small"
+        color="secondary"
+        variant="ghost"
+        shape="round"
+        class="border dark:border-immich-dark-gray dark:bg-gray-500 dark:hover:bg-immich-dark-primary/50 hover:bg-immich-primary/10 dark:text-white"
+      >
+        <div class="flex place-content-center place-items-center text-center gap-2 px-2">
+          <Icon icon={mdiAccountCog} size="18" aria-hidden />
+          {$t('manage_account')}
+        </div>
+      </Button>
       {#if $user.isAdmin}
         <Button
           href={AppRoute.ADMIN_USERS}

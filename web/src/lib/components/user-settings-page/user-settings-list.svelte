@@ -6,34 +6,27 @@
   import NotificationsSettings from '$lib/components/user-settings-page/notifications-settings.svelte';
   import UserUsageStatistic from '$lib/components/user-settings-page/user-usage-statistic.svelte';
   import { OpenSettingQueryParameterValue, QueryParameter } from '$lib/constants';
-  import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { user } from '$lib/stores/user.store';
   import { oauth } from '$lib/utils';
   import { type ApiKeyResponseDto, type SessionResponseDto } from '@immich/sdk';
   import {
     mdiAccountGroupOutline,
-    mdiAccountOutline,
     mdiApi,
     mdiBellOutline,
     mdiCogOutline,
     mdiDevices,
     mdiDownload,
     mdiFeatureSearchOutline,
-    mdiFormTextboxPassword,
     mdiLockSmart,
     mdiServerOutline,
-    mdiTwoFactorAuthentication,
   } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import SettingAccordionState from '../shared-components/settings/setting-accordion-state.svelte';
   import SettingAccordion from '../shared-components/settings/setting-accordion.svelte';
   import AppSettings from './app-settings.svelte';
-  import ChangePasswordSettings from './change-password-settings.svelte';
   import DeviceList from './device-list.svelte';
-  import OAuthSettings from './oauth-settings.svelte';
   import PartnerSettings from './partner-settings.svelte';
   import UserAPIKeyList from './user-api-key-list.svelte';
-  import UserProfileSettings from './user-profile-settings.svelte';
 
   interface Props {
     keys?: ApiKeyResponseDto[];
@@ -57,9 +50,11 @@
     <AppSettings />
   </SettingAccordion>
 
-  <SettingAccordion icon={mdiAccountOutline} key="account" title={$t('account')} subtitle={$t('manage_your_account')}>
+  <!-- pizcloud -->
+  <!-- <SettingAccordion icon={mdiAccountOutline} key="account" title={$t('account')} subtitle={$t('manage_your_account')}>
     <UserProfileSettings />
-  </SettingAccordion>
+  </SettingAccordion> -->
+  <!-- #pizcloud -->
 
   <SettingAccordion
     icon={mdiServerOutline}
@@ -110,7 +105,8 @@
     <NotificationsSettings />
   </SettingAccordion>
 
-  {#if featureFlagsManager.value.oauth}
+  <!-- pizcloud -->
+  <!-- {#if featureFlagsManager.value.oauth}
     <SettingAccordion
       icon={mdiTwoFactorAuthentication}
       key="oauth"
@@ -120,16 +116,17 @@
     >
       <OAuthSettings user={$user} />
     </SettingAccordion>
-  {/if}
+  {/if} -->
 
-  <SettingAccordion
+  <!-- <SettingAccordion
     icon={mdiFormTextboxPassword}
     key="password"
     title={$t('password')}
     subtitle={$t('change_your_password')}
   >
     <ChangePasswordSettings />
-  </SettingAccordion>
+  </SettingAccordion> -->
+  <!-- #pizcloud -->
 
   <SettingAccordion
     icon={mdiAccountGroupOutline}

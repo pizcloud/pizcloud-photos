@@ -22,6 +22,7 @@ declare module '$env/static/public' {
   export const PUBLIC_IMMICH_PAY_HOST: string;
   export const PUBLIC_IMMICH_BUY_HOST: string;
 
+  export const PUBLIC_ACCOUNT_SERVER_URL: string; // pizcloud
   export const PUBLIC_PIZCLOUD_SERVER_URL: string; // pizcloud
   export const PUBLIC_MAIN_DOMAIN: string; // pizcloud
   export const PUBLIC_DEFAULT_SERVICE_NAME: string; // pizcloud

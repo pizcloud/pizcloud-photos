@@ -27,13 +27,11 @@ class PhotosBaseUrlService {
 
   final AccountApi _accountApi;
 
-  // pizcloud
   String _ensureApiPath(String value) {
     final normalized = _normalizeBaseUrl(value);
     if (normalized.isEmpty) return normalized;
     return normalized.endsWith('/api') ? normalized : '$normalized/api';
   }
-  // #pizcloud
 
   String _normalizeBaseUrl(String value) {
     return value.trim().replaceAll(RegExp(r'/+$'), '');
@@ -43,7 +41,7 @@ class PhotosBaseUrlService {
     return _fetchApiUrl(ref);
   }
 
-  // Pizcloud: Adapter for non-widget callers that only have Ref.
+  // Adapter for non-widget callers that only have Ref.
   Future<bool> fetchApiUrlFromRef(Ref? ref) async {
     return _fetchApiUrl(ref);
   }
@@ -97,7 +95,7 @@ class PhotosBaseUrlService {
     }
   }
 
-  // pizcloud: ensure server endpoint using stored URLs after fetchApiUrl.
+  // ensure server endpoint using stored URLs after fetchApiUrl.
   Future<bool> ensureServerEndpoint(Object? ref) async {
     final apiUrl = Store.tryGet(StoreKey.pizcloudPhotosApiUrl);
     if (apiUrl == null || apiUrl.isEmpty) {
@@ -161,6 +159,4 @@ class PhotosBaseUrlService {
     }
     return true;
   }
-
-  // #pizcloud
 }
