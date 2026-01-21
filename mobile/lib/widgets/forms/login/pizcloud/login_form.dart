@@ -1,5 +1,4 @@
 import 'dart:async';
-// import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
@@ -12,30 +11,26 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
-// import 'package:immich_mobile/providers/auth.provider.dart';
+import 'package:immich_mobile/models/pizcloud/saved_login_account.model.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/backup/backup.provider.dart';
 import 'package:immich_mobile/providers/gallery_permission.provider.dart';
-// import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/repositories/local_files_manager.repository.dart';
 import 'package:immich_mobile/routing/router.dart';
-// import 'package:immich_mobile/utils/url_helper.dart';
-// import 'package:immich_mobile/utils/version_compatibility.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/common/pizcloud/pizcloud_logo.dart';
 import 'package:immich_mobile/widgets/forms/login/loading_icon.dart';
-// import 'package:immich_mobile/widgets/forms/login/server_endpoint_input.dart';
 import 'package:logging/logging.dart';
-// import 'package:openapi/api.dart';
-// import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-// import 'package:http/http.dart' as http;
 import 'package:flutter/gestures.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:immich_mobile/services/api.service.dart';
 
 import 'package:immich_mobile/services/pizcloud/google.service.dart';
 import 'package:immich_mobile/services/pizcloud/login_with_email.service.dart';
+import 'package:immich_mobile/services/pizcloud/saved_login_accounts.service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LoginForm extends HookConsumerWidget {
@@ -43,20 +38,20 @@ class LoginForm extends HookConsumerWidget {
 
   final log = Logger('LoginForm');
   final TextEditingController _emailController = TextEditingController();
-  // pizcloud: bootstrap state
+  // bootstrap state
   final isBootstrapping = useState<bool>(false);
   final lastBootstrapFailed = useState<bool>(false);
-
-  // #pizcloud
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = useState<bool>(false);
     final isLoadingServer = useState<bool>(false);
     final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
-    // final serverInfo = ref.watch(serverInfoProvider);
     final warningMessage = useState<String?>(null);
     final loginFormKey = GlobalKey<FormState>();
+    final savedAccounts = useState<List<SavedLoginAccount>>([]);
+    final showEmailInput = useState<bool>(false);
+    const savedAccountsService = SavedLoginAccountsService();
 
     // Validation states
     // focus & busy states for login actions
@@ -69,7 +64,13 @@ class LoginForm extends HookConsumerWidget {
 
     final GoogleService googleService = GoogleService();
     final LoginWithEmailService loginWithEmailService = LoginWithEmailService();
-    // final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    useEffect(() {
+      final accounts = savedAccountsService.load();
+      savedAccounts.value = accounts;
+      showEmailInput.value = accounts.isEmpty;
+      return null;
+    }, const []);
 
     // Future<bool> waitForAccessTokenReady() async {
     //   const retries = 20;
@@ -270,61 +271,161 @@ class LoginForm extends HookConsumerWidget {
       }
     }
 
-    // =======================================
-    // buildSelectServer() {
-    //   const buttonRadius = 25.0;
-    //   return Column(
-    //     crossAxisAlignment: CrossAxisAlignment.stretch,
-    //     children: [
-    //       ServerEndpointInput(
-    //         controller: serverEndpointController,
-    //         focusNode: serverEndpointFocusNode,
-    //         onSubmit: getServerAuthSettings,
-    //       ),
-    //       const SizedBox(height: 18),
-    //       Row(
-    //         children: [
-    //           Expanded(
-    //             child: ElevatedButton.icon(
-    //               style: ElevatedButton.styleFrom(
-    //                 padding: const EdgeInsets.symmetric(vertical: 12),
-    //                 shape: const RoundedRectangleBorder(
-    //                   borderRadius: BorderRadius.only(
-    //                     topLeft: Radius.circular(buttonRadius),
-    //                     bottomLeft: Radius.circular(buttonRadius),
-    //                   ),
-    //                 ),
-    //               ),
-    //               onPressed: () => context.pushRoute(const SettingsRoute()),
-    //               icon: const Icon(Icons.settings_rounded),
-    //               label: const Text(""),
-    //             ),
-    //           ),
-    //           const SizedBox(width: 1),
-    //           Expanded(
-    //             flex: 3,
-    //             child: ElevatedButton.icon(
-    //               style: ElevatedButton.styleFrom(
-    //                 padding: const EdgeInsets.symmetric(vertical: 12),
-    //                 shape: const RoundedRectangleBorder(
-    //                   borderRadius: BorderRadius.only(
-    //                     topRight: Radius.circular(buttonRadius),
-    //                     bottomRight: Radius.circular(buttonRadius),
-    //                   ),
-    //                 ),
-    //               ),
-    //               onPressed: isLoadingServer.value ? null : getServerAuthSettings,
-    //               icon: const Icon(Icons.arrow_forward_rounded),
-    //               label: const Text('next', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),
-    //             ),
-    //           ),
-    //         ],
-    //       ),
-    //       const SizedBox(height: 18),
-    //       if (isLoadingServer.value) const LoadingIcon(),
-    //     ],
-    //   );
-    // }
+    void updateSavedAccounts(List<SavedLoginAccount> accounts) {
+      savedAccounts.value = accounts;
+      if (accounts.isEmpty) {
+        showEmailInput.value = true;
+      }
+    }
+
+    Widget buildSavedAccountAvatar(SavedLoginAccount account) {
+      final avatarColor = account.avatarColor.toColor();
+      final displayChar = (account.name.isNotEmpty ? account.name : account.email)[0].toUpperCase();
+      final endpoint = Store.tryGet(StoreKey.serverEndpoint);
+      final profileImageUrl = (endpoint != null && endpoint.isNotEmpty)
+          ? '$endpoint/users/${account.userId}/profile-image?d=${account.profileChangedAt.millisecondsSinceEpoch}'
+          : null;
+
+      final textIcon = DefaultTextStyle(
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          color: avatarColor.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+        ),
+        child: Text(displayChar),
+      );
+
+      return CircleAvatar(
+        backgroundColor: avatarColor,
+        radius: 18,
+        child: account.hasProfileImage && profileImageUrl != null
+            ? ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(50)),
+                child: CachedNetworkImage(
+                  fit: BoxFit.cover,
+                  cacheKey: '${account.userId}-${account.profileChangedAt.toIso8601String()}',
+                  width: 36,
+                  height: 36,
+                  placeholder: (_, __) => const SizedBox.shrink(),
+                  imageUrl: profileImageUrl,
+                  httpHeaders: ApiService.getRequestHeaders(),
+                  fadeInDuration: const Duration(milliseconds: 300),
+                  errorWidget: (context, error, stackTrace) => textIcon,
+                ),
+              )
+            : textIcon,
+      );
+    }
+
+    Widget buildSavedAccountRow(SavedLoginAccount account) {
+      return InkWell(
+        onTap: isAnyBusy
+            ? null
+            : () {
+                _emailController.text = account.email;
+                continueWithEmail();
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              buildSavedAccountAvatar(account),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      account.name.isNotEmpty ? account.name : account.email,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(account.email, style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.redAccent),
+                onPressed: isAnyBusy
+                    ? null
+                    : () async {
+                        final updated = await savedAccountsService.removeByEmail(account.email);
+                        updateSavedAccounts(updated);
+                      },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget buildSavedAccountsSection() {
+      if (savedAccounts.value.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 4),
+          Text(
+            'choose_account_to_continue',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ).tr(),
+          const SizedBox(height: 8),
+          // ListView.builder(
+          //   itemCount: savedAccounts.value.length,
+          //   shrinkWrap: true,
+          //   physics: const NeverScrollableScrollPhysics(),
+          //   itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
+          // ),
+          // SizedBox(
+          //   height: 220,
+          //   child: Scrollbar(
+          //     child: ListView.builder(
+          //       itemCount: savedAccounts.value.length,
+          //       itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
+          //     ),
+          //   ),
+          // ),
+          Builder(
+            builder: (context) {
+              const rowHeight = 80.0;
+              const maxListHeight = 220.0;
+              final listHeight = (savedAccounts.value.length * rowHeight).clamp(0.0, maxListHeight);
+              final shouldScroll = savedAccounts.value.length * rowHeight > maxListHeight;
+
+              return SizedBox(
+                height: listHeight,
+                child: Scrollbar(
+                  child: ListView.builder(
+                    physics: shouldScroll
+                        ? const AlwaysScrollableScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    itemCount: savedAccounts.value.length,
+                    itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
+                  ),
+                ),
+              );
+            },
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: isAnyBusy
+                  ? null
+                  : () {
+                      // _emailController.text = _emailController.text;
+                      _emailController.clear();
+                      showEmailInput.value = true;
+                      Future.microtask(() => emailFocusNode.requestFocus());
+                    },
+              child: Text('use_another_account').tr(),
+            ),
+          ),
+        ],
+      );
+    }
 
     buildVersionCompatWarning() {
       if (warningMessage.value == null) {
@@ -394,38 +495,41 @@ class LoginForm extends HookConsumerWidget {
                       ),
 
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _emailController,
-                        focusNode: emailFocusNode,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'you@example.com',
-                          suffixIcon: _emailController.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  onPressed: isAnyBusy
-                                      ? null
-                                      : () {
-                                          _emailController.clear();
-                                        },
-                                  icon: const Icon(Icons.clear),
-                                ),
+                      buildSavedAccountsSection(),
+                      if (showEmailInput.value) ...[
+                        TextFormField(
+                          controller: _emailController,
+                          focusNode: emailFocusNode,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            hintText: 'you@example.com',
+                            suffixIcon: _emailController.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    onPressed: isAnyBusy
+                                        ? null
+                                        : () {
+                                            _emailController.clear();
+                                          },
+                                    icon: const Icon(Icons.clear),
+                                  ),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
+                          textInputAction: TextInputAction.done,
+                          enabled: !isAnyBusy,
+                          validator: validateEmail,
+                          onFieldSubmitted: (_) => continueWithEmail(),
                         ),
-                        keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.email],
-                        textInputAction: TextInputAction.done,
-                        enabled: !isAnyBusy,
-                        validator: validateEmail,
-                        onFieldSubmitted: (_) => continueWithEmail(),
-                      ),
-                      const SizedBox(height: 8),
-                      FilledButton.icon(
-                        onPressed: isAnyBusy ? null : continueWithEmail,
-                        icon: isEmailBusy.value
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.arrow_forward),
-                        label: Text(isEmailBusy.value ? 'please_wait'.tr() : 'continue'.tr()),
-                      ),
+                        const SizedBox(height: 8),
+                        FilledButton.icon(
+                          onPressed: isAnyBusy ? null : continueWithEmail,
+                          icon: isEmailBusy.value
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.arrow_forward),
+                          label: Text(isEmailBusy.value ? 'please_wait'.tr() : 'continue'.tr()),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -480,14 +584,6 @@ class LoginForm extends HookConsumerWidget {
                       // ),
                     ],
                   ),
-            // if (!isOauthEnable.value && !isPasswordLoginEnable.value) Center(child: const Text('login_disabled').tr()),
-            // const SizedBox(height: 12),
-            // if (!AppConfig.lockServer)
-            //   TextButton.icon(
-            //     icon: const Icon(Icons.arrow_back),
-            //     onPressed: (isAnyBusy || AppConfig.lockServer) ? null : () => serverEndpoint.value = null,
-            //     label: const Text('back').tr(),
-            //   ),
           ],
         ),
       );
@@ -495,45 +591,6 @@ class LoginForm extends HookConsumerWidget {
 
     // pizcloud: no manual server selection; login is always shown.
     Widget serverSelectionOrLogin = buildLogin();
-
-    // Previous server selection flow (kept for reference).
-    // final bool hasDefault = AppConfig.defaultServer.trim().isNotEmpty;
-    // Widget serverSelectionOrLogin;
-    //
-    // if (serverEndpoint.value == null) {
-    //   final isAutoMode = (getServerUrl() != null && getServerUrl()!.isNotEmpty) || (hasDefault && AppConfig.lockServer);
-    //
-    //   if (isAutoMode) {
-    //     serverSelectionOrLogin = Column(
-    //       crossAxisAlignment: CrossAxisAlignment.center,
-    //       children: [
-    //         if (isBootstrapping.value) const LoadingIcon(),
-    //         if (!isBootstrapping.value && lastBootstrapFailed.value)
-    //           ElevatedButton.icon(
-    //             onPressed: isLoadingServer.value
-    //                 ? null
-    //                 : () async {
-    //                     final stored = getServerUrl();
-    //                     final fallback = AppConfig.defaultServer.trim();
-    //                     final start = (stored != null && stored.isNotEmpty)
-    //                         ? stored
-    //                         : (fallback.isNotEmpty ? fallback : null);
-    //                     if (start != null) {
-    //                       await bootstrapWithUrl(start);
-    //                     }
-    //                   },
-    //             icon: const Icon(Icons.refresh),
-    //             label: const Text('Retry'),
-    //           ),
-    //       ],
-    //     );
-    //   } else {
-    //     serverSelectionOrLogin = buildSelectServer();
-    //   }
-    // } else {
-    //   serverSelectionOrLogin = buildLogin();
-    // }
-    // #pizcloud
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -545,7 +602,7 @@ class LoginForm extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: constraints.maxHeight / 5),
+                  SizedBox(height: constraints.maxHeight / 9),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.end,

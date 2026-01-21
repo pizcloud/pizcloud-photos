@@ -21,6 +21,7 @@ import 'package:immich_mobile/utils/debug_print.dart';
 
 import 'package:immich_mobile/services/pizcloud/push_notification.service.dart'; // pizcloud
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart'; // pizcloud
+import 'package:immich_mobile/services/pizcloud/saved_login_accounts.service.dart'; // pizcloud
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
@@ -121,7 +122,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> saveAuthInfo({required String accessToken}) async {
+  Future<bool> saveAuthInfo({required String accessToken, bool rememberAccount = false}) async {
     await _apiService.setAccessToken(accessToken);
 
     final serverEndpoint = Store.get(StoreKey.serverEndpoint);
@@ -182,6 +183,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       name: user.name,
       isAdmin: user.isAdmin,
     );
+    // pizcloud
+    if (rememberAccount) {
+      await SavedLoginAccountsService().addOrUpdateFromUser(user);
+    }
+    // #pizcloud
 
     return true;
   }

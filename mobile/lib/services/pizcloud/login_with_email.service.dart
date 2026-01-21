@@ -64,18 +64,15 @@ class LoginWithEmailService {
     if (!apiReady) {
       throw StateError('Failed to resolve photos API base URL');
     }
-    debugPrint('callback');
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
 
     final accessToken = await _loadAccessTokenFromCookies();
     final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
-    debugPrint('end-callback');
 
     final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
     if (!ensured) {
       throw StateError('Failed to ensure server endpoint');
     }
-    debugPrint('ensured');
 
     return LoginWithEmailResult(
       authUri: authUri,
@@ -118,7 +115,7 @@ class LoginWithEmailService {
         }
         final refreshedEndpoint = Store.tryGet(StoreKey.serverEndpoint);
         if (refreshedEndpoint != null && refreshedEndpoint.isNotEmpty) {
-          return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
+          return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken, rememberAccount: true);
         }
         debugPrint('Missing server endpoint after re-fetch');
       }
@@ -133,7 +130,7 @@ class LoginWithEmailService {
     }
 
     // Persist the access token so subsequent OpenAPI calls are authenticated
-    return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
+    return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken, rememberAccount: true);
   }
 }
 

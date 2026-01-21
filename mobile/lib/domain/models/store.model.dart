@@ -89,7 +89,10 @@ enum StoreKey<T> {
   // pizcloud Photos API base URL
   pizcloudPhotosApiUrl<String>._(1009),
   // pizcloud API base URL
-  pizcloudApiUrl<String>._(1010);
+  pizcloudApiUrl<String>._(1010),
+
+  // pizcloud saved login accounts (JSON string)
+  pizcloudSavedLoginAccounts<String>._(1011);
 
   const StoreKey._(this.id);
   final int id;
