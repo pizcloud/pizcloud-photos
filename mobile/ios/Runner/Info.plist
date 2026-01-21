@@ -102,7 +102,7 @@
 			<string>Deep Link</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>immich</string>
+				<string>pizcloud</string>
 			</array>
 		</dict>
 	</array>
