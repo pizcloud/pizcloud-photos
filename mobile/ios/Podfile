@@ -57,7 +57,7 @@ post_install do |installer|
     # Start of the permission_handler configuration
     # Remove the # character in front of the permission you do want to use.
     target.build_configurations.each do |config|
-
+      config.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
       # You can enable the permissions needed here. For example to enable camera
       # permission, just remove the `#` character in front so it looks like this:
       #
