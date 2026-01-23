@@ -373,41 +373,45 @@ class LoginForm extends HookConsumerWidget {
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ).tr(),
           const SizedBox(height: 8),
-          // ListView.builder(
-          //   itemCount: savedAccounts.value.length,
-          //   shrinkWrap: true,
-          //   physics: const NeverScrollableScrollPhysics(),
-          //   itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
+          // Builder(
+          //   builder: (context) {
+          //     const rowHeight = 80.0;
+          //     const maxListHeight = 220.0;
+          //     final listHeight = (savedAccounts.value.length * rowHeight).clamp(0.0, maxListHeight);
+          //     final shouldScroll = savedAccounts.value.length * rowHeight > maxListHeight;
+          //
+          //     return SizedBox(
+          //       height: listHeight,
+          //       child: Scrollbar(
+          //         child: ListView.builder(
+          //           physics: shouldScroll
+          //               ? const AlwaysScrollableScrollPhysics()
+          //               : const NeverScrollableScrollPhysics(),
+          //           itemCount: savedAccounts.value.length,
+          //           itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
+          //         ),
+          //       ),
+          //     );
+          //   },
           // ),
-          // SizedBox(
-          //   height: 220,
-          //   child: Scrollbar(
-          //     child: ListView.builder(
-          //       itemCount: savedAccounts.value.length,
-          //       itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
-          //     ),
-          //   ),
-          // ),
-          Builder(
-            builder: (context) {
-              const rowHeight = 80.0;
-              const maxListHeight = 220.0;
-              final listHeight = (savedAccounts.value.length * rowHeight).clamp(0.0, maxListHeight);
-              final shouldScroll = savedAccounts.value.length * rowHeight > maxListHeight;
-
-              return SizedBox(
-                height: listHeight,
-                child: Scrollbar(
-                  child: ListView.builder(
-                    physics: shouldScroll
-                        ? const AlwaysScrollableScrollPhysics()
-                        : const NeverScrollableScrollPhysics(),
-                    itemCount: savedAccounts.value.length,
-                    itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
-                  ),
-                ),
-              );
-            },
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 220),
+            child: Scrollbar(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                physics: () {
+                  const rowHeightEstimate = 80.0;
+                  const maxListHeight = 220.0;
+                  final shouldScroll =
+                      savedAccounts.value.length > 3 ||
+                      (savedAccounts.value.length * rowHeightEstimate) > maxListHeight;
+                  return shouldScroll ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics();
+                }(),
+                itemCount: savedAccounts.value.length,
+                itemBuilder: (context, index) => buildSavedAccountRow(savedAccounts.value[index]),
+              ),
+            ),
           ),
           Align(
             alignment: Alignment.centerLeft,
