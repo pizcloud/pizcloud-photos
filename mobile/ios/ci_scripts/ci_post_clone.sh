@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
+
 # The default execution directory of this script is the ci_scripts directory.
 # Derive the repository root if CI_WORKSPACE is not populated in Xcode Cloud.
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
