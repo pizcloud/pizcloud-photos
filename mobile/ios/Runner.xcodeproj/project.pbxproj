@@ -752,6 +752,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.pizcloud.photos.profile;
 				PRODUCT_NAME = "PizCloud Photos-Profile";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.10;
@@ -901,6 +902,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.pizcloud.photos.vdebug;
 				PRODUCT_NAME = "PizCloud Photos-Debug";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -931,6 +933,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.pizcloud.photos;
 				PRODUCT_NAME = "PizCloud Photos";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.10;
