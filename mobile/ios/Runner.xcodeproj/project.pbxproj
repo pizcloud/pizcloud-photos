@@ -93,7 +93,7 @@
 		7EEE95B59A1C08B0692F1A15 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
-		97C146EE1CF9000F007C117D /* PizCloud Photos-Debug.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "PizCloud Photos-Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		97C146EE1CF9000F007C117D /* PizCloud-Photos-Debug.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "PizCloud-Photos-Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -254,7 +254,7 @@
 		97C146EF1CF9000F007C117D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				97C146EE1CF9000F007C117D /* PizCloud Photos-Debug.app */,
+				97C146EE1CF9000F007C117D /* PizCloud-Photos-Debug.app */,
 				FAC6F8902D287C890078CB2F /* ShareExtension.appex */,
 				F0B57D382DF764BD00DC5BCC /* WidgetExtension.appex */,
 			);
@@ -357,7 +357,7 @@
 			);
 			name = Runner;
 			productName = Runner;
-			productReference = 97C146EE1CF9000F007C117D /* PizCloud Photos-Debug.app */;
+			productReference = 97C146EE1CF9000F007C117D /* PizCloud-Photos-Debug.app */;
 			productType = "com.apple.product-type.application";
 		};
 		F0B57D372DF764BD00DC5BCC /* WidgetExtension */ = {
@@ -726,7 +726,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = iphoneos;
-				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros StructuredQueriesSQLiteMacros";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -753,9 +753,9 @@
 				);
 				MARKETING_VERSION = 1.121.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pizcloud.photos.profile;
-				PRODUCT_NAME = "PizCloud Photos-Profile";
+				PRODUCT_NAME = "PizCloud-Photos-Profile";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros StructuredQueriesSQLiteMacros";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.10;
@@ -820,7 +820,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros StructuredQueriesSQLiteMacros";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -877,7 +877,7 @@
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = iphoneos;
-				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros StructuredQueriesSQLiteMacros";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -906,9 +906,9 @@
 				);
 				MARKETING_VERSION = 1.121.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pizcloud.photos.vdebug;
-				PRODUCT_NAME = "PizCloud Photos-Debug";
+				PRODUCT_NAME = "PizCloud-Photos-Debug";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros StructuredQueriesSQLiteMacros";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -939,7 +939,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.pizcloud.photos;
 				PRODUCT_NAME = "PizCloud Photos";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros";
+				SWIFT_ACTIVE_MACRO_PLUGINS = "$(inherited) StructuredQueriesMacros StructuredQueriesSQLiteMacros";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.10;
