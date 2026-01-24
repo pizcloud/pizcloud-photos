@@ -35,6 +35,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>68363837894-7dq155bqji0i1gcgl0s2ore991a528jk.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>68363837894-ukp9akn9uujb481sgpubbt9nq8s9c843.apps.googleusercontent.com</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -103,6 +107,14 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>pizcloud</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.68363837894-7dq155bqji0i1gcgl0s2ore991a528jk</string>
 			</array>
 		</dict>
 	</array>
