@@ -138,6 +138,7 @@ class AuthService {
       Store.delete(StoreKey.preferredWifiName),
       Store.delete(StoreKey.localEndpoint),
       Store.delete(StoreKey.externalEndpointList),
+      Store.delete(StoreKey.pizcloudLoginMethod), // pizcloud
     ]);
   }
 
