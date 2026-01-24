@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import WidgetKit
 
-let IMMICH_SHARE_GROUP = "group.app.immich.share"
+let IMMICH_SHARE_GROUP = "group.com.pizcloud.share"
 
 enum WidgetError: Error, Codable {
   case noLogin
@@ -104,13 +104,13 @@ struct Album: Codable, Equatable {
 // MARK: API
 
 class ImmichAPI {
-  typealias CustomHeaders = [String:String]
+  typealias CustomHeaders = [String: String]
   struct ServerConfig {
     let serverEndpoint: String
     let sessionKey: String
     let customHeaders: CustomHeaders
   }
-  
+
   let serverConfig: ServerConfig
 
   init() async throws {
@@ -125,13 +125,15 @@ class ImmichAPI {
     if serverURL == "" || sessionKey == "" {
       throw WidgetError.noLogin
     }
-    
+
     // custom headers come in the form of KV pairs in JSON
     var customHeadersJSON = (defaults.string(forKey: "widget_custom_headers") ?? "")
     var customHeaders: CustomHeaders = [:]
-    
+
     if customHeadersJSON != "",
-       let parsedHeaders = try? JSONDecoder().decode(CustomHeaders.self, from: customHeadersJSON.data(using: .utf8)!) {
+      let parsedHeaders = try? JSONDecoder().decode(
+        CustomHeaders.self, from: customHeadersJSON.data(using: .utf8)!)
+    {
       customHeaders = parsedHeaders
     }
 
@@ -168,7 +170,7 @@ class ImmichAPI {
 
     return components?.url
   }
-  
+
   func applyCustomHeaders(for request: inout URLRequest) {
     for (header, value) in serverConfig.customHeaders {
       request.addValue(value, forHTTPHeaderField: header)
@@ -194,7 +196,7 @@ class ImmichAPI {
     request.httpBody = try JSONEncoder().encode(filters)
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     applyCustomHeaders(for: &request)
-    
+
     let (data, _) = try await URLSession.shared.data(for: request)
 
     // decode data
@@ -276,7 +278,7 @@ class ImmichAPI {
     var request = URLRequest(url: searchURL)
     request.httpMethod = "GET"
     applyCustomHeaders(for: &request)
-    
+
     let (data, _) = try await URLSession.shared.data(for: request)
 
     // decode data

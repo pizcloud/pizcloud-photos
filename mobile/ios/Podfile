@@ -57,7 +57,7 @@ post_install do |installer|
     # Start of the permission_handler configuration
     # Remove the # character in front of the permission you do want to use.
     target.build_configurations.each do |config|
-
+      config.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
       # You can enable the permissions needed here. For example to enable camera
       # permission, just remove the `#` character in front so it looks like this:
       #
@@ -120,5 +120,35 @@ post_install do |installer|
 
     end
     # End of the permission_handler configuration
+  end
+
+  # Ensure the prebuilt MapLibre XCFramework ships with a dSYM during archive exports.
+  maplibre_binary = File.join(installer.sandbox.root, 'MapLibre', 'MapLibre.xcframework', 'ios-arm64', 'MapLibre.framework', 'MapLibre')
+  maplibre_dsym = File.join(installer.sandbox.root, 'MapLibre', 'MapLibre.framework.dSYM')
+
+  if File.exist?(maplibre_binary)
+    unless File.exist?(maplibre_dsym)
+      puts 'Generating MapLibre dSYM from the vendored framework...'
+      system('dsymutil', maplibre_binary, '-o', maplibre_dsym)
+    end
+
+    frameworks_script = File.join(installer.sandbox.root, 'Target Support Files', 'Pods-Runner', 'Pods-Runner-frameworks.sh')
+    install_line = 'install_dsym "${PODS_ROOT}/MapLibre/MapLibre.framework.dSYM"'
+    marker = 'if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then'
+
+    if File.exist?(frameworks_script)
+      script = File.read(frameworks_script)
+      unless script.include?(install_line)
+        if script.include?(marker)
+          File.write(frameworks_script, script.sub(marker, "#{install_line}\n#{marker}"))
+        else
+          puts "warning: Unable to inject MapLibre dSYM copy step (marker missing)."
+        end
+      end
+    else
+      puts "warning: #{frameworks_script} not found; MapLibre dSYM will not be installed automatically."
+    end
+  else
+    puts "warning: MapLibre binary not found at #{maplibre_binary}; skipped dSYM generation."
   end
 end
