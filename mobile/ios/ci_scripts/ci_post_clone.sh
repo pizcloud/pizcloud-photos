@@ -1,12 +1,5 @@
 #!/usr/bin/env sh
 
-set -euo pipefail
-
-mkdir -p "$HOME/.appstoreconnect/private_keys"
-echo "$APP_STORE_CONNECT_API_KEY_P8_BASE64" | base64 --decode > \
-  "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
-chmod 600 "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
-
 defaults write com.apple.dt.Xcode IDESkipMacroFingerprintValidation -bool YES
 
 # The default execution directory of this script is the ci_scripts directory.
