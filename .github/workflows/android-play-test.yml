@@ -65,6 +65,17 @@ jobs:
         working-directory: ./mobile
         run: make pigeon
 
+      - name: Compute build number
+        id: build_number
+        run: |
+          BASE_CODE=$(awk -F'+' '/^version:/ {print $2}' mobile/pubspec.yaml | tr -d '\r')
+          if ! [[ "$BASE_CODE" =~ ^[0-9]+$ ]]; then
+            echo "Invalid base build number: $BASE_CODE"
+            exit 1
+          fi
+          BUILD_NUMBER=$((BASE_CODE + GITHUB_RUN_NUMBER + GITHUB_RUN_ATTEMPT - 1))
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
       - name: Write google-services.json
         working-directory: ./mobile/android/app
         env:
@@ -82,7 +93,7 @@ jobs:
           ALIAS: ${{ secrets.ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --build-number ${{ steps.build_number.outputs.build_number }}
 
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
