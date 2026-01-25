@@ -42,12 +42,26 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  require 'xcodeproj'
+  app_version = nil
+  app_info_plist = File.join(__dir__, 'Runner', 'Info.plist')
+  if File.exist?(app_info_plist)
+    app_plist = Xcodeproj::Plist.read_from_path(app_info_plist)
+    app_version = app_plist['CFBundleShortVersionString']
+  end
+
   installer.generated_projects.each do |project|
     project.targets.each do |target|
-        target.build_configurations.each do |config|
-            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+        if app_version && !app_version.empty?
+          config.build_settings['MARKETING_VERSION'] = app_version
         end
+      end
     end
+  end
+  if app_version.nil? || app_version.empty?
+    puts 'warning: CFBundleShortVersionString not found; MARKETING_VERSION not updated.'
   end
 
   installer.pods_project.targets.each do |target|
