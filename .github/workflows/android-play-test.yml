@@ -1,0 +1,105 @@
+name: Android Play Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Google Play track (internal/beta/alpha)'
+        required: true
+        default: 'internal'
+      release_status:
+        description: 'Release status (draft/inProgress/completed)'
+        required: true
+        default: 'completed'
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-play-test.yml'
+
+concurrency:
+  group: android-play-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+
+      - name: Create the Keystore
+        env:
+          KEY_JKS: ${{ secrets.KEY_JKS }}
+        working-directory: ./mobile
+        run: printf "%s" "$KEY_JKS" | base64 -d > android/key.jks
+
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e # v2.21.0
+        with:
+          channel: 'stable'
+          flutter-version-file: ./mobile/pubspec.yaml
+          cache: true
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          packages: ''
+
+      - name: Get Packages
+        working-directory: ./mobile
+        run: flutter pub get
+
+      - name: Generate translation file
+        working-directory: ./mobile
+        run: dart run easy_localization:generate -S ../i18n && dart run bin/generate_keys.dart
+
+      - name: Generate platform APIs
+        working-directory: ./mobile
+        run: make pigeon
+
+      - name: Compute build number
+        id: build_number
+        run: |
+          BASE_CODE=$(awk -F'+' '/^version:/ {print $2}' mobile/pubspec.yaml | tr -d '\r')
+          if ! [[ "$BASE_CODE" =~ ^[0-9]+$ ]]; then
+            echo "Invalid base build number: $BASE_CODE"
+            exit 1
+          fi
+          BUILD_NUMBER=$((BASE_CODE + GITHUB_RUN_NUMBER + GITHUB_RUN_ATTEMPT - 1))
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Write google-services.json
+        working-directory: ./mobile/android/app
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "Missing GOOGLE_SERVICES_JSON secret"
+            exit 1
+          fi
+          printf "%s" "$GOOGLE_SERVICES_JSON" > google-services.json
+
+      - name: Build Android App Bundle
+        working-directory: ./mobile
+        env:
+          ALIAS: ${{ secrets.ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: flutter build appbundle --release --build-number ${{ steps.build_number.outputs.build_number }}
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
+          packageName: com.pizcloud.photos
+          releaseFiles: mobile/build/app/outputs/bundle/release/app-release.aab
+          track: ${{ inputs.track || 'internal' }}
+          status: ${{ inputs.release_status || 'completed' }}
