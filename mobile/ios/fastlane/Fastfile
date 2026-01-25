@@ -93,6 +93,38 @@ end
     )
   end
 
+  # Helper method to keep extension versions in sync with the app
+  def sync_extension_versions(version_number: nil)
+    version = version_number
+    if version.nil? || version.empty?
+      version = get_info_plist_value(
+        path: "Runner/Info.plist",
+        key: "CFBundleShortVersionString"
+      )
+    end
+    if version.nil? || version.to_s.empty?
+      UI.user_error!("Unable to determine app version for extensions")
+    end
+
+    require "xcodeproj"
+    project_path = "./Runner.xcodeproj"
+    project = Xcodeproj::Project.open(project_path)
+    target_names = ["Runner", "ShareExtension", "WidgetExtension"]
+
+    target_names.each do |target_name|
+      target = project.targets.find { |t| t.name == target_name }
+      unless target
+        UI.user_error!("Missing target #{target_name} in #{project_path}")
+      end
+      target.build_configurations.each do |config|
+        config.build_settings["MARKETING_VERSION"] = version
+      end
+    end
+
+    project.save
+    version
+  end
+
   # Helper method to build and upload to TestFlight
   def build_and_upload(
     api_key:,
@@ -108,6 +140,9 @@ end
     if version_number
       increment_version_number(version_number: version_number)
     end
+
+    # Keep extension versions aligned with the app
+    sync_extension_versions(version_number: version_number)
 
     # Increment build number
     increment_build_number(
@@ -188,14 +223,16 @@ end
 
   desc "iOS Manual Release"
   lane :release_manual do
+    version_number = get_version_from_pubspec
     enable_automatic_code_signing(
       path: "./Runner.xcodeproj",
       targets: ["Runner", "ShareExtension", "WidgetExtension"]
     )
 
     increment_version_number(
-      version_number: get_version_from_pubspec
+      version_number: version_number
     )
+    sync_extension_versions(version_number: version_number)
     increment_build_number(
       build_number: latest_testflight_build_number + 1,
     )
