@@ -23,10 +23,22 @@ platform :ios do
 
   # Helper method to get App Store Connect API key
   def get_api_key
+    key_content = ENV["APP_STORE_CONNECT_API_KEY_P8"]
+    if key_content.nil? || key_content.empty?
+      key_b64 = ENV["APP_STORE_CONNECT_API_KEY_P8_BASE64"]
+      if key_b64 && !key_b64.empty?
+        require "base64"
+        key_content = Base64.decode64(key_b64)
+      end
+    end
+    if key_content.nil? || key_content.empty?
+      UI.user_error!("Missing APP_STORE_CONNECT_API_KEY_P8 or APP_STORE_CONNECT_API_KEY_P8_BASE64")
+    end
+
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_filepath: "#{Dir.home}/.appstoreconnect/private_keys/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8",
+      key_content: key_content,
       duration: 1200,
       in_house: false
     )
