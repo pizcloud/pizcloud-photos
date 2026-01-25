@@ -21,6 +21,12 @@ flutter precache --ios
 # Install Flutter dependencies.
 flutter pub get
 
+# Generate localization files used by the app.
+dart run easy_localization:generate -S ../i18n
+dart run bin/generate_keys.dart
+dart format lib/generated/codegen_loader.g.dart
+dart format lib/generated/intl_keys.g.dart
+
 # Install CocoaPods using Homebrew.
 export HOMEBREW_NO_AUTO_UPDATE=1 # disable homebrew's automatic updates.
 brew install cocoapods

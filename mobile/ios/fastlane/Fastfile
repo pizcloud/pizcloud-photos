@@ -17,7 +17,7 @@ default_platform(:ios)
 
 platform :ios do
   # Constants
-  TEAM_ID = "XM32YFGT22"
+  TEAM_ID = "UUY6764SPM"
   CODE_SIGN_IDENTITY = "Apple Distribution: PizCloud (#{TEAM_ID})"
   BASE_BUNDLE_ID = "com.pizcloud.photos"
 
