@@ -23,6 +23,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   build-upload:
@@ -68,13 +69,16 @@ jobs:
       - name: Compute build number
         id: build_number
         run: |
-          BASE_CODE=$(awk -F'+' '/^version:/ {print $2}' mobile/pubspec.yaml | tr -d '\r')
-          if ! [[ "$BASE_CODE" =~ ^[0-9]+$ ]]; then
-            echo "Invalid base build number: $BASE_CODE"
+          BASE_CODE="${{ vars.BUILD_NUMBER }}"
+          if [ -z "$BASE_CODE" ]; then
+            echo "Missing BUILD_NUMBER repo variable"
             exit 1
           fi
-          BUILD_NUMBER=$((BASE_CODE + GITHUB_RUN_NUMBER + GITHUB_RUN_ATTEMPT - 1))
-          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          if ! [[ "$BASE_CODE" =~ ^[0-9]+$ ]]; then
+            echo "Invalid BUILD_NUMBER: $BASE_CODE"
+            exit 1
+          fi
+          echo "build_number=$BASE_CODE" >> "$GITHUB_OUTPUT"
 
       - name: Write google-services.json
         working-directory: ./mobile/android/app
@@ -103,3 +107,16 @@ jobs:
           releaseFiles: mobile/build/app/outputs/bundle/release/app-release.aab
           track: ${{ inputs.track || 'internal' }}
           status: ${{ inputs.release_status || 'completed' }}
+
+      - name: Increment BUILD_NUMBER
+        env:
+          CURRENT_BUILD_NUMBER: ${{ steps.build_number.outputs.build_number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NEXT_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + 1))
+          curl -sS -X PATCH \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/variables/BUILD_NUMBER" \
+            -d "{\"name\":\"BUILD_NUMBER\",\"value\":\"${NEXT_BUILD_NUMBER}\"}"
