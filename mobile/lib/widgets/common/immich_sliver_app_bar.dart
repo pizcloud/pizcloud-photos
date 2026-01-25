@@ -11,13 +11,11 @@ import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/cast.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/setting.provider.dart';
-import 'package:immich_mobile/providers/media_permission.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/sync_status.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
-import 'package:immich_mobile/services/media_permission_service.dart'; // pizcloud
 import 'package:immich_mobile/widgets/asset_viewer/cast_dialog.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_dialog.dart';
 import 'package:immich_mobile/widgets/common/user_circle_avatar.dart';
@@ -47,12 +45,6 @@ class ImmichSliverAppBar extends ConsumerWidget {
     final isCasting = ref.watch(castProvider.select((c) => c.isCasting));
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
     final isMultiSelectEnabled = ref.watch(multiSelectProvider.select((s) => s.isEnabled));
-    // pizcloud
-    final showMediaPermissionBanner = ref.watch(
-      mediaPermissionProvider.select((s) => s == MediaPermState.none || s == MediaPermState.limited),
-    );
-    final resolvedPrimary = !showMediaPermissionBanner;
-    // #pizcloud
 
     return SliverAnimatedOpacity(
       duration: Durations.medium1,
@@ -62,7 +54,6 @@ class ImmichSliverAppBar extends ConsumerWidget {
         pinned: pinned,
         snap: snap,
         expandedHeight: expandedHeight,
-        primary: resolvedPrimary, // pizcloud
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
         automaticallyImplyLeading: false,
         centerTitle: false,
