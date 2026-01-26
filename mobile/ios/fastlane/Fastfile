@@ -17,36 +17,48 @@ default_platform(:ios)
 
 platform :ios do
   # Constants
-  TEAM_ID = "2F67MQ8R79"
-  CODE_SIGN_IDENTITY = "Apple Distribution: Hau Tran (#{TEAM_ID})"
-  BASE_BUNDLE_ID = "app.alextran.immich"
-  
+  TEAM_ID = "UUY6764SPM"
+  CODE_SIGN_IDENTITY = "Apple Distribution: PizCloud (#{TEAM_ID})"
+  BASE_BUNDLE_ID = "com.pizcloud.photos"
+
   # Helper method to get App Store Connect API key
   def get_api_key
+    key_content = ENV["APP_STORE_CONNECT_API_KEY_P8"]
+    if key_content.nil? || key_content.empty?
+      key_b64 = ENV["APP_STORE_CONNECT_API_KEY_P8_BASE64"]
+      if key_b64 && !key_b64.empty?
+        require "base64"
+        key_content = Base64.decode64(key_b64)
+      end
+    end
+    if key_content.nil? || key_content.empty?
+      UI.user_error!("Missing APP_STORE_CONNECT_API_KEY_P8 or APP_STORE_CONNECT_API_KEY_P8_BASE64")
+    end
+
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_filepath: "#{Dir.home}/.appstoreconnect/private_keys/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8",
+      key_content: key_content,
       duration: 1200,
       in_house: false
     )
   end
-  
+
   # Helper method to get version from pubspec.yaml
 def get_version_from_pubspec
   require 'yaml'
-  
+
   pubspec_path = File.join(Dir.pwd, "../..", "pubspec.yaml")
   pubspec = YAML.load_file(pubspec_path)
-  
+
   version_string = pubspec['version']
   version_string ? version_string.split('+').first : nil
 end
-  
+
   # Helper method to configure code signing for all targets
   def configure_code_signing(bundle_id_suffix: "")
     bundle_suffix = bundle_id_suffix.empty? ? "" : ".#{bundle_id_suffix}"
-    
+
     # Runner (main app)
     update_code_signing_settings(
       use_automatic_signing: false,
@@ -57,7 +69,7 @@ end
       profile_name: "#{BASE_BUNDLE_ID}#{bundle_suffix} AppStore",
       targets: ["Runner"]
     )
-    
+
     # ShareExtension
     update_code_signing_settings(
       use_automatic_signing: false,
@@ -68,7 +80,7 @@ end
       profile_name: "#{BASE_BUNDLE_ID}#{bundle_suffix}.ShareExtension AppStore",
       targets: ["ShareExtension"]
     )
-    
+
     # WidgetExtension
     update_code_signing_settings(
       use_automatic_signing: false,
@@ -80,7 +92,39 @@ end
       targets: ["WidgetExtension"]
     )
   end
-  
+
+  # Helper method to keep extension versions in sync with the app
+  def sync_extension_versions(version_number: nil)
+    version = version_number
+    if version.nil? || version.empty?
+      version = get_info_plist_value(
+        path: "Runner/Info.plist",
+        key: "CFBundleShortVersionString"
+      )
+    end
+    if version.nil? || version.to_s.empty?
+      UI.user_error!("Unable to determine app version for extensions")
+    end
+
+    require "xcodeproj"
+    project_path = "./Runner.xcodeproj"
+    project = Xcodeproj::Project.open(project_path)
+    target_names = ["Runner", "ShareExtension", "WidgetExtension"]
+
+    target_names.each do |target_name|
+      target = project.targets.find { |t| t.name == target_name }
+      unless target
+        UI.user_error!("Missing target #{target_name} in #{project_path}")
+      end
+      target.build_configurations.each do |config|
+        config.build_settings["MARKETING_VERSION"] = version
+      end
+    end
+
+    project.save
+    version
+  end
+
   # Helper method to build and upload to TestFlight
   def build_and_upload(
     api_key:,
@@ -91,12 +135,15 @@ end
   )
     bundle_suffix = bundle_id_suffix.empty? ? "" : ".#{bundle_id_suffix}"
     app_identifier = "#{BASE_BUNDLE_ID}#{bundle_suffix}"
-    
+
     # Set version number if provided
     if version_number
       increment_version_number(version_number: version_number)
     end
-    
+
+    # Keep extension versions aligned with the app
+    sync_extension_versions(version_number: version_number)
+
     # Increment build number
     increment_build_number(
       build_number: latest_testflight_build_number(
@@ -105,7 +152,7 @@ end
       ) + 1,
       xcodeproj: "./Runner.xcodeproj"
     )
-    
+
     # Build the app
     build_app(
       scheme: "Runner",
@@ -123,7 +170,7 @@ end
         signingCertificate: CODE_SIGN_IDENTITY
       }
     )
-    
+
     # Upload to TestFlight
     upload_to_testflight(
       api_key: api_key,
@@ -131,19 +178,19 @@ end
       distribute_external: distribute_external
     )
   end
-  
+
   desc "iOS Development Build to TestFlight (requires separate bundle ID)"
   lane :gha_testflight_dev do
     api_key = get_api_key
-    
+
     # Install development provisioning profiles
     install_provisioning_profile(path: "profile_dev.mobileprovision")
     install_provisioning_profile(path: "profile_dev_share.mobileprovision")
     install_provisioning_profile(path: "profile_dev_widget.mobileprovision")
-    
+
     # Configure code signing for dev bundle IDs
     configure_code_signing(bundle_id_suffix: "development")
-    
+
     # Build and upload
     build_and_upload(
       api_key: api_key,
@@ -156,13 +203,13 @@ end
   desc "iOS Release to TestFlight"
   lane :gha_release_prod do
     api_key = get_api_key
-    
+
     # Install provisioning profiles
     install_provisioning_profile(path: "profile.mobileprovision")
     install_provisioning_profile(path: "profile_share.mobileprovision")
     install_provisioning_profile(path: "profile_widget.mobileprovision")
-    
-    
+
+
     # Configure code signing for production bundle IDs
     configure_code_signing
 
@@ -176,18 +223,20 @@ end
 
   desc "iOS Manual Release"
   lane :release_manual do
+    version_number = get_version_from_pubspec
     enable_automatic_code_signing(
       path: "./Runner.xcodeproj",
       targets: ["Runner", "ShareExtension", "WidgetExtension"]
     )
 
     increment_version_number(
-      version_number: get_version_from_pubspec
+      version_number: version_number
     )
+    sync_extension_versions(version_number: version_number)
     increment_build_number(
       build_number: latest_testflight_build_number + 1,
     )
-    
+
     # Build archive with automatic signing
     gym(
       scheme: "Runner",
@@ -204,7 +253,7 @@ end
         compileBitcode: false
       }
     )
-    
+
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
@@ -214,15 +263,15 @@ end
   lane :gha_build_only do
     # Use the same build process as production, just skip the upload
     # This ensures PR builds validate the same way as production builds
-    
+
     # Install provisioning profiles (use development profiles for PR builds)
     install_provisioning_profile(path: "profile_dev.mobileprovision")
     install_provisioning_profile(path: "profile_dev_share.mobileprovision")
     install_provisioning_profile(path: "profile_dev_widget.mobileprovision")
-    
+
     # Configure code signing for dev bundle IDs
     configure_code_signing(bundle_id_suffix: "development")
-    
+
     # Build the app (same as gha_testflight_dev but without upload)
     build_app(
       scheme: "Runner",

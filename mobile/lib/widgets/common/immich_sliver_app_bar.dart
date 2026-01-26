@@ -146,19 +146,21 @@ class _ProfileIndicator extends ConsumerWidget {
       onLongPress: () => toggleReadonlyMode(),
       borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: Badge(
-        label: Container(
-          decoration: BoxDecoration(
-            color: context.isDarkTheme ? Colors.black : Colors.white,
-            borderRadius: BorderRadius.circular(widgetSize / 2),
-          ),
-          child: Icon(
-            Icons.info,
-            color: serverInfoState.versionStatus == VersionStatus.error
-                ? context.colorScheme.error
-                : context.primaryColor,
-            size: widgetSize / 2,
-          ),
-        ),
+        // pizcloud
+        // label: Container(
+        //   decoration: BoxDecoration(
+        //     color: context.isDarkTheme ? Colors.black : Colors.white,
+        //     borderRadius: BorderRadius.circular(widgetSize / 2),
+        //   ),
+        //   child: Icon(
+        //     Icons.info,
+        //     color: serverInfoState.versionStatus == VersionStatus.error
+        //         ? context.colorScheme.error
+        //         : context.primaryColor,
+        //     size: widgetSize / 2,
+        //   ),
+        // ),
+        // #pizcloud
         backgroundColor: Colors.transparent,
         alignment: Alignment.bottomRight,
         isLabelVisible: versionWarningPresent,

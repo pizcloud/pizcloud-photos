@@ -30,33 +30,46 @@ class MediaPermissionBanner extends ConsumerWidget {
             border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
+          // pizcloud
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.photo_library_outlined),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text('photo_access_permission_is_required', style: Theme.of(context).textTheme.bodyMedium).tr(),
+              Row(
+                children: [
+                  const Icon(Icons.photo_library_outlined),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'photo_access_permission_is_required',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ).tr(),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              FilledButton(
-                onPressed: () async {
-                  final (ok, permanentlyDenied) = await ref
-                      .read(mediaPermissionProvider.notifier)
-                      .requestAndRefresh(preferFullOnAndroid: true);
-                  if (ok) return;
-                  if (permanentlyDenied) {
-                    // The system has blocked the permission dialog → guide to open Settings
-                    _showGoToSettingsDialog(context, ref);
-                  } else {
-                    // The user has kept 'Allow limited' or just tapped 'Don’t allow'
-                    // => suggest opening Settings to upgrade to 'Allow all'.
-                    _showUpgradeFromLimitedDialog(context, ref);
-                  }
-                },
-                child: const Text('grant_permission_now').tr(),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(
+                  onPressed: () async {
+                    final (ok, permanentlyDenied) = await ref
+                        .read(mediaPermissionProvider.notifier)
+                        .requestAndRefresh(preferFullOnAndroid: true);
+                    if (ok) return;
+                    if (permanentlyDenied) {
+                      // The system has blocked the permission dialog → guide to open Settings
+                      _showGoToSettingsDialog(context, ref);
+                    } else {
+                      // The user has kept 'Allow limited' or just tapped 'Don’t allow'
+                      // => suggest opening Settings to upgrade to 'Allow all'.
+                      _showUpgradeFromLimitedDialog(context, ref);
+                    }
+                  },
+                  child: const Text('grant_permission_now').tr(),
+                ),
               ),
             ],
           ),
+          // #pizcloud
         ),
       ),
     );

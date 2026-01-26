@@ -18,6 +18,8 @@ import 'package:immich_mobile/providers/search/search_input_focus.provider.dart'
 import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
+import 'package:immich_mobile/services/media_permission_service.dart'; // pizcloud
+import 'package:immich_mobile/providers/media_permission.provider.dart'; // pizcloud
 
 // pizcloud: new imports
 import 'package:immich_mobile/widgets/media_permissions/media_permission_banner.dart';
@@ -89,6 +91,14 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
       transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
       builder: (context, child) {
         final tabsRouter = AutoTabsRouter.of(context);
+        // pizcloud
+        final showMediaPermissionBanner = ref.watch(
+          mediaPermissionProvider.select((s) => s == MediaPermState.none || s == MediaPermState.limited),
+        );
+        final adjustedChild = showMediaPermissionBanner
+            ? MediaQuery.removePadding(context: context, removeTop: true, child: child)
+            : child;
+        // #pizcloud
         return PopScope(
           canPop: tabsRouter.activeIndex == 0,
           onPopInvokedWithResult: (didPop, _) => !didPop ? tabsRouter.setActiveIndex(0) : null,
@@ -106,7 +116,8 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                         child: Column(
                           children: [
                             const MediaPermissionBanner(),
-                            Expanded(child: child),
+                            // Expanded(child: child), // pizcloud
+                            Expanded(child: adjustedChild), // pizcloud
                           ],
                         ),
                       ),
@@ -117,7 +128,8 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                   Column(
                     children: [
                       const MediaPermissionBanner(),
-                      Expanded(child: child),
+                      // Expanded(child: child), // pizcloud
+                      Expanded(child: adjustedChild), // pizcloud
                     ],
                   ),
 

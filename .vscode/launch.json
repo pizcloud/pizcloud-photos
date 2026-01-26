@@ -2,6 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Flutter: Attach to Device",
+      "type": "dart",
+      // "request": "attach",
+      "request": "launch",
+      "program": "mobile/lib/main.dart",
+      "console": "debugConsole",
+      "flutterMode": "debug"
+    },
+    {
       "type": "node",
       "request": "attach",
       "restart": true,

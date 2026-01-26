@@ -74,6 +74,7 @@ class LoginWithEmailService {
       throw StateError('Failed to ensure server endpoint');
     }
 
+    await Store.put(StoreKey.pizcloudLoginMethod, 'email');
     return LoginWithEmailResult(
       authUri: authUri,
       callbackUri: callbackUri,

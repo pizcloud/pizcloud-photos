@@ -55,6 +55,11 @@ class GoogleService {
     await init();
   }
 
+  Future<GoogleSignInAccount?> attemptLightweightAuthentication() async {
+    await _ensureInitialized();
+    return _googleSignIn.attemptLightweightAuthentication();
+  }
+
   Future<GoogleSignInAccount> signIn() async {
     await _ensureInitialized();
     final account = await _googleSignIn.authenticate(scopeHint: _scopes);
@@ -98,6 +103,7 @@ class GoogleService {
       throw StateError('Failed to ensure server endpoint');
     }
 
+    await Store.put(StoreKey.pizcloudLoginMethod, 'google');
     return LogInWithGoogleResult(
       account: account,
       idToken: idToken,
