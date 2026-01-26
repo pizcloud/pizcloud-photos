@@ -110,10 +110,29 @@ jobs:
 
       - name: Increment BUILD_NUMBER
         env:
-          CURRENT_BUILD_NUMBER: ${{ steps.build_number.outputs.build_number }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_BUILD_NUMBER: ${{ vars.BUILD_NUMBER }}
+          INCREMENT: ${{ inputs.increment }}
+          GH_TOKEN: ${{ secrets.ACTIONS_RW_TOKEN || github.token }}
         run: |
-          NEXT_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + 1))
+          if [ -z "$CURRENT_BUILD_NUMBER" ]; then
+            echo "Missing BUILD_NUMBER repo variable"
+            exit 1
+          fi
+          if ! [[ "$CURRENT_BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid BUILD_NUMBER: $CURRENT_BUILD_NUMBER"
+            exit 1
+          fi
+          if ! [[ "$INCREMENT" =~ ^-?[0-9]+$ ]]; then
+            echo "Invalid increment: $INCREMENT"
+            exit 1
+          fi
+          NEXT_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + INCREMENT))
+          if [ "$NEXT_BUILD_NUMBER" -lt 1 ]; then
+            echo "Next BUILD_NUMBER must be >= 1"
+            exit 1
+          fi
+          echo "Next BUILD_NUMBER=$NEXT_BUILD_NUMBER"
+          echo ${GITHUB_REPOSITORY}
           curl -sS -X PATCH \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
