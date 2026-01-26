@@ -1,0 +1,51 @@
+name: Test Build Number Increment
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: 'Increment value'
+        required: true
+        default: '1'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show current BUILD_NUMBER
+        run: echo "Current BUILD_NUMBER=${{ vars.BUILD_NUMBER }}"
+
+      - name: Increment BUILD_NUMBER
+        env:
+          CURRENT_BUILD_NUMBER: ${{ vars.BUILD_NUMBER }}
+          INCREMENT: ${{ inputs.increment }}
+          GH_TOKEN: ${{ secrets.ACTIONS_RW_TOKEN || github.token }}
+        run: |
+          if [ -z "$CURRENT_BUILD_NUMBER" ]; then
+            echo "Missing BUILD_NUMBER repo variable"
+            exit 1
+          fi
+          if ! [[ "$CURRENT_BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid BUILD_NUMBER: $CURRENT_BUILD_NUMBER"
+            exit 1
+          fi
+          if ! [[ "$INCREMENT" =~ ^-?[0-9]+$ ]]; then
+            echo "Invalid increment: $INCREMENT"
+            exit 1
+          fi
+          NEXT_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + INCREMENT))
+          if [ "$NEXT_BUILD_NUMBER" -lt 1 ]; then
+            echo "Next BUILD_NUMBER must be >= 1"
+            exit 1
+          fi
+          echo "Next BUILD_NUMBER=$NEXT_BUILD_NUMBER"
+          curl -sS -X PATCH \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/variables/BUILD_NUMBER" \
+            -d "{\"name\":\"BUILD_NUMBER\",\"value\":\"${NEXT_BUILD_NUMBER}\"}"
