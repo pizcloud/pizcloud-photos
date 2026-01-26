@@ -43,6 +43,7 @@ jobs:
             exit 1
           fi
           echo "Next BUILD_NUMBER=$NEXT_BUILD_NUMBER"
+          echo ${GITHUB_REPOSITORY}
           curl -sS -X PATCH \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
