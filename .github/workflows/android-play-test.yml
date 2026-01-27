@@ -134,6 +134,5 @@ jobs:
           releaseFiles: mobile/build/app/outputs/bundle/release/app-release.aab
           track: ${{ inputs.track || 'internal' }}
           status: ${{ inputs.release_status || 'completed' }}
-          changesNotSentForReview: true
 
 
