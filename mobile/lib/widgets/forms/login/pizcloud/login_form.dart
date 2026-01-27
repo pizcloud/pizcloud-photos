@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
@@ -169,7 +170,7 @@ class LoginForm extends HookConsumerWidget {
         if (result.authSaved != true) {
           ImmichToast.show(
             context: context,
-            msg: "login_form_failed_login".tr(),
+            msg: "login_form_server_error".tr(),
             toastType: ToastType.error,
             gravity: ToastGravity.TOP,
           );
@@ -194,11 +195,15 @@ class LoginForm extends HookConsumerWidget {
           unawaited(ref.watch(backupProvider.notifier).resumeBackup());
         }
         unawaited(context.replaceRoute(const TabControllerRoute()));
+      } on GoogleSignInException catch (e) {
+        final code = e.code.name.toLowerCase();
+        if (code.contains('cancel')) return;
+        if (!context.mounted) return;
       } catch (e) {
         if (!context.mounted) return;
         ImmichToast.show(
           context: context,
-          msg: 'login_form_failed_login'.tr(),
+          msg: 'login_form_server_error'.tr(),
           toastType: ToastType.error,
           gravity: ToastGravity.TOP,
         );
@@ -228,7 +233,7 @@ class LoginForm extends HookConsumerWidget {
         if (result.authSaved != true) {
           ImmichToast.show(
             context: context,
-            msg: "login_form_failed_login".tr(),
+            msg: "login_form_server_error".tr(),
             toastType: ToastType.error,
             gravity: ToastGravity.TOP,
           );
@@ -260,7 +265,7 @@ class LoginForm extends HookConsumerWidget {
         if (!context.mounted) return;
         ImmichToast.show(
           context: context,
-          msg: 'login_form_failed_login'.tr(),
+          msg: 'login_form_server_error'.tr(),
           toastType: ToastType.error,
           gravity: ToastGravity.TOP,
         );

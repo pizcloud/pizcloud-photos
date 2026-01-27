@@ -15,8 +15,8 @@ class PhotosApiUrlResponse {
 
   factory PhotosApiUrlResponse.fromJson(Map<String, dynamic> json) {
     return PhotosApiUrlResponse(
-      photoApi: json['photoApi'] as String,
-      pizcloudApi: json['pizcloudApi'] as String,
+      photoApi: (json['photoApi'] as String?) ?? '',
+      pizcloudApi: (json['pizcloudApi'] as String?) ?? '',
       cluster: json['cluster'] as String?,
     );
   }
