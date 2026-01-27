@@ -59,7 +59,8 @@ export const authenticate = async (url: URL, options?: AuthOptions) => {
   }
 
   if (!user) {
-    redirect(302, `${AppRoute.AUTH_LOGIN}?continue=${encodeURIComponent(url.pathname + url.search)}`);
+    // redirect(302, `${AppRoute.AUTH_LOGIN}?continue=${encodeURIComponent(url.pathname + url.search)}`);
+    redirect(302, `${AppRoute.AUTH_LOGIN}`); // pizcloud
   }
 
   if (adminRoute && !user.isAdmin) {
