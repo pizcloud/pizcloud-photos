@@ -59,16 +59,19 @@ FROM
 WHERE NOT EXISTS (
 	SELECT 1 FROM remote_asset_entity rae WHERE rae.checksum = lae.checksum AND rae.owner_id IN :user_ids
 )
-AND EXISTS (
-	SELECT 1 FROM local_album_asset_entity laa
-	INNER JOIN local_album_entity la on laa.album_id = la.id
-	WHERE laa.asset_id = lae.id AND la.backup_selection = 0 -- selected
-)
-AND NOT EXISTS (
-    SELECT 1 FROM local_album_asset_entity laa
-    INNER JOIN local_album_entity la on laa.album_id = la.id
-    WHERE laa.asset_id = lae.id AND la.backup_selection = 2 -- excluded
-)
+-- pizcloud OLD: Only show local assets if they belong to selected albums.
+-- AND EXISTS (
+-- 	SELECT 1 FROM local_album_asset_entity laa
+-- 	INNER JOIN local_album_entity la on laa.album_id = la.id
+-- 	WHERE laa.asset_id = lae.id AND la.backup_selection = 0 -- selected
+-- )
+-- pizcloud OLD: Excluded albums were hidden from timeline.
+-- AND NOT EXISTS (
+--     SELECT 1 FROM local_album_asset_entity laa
+--     INNER JOIN local_album_entity la on laa.album_id = la.id
+--     WHERE laa.asset_id = lae.id AND la.backup_selection = 2 -- excluded
+-- )
+-- pizcloud NEW: Always show all local assets in timeline (selection only affects backup).
 ORDER BY created_at DESC
 LIMIT $limit;
 
@@ -103,16 +106,19 @@ FROM
 	WHERE NOT EXISTS (
 		SELECT 1 FROM remote_asset_entity rae WHERE rae.checksum = lae.checksum AND rae.owner_id IN :user_ids
 	)
-	AND EXISTS (
-		SELECT 1 FROM local_album_asset_entity laa
-		INNER JOIN local_album_entity la on laa.album_id = la.id
-		WHERE laa.asset_id = lae.id AND la.backup_selection = 0 -- selected
-	)
-	AND NOT EXISTS (
-		SELECT 1 FROM local_album_asset_entity laa
-		INNER JOIN local_album_entity la on laa.album_id = la.id
-		WHERE laa.asset_id = lae.id AND la.backup_selection = 2 -- excluded
-	)
+	-- pizcloud OLD: Only show local assets if they belong to selected albums.
+	-- AND EXISTS (
+	-- 	SELECT 1 FROM local_album_asset_entity laa
+	-- 	INNER JOIN local_album_entity la on laa.album_id = la.id
+	-- 	WHERE laa.asset_id = lae.id AND la.backup_selection = 0 -- selected
+	-- )
+	-- pizcloud OLD: Excluded albums were hidden from timeline.
+	-- AND NOT EXISTS (
+	-- 	SELECT 1 FROM local_album_asset_entity laa
+	-- 	INNER JOIN local_album_entity la on laa.album_id = la.id
+	-- 	WHERE laa.asset_id = lae.id AND la.backup_selection = 2 -- excluded
+	-- )
+	-- pizcloud NEW: Always show all local assets in timeline (selection only affects backup).
 )
 GROUP BY bucket_date
 ORDER BY bucket_date DESC;
