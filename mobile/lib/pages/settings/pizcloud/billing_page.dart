@@ -26,16 +26,16 @@ class FakeProduct {
 }
 
 const List<FakeProduct> kFakeProducts = [
-  FakeProduct('storage_50gb_monthly', 'Basic', '50 GB cloud storage billed monthly', '\$0.2'),
-  FakeProduct('storage_50gb_yearly', 'Basic', '50 GB cloud storage billed yearly', '\$2,4'),
-  FakeProduct('storage_100g_monthly', 'Pro1', '100 GB cloud storage billed monthly', '\$0.4'),
-  FakeProduct('storage_100g_yearly', 'Pro1', '100 GB cloud storage billed yearly', '\$4.8'),
-  FakeProduct('storage_500gb_monthly', 'Pro2', '500 GB cloud storage billed monthly', '\$5'),
-  FakeProduct('storage_500gb_yearly', 'Pro2', '500 GB cloud storage billed yearly', '\$50'),
-  FakeProduct('storage_1tb_monthly', 'Pro3', '1 TB cloud storage billed monthly', '\$10'),
-  FakeProduct('storage_1tb_yearly', 'Pro3', '1 TB cloud storage billed yearly', '\$120'),
-  FakeProduct('storage_2tb_monthly', 'Premium', '2 TB cloud storage billed monthly', '\$12'),
-  FakeProduct('storage_2tb_yearly', 'Premium', '2 TB cloud storage billed yearly', '\$144'),
+  FakeProduct('storage_50gb_monthly', 'Basic', '50 GB cloud storage billed monthly', '\$0.39'),
+  FakeProduct('storage_50gb_yearly', 'Basic', '50 GB cloud storage billed yearly', '\$3.9'),
+  FakeProduct('storage_100g_monthly', 'Pro1', '100 GB cloud storage billed monthly', '\$0.79'),
+  FakeProduct('storage_100g_yearly', 'Pro1', '100 GB cloud storage billed yearly', '\$7.9'),
+  FakeProduct('storage_500gb_monthly', 'Pro2', '500 GB cloud storage billed monthly', '\$1.99'),
+  FakeProduct('storage_500gb_yearly', 'Pro2', '500 GB cloud storage billed yearly', '\$19.9'),
+  FakeProduct('storage_1tb_monthly', 'Pro3', '1 TB cloud storage billed monthly', '\$3.99'),
+  FakeProduct('storage_1tb_yearly', 'Pro3', '1 TB cloud storage billed yearly', '\$39.9'),
+  FakeProduct('storage_2tb_monthly', 'Premium', '2 TB cloud storage billed monthly', '\$7.99'),
+  FakeProduct('storage_2tb_yearly', 'Premium', '2 TB cloud storage billed yearly', '\$79.9'),
 ];
 
 /// ===============================================================
@@ -143,6 +143,7 @@ class PlanDisplay {
 
   final bool referralDiscountApplied;
   final String? offerToken;
+  final String? iosOfferId;
 
   const PlanDisplay({
     required this.id,
@@ -154,6 +155,7 @@ class PlanDisplay {
     required this.raw,
     this.referralDiscountApplied = false,
     this.offerToken,
+    this.iosOfferId,
   });
 }
 
@@ -555,40 +557,15 @@ class BillingPage extends HookConsumerWidget {
               raw: p,
               referralDiscountApplied: referralStillValid && largePlan,
               offerToken: null,
+              iosOfferId: (referralStillValid && largePlan) ? 'referral-30' : null,
             ),
           );
         }
       }
-      // for (final p in realProducts) {
-      //   final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
-      //   final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
-      //   final resolvedMonthly = isM || (!isM && !isY); // default monthly if unknown
-      //   items.add(
-      //     PlanDisplay(
-      //       id: p.id,
-      //       title: _planShortTitle(p.title, p.id),
-      //       price: p.price,
-      //       isMonthly: resolvedMonthly,
-      //       features: _featuresFor('${p.id} ${p.title} ${p.description}'),
-      //       highlighted: _isMostPopular('${p.id} ${p.title}'),
-      //       raw: p,
-      //     ),
-      //   );
-      // }
     }
 
     // Filter by current period
     final filtered = items.where((e) => period.value == BillingPeriod.monthly ? e.isMonthly : !e.isMonthly).toList();
-
-    // OLD: Sort Basic → Pro → Premium
-    // int rank(String t) {
-    //   final s = t.toLowerCase();
-    //   if (s.contains('premium') || s.contains('2tb')) return 3;
-    //   if (s.contains('pro') || s.contains('500')) return 2;
-    //   return 1;
-    // }
-    //
-    // filtered.sort((a, b) => rank(a.title).compareTo(rank(b.title)));
     final orderIndex = <String, int>{};
     for (var i = 0; i < IapService.productIdOrder.length; i += 1) {
       orderIndex[IapService.productIdOrder[i]] = i;
@@ -647,7 +624,9 @@ class BillingPage extends HookConsumerWidget {
                           final plan = selectedPlan.value!;
                           if (plan.raw != null) {
                             // Real purchase
-                            ref.read(billingControllerProvider.notifier).buy(plan.raw!, offerToken: plan.offerToken);
+                            ref
+                                .read(billingControllerProvider.notifier)
+                                .buy(plan.raw!, offerToken: plan.offerToken, iosOfferId: plan.iosOfferId);
                           } else {
                             try {
                               await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);

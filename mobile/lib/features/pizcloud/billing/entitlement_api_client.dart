@@ -6,6 +6,7 @@ import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
+import 'package:immich_mobile/features/pizcloud/billing/ios_promotional_offer.dart';
 
 // final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // deprecated
 
@@ -132,5 +133,45 @@ class EntitlementApiClient {
     if (status < 200 || status >= 300) {
       throw Exception('Notify verified purchase failed: $status ${res.data}');
     }
+  }
+
+  Future<IosPromotionalOffer?> getIosPromotionalOfferSignature({
+    required String productId,
+    required String offerId,
+    String? applicationUserName,
+  }) async {
+    final api = await _pizApiService;
+
+    final res = await api.client.post<dynamic>(
+      '/billing/iap/ios/promotional-signature',
+      data: {
+        'productId': productId,
+        'offerId': offerId,
+        if (applicationUserName != null && applicationUserName.isNotEmpty) 'applicationUserName': applicationUserName,
+      },
+    );
+
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      return null;
+    }
+
+    final data = res.data;
+    if (data is Map<String, dynamic>) {
+      final offer = IosPromotionalOffer.fromJson(data);
+      return offer.isValid ? offer : null;
+    }
+
+    if (data is String) {
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) {
+          final offer = IosPromotionalOffer.fromJson(decoded);
+          return offer.isValid ? offer : null;
+        }
+      } catch (_) {}
+    }
+
+    return null;
   }
 }

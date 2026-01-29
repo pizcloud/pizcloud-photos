@@ -48,13 +48,13 @@ class BillingController extends StateNotifier<BillingState> {
       final referral = await repo.loadReferralSummary();
 
       if (resp.error != null) {
-        state = state.copy(
-          loading: false,
-          error: resp.error!.message,
-          entitlement: ent,
-          usage: usage,
-          referral: referral,
-        );
+        // state = state.copy(
+        //   loading: false,
+        //   error: resp.error!.message,
+        //   entitlement: ent,
+        //   usage: usage,
+        //   referral: referral,
+        // );
       } else {
         state = state.copy(
           loading: false,
@@ -69,9 +69,10 @@ class BillingController extends StateNotifier<BillingState> {
     }
   }
 
-  // OLD:
-  // Future<void> buy(ProductDetails p) => repo.purchase(p);
-  Future<void> buy(ProductDetails p, {String? offerToken}) => repo.purchase(p, offerToken: offerToken);
+  // Future<void> buy(ProductDetails p, {String? offerToken}) => repo.purchase(p, offerToken: offerToken);
+  Future<void> buy(ProductDetails p, {String? offerToken, String? iosOfferId}) =>
+      repo.purchase(p, offerToken: offerToken, iosOfferId: iosOfferId);
+
   Future<void> refreshUsage() async {
     final usage = await repo.loadUsage();
     final referral = await repo.loadReferralSummary();
