@@ -88,6 +88,7 @@ dependencies:
   # new
   in_app_purchase: ^3.2.0
   in_app_purchase_android: ^0.4.0+8
+  in_app_purchase_storekit: ^0.4.1+2
   flutter_riverpod: ^2.5.1
   google_sign_in: ^7.2.0
   dio: ^5.4.0

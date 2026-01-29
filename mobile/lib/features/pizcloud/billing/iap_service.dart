@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
+import 'ios_promotional_offer.dart';
 
 class IapService {
   final InAppPurchase _iap = InAppPurchase.instance;
@@ -50,7 +53,12 @@ class IapService {
   //   final param = PurchaseParam(productDetails: p);
   //   await _iap.buyNonConsumable(purchaseParam: param);
   // }
-  Future<void> buy(ProductDetails p, {String? offerToken}) async {
+  Future<void> buy(
+    ProductDetails p, {
+    String? offerToken,
+    IosPromotionalOffer? iosOffer,
+    String? applicationUserName,
+  }) async {
     if (Platform.isAndroid && p is GooglePlayProductDetails) {
       final googleProduct = p;
       final String? resolvedToken = (offerToken != null && offerToken.isNotEmpty)
@@ -62,6 +70,23 @@ class IapService {
         await _iap.buyNonConsumable(purchaseParam: param);
         return;
       }
+    }
+
+    if (Platform.isIOS && iosOffer != null && iosOffer.isValid) {
+      final param = AppStorePurchaseParam(
+        productDetails: p,
+        applicationUserName: applicationUserName,
+        discount: SKPaymentDiscountWrapper(
+          identifier: iosOffer.offerId,
+          keyIdentifier: iosOffer.keyId,
+          nonce: iosOffer.nonce,
+          signature: iosOffer.signature,
+          timestamp: iosOffer.timestampMs,
+        ),
+      );
+
+      await _iap.buyNonConsumable(purchaseParam: param);
+      return;
     }
 
     final param = PurchaseParam(productDetails: p);
