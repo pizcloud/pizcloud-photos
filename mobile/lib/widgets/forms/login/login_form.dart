@@ -244,9 +244,9 @@ class LoginForm extends HookConsumerWidget {
 
     // pizcloud
     // populateTestLoginInfo() {
-    //   emailController.text = 'demo@immich.app';
+    //   emailController.text = 'demoemail@pizcloud.app';
     //   passwordController.text = 'demo';
-    //   serverEndpointController.text = 'https://demo.immich.app';
+    //   serverEndpointController.text = 'https://demo.pizcloud.app';
     // }
 
     // populateTestLoginInfo1() {

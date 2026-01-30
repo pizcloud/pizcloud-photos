@@ -41,7 +41,7 @@ struct ImageEntry: TimelineEntry {
 
   func cache(for key: String) throws {
     if let containerURL = FileManager.default.containerURL(
-      forSecurityApplicationGroupIdentifier: IMMICH_SHARE_GROUP
+      forSecurityApplicationGroupIdentifier: PIZCLOUD_SHARE_GROUP
     ) {
       let imageURL = containerURL.appendingPathComponent("\(key)_image.png")
       let metadataURL = containerURL.appendingPathComponent(
@@ -61,7 +61,7 @@ struct ImageEntry: TimelineEntry {
     -> ImageEntry?
   {
     if let containerURL = FileManager.default.containerURL(
-      forSecurityApplicationGroupIdentifier: IMMICH_SHARE_GROUP
+      forSecurityApplicationGroupIdentifier: PIZCLOUD_SHARE_GROUP
     ) {
       let imageURL = containerURL.appendingPathComponent("\(key)_image.png")
       let metadataURL = containerURL.appendingPathComponent(

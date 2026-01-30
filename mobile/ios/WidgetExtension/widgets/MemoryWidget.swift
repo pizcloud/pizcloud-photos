@@ -165,6 +165,6 @@ struct ImmichMemoryWidget: Widget {
 
     // widget picker info
     .configurationDisplayName("Memories")
-    .description("See memories from Immich.")
+    .description("View PizCloud Memories.")
   }
 }

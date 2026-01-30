@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import WidgetKit
 
-let IMMICH_SHARE_GROUP = "group.com.pizcloud.share"
+let PIZCLOUD_SHARE_GROUP = "group.com.pizcloud.share"
 
 enum WidgetError: Error, Codable {
   case noLogin
@@ -22,10 +22,10 @@ extension WidgetError: LocalizedError {
   public var errorDescription: String? {
     switch self {
     case .noLogin:
-      return "Login to Immich"
+      return "Login to PizCloud Photos"
 
     case .fetchFailed:
-      return "Unable to connect to your Immich instance"
+      return "Unable to connect to your PizCloud instance"
 
     case .albumNotFound:
       return "Album not found"
@@ -115,7 +115,7 @@ class ImmichAPI {
 
   init() async throws {
     // fetch the credentials from the UserDefaults store that dart placed here
-    guard let defaults = UserDefaults(suiteName: IMMICH_SHARE_GROUP),
+    guard let defaults = UserDefaults(suiteName: PIZCLOUD_SHARE_GROUP),
       let serverURL = defaults.string(forKey: "widget_server_url"),
       let sessionKey = defaults.string(forKey: "widget_auth_token")
     else {

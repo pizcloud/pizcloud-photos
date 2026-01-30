@@ -92,12 +92,12 @@
         <data android:mimeType="video/*" />
       </intent-filter>
 
-      <!-- immich:// URL scheme handling -->
+      <!-- pizcloud:// URL scheme handling -->
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
-        <data android:scheme="immich" />
+        <data android:scheme="pizcloud" />
       </intent-filter>
 
       <!-- photos.pizcloud.com deep link -->
@@ -132,7 +132,7 @@
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
          <data android:scheme="pizcloud" android:host="auth" android:path="/callback"  android:pathPrefix="/oauth-callback"/>
-        <!-- <data android:scheme="app.immich" android:pathPrefix="/oauth-callback" /> -->
+        <!-- <data android:scheme="app.pizcloud" android:pathPrefix="/oauth-callback" /> -->
       </intent-filter>
     </activity>
     <!-- Don't delete the meta-data below.
