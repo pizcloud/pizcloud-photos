@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/providers/multiselect.provider.dart';
 import 'package:immich_mobile/providers/timeline.provider.dart';
@@ -12,18 +13,18 @@ class ArchivePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    AppBar buildAppBar() {
+    PlatformAppBar buildAppBar() {
       final archiveRenderList = ref.watch(archiveTimelineProvider);
       final count = archiveRenderList.value?.totalAssets.toString() ?? "?";
-      return AppBar(
+      return PlatformAppBar(
         leading: IconButton(onPressed: () => context.maybePop(), icon: const Icon(Icons.arrow_back_ios_rounded)),
-        centerTitle: true,
         automaticallyImplyLeading: false,
         title: const Text('archive_page_title').tr(namedArgs: {'count': count}),
+        material: (_, __) => MaterialAppBarData(centerTitle: true),
       );
     }
 
-    return Scaffold(
+    return PlatformScaffold(
       appBar: ref.watch(multiselectProvider) ? null : buildAppBar(),
       body: MultiselectGrid(
         renderListProvider: archiveTimelineProvider,

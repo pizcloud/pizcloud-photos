@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -38,9 +39,8 @@ class AlbumAssetSelectionPage extends HookConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () {
@@ -53,8 +53,7 @@ class AlbumAssetSelectionPage extends HookConsumerWidget {
                 'share_assets_selected',
                 style: TextStyle(fontSize: 18),
               ).tr(namedArgs: {'count': selected.value.length.toString()}),
-        centerTitle: false,
-        actions: [
+        trailingActions: [
           if (selected.value.isNotEmpty || canDeselect)
             TextButton(
               onPressed: () {
@@ -67,6 +66,7 @@ class AlbumAssetSelectionPage extends HookConsumerWidget {
               ).tr(),
             ),
         ],
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
       ),
       body: assetSelectionRenderList.widgetWhen(onData: (data) => buildBody(data)),
     );

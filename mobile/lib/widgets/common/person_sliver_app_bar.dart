@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/person.model.dart';
@@ -64,74 +65,112 @@ class _MesmerizingSliverAppBarState extends ConsumerState<PersonSliverAppBar> {
         const Shadow(offset: Offset(0, 2), blurRadius: 0, color: Colors.transparent),
     ];
 
-    return isMultiSelectEnabled
-        ? SliverToBoxAdapter(
-            child: switch (_scrollProgress) {
-              < 0.8 => const SizedBox(height: 120),
-              _ => const SizedBox(height: 352),
-            },
-          )
-        : SliverAppBar(
-            expandedHeight: 300.0,
-            floating: false,
-            pinned: true,
-            snap: false,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(
-                Platform.isIOS ? Icons.arrow_back_ios_new_rounded : Icons.arrow_back,
-                color: Color.lerp(Colors.white, context.primaryColor, _scrollProgress),
-                shadows: [
-                  _scrollProgress < 0.95
-                      ? Shadow(offset: const Offset(0, 2), blurRadius: 5, color: Colors.black.withValues(alpha: 0.5))
-                      : const Shadow(offset: Offset(0, 2), blurRadius: 0, color: Colors.transparent),
-                ],
-              ),
-              onPressed: () {
-                context.pop();
-              },
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.more_vert, color: actionIconColor, shadows: actionIconShadows),
-                onPressed: widget.onShowOptions,
-              ),
+    if (isMultiSelectEnabled) {
+      return SliverToBoxAdapter(
+        child: switch (_scrollProgress) {
+          < 0.8 => const SizedBox(height: 120),
+          _ => const SizedBox(height: 352),
+        },
+      );
+    }
+
+    final flexibleSpace = Builder(
+      builder: (context) {
+        final settings = context.dependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
+        final scrollProgress = _calculateScrollProgress(settings);
+
+        // Update scroll progress for the leading button
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _scrollProgress != scrollProgress) {
+            setState(() {
+              _scrollProgress = scrollProgress;
+            });
+          }
+        });
+
+        return FlexibleSpaceBar(
+          centerTitle: true,
+          title: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: scrollProgress > 0.95
+                ? Text(
+                    widget.person.name,
+                    style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w600, fontSize: 18),
+                  )
+                : null,
+          ),
+          background: _ExpandedBackground(
+            scrollProgress: scrollProgress,
+            person: widget.person,
+            onNameTap: widget.onNameTap,
+            onBirthdayTap: widget.onBirthdayTap,
+          ),
+        );
+      },
+    );
+
+    // iOS: use Material SliverAppBar to preserve flexibleSpace background and avoid large-title layout issues.
+    if (isCupertino(context)) {
+      return SliverAppBar(
+        expandedHeight: 300.0,
+        floating: false,
+        pinned: true,
+        snap: false,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Color.lerp(Colors.white, context.primaryColor, _scrollProgress),
+            shadows: [
+              _scrollProgress < 0.95
+                  ? Shadow(offset: const Offset(0, 2), blurRadius: 5, color: Colors.black.withValues(alpha: 0.5))
+                  : const Shadow(offset: Offset(0, 2), blurRadius: 0, color: Colors.transparent),
             ],
-            flexibleSpace: Builder(
-              builder: (context) {
-                final settings = context.dependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
-                final scrollProgress = _calculateScrollProgress(settings);
+          ),
+          onPressed: () {
+            context.pop();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.more_vert, color: actionIconColor, shadows: actionIconShadows),
+            onPressed: widget.onShowOptions,
+          ),
+        ],
+        flexibleSpace: flexibleSpace,
+      );
+    }
 
-                // Update scroll progress for the leading button
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && _scrollProgress != scrollProgress) {
-                    setState(() {
-                      _scrollProgress = scrollProgress;
-                    });
-                  }
-                });
-
-                return FlexibleSpaceBar(
-                  centerTitle: true,
-                  title: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: scrollProgress > 0.95
-                        ? Text(
-                            widget.person.name,
-                            style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.w600, fontSize: 18),
-                          )
-                        : null,
-                  ),
-                  background: _ExpandedBackground(
-                    scrollProgress: scrollProgress,
-                    person: widget.person,
-                    onNameTap: widget.onNameTap,
-                    onBirthdayTap: widget.onBirthdayTap,
-                  ),
-                );
-              },
-            ),
-          );
+    return PlatformSliverAppBar(
+      material: (_, __) => MaterialSliverAppBarData(
+        expandedHeight: 300.0,
+        floating: false,
+        pinned: true,
+        snap: false,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Platform.isIOS ? Icons.arrow_back_ios_new_rounded : Icons.arrow_back,
+            color: Color.lerp(Colors.white, context.primaryColor, _scrollProgress),
+            shadows: [
+              _scrollProgress < 0.95
+                  ? Shadow(offset: const Offset(0, 2), blurRadius: 5, color: Colors.black.withValues(alpha: 0.5))
+                  : const Shadow(offset: Offset(0, 2), blurRadius: 0, color: Colors.transparent),
+            ],
+          ),
+          onPressed: () {
+            context.pop();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.more_vert, color: actionIconColor, shadows: actionIconShadows),
+            onPressed: widget.onShowOptions,
+          ),
+        ],
+        flexibleSpace: flexibleSpace,
+      ),
+    );
   }
 }
 

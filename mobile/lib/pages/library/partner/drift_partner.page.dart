@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/user.model.dart';
 // import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -107,12 +108,10 @@ class DriftPartnerPage extends HookConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: const Text("partners").t(context: context),
-        elevation: 0,
-        centerTitle: false,
-        actions: [
+        trailingActions: [
           IconButton(
             // onPressed: potentialPartnersAsync.whenOrNull(data: (data) => addNewUsersHandler), // pizcloud
             onPressed: addNewUsersHandler, // pizcloud
@@ -120,6 +119,7 @@ class DriftPartnerPage extends HookConsumerWidget {
             tooltip: "add_partner".tr(),
           ),
         ],
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
       ),
       body: _SharedToPartnerList(onAddPartner: addNewUsersHandler, onDeletePartner: onDeleteUser),
     );

@@ -5,6 +5,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
@@ -224,9 +225,7 @@ class MapPage extends HookConsumerWidget {
     return MapThemeOverride(
       mapBuilder: (style) => context.isMobile
           // Single-column
-          ? Scaffold(
-              extendBodyBehindAppBar: true,
-              appBar: MapAppBar(selectedAssets: selectedAssets),
+          ? PlatformScaffold(
               body: Stack(
                 children: [
                   _MapWithMarker(
@@ -251,14 +250,16 @@ class MapPage extends HookConsumerWidget {
                   ),
                 ],
               ),
+              material: (_, __) => MaterialScaffoldData(
+                appBar: MapAppBar(selectedAssets: selectedAssets),
+                extendBodyBehindAppBar: true,
+              ),
             )
           // Two-pane
           : Row(
               children: [
                 Expanded(
-                  child: Scaffold(
-                    extendBodyBehindAppBar: true,
-                    appBar: MapAppBar(selectedAssets: selectedAssets),
+                  child: PlatformScaffold(
                     body: Stack(
                       children: [
                         _MapWithMarker(
@@ -281,6 +282,10 @@ class MapPage extends HookConsumerWidget {
                           ),
                         ),
                       ],
+                    ),
+                    material: (_, __) => MaterialScaffoldData(
+                      appBar: MapAppBar(selectedAssets: selectedAssets),
+                      extendBodyBehindAppBar: true,
                     ),
                   ),
                 ),

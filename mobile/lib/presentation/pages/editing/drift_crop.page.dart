@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:crop_image/crop_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -26,12 +27,12 @@ class DriftCropImagePage extends HookWidget {
     final cropController = useCropController();
     final aspectRatio = useState<double?>(null);
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         backgroundColor: context.scaffoldBackgroundColor,
         title: Text("crop".tr()),
         leading: CloseButton(color: context.primaryColor),
-        actions: [
+        trailingActions: [
           IconButton(
             icon: Icon(Icons.done_rounded, color: context.primaryColor, size: 24),
             onPressed: () async {

@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/album.entity.dart';
@@ -27,9 +28,8 @@ class AlbumPreviewPage extends HookConsumerWidget {
       return null;
     }, []);
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Column(
           children: [
             Text(album.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
@@ -47,6 +47,7 @@ class AlbumPreviewPage extends HookConsumerWidget {
           ],
         ),
         leading: IconButton(onPressed: () => context.maybePop(), icon: const Icon(Icons.arrow_back_ios_new_rounded)),
+        material: (_, __) => MaterialAppBarData(elevation: 0),
       ),
       body: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

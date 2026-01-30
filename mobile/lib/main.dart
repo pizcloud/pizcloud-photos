@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
 import 'package:immich_mobile/constants/locales.dart';
@@ -243,19 +244,66 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
 
     return ProviderScope(
       overrides: [localeProvider.overrideWithValue(context.locale)],
-      child: MaterialApp.router(
-        title: 'PizCloud',
-        debugShowCheckedModeBanner: true,
-        localizationsDelegates: context.localizationDelegates,
-        supportedLocales: context.supportedLocales,
-        locale: context.locale,
-        themeMode: ref.watch(immichThemeModeProvider),
-        darkTheme: getThemeData(colorScheme: immichTheme.dark, locale: context.locale),
-        theme: getThemeData(colorScheme: immichTheme.light, locale: context.locale),
-        routerConfig: router.config(
-          deepLinkBuilder: _deepLinkBuilder,
-          navigatorObservers: () => [AppNavigationObserver(ref: ref)],
+      child: PlatformProvider(
+        settings: PlatformSettingsData(
+          // Allow existing Material widgets while we migrate UI in phase 2.
+          iosUsesMaterialWidgets: true,
         ),
+        builder: (context) {
+          final themeMode = ref.watch(immichThemeModeProvider);
+          final lightTheme = getThemeData(colorScheme: immichTheme.light, locale: context.locale);
+          final darkTheme = getThemeData(colorScheme: immichTheme.dark, locale: context.locale);
+          final cupertinoLightTheme = getCupertinoThemeData(colorScheme: immichTheme.light, locale: context.locale);
+          final cupertinoDarkTheme = getCupertinoThemeData(colorScheme: immichTheme.dark, locale: context.locale);
+
+          return PlatformTheme(
+            themeMode: themeMode,
+            materialLightTheme: lightTheme,
+            materialDarkTheme: darkTheme,
+            cupertinoLightTheme: cupertinoLightTheme,
+            cupertinoDarkTheme: cupertinoDarkTheme,
+            builder: (context) {
+              final platformTheme = PlatformTheme.of(context);
+              final isDark = platformTheme?.isDark ?? Theme.of(context).brightness == Brightness.dark;
+              final cupertinoTheme = isDark ? cupertinoDarkTheme : cupertinoLightTheme;
+
+              // Old MaterialApp.router (kept for comparison)
+              // MaterialApp.router(
+              //   title: 'PizCloud',
+              //   debugShowCheckedModeBanner: true,
+              //   localizationsDelegates: context.localizationDelegates,
+              //   supportedLocales: context.supportedLocales,
+              //   locale: context.locale,
+              //   themeMode: themeMode,
+              //   darkTheme: darkTheme,
+              //   theme: lightTheme,
+              //   routerConfig: router.config(
+              //     deepLinkBuilder: _deepLinkBuilder,
+              //     navigatorObservers: () => [AppNavigationObserver(ref: ref)],
+              //   ),
+              // );
+
+              return PlatformApp.router(
+                title: 'PizCloud',
+                debugShowCheckedModeBanner: true,
+                localizationsDelegates: context.localizationDelegates,
+                supportedLocales: context.supportedLocales,
+                locale: context.locale,
+                routerConfig: router.config(
+                  deepLinkBuilder: _deepLinkBuilder,
+                  navigatorObservers: () => [AppNavigationObserver(ref: ref)],
+                ),
+                material: (_, __) => MaterialAppRouterData(
+                  themeMode: themeMode,
+                  theme: lightTheme,
+                  darkTheme: darkTheme,
+                  debugShowCheckedModeBanner: true,
+                ),
+                cupertino: (_, __) => CupertinoAppRouterData(theme: cupertinoTheme, debugShowCheckedModeBanner: true),
+              );
+            },
+          );
+        },
       ),
     );
   }

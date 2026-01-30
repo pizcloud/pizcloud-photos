@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/setting.model.dart';
@@ -45,43 +46,60 @@ class ImmichSliverAppBar extends ConsumerWidget {
     final isCasting = ref.watch(castProvider.select((c) => c.isCasting));
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
     final isMultiSelectEnabled = ref.watch(multiSelectProvider.select((s) => s.isEnabled));
+    final materialActions = <Widget>[
+      if (isCasting && !isReadonlyModeEnabled)
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: IconButton(
+            onPressed: () {
+              showPlatformDialog(context: context, builder: (context) => const CastDialog());
+            },
+            icon: Icon(isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded),
+          ),
+        ),
+      const _SyncStatusIndicator(),
+      if (actions != null)
+        ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 16), child: action)),
+      if ((kDebugMode || kProfileMode) && !isReadonlyModeEnabled)
+        IconButton(
+          icon: const Icon(Icons.science_rounded),
+          onPressed: () => context.pushRoute(const FeatInDevRoute()),
+        ),
+      if (showUploadButton && !isReadonlyModeEnabled)
+        const Padding(padding: EdgeInsets.only(right: 20), child: _BackupIndicator()),
+      const Padding(padding: EdgeInsets.only(right: 20), child: _ProfileIndicator()),
+    ];
 
     return SliverAnimatedOpacity(
       duration: Durations.medium1,
       opacity: isMultiSelectEnabled ? 0 : 1,
-      sliver: SliverAppBar(
-        floating: floating,
-        pinned: pinned,
-        snap: snap,
-        expandedHeight: expandedHeight,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-        automaticallyImplyLeading: false,
-        centerTitle: false,
-        title: title ?? const _ImmichLogoWithText(),
-        actions: [
-          if (isCasting && !isReadonlyModeEnabled)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: IconButton(
-                onPressed: () {
-                  showDialog(context: context, builder: (context) => const CastDialog());
-                },
-                icon: Icon(isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded),
+      // iOS: use Material SliverAppBar to avoid large-title spacing and keep layout consistent.
+      sliver: isCupertino(context)
+          ? SliverAppBar(
+              automaticallyImplyLeading: false,
+              title: title ?? const _ImmichLogoWithText(),
+              floating: floating,
+              pinned: pinned,
+              snap: snap,
+              expandedHeight: expandedHeight,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+              centerTitle: false,
+              actions: materialActions,
+            )
+          : PlatformSliverAppBar(
+              automaticallyImplyLeading: false,
+              title: null,
+              material: (_, __) => MaterialSliverAppBarData(
+                title: title ?? const _ImmichLogoWithText(),
+                floating: floating,
+                pinned: pinned,
+                snap: snap,
+                expandedHeight: expandedHeight,
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+                centerTitle: false,
+                actions: materialActions,
               ),
             ),
-          const _SyncStatusIndicator(),
-          if (actions != null)
-            ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 16), child: action)),
-          if ((kDebugMode || kProfileMode) && !isReadonlyModeEnabled)
-            IconButton(
-              icon: const Icon(Icons.science_rounded),
-              onPressed: () => context.pushRoute(const FeatInDevRoute()),
-            ),
-          if (showUploadButton && !isReadonlyModeEnabled)
-            const Padding(padding: EdgeInsets.only(right: 20), child: _BackupIndicator()),
-          const Padding(padding: EdgeInsets.only(right: 20), child: _ProfileIndicator()),
-        ],
-      ),
     );
   }
 }
@@ -142,7 +160,8 @@ class _ProfileIndicator extends ConsumerWidget {
     }
 
     return InkWell(
-      onTap: () => showDialog(context: context, useRootNavigator: false, builder: (ctx) => const ImmichAppBarDialog()),
+      onTap: () =>
+          showPlatformDialog(context: context, useRootNavigator: false, builder: (ctx) => const ImmichAppBarDialog()),
       onLongPress: () => toggleReadonlyMode(),
       borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: Badge(

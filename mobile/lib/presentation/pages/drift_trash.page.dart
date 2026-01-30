@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/trash_bottom_sheet.widget.dart';
@@ -28,13 +29,21 @@ class DriftTrashPage extends StatelessWidget {
         }),
       ],
       child: Timeline(
-        appBar: SliverAppBar(
-          title: Text('trash'.t(context: context)),
-          floating: true,
-          snap: true,
-          pinned: true,
-          centerTitle: true,
-          elevation: 0,
+        appBar: PlatformSliverAppBar(
+          material: (_, __) => MaterialSliverAppBarData(
+            title: Text('trash'.t(context: context)),
+            floating: true,
+            snap: true,
+            pinned: true,
+            centerTitle: true,
+            elevation: 0,
+          ),
+          cupertino: (_, __) => CupertinoSliverAppBarData(
+            middle: Text('trash'.t(context: context)),
+            automaticallyImplyTitle: false,
+            title: const SizedBox.shrink(),
+            transitionBetweenRoutes: false,
+          ),
         ),
         topSliverWidgetHeight: 24,
         topSliverWidget: Consumer(

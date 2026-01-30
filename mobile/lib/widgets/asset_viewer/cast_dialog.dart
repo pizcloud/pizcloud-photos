@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/models/cast/cast_manager_state.dart';
@@ -22,7 +23,7 @@ class CastDialog extends ConsumerWidget {
       return castManager.receiverName == deviceName && !castManager.isCasting;
     }
 
-    return AlertDialog(
+    return PlatformAlertDialog(
       title: const Text("cast", style: TextStyle(fontWeight: FontWeight.bold)).tr(),
       content: SizedBox(
         width: 250,
@@ -71,7 +72,7 @@ class CastDialog extends ConsumerWidget {
                 } else {
                   final (deviceName, type, deviceObj) = item as (String, CastDestinationType, dynamic);
 
-                  return ListTile(
+                  return PlatformListTile(
                     title: Text(
                       deviceName,
                       style: TextStyle(color: isCurrentDevice(deviceName) ? context.colorScheme.primary : null),
@@ -83,7 +84,7 @@ class CastDialog extends ConsumerWidget {
                     trailing: isCurrentDevice(deviceName)
                         ? Icon(Icons.check, color: context.colorScheme.primary)
                         : isDeviceConnecting(deviceName)
-                        ? const CircularProgressIndicator()
+                        ? const PlatformCircularProgressIndicator()
                         : null,
                     onTap: () async {
                       if (isDeviceConnecting(deviceName)) {
@@ -107,14 +108,14 @@ class CastDialog extends ConsumerWidget {
       ),
       actions: [
         if (castManager.isCasting)
-          TextButton(
+          PlatformDialogAction(
             onPressed: () => ref.read(castProvider.notifier).disconnect(),
             child: Text(
               "stop_casting",
               style: TextStyle(color: context.colorScheme.secondary, fontWeight: FontWeight.bold),
             ).tr(),
           ),
-        TextButton(
+        PlatformDialogAction(
           onPressed: () => context.pop(),
           child: Text(
             "close",

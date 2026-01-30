@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -288,17 +289,19 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
       }
     }
 
-    return AppBar(
-      elevation: 0,
+    return PlatformAppBar(
       backgroundColor: context.scaffoldBackgroundColor,
       leading: buildLeadingButton(),
-      centerTitle: false,
-      actions: [
+      trailingActions: [
         if (album.shared && (album.activityEnabled || comments != 0)) buildActivitiesButton(),
         if (album.isRemote) ...[
           IconButton(splashRadius: 25, onPressed: buildBottomSheet, icon: const Icon(Icons.more_horiz_rounded)),
         ],
       ],
+      cupertino: (_, __) => CupertinoNavigationBarData(
+        transitionBetweenRoutes: false,
+      ),
+      material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
     );
   }
 

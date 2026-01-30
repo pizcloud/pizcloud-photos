@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -120,18 +121,17 @@ class PartnerPage extends HookConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: const Text("partners").tr(),
-        elevation: 0,
-        centerTitle: false,
-        actions: [
+        trailingActions: [
           IconButton(
             onPressed: availableUsers.whenOrNull(data: (data) => addNewUsersHandler),
             icon: const Icon(Icons.person_add),
             tooltip: "add_partner".tr(),
           ),
         ],
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
       ),
       body: buildUserList(partners),
     );

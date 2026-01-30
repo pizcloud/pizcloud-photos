@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -270,14 +271,14 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
 
     return ProviderScope(
       overrides: [currentRemoteAlbumScopedProvider.overrideWithValue(album)],
-      child: Scaffold(
-        appBar: AppBar(
+      child: PlatformScaffold(
+        appBar: PlatformAppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => context.maybePop(null),
           ),
-          centerTitle: true,
           title: Text("options".t(context: context)),
+          material: (_, __) => MaterialAppBarData(centerTitle: true),
         ),
         body: ListView(
           children: [

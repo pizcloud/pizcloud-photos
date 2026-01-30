@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -36,7 +37,11 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
     buildProfileIndicator() {
       return InkWell(
         onTap: () =>
-            showDialog(context: context, useRootNavigator: false, builder: (ctx) => const ImmichAppBarDialog()),
+            showPlatformDialog(
+              context: context,
+              useRootNavigator: false,
+              builder: (ctx) => const ImmichAppBarDialog(),
+            ),
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Badge(
           label: Container(
@@ -119,11 +124,9 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
       );
     }
 
-    return AppBar(
+    return PlatformAppBar(
       backgroundColor: context.themeData.appBarTheme.backgroundColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
       automaticallyImplyLeading: false,
-      centerTitle: false,
       title: Builder(
         builder: (BuildContext context) {
           return Row(
@@ -152,7 +155,12 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
           );
         },
       ),
-      actions: [
+      cupertino: (_, __) => CupertinoNavigationBarData(
+        transitionBetweenRoutes: false,
+      ),
+      material: (_, __) => MaterialAppBarData(
+      ),
+      trailingActions: [
         if (actions != null)
           ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 16), child: action)),
         if (kDebugMode || kProfileMode)
@@ -165,7 +173,7 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(
               onPressed: () {
-                showDialog(context: context, builder: (context) => const CastDialog());
+                showPlatformDialog(context: context, builder: (context) => const CastDialog());
               },
               icon: Icon(isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded),
             ),

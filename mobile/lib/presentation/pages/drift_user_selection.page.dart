@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
@@ -114,18 +115,17 @@ class DriftUserSelectionPage extends HookConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: const Text('invite_to_album').tr(),
-        elevation: 0,
-        centerTitle: false,
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
           onPressed: () {
             context.maybePop(null);
           },
         ),
-        actions: [
+        trailingActions: [
           TextButton(
             onPressed: sharedUsersList.value.isEmpty ? null : addNewUsersHandler,
             child: const Text("add", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),

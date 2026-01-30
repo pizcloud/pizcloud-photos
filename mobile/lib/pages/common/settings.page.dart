@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
@@ -56,8 +57,11 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     context.locale;
-    return Scaffold(
-      appBar: AppBar(centerTitle: false, title: const Text('settings').tr()),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: const Text('settings').tr(),
+        material: (_, __) => MaterialAppBarData(centerTitle: false),
+      ),
       body: context.isMobile ? const SafeArea(child: _MobileLayout()) : const SafeArea(child: _TabletLayout()),
     );
   }
@@ -141,8 +145,11 @@ class SettingsSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     context.locale;
-    return Scaffold(
-      appBar: AppBar(centerTitle: false, title: Text(section.title).tr()),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: Text(section.title).tr(),
+        material: (_, __) => MaterialAppBarData(centerTitle: false),
+      ),
       body: section.widget,
     );
   }

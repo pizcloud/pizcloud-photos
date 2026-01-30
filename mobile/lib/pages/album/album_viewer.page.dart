@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/pages/album/album_viewer.dart';
 import 'package:immich_mobile/providers/album/album.provider.dart';
@@ -24,6 +25,6 @@ class AlbumViewerPage extends HookConsumerWidget {
       albumFuture.whenData((value) => ref.read(currentAlbumProvider.notifier).set(value));
     });
 
-    return const Scaffold(body: AlbumViewer());
+    return const PlatformScaffold(body: AlbumViewer());
   }
 }

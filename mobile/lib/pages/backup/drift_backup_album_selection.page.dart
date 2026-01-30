@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/local_album.model.dart';
 import 'package:immich_mobile/domain/services/sync_linked_album.service.dart';
@@ -144,8 +145,8 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
+      child: PlatformScaffold(
+        appBar: PlatformAppBar(
           leading: IconButton(
             onPressed: () async => await context.maybePop(),
             icon: const Icon(Icons.arrow_back_ios_rounded),
@@ -159,7 +160,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                   onChanged: (value) => setState(() => _searchQuery = value.trim()),
                 )
               : const Text("backup_album_selection_page_select_albums").t(context: context),
-          actions: [
+          trailingActions: [
             if (!_isSearchMode)
               IconButton(
                 icon: const Icon(Icons.search),
@@ -178,7 +179,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                 }),
               ),
           ],
-          elevation: 0,
+          material: (_, __) => MaterialAppBarData(elevation: 0),
         ),
         body: Stack(
           children: [

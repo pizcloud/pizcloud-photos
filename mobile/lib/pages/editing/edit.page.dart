@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -69,15 +70,53 @@ class EditImagePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
+    final bottomBar = Container(
+      height: 70,
+      margin: const EdgeInsets.only(bottom: 60, right: 10, left: 10, top: 10),
+      decoration: BoxDecoration(
+        color: context.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.all(Radius.circular(30)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.crop_rotate_rounded, color: context.themeData.iconTheme.color, size: 25),
+                onPressed: () {
+                  context.pushRoute(CropImageRoute(asset: asset, image: image));
+                },
+              ),
+              Text("crop".tr(), style: context.textTheme.displayMedium),
+            ],
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.filter, color: context.themeData.iconTheme.color, size: 25),
+                onPressed: () {
+                  context.pushRoute(FilterImageRoute(asset: asset, image: image));
+                },
+              ),
+              Text("filter".tr(), style: context.textTheme.displayMedium),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Text("edit".tr()),
         backgroundColor: context.scaffoldBackgroundColor,
         leading: IconButton(
           icon: Icon(Icons.close_rounded, color: context.primaryColor, size: 24),
           onPressed: () => context.navigator.popUntil((route) => route.isFirst),
         ),
-        actions: <Widget>[
+        trailingActions: <Widget>[
           TextButton(
             onPressed: isEdited ? () => _saveEditedImage(context, asset, image, ref) : null,
             child: Text("save_to_gallery".tr(), style: TextStyle(color: isEdited ? context.primaryColor : Colors.grey)),
@@ -85,64 +124,41 @@ class EditImagePage extends ConsumerWidget {
         ],
       ),
       backgroundColor: context.scaffoldBackgroundColor,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: context.height * 0.7, maxWidth: context.width * 0.9),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(7)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  spreadRadius: 2,
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+      body: Stack(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: context.height * 0.7, maxWidth: context.width * 0.9),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.all(Radius.circular(7)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(7)),
-              child: Image(image: image.image, fit: BoxFit.contain),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(7)),
+                  child: Image(image: image.image, fit: BoxFit.contain),
+                ),
+              ),
             ),
           ),
-        ),
+          if (isCupertino(context))
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(top: false, child: bottomBar),
+            ),
+        ],
       ),
-      bottomNavigationBar: Container(
-        height: 70,
-        margin: const EdgeInsets.only(bottom: 60, right: 10, left: 10, top: 10),
-        decoration: BoxDecoration(
-          color: context.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.all(Radius.circular(30)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                IconButton(
-                  icon: Icon(Icons.crop_rotate_rounded, color: context.themeData.iconTheme.color, size: 25),
-                  onPressed: () {
-                    context.pushRoute(CropImageRoute(asset: asset, image: image));
-                  },
-                ),
-                Text("crop".tr(), style: context.textTheme.displayMedium),
-              ],
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                IconButton(
-                  icon: Icon(Icons.filter, color: context.themeData.iconTheme.color, size: 25),
-                  onPressed: () {
-                    context.pushRoute(FilterImageRoute(asset: asset, image: image));
-                  },
-                ),
-                Text("filter".tr(), style: context.textTheme.displayMedium),
-              ],
-            ),
-          ],
-        ),
+      material: (_, __) => MaterialScaffoldData(
+        bottomNavBar: bottomBar,
       ),
     );
   }

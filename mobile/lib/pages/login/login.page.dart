@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -27,39 +28,41 @@ class LoginPage extends HookConsumerWidget {
       return null;
     });
 
-    return Scaffold(
+    return PlatformScaffold(
       body: LoginForm(),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: SizedBox(
-            height: 50,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'v${appVersion.value}',
-                  style: TextStyle(
-                    color: context.colorScheme.onSurfaceSecondary,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: "Inconsolata",
-                  ),
-                ),
-                const Text(' '),
-                GestureDetector(
-                  child: Text(
-                    'Logs',
+      material: (_, __) => MaterialScaffoldData(
+        bottomNavBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: SizedBox(
+              height: 50,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'v${appVersion.value}',
                     style: TextStyle(
-                      color: context.primaryColor,
+                      color: context.colorScheme.onSurfaceSecondary,
                       fontWeight: FontWeight.bold,
                       fontFamily: "Inconsolata",
                     ),
                   ),
-                  onTap: () {
-                    context.pushRoute(const AppLogRoute());
-                  },
-                ),
-              ],
+                  const Text(' '),
+                  GestureDetector(
+                    child: Text(
+                      'Logs',
+                      style: TextStyle(
+                        color: context.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "Inconsolata",
+                      ),
+                    ),
+                    onTap: () {
+                      context.pushRoute(const AppLogRoute());
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

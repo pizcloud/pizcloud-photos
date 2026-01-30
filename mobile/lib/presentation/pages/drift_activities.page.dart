@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
@@ -34,11 +35,11 @@ class DriftActivitiesPage extends HookConsumerWidget {
 
     return ProviderScope(
       overrides: [currentRemoteAlbumScopedProvider.overrideWithValue(album)],
-      child: Scaffold(
-        appBar: AppBar(
+      child: PlatformScaffold(
+        appBar: PlatformAppBar(
           title: Text(album.name),
-          actions: [const LikeActivityActionButton(menuItem: true)],
-          actionsPadding: const EdgeInsets.only(right: 8),
+          trailingActions: [const LikeActivityActionButton(menuItem: true)],
+          material: (_, __) => MaterialAppBarData(actionsPadding: const EdgeInsets.only(right: 8)),
         ),
         body: activities.widgetWhen(
           onData: (data) {
@@ -76,7 +77,7 @@ class DriftActivitiesPage extends HookConsumerWidget {
             );
           },
         ),
-        resizeToAvoidBottomInset: true,
+        material: (_, __) => MaterialScaffoldData(resizeToAvoidBottomInset: true),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/setting.model.dart';
@@ -56,9 +57,11 @@ class Timeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      floatingActionButton: const DownloadStatusFloatingButton(),
+    return PlatformScaffold(
+      material: (_, __) => MaterialScaffoldData(
+        resizeToAvoidBottomInset: false,
+        floatingActionButton: const DownloadStatusFloatingButton(),
+      ),
       body: LayoutBuilder(
         builder: (_, constraints) => ProviderScope(
           overrides: [

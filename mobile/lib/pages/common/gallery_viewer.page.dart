@@ -7,6 +7,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -288,7 +289,7 @@ class GalleryViewerPage extends HookConsumerWidget {
     return PopScope(
       // Change immersive mode back to normal "edgeToEdge" mode
       onPopInvokedWithResult: (didPop, _) => SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge),
-      child: Scaffold(
+      child: PlatformScaffold(
         backgroundColor: Colors.black,
         body: Stack(
           children: [

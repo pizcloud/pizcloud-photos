@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
@@ -72,12 +73,11 @@ class FolderPage extends HookConsumerWidget {
       sortOrder.value = newOrder;
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Text(currentFolder.value?.name ?? tr("folders")),
-        elevation: 0,
-        centerTitle: false,
-        actions: [IconButton(icon: const Icon(Icons.swap_vert), onPressed: onToggleSortOrder)],
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
+        trailingActions: [IconButton(icon: const Icon(Icons.swap_vert), onPressed: onToggleSortOrder)],
       ),
       body: folderState.when(
         data: (rootFolder) {

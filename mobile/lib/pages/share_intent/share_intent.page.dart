@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
@@ -56,8 +57,8 @@ class ShareIntentPage extends HookConsumerWidget {
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Column(
           children: [
             const Text('upload_to_immich').tr(namedArgs: {'count': candidates.length.toString()}),
@@ -125,14 +126,16 @@ class ShareIntentPage extends HookConsumerWidget {
           );
         },
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
-            height: 48,
-            child: ElevatedButton(
-              onPressed: isUploaded.value ? null : upload,
-              child: isUploaded.value ? UploadingText(candidates: candidates) : const Text('upload').tr(),
+      material: (_, __) => MaterialScaffoldData(
+        bottomNavBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              height: 48,
+              child: ElevatedButton(
+                onPressed: isUploaded.value ? null : upload,
+                child: isUploaded.value ? UploadingText(candidates: candidates) : const Text('upload').tr(),
+              ),
             ),
           ),
         ),

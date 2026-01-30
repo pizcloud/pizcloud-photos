@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
@@ -102,17 +103,22 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       child: AnimatedOpacity(
         opacity: opacity / 255,
         duration: Durations.short2,
-        child: AppBar(
+        child: PlatformAppBar(
           backgroundColor: isShowingSheet ? Colors.transparent : Colors.black.withAlpha(125),
           leading: const _AppBarBackButton(),
-          iconTheme: const IconThemeData(size: 22, color: Colors.white),
-          actionsIconTheme: const IconThemeData(size: 22, color: Colors.white),
-          shape: const Border(),
-          actions: isShowingSheet || isReadonlyModeEnabled
+          trailingActions: isShowingSheet || isReadonlyModeEnabled
               ? null
               : isInLockedView
               ? lockedViewActions
               : actions,
+          cupertino: (_, __) => CupertinoNavigationBarData(
+            transitionBetweenRoutes: false,
+          ),
+          material: (_, __) => MaterialAppBarData(
+            iconTheme: const IconThemeData(size: 22, color: Colors.white),
+            actionsIconTheme: const IconThemeData(size: 22, color: Colors.white),
+            shape: const Border(),
+          ),
         ),
       ),
     );

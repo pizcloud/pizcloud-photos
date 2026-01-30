@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
@@ -40,8 +41,8 @@ class ActivitiesPage extends HookConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: asset == null ? Text(album.name) : null),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(title: asset == null ? Text(album.name) : null),
       body: activities.widgetWhen(
         onData: (data) {
           final liked = data.firstWhereOrNull(

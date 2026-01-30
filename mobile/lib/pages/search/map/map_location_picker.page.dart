@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
@@ -54,11 +55,9 @@ class MapLocationPickerPage extends HookConsumerWidget {
 
     return MapThemeOverride(
       mapBuilder: (style) => Builder(
-        builder: (ctx) => Scaffold(
+        builder: (ctx) => PlatformScaffold(
           backgroundColor: ctx.themeData.cardColor,
-          appBar: _AppBar(onClose: onClose),
-          extendBodyBehindAppBar: true,
-          primary: true,
+          appBar: _buildAppBar(onClose: onClose),
           body: style.widgetWhen(
             onData: (style) => Container(
               clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -78,10 +77,14 @@ class MapLocationPickerPage extends HookConsumerWidget {
               ),
             ),
           ),
-          bottomNavigationBar: _BottomBar(
-            selectedLatLng: selectedLatLng,
-            onUseLocation: () => onClose(selectedLatLng.value),
-            onGetCurrentLocation: getCurrentLocation,
+          material: (_, __) => MaterialScaffoldData(
+            extendBodyBehindAppBar: true,
+            primary: true,
+            bottomNavBar: _BottomBar(
+              selectedLatLng: selectedLatLng,
+              onUseLocation: () => onClose(selectedLatLng.value),
+              onGetCurrentLocation: getCurrentLocation,
+            ),
           ),
         ),
       ),
@@ -89,28 +92,20 @@ class MapLocationPickerPage extends HookConsumerWidget {
   }
 }
 
-class _AppBar extends StatelessWidget implements PreferredSizeWidget {
-  final Function() onClose;
-
-  const _AppBar({required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
+PlatformAppBar _buildAppBar({required VoidCallback onClose}) {
+  return PlatformAppBar(
+    automaticallyImplyLeading: false,
+    backgroundColor: Colors.transparent,
+    leading: Padding(
       padding: const EdgeInsets.only(top: 25),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: ElevatedButton(
-          onPressed: onClose,
-          style: ElevatedButton.styleFrom(shape: const CircleBorder()),
-          child: const Icon(Icons.arrow_back_ios_new_rounded),
-        ),
+      child: ElevatedButton(
+        onPressed: onClose,
+        style: ElevatedButton.styleFrom(shape: const CircleBorder()),
+        child: const Icon(Icons.arrow_back_ios_new_rounded),
       ),
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(100);
+    ),
+    material: (_, __) => MaterialAppBarData(elevation: 0),
+  );
 }
 
 class _BottomBar extends StatelessWidget {

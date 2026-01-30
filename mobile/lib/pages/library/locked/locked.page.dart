@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -37,8 +38,21 @@ class LockedPage extends HookConsumerWidget {
       return null;
     }, [appLifeCycle]);
 
-    return Scaffold(
-      appBar: ref.watch(multiselectProvider) ? null : const LockPageAppBar(),
+    return PlatformScaffold(
+      appBar: ref.watch(multiselectProvider)
+          ? null
+          : PlatformAppBar(
+              leading: IconButton(
+                onPressed: () {
+                  ref.read(authProvider.notifier).lockPinCode();
+                  context.maybePop();
+                },
+                icon: const Icon(Icons.arrow_back_ios_rounded),
+              ),
+              automaticallyImplyLeading: false,
+              title: const Text('locked_folder').tr(),
+              material: (_, __) => MaterialAppBarData(centerTitle: true),
+            ),
       body: showOverlay.value
           ? const SizedBox()
           : MultiselectGrid(
@@ -56,27 +70,4 @@ class LockedPage extends HookConsumerWidget {
             ),
     );
   }
-}
-
-class LockPageAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  const LockPageAppBar({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return AppBar(
-      leading: IconButton(
-        onPressed: () {
-          ref.read(authProvider.notifier).lockPinCode();
-          context.maybePop();
-        },
-        icon: const Icon(Icons.arrow_back_ios_rounded),
-      ),
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      title: const Text('locked_folder').tr(),
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

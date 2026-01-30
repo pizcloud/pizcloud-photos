@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
@@ -59,11 +60,10 @@ class HeaderSettingsPage extends HookConsumerWidget {
       }),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: const Text(IntlKeys.headers_settings_tile_title).tr(),
-        centerTitle: false,
-        actions: [
+        trailingActions: [
           IconButton(
             onPressed: () {
               headers.value.add(SettingsHeader());
@@ -73,6 +73,7 @@ class HeaderSettingsPage extends HookConsumerWidget {
             tooltip: 'header_settings_add_header_tip'.tr(),
           ),
         ],
+        material: (_, __) => MaterialAppBarData(centerTitle: false),
       ),
       body: PopScope(
         onPopInvokedWithResult: (didPop, _) => saveHeaders(headers.value),

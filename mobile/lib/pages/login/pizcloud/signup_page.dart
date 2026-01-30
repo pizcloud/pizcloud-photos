@@ -11,6 +11,7 @@ import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:openapi/api.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
@@ -264,8 +265,8 @@ class SignupPage extends HookConsumerWidget {
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: const Text("sign_up").tr(),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.maybePop()),
       ),

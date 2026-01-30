@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/presentation/widgets/map/map.widget.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -12,8 +13,8 @@ class DriftMapPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
+    return PlatformScaffold(
+      material: (_, __) => MaterialScaffoldData(extendBodyBehindAppBar: true),
       body: Stack(
         children: [
           DriftMap(initialLocation: initialLocation),

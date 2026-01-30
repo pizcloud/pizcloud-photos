@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/user.model.dart';
@@ -56,10 +57,13 @@ class PartnerDetailPage extends HookConsumerWidget {
       }
     }
 
-    return Scaffold(
+    return PlatformScaffold(
       appBar: ref.watch(multiselectProvider)
           ? null
-          : AppBar(title: Text(partner.name), elevation: 0, centerTitle: false),
+          : PlatformAppBar(
+              title: Text(partner.name),
+              material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
+            ),
       body: MultiselectGrid(
         topWidget: Padding(
           padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 16.0),

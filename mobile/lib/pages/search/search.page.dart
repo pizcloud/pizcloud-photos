@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
@@ -414,18 +415,17 @@ class SearchPage extends HookConsumerWidget {
       TextSearchType.ocr => Icons.document_scanner_outlined,
     };
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
+    return PlatformScaffold(
+      material: (_, __) => MaterialScaffoldData(resizeToAvoidBottomInset: false),
+      appBar: PlatformAppBar(
         automaticallyImplyLeading: true,
-        actions: [
+        trailingActions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: MenuAnchor(
               style: MenuStyle(
-                elevation: const WidgetStatePropertyAll(1),
-                shape: WidgetStateProperty.all(
-                  const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+                shape: const WidgetStatePropertyAll(
+                  RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
                 ),
                 padding: const WidgetStatePropertyAll(EdgeInsets.all(4)),
               ),
@@ -519,6 +519,9 @@ class SearchPage extends HookConsumerWidget {
             ),
           ),
         ],
+        cupertino: (_, __) => CupertinoNavigationBarData(
+          transitionBetweenRoutes: false,
+        ),
         title: Container(
           decoration: BoxDecoration(
             border: Border.all(color: context.colorScheme.onSurface.withAlpha(0), width: 0),

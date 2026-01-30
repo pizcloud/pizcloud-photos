@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -180,11 +181,10 @@ class CreateAlbumPage extends HookConsumerWidget {
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: false,
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         backgroundColor: context.scaffoldBackgroundColor,
+        automaticallyImplyLeading: false,
         leading: IconButton(
           onPressed: () {
             selectedAssets.value = {};
@@ -193,7 +193,7 @@ class CreateAlbumPage extends HookConsumerWidget {
           icon: const Icon(Icons.close_rounded),
         ),
         title: const Text('create_album').tr(),
-        actions: [
+        trailingActions: [
           TextButton(
             onPressed: albumTitleController.text.isNotEmpty ? createAlbum : null,
             child: Text(
@@ -205,17 +205,13 @@ class CreateAlbumPage extends HookConsumerWidget {
             ),
           ),
         ],
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
       ),
       body: GestureDetector(
         onTap: onBackgroundTapped,
         child: CustomScrollView(
           slivers: [
-            SliverAppBar(
-              backgroundColor: context.scaffoldBackgroundColor,
-              elevation: 5,
-              automaticallyImplyLeading: false,
-              pinned: true,
-              floating: false,
+            PlatformSliverAppBar(
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(125.0),
                 child: Column(
@@ -225,6 +221,20 @@ class CreateAlbumPage extends HookConsumerWidget {
                     if (selectedAssets.value.isNotEmpty) buildControlButton(),
                   ],
                 ),
+              ),
+              material: (_, __) => MaterialSliverAppBarData(
+                backgroundColor: context.scaffoldBackgroundColor,
+                elevation: 5,
+                automaticallyImplyLeading: false,
+                pinned: true,
+                floating: false,
+              ),
+              cupertino: (_, __) => CupertinoSliverAppBarData(
+                automaticallyImplyLeading: false,
+                automaticallyImplyTitle: false,
+                title: const SizedBox.shrink(),
+                middle: const SizedBox.shrink(),
+                transitionBetweenRoutes: false,
               ),
             ),
             buildTitle(),

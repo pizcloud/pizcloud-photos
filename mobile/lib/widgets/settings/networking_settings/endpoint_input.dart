@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/models/auth/auxilary_endpoint.model.dart';
@@ -99,8 +100,8 @@ class EndpointInputState extends ConsumerState<EndpointInput> {
         padding: const EdgeInsets.only(right: 16),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: PlatformListTile(
+        title: const SizedBox.shrink(),
         trailing: ReorderableDragStartListener(
           enabled: widget.enabled,
           index: widget.index,
@@ -111,30 +112,39 @@ class EndpointInputState extends ConsumerState<EndpointInput> {
           status: auxCheckStatus,
           enabled: widget.enabled,
         ),
-        subtitle: TextFormField(
+        subtitle: PlatformTextFormField(
           enabled: widget.enabled,
-          onTapOutside: (_) => focusNode.unfocus(),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: validateUrl,
           keyboardType: TextInputType.url,
           style: const TextStyle(fontFamily: 'Inconsolata', fontWeight: FontWeight.w600, fontSize: 14),
-          decoration: InputDecoration(
-            hintText: 'http(s)://domain.com',
-            contentPadding: const EdgeInsets.all(16),
-            filled: true,
-            fillColor: context.colorScheme.surfaceContainer,
-            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.red[300]!),
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
-            ),
-            disabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: context.isDarkTheme ? Colors.grey[900]! : Colors.grey[300]!),
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
-            ),
-          ),
           controller: controller,
           focusNode: focusNode,
+          material: (_, __) => MaterialTextFormFieldData(
+            onTapOutside: (_) => focusNode.unfocus(),
+            decoration: InputDecoration(
+              hintText: 'http(s)://domain.com',
+              contentPadding: const EdgeInsets.all(16),
+              filled: true,
+              fillColor: context.colorScheme.surfaceContainer,
+              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.red[300]!),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: context.isDarkTheme ? Colors.grey[900]! : Colors.grey[300]!),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+              ),
+            ),
+          ),
+          cupertino: (_, __) => CupertinoTextFormFieldData(
+            placeholder: 'http(s)://domain.com',
+            padding: const EdgeInsets.all(16),
+          ),
+        ),
+        material: (_, __) => MaterialListTileData(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
@@ -21,8 +22,8 @@ class DriftBackupAssetDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     AsyncValue<List<LocalAsset>> result = ref.watch(driftBackupCandidateProvider);
-    return Scaffold(
-      appBar: AppBar(title: Text('backup_controller_page_remainder'.t(context: context))),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(title: Text('backup_controller_page_remainder'.t(context: context))),
       body: result.when(
         data: (List<LocalAsset> candidates) {
           return ListView.separated(

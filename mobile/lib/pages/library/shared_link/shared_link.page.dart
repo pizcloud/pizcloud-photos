@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
@@ -94,8 +95,11 @@ class SharedLinkPage extends HookConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text("shared_link_app_bar_title").tr(), elevation: 0, centerTitle: false),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: const Text("shared_link_app_bar_title").tr(),
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
+      ),
       body: SafeArea(
         child: sharedLinks.widgetWhen(
           onError: (error, stackTrace) => buildNoShares(),

@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
@@ -104,6 +105,7 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
   late PageController pageController;
   late DraggableScrollableController bottomSheetController;
   PersistentBottomSheetController? sheetCloseController;
+  bool _isModalBottomSheetOpen = false;
   // PhotoViewGallery takes care of disposing it's controllers
   PhotoViewControllerBase? viewController;
   StreamSubscription? reloadSubscription;
@@ -403,7 +405,7 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
       if (dragInProgress) {
         blockGestures = true;
       }
-      sheetCloseController?.close();
+      _closeBottomSheet();
     }
 
     // If the asset is being dragged down, we do not want to update the asset position again
@@ -438,6 +440,16 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
     }
   }
 
+  void _closeBottomSheet() {
+    if (sheetCloseController != null) {
+      sheetCloseController?.close();
+      return;
+    }
+    if (_isModalBottomSheetOpen && scaffoldContext != null) {
+      Navigator.of(scaffoldContext!, rootNavigator: true).maybePop();
+    }
+  }
+
   void _onTimelineReloadEvent() {
     totalAssets = ref.read(timelineServiceProvider).totalAssets;
     if (totalAssets == 0) {
@@ -469,7 +481,7 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
 
     setState(() {
       _onAssetChanged(pageController.page!.round());
-      sheetCloseController?.close();
+      _closeBottomSheet();
     });
   }
 
@@ -478,22 +490,44 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
     initialScale = viewController?.scale;
     // viewController?.updateMultiple(scale: (viewController?.scale ?? 1.0) + 0.01);
     previousExtent = _kBottomSheetMinimumExtent;
-    sheetCloseController = showBottomSheet(
-      context: ctx,
-      sheetAnimationStyle: const AnimationStyle(duration: Durations.short4, reverseDuration: Durations.short2),
-      constraints: const BoxConstraints(maxWidth: double.infinity),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.0))),
-      backgroundColor: ctx.colorScheme.surfaceContainerLowest,
-      builder: (_) {
-        return NotificationListener<Notification>(
-          onNotification: _onNotification,
-          child: activitiesMode
-              ? ActivitiesBottomSheet(controller: bottomSheetController, initialChildSize: extent)
-              : AssetDetailBottomSheet(controller: bottomSheetController, initialChildSize: extent),
-        );
-      },
-    );
-    sheetCloseController?.closed.then((_) => _handleSheetClose());
+    if (isCupertino(ctx)) {
+      _isModalBottomSheetOpen = true;
+      showModalBottomSheet<void>(
+        context: ctx,
+        isScrollControlled: true,
+        constraints: const BoxConstraints(maxWidth: double.infinity),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.0))),
+        backgroundColor: ctx.colorScheme.surfaceContainerLowest,
+        builder: (_) {
+          return NotificationListener<Notification>(
+            onNotification: _onNotification,
+            child: activitiesMode
+                ? ActivitiesBottomSheet(controller: bottomSheetController, initialChildSize: extent)
+                : AssetDetailBottomSheet(controller: bottomSheetController, initialChildSize: extent),
+          );
+        },
+      ).whenComplete(() {
+        _isModalBottomSheetOpen = false;
+        _handleSheetClose();
+      });
+    } else {
+      sheetCloseController = showBottomSheet(
+        context: ctx,
+        sheetAnimationStyle: const AnimationStyle(duration: Durations.short4, reverseDuration: Durations.short2),
+        constraints: const BoxConstraints(maxWidth: double.infinity),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.0))),
+        backgroundColor: ctx.colorScheme.surfaceContainerLowest,
+        builder: (_) {
+          return NotificationListener<Notification>(
+            onNotification: _onNotification,
+            child: activitiesMode
+                ? ActivitiesBottomSheet(controller: bottomSheetController, initialChildSize: extent)
+                : AssetDetailBottomSheet(controller: bottomSheetController, initialChildSize: extent),
+          );
+        },
+      );
+      sheetCloseController?.closed.then((_) => _handleSheetClose());
+    }
   }
 
   void _handleSheetClose() {
@@ -658,19 +692,8 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
     // TODO: Add a custom scrum builder once the fix lands on stable
     return PopScope(
       onPopInvokedWithResult: _onPop,
-      child: Scaffold(
+      child: PlatformScaffold(
         backgroundColor: backgroundColor,
-        appBar: const ViewerTopAppBar(),
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        floatingActionButton: IgnorePointer(
-          ignoring: !showingControls,
-          child: AnimatedOpacity(
-            opacity: showingControls ? 1.0 : 0.0,
-            duration: Durations.short2,
-            child: const DownloadStatusFloatingButton(),
-          ),
-        ),
         body: Stack(
           children: [
             PhotoViewGallery.builder(
@@ -688,16 +711,68 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
               backgroundDecoration: BoxDecoration(color: backgroundColor),
               enablePanAlways: true,
             ),
+            if (isCupertino(context))
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: const ViewerTopAppBar(),
+                ),
+              ),
+            if (isCupertino(context))
+              Positioned(
+                right: 16,
+                bottom: 120,
+                child: IgnorePointer(
+                  ignoring: !showingControls,
+                  child: AnimatedOpacity(
+                    opacity: showingControls ? 1.0 : 0.0,
+                    duration: Durations.short2,
+                    child: const DownloadStatusFloatingButton(),
+                  ),
+                ),
+              ),
+            if (isCupertino(context))
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SafeArea(
+                  top: false,
+                  child: showingBottomSheet
+                      ? const SizedBox.shrink()
+                      : const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [AssetStackRow(), ViewerBottomBar()],
+                        ),
+                ),
+              ),
           ],
         ),
-        bottomNavigationBar: showingBottomSheet
-            ? const SizedBox.shrink()
-            : const Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [AssetStackRow(), ViewerBottomBar()],
-              ),
+        material: (_, __) => MaterialScaffoldData(
+          extendBody: true,
+          extendBodyBehindAppBar: true,
+          floatingActionButton: IgnorePointer(
+            ignoring: !showingControls,
+            child: AnimatedOpacity(
+              opacity: showingControls ? 1.0 : 0.0,
+              duration: Durations.short2,
+              child: const DownloadStatusFloatingButton(),
+            ),
+          ),
+          bottomNavBar: showingBottomSheet
+              ? const SizedBox.shrink()
+              : const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [AssetStackRow(), ViewerBottomBar()],
+                ),
+        ),
       ),
     );
   }

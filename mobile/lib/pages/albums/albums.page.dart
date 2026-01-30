@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -71,16 +72,18 @@ class AlbumsPage extends HookConsumerWidget {
       onSearch('', QuickFilterMode.all);
     }
 
-    return Scaffold(
-      appBar: ImmichAppBar(
-        showUploadButton: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_rounded, size: 28),
-            onPressed: () => context.pushRoute(CreateAlbumRoute()),
-          ),
-        ],
-      ),
+    final appBar = ImmichAppBar(
+      showUploadButton: false,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add_rounded, size: 28),
+          onPressed: () => context.pushRoute(CreateAlbumRoute()),
+        ),
+      ],
+    ).build(context, ref) as PlatformAppBar;
+
+    return PlatformScaffold(
+      appBar: appBar,
       body: RefreshIndicator(
         displacement: 70,
         onRefresh: () async {
@@ -220,7 +223,7 @@ class AlbumsPage extends HookConsumerWidget {
           ],
         ),
       ),
-      resizeToAvoidBottomInset: false,
+      material: (_, __) => MaterialScaffoldData(resizeToAvoidBottomInset: false),
     );
   }
 }

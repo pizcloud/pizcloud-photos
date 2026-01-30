@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -18,12 +19,11 @@ class DriftUploadDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uploadItems = ref.watch(driftBackupProvider.select((state) => state.uploadItems));
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Text("upload_details".t(context: context)),
         backgroundColor: context.colorScheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 1,
+        material: (_, __) => MaterialAppBarData(elevation: 0, scrolledUnderElevation: 1),
       ),
       body: uploadItems.isEmpty ? _buildEmptyState(context) : _buildUploadList(uploadItems),
     );

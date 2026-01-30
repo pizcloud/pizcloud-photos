@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/local_album.model.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
@@ -100,9 +101,8 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
       await backupNotifier.cancel();
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Text("backup_controller_page_backup".t()),
         leading: IconButton(
           onPressed: () {
@@ -111,7 +111,7 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
           splashRadius: 24,
           icon: const Icon(Icons.arrow_back_ios_rounded),
         ),
-        actions: [
+        trailingActions: [
           IconButton(
             onPressed: () {
               context.pushRoute(const DriftBackupOptionsRoute());
@@ -120,6 +120,7 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
             tooltip: "backup_options".t(context: context),
           ),
         ],
+        material: (_, __) => MaterialAppBarData(elevation: 0),
       ),
       body: Stack(
         children: [

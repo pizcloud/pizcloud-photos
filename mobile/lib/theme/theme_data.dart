@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:immich_mobile/constants/locales.dart';
@@ -106,6 +107,42 @@ ThemeData getThemeData({required ColorScheme colorScheme, required Locale locale
       // TODO: Uncommented after upgrade to version later than 3.29.2
       // circularTrackColor: Colors.black12,
       trackGap: 3,
+    ),
+  );
+}
+
+CupertinoThemeData getCupertinoThemeData({required ColorScheme colorScheme, required Locale locale}) {
+  final isDark = colorScheme.brightness == Brightness.dark;
+  final fontFamily = _getFontFamilyFromLocale(locale);
+
+  return CupertinoThemeData(
+    brightness: colorScheme.brightness,
+    primaryColor: colorScheme.primary,
+    primaryContrastingColor: colorScheme.onPrimary,
+    scaffoldBackgroundColor: colorScheme.surface,
+    barBackgroundColor: isDark ? colorScheme.surfaceContainer : colorScheme.surface,
+    textTheme: CupertinoTextThemeData(
+      primaryColor: colorScheme.primary,
+      textStyle: TextStyle(
+        fontFamily: fontFamily,
+        color: colorScheme.onSurface,
+      ),
+      navTitleTextStyle: TextStyle(
+        fontFamily: fontFamily,
+        color: colorScheme.primary,
+        fontWeight: FontWeight.w600,
+        fontSize: 18,
+      ),
+      navLargeTitleTextStyle: TextStyle(
+        fontFamily: fontFamily,
+        color: colorScheme.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      navActionTextStyle: TextStyle(
+        fontFamily: fontFamily,
+        color: colorScheme.primary,
+      ),
+      tabLabelTextStyle: TextStyle(fontFamily: fontFamily),
     ),
   );
 }

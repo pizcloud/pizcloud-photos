@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:immich_mobile/constants/filters.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -65,12 +66,12 @@ class FilterImagePage extends HookWidget {
       return Image.memory(pngBytes, fit: BoxFit.contain);
     }
 
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         backgroundColor: context.scaffoldBackgroundColor,
         title: Text("filter".tr()),
         leading: CloseButton(color: context.primaryColor),
-        actions: [
+        trailingActions: [
           IconButton(
             icon: Icon(Icons.done_rounded, color: context.primaryColor, size: 24),
             onPressed: () async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -603,10 +604,14 @@ class BillingPage extends HookConsumerWidget {
 
     final showCta = selectedPlan.value != null;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('choose_your_plan').tr(), centerTitle: true),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: const Text('choose_your_plan').tr(),
+        material: (_, __) => MaterialAppBarData(centerTitle: true),
+      ),
       // Sticky CTA
-      bottomNavigationBar: showCta
+      material: (_, __) => MaterialScaffoldData(
+        bottomNavBar: showCta
           ? SafeArea(
               top: false,
               child: Container(
@@ -671,6 +676,7 @@ class BillingPage extends HookConsumerWidget {
               ),
             )
           : null,
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 120), // extra bottom for CTA

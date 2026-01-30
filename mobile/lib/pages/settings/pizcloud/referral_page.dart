@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -372,7 +373,7 @@ class ReferralPage extends HookConsumerWidget {
       final minAmount = minWithdrawAmount;
       final payout = payoutMethodState.value;
 
-      await showDialog<void>(
+      await showPlatformDialog<void>(
         context: context,
         builder: (ctx) {
           final theme = Theme.of(ctx);
@@ -389,7 +390,8 @@ class ReferralPage extends HookConsumerWidget {
             Navigator.of(ctx).pop();
             if (userEmail == null || userEmail!.isEmpty) return;
             Navigator.of(context).push(
-              MaterialPageRoute(
+              platformPageRoute(
+                context: context,
                 builder: (_) => ReferralPayoutMethodPage(
                   userEmail: userEmail!,
                   onSaved: () {
@@ -752,7 +754,8 @@ class ReferralPage extends HookConsumerWidget {
                   return;
                 }
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  platformPageRoute(
+                    context: context,
                     builder: (_) => ReferralPayoutMethodPage(
                       userEmail: userEmail!,
                       onSaved: () {
@@ -778,7 +781,9 @@ class ReferralPage extends HookConsumerWidget {
                   }
                   Navigator.of(
                     context,
-                  ).push(MaterialPageRoute(builder: (_) => ReferralWithdrawalsPage(userEmail: userEmail!)));
+                  ).push(
+                    platformPageRoute(context: context, builder: (_) => ReferralWithdrawalsPage(userEmail: userEmail!)),
+                  );
                 },
                 child: Text('referral.withdraw_history_button'.tr()),
               ),
@@ -795,13 +800,13 @@ class ReferralPage extends HookConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text('referral.title'.tr())),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(title: Text('referral.title'.tr())),
       body: SafeArea(
         child: Builder(
           builder: (context) {
             if (summaryLoading.value) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: PlatformCircularProgressIndicator());
             }
 
             if (summaryError.value != null) {

@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -22,7 +23,7 @@ class DriftPlacePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final ValueNotifier<String?> search = ValueNotifier(null);
 
-    return Scaffold(
+    return PlatformScaffold(
       body: ValueListenableBuilder(
         valueListenable: search,
         builder: (context, searchValue, child) {
@@ -48,14 +49,7 @@ class _PlaceSliverAppBar extends HookWidget {
   Widget build(BuildContext context) {
     final searchFocusNode = useFocusNode();
 
-    return SliverAppBar(
-      floating: true,
-      pinned: true,
-      snap: false,
-      backgroundColor: context.colorScheme.surfaceContainer,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-      automaticallyImplyLeading: search.value == null,
-      centerTitle: true,
+    return PlatformSliverAppBar(
       title: search.value != null
           ? SearchField(
               focusNode: searchFocusNode,
@@ -66,14 +60,45 @@ class _PlaceSliverAppBar extends HookWidget {
               autofocus: true,
             )
           : Text('places'.t(context: context)),
-      actions: [
-        IconButton(
+      backgroundColor: context.colorScheme.surfaceContainer,
+      material: (_, __) => MaterialSliverAppBarData(
+        floating: true,
+        pinned: true,
+        snap: false,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+        automaticallyImplyLeading: search.value == null,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(search.value != null ? Icons.close : Icons.search),
+            onPressed: () {
+              search.value = search.value == null ? '' : null;
+            },
+          ),
+        ],
+      ),
+      cupertino: (_, __) => CupertinoSliverAppBarData(
+        middle: search.value != null
+            ? SearchField(
+                focusNode: searchFocusNode,
+                onTapOutside: (_) => searchFocusNode.unfocus(),
+                onChanged: (value) => search.value = value,
+                filled: true,
+                hintText: 'filter_places'.t(context: context),
+                autofocus: true,
+              )
+            : Text('places'.t(context: context)),
+        trailing: IconButton(
           icon: Icon(search.value != null ? Icons.close : Icons.search),
           onPressed: () {
             search.value = search.value == null ? '' : null;
           },
         ),
-      ],
+        automaticallyImplyLeading: search.value == null,
+        automaticallyImplyTitle: false,
+        title: const SizedBox.shrink(),
+        transitionBetweenRoutes: false,
+      ),
     );
   }
 }

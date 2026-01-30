@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
@@ -17,8 +18,8 @@ class LocalAlbumsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final albums = ref.watch(localAlbumsProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text('on_this_device'.tr())),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(title: Text('on_this_device'.tr())),
       body: ListView.builder(
         padding: const EdgeInsets.all(18.0),
         itemCount: albums.length,

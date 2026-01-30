@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/providers/album/album.provider.dart';
@@ -92,11 +93,29 @@ class TabControllerPage extends HookConsumerWidget {
       ),
     ];
 
-    Widget bottomNavigationBar(TabsRouter tabsRouter) {
-      return NavigationBar(
-        selectedIndex: tabsRouter.activeIndex,
-        onDestinationSelected: (index) => onNavigationSelected(tabsRouter, index),
-        destinations: navigationDestinations,
+    List<BottomNavigationBarItem> bottomNavItems() {
+      return navigationDestinations
+          .map(
+            (destination) => BottomNavigationBarItem(
+              icon: destination.icon,
+              activeIcon: destination.selectedIcon ?? destination.icon,
+              label: destination.label,
+            ),
+          )
+          .toList();
+    }
+
+    PlatformNavBar platformNavBar(TabsRouter tabsRouter) {
+      return PlatformNavBar(
+        items: bottomNavItems(),
+        currentIndex: tabsRouter.activeIndex,
+        itemChanged: (index) => onNavigationSelected(tabsRouter, index),
+        cupertino: (_, __) => CupertinoTabBarData(height: 65),
+        material3: (_, __) => MaterialNavigationBarData(
+          items: navigationDestinations,
+          selectedIndex: tabsRouter.activeIndex,
+          onDestinationSelected: (index) => onNavigationSelected(tabsRouter, index),
+        ),
       );
     }
 
@@ -119,11 +138,12 @@ class TabControllerPage extends HookConsumerWidget {
       transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
       builder: (context, child) {
         final tabsRouter = AutoTabsRouter.of(context);
+        final bottomBar = multiselectEnabled || isScreenLandscape ? null : platformNavBar(tabsRouter);
         return PopScope(
           canPop: tabsRouter.activeIndex == 0,
           onPopInvokedWithResult: (didPop, _) => !didPop ? tabsRouter.setActiveIndex(0) : null,
-          child: Scaffold(
-            resizeToAvoidBottomInset: false,
+          child: PlatformScaffold(
+            material: (_, __) => MaterialScaffoldData(resizeToAvoidBottomInset: false, bottomNavBar: bottomBar),
             body: isScreenLandscape
                 ? Row(
                     children: [
@@ -132,8 +152,12 @@ class TabControllerPage extends HookConsumerWidget {
                       Expanded(child: child),
                     ],
                   )
-                : child,
-            bottomNavigationBar: multiselectEnabled || isScreenLandscape ? null : bottomNavigationBar(tabsRouter),
+                : Column(
+                    children: [
+                      Expanded(child: child),
+                      if (isCupertino(context) && bottomBar != null) SafeArea(top: false, child: bottomBar),
+                    ],
+                  ),
           ),
         );
       },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -28,13 +29,18 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
       context.pop<Set<BaseAsset>>(selected);
     }
 
-    return SliverAppBar(
-      floating: true,
-      pinned: true,
-      snap: false,
+    final titleWidget = Text("Select {count}".t(context: context, args: {'count': filteredAssets.length.toString()}));
+    final doneButton = PlatformTextButton(
+      onPressed: () => onDone(filteredAssets),
+      child: Text(
+        'done'.t(context: context),
+        style: context.textTheme.titleSmall?.copyWith(color: context.colorScheme.primary),
+      ),
+    );
+
+    // iOS: avoid large-title duplication by keeping the PlatformSliverAppBar title null.
+    return PlatformSliverAppBar(
       backgroundColor: context.colorScheme.surfaceContainer,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-      automaticallyImplyLeading: false,
       leading: IconButton(
         icon: const Icon(Icons.close_rounded),
         onPressed: () {
@@ -42,17 +48,24 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
           context.pop<Set<BaseAsset>>(null);
         },
       ),
-      centerTitle: true,
-      title: Text("Select {count}".t(context: context, args: {'count': filteredAssets.length.toString()})),
-      actions: [
-        TextButton(
-          onPressed: () => onDone(filteredAssets),
-          child: Text(
-            'done'.t(context: context),
-            style: context.textTheme.titleSmall?.copyWith(color: context.colorScheme.primary),
-          ),
-        ),
-      ],
+      title: isCupertino(context) ? null : titleWidget,
+      material: (_, __) => MaterialSliverAppBarData(
+        floating: true,
+        pinned: true,
+        snap: false,
+        centerTitle: true,
+        title: titleWidget,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+        actions: [doneButton],
+      ),
+      cupertino: (_, __) => CupertinoSliverAppBarData(
+        automaticallyImplyTitle: false,
+        title: const SizedBox.shrink(),
+        middle: titleWidget,
+        alwaysShowMiddle: true,
+        transitionBetweenRoutes: false,
+        trailing: doneButton,
+      ),
     );
   }
 }

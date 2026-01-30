@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -183,7 +184,8 @@ class BottomGalleryBar extends ConsumerWidget {
 
       unawaited(
         context.navigator.push(
-          MaterialPageRoute(
+          platformPageRoute(
+            context: context,
             builder: (context) => EditImagePage(asset: asset, image: image, isEdited: false),
           ),
         ),

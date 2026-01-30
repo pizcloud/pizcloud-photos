@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
@@ -35,6 +36,31 @@ class TabShellPage extends ConsumerStatefulWidget {
 }
 
 class _TabShellPageState extends ConsumerState<TabShellPage> {
+  StreamSubscription? _eventSubscription;
+  bool _hideNavigationBar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventSubscription = EventStream.shared.listen<MultiSelectToggleEvent>(_onMultiSelectToggle);
+  }
+
+  @override
+  void dispose() {
+    _eventSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _onMultiSelectToggle(MultiSelectToggleEvent event) {
+    if (_hideNavigationBar == event.isEnabled) {
+      return;
+    }
+
+    setState(() {
+      _hideNavigationBar = event.isEnabled;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isScreenLandscape = context.orientation == Orientation.landscape;
@@ -95,15 +121,46 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
         final showMediaPermissionBanner = ref.watch(
           mediaPermissionProvider.select((s) => s == MediaPermState.none || s == MediaPermState.limited),
         );
-        final adjustedChild = showMediaPermissionBanner
-            ? MediaQuery.removePadding(context: context, removeTop: true, child: child)
-            : child;
         // #pizcloud
+        final showBottomBar = !isScreenLandscape && !_hideNavigationBar;
+        final bottomItems = navigationDestinations
+            .map(
+              (destination) => BottomNavigationBarItem(
+                icon: destination.icon,
+                activeIcon: destination.selectedIcon ?? destination.icon,
+                label: destination.label,
+              ),
+            )
+            .toList();
+        final bottomBar = showBottomBar
+            ? PlatformNavBar(
+                items: bottomItems,
+                currentIndex: tabsRouter.activeIndex,
+                itemChanged: (index) => _onNavigationSelected(tabsRouter, index, ref),
+                cupertino: (_, __) => CupertinoTabBarData(height: 65),
+                material3: (_, __) => MaterialNavigationBarData(
+                  items: navigationDestinations,
+                  selectedIndex: tabsRouter.activeIndex,
+                  onDestinationSelected: (index) => _onNavigationSelected(tabsRouter, index, ref),
+                ),
+              )
+            : null;
+
+        Widget buildTabContent() {
+          return Column(
+            children: [
+              if (showMediaPermissionBanner) const MediaPermissionBanner(),
+              Expanded(child: child),
+              if (isCupertino(context) && bottomBar != null) SafeArea(top: false, child: bottomBar),
+            ],
+          );
+        }
+
         return PopScope(
           canPop: tabsRouter.activeIndex == 0,
           onPopInvokedWithResult: (didPop, _) => !didPop ? tabsRouter.setActiveIndex(0) : null,
-          child: Scaffold(
-            resizeToAvoidBottomInset: false,
+          child: PlatformScaffold(
+            material: (_, __) => MaterialScaffoldData(resizeToAvoidBottomInset: false, bottomNavBar: bottomBar),
             body: Stack(
               children: [
                 if (isScreenLandscape)
@@ -112,31 +169,16 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                       navigationRail(tabsRouter),
                       const VerticalDivider(),
                       // pizcloud: Media permission banner + child
-                      Expanded(
-                        child: Column(
-                          children: [
-                            const MediaPermissionBanner(),
-                            // Expanded(child: child), // pizcloud
-                            Expanded(child: adjustedChild), // pizcloud
-                          ],
-                        ),
-                      ),
+                      Expanded(child: buildTabContent()),
                       // #pizcloud
                     ],
                   )
                 else
-                  Column(
-                    children: [
-                      const MediaPermissionBanner(),
-                      // Expanded(child: child), // pizcloud
-                      Expanded(child: adjustedChild), // pizcloud
-                    ],
-                  ),
+                  buildTabContent(),
 
                 const MediaPermissionLifecycleListener(),
               ],
             ),
-            bottomNavigationBar: _BottomNavigationBar(tabsRouter: tabsRouter, destinations: navigationDestinations),
           ),
         );
       },
@@ -177,52 +219,4 @@ void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
   ref.read(hapticFeedbackProvider.notifier).selectionClick();
   router.setActiveIndex(index);
   ref.read(tabProvider.notifier).state = TabEnum.values[index];
-}
-
-class _BottomNavigationBar extends ConsumerStatefulWidget {
-  const _BottomNavigationBar({required this.tabsRouter, required this.destinations});
-
-  final List<Widget> destinations;
-  final TabsRouter tabsRouter;
-
-  @override
-  ConsumerState createState() => _BottomNavigationBarState();
-}
-
-class _BottomNavigationBarState extends ConsumerState<_BottomNavigationBar> {
-  bool hideNavigationBar = false;
-  StreamSubscription? _eventSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _eventSubscription = EventStream.shared.listen<MultiSelectToggleEvent>(_onEvent);
-  }
-
-  void _onEvent(MultiSelectToggleEvent event) {
-    setState(() {
-      hideNavigationBar = event.isEnabled;
-    });
-  }
-
-  @override
-  void dispose() {
-    _eventSubscription?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isScreenLandscape = context.orientation == Orientation.landscape;
-
-    if (isScreenLandscape || hideNavigationBar) {
-      return const SizedBox.shrink();
-    }
-
-    return NavigationBar(
-      selectedIndex: widget.tabsRouter.activeIndex,
-      onDestinationSelected: (index) => _onNavigationSelected(widget.tabsRouter, index, ref),
-      destinations: widget.destinations,
-    );
-  }
 }
