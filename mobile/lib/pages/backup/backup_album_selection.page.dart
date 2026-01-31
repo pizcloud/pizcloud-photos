@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -84,7 +85,7 @@ class BackupAlbumSelectionPage extends HookConsumerWidget {
               ),
               backgroundColor: context.primaryColor,
               deleteIconColor: isDarkTheme ? Colors.black : Colors.white,
-              deleteIcon: const Icon(Icons.cancel_rounded, size: 15),
+              deleteIcon: Icon(context.platformIcons.clear, size: 15),
               onDeleted: removeSelection,
             ),
           ),
@@ -109,7 +110,7 @@ class BackupAlbumSelectionPage extends HookConsumerWidget {
               ),
               backgroundColor: Colors.red[300],
               deleteIconColor: context.scaffoldBackgroundColor,
-              deleteIcon: const Icon(Icons.cancel_rounded, size: 15),
+              deleteIcon: Icon(context.platformIcons.clear, size: 15),
               onDeleted: removeSelection,
             ),
           ),
@@ -128,7 +129,7 @@ class BackupAlbumSelectionPage extends HookConsumerWidget {
 
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        leading: IconButton(onPressed: () => context.maybePop(), icon: const Icon(Icons.arrow_back_ios_rounded)),
+        leading: IconButton(onPressed: () => context.maybePop(), icon: Icon(context.platformIcons.back)),
         title: const Text("backup_album_selection_page_select_albums").tr(),
         material: (_, __) => MaterialAppBarData(elevation: 0),
       ),
@@ -176,7 +177,11 @@ class BackupAlbumSelectionPage extends HookConsumerWidget {
                   ),
                   trailing: IconButton(
                     splashRadius: 16,
-                    icon: Icon(Icons.info, size: 20, color: context.primaryColor),
+                    icon: Icon(
+                      context.platformIcon(material: Icons.info, cupertino: CupertinoIcons.info),
+                      size: 20,
+                      color: context.primaryColor,
+                    ),
                     onPressed: () {
                       // show the dialog
                       showDialog(

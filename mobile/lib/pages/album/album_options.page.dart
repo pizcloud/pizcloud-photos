@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -86,7 +87,9 @@ class AlbumOptionsPage extends HookConsumerWidget {
       if (user.id == userId) {
         actions = [
           ListTile(
-            leading: const Icon(Icons.exit_to_app_rounded),
+            leading: Icon(
+              context.platformIcon(material: Icons.exit_to_app_rounded, cupertino: CupertinoIcons.square_arrow_left),
+            ),
             title: const Text("shared_album_section_people_action_leave").tr(),
             onTap: leaveAlbum,
           ),
@@ -96,7 +99,12 @@ class AlbumOptionsPage extends HookConsumerWidget {
       if (isOwner) {
         actions = [
           ListTile(
-            leading: const Icon(Icons.person_remove_rounded),
+            leading: Icon(
+              context.platformIcon(
+                material: Icons.person_remove_rounded,
+                cupertino: CupertinoIcons.person_crop_circle_badge_minus,
+              ),
+            ),
             title: const Text("shared_album_section_people_action_remove_user").tr(),
             onTap: () => removeUserFromAlbum(user),
           ),
@@ -138,7 +146,9 @@ class AlbumOptionsPage extends HookConsumerWidget {
             leading: UserCircleAvatar(user: user, radius: 22),
             title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.w500)),
             subtitle: Text(user.email, style: TextStyle(color: context.colorScheme.onSurfaceSecondary)),
-            trailing: userId == user.id || isOwner ? const Icon(Icons.more_horiz_rounded) : const SizedBox(),
+            trailing: userId == user.id || isOwner
+                ? Icon(context.platformIcon(material: Icons.more_horiz_rounded, cupertino: CupertinoIcons.ellipsis))
+                : const SizedBox(),
             onTap: userId == user.id || isOwner ? () => handleUserClick(user) : null,
           );
         },
@@ -155,7 +165,7 @@ class AlbumOptionsPage extends HookConsumerWidget {
     return PlatformScaffold(
       appBar: PlatformAppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: Icon(context.platformIcons.back),
           onPressed: () => context.maybePop(null),
         ),
         title: Text("options".tr()),

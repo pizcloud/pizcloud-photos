@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -76,7 +77,7 @@ class AlbumsPage extends HookConsumerWidget {
       showUploadButton: false,
       actions: [
         IconButton(
-          icon: const Icon(Icons.add_rounded, size: 28),
+          icon: Icon(context.platformIcons.add, size: 28),
           onPressed: () => context.pushRoute(CreateAlbumRoute()),
         ),
       ],
@@ -112,9 +113,9 @@ class AlbumsPage extends HookConsumerWidget {
                 autofocus: false,
                 contentPadding: const EdgeInsets.all(16),
                 hintText: 'search_albums'.tr(),
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: Icon(context.platformIcons.search),
                 suffixIcon: searchController.text.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear_rounded), onPressed: clearSearch)
+                    ? IconButton(icon: Icon(context.platformIcons.clear), onPressed: clearSearch)
                     : null,
                 controller: searchController,
                 onChanged: (_) => onSearch(searchController.text, filterMode.value),
@@ -158,7 +159,18 @@ class AlbumsPage extends HookConsumerWidget {
               children: [
                 const SortButton(),
                 IconButton(
-                  icon: Icon(isGrid.value ? Icons.view_list_outlined : Icons.grid_view_outlined, size: 24),
+                  icon: Icon(
+                    isGrid.value
+                        ? context.platformIcon(
+                            material: Icons.view_list_outlined,
+                            cupertino: CupertinoIcons.list_bullet,
+                          )
+                        : context.platformIcon(
+                            material: Icons.grid_view_outlined,
+                            cupertino: CupertinoIcons.square_grid_2x2,
+                          ),
+                    size: 24,
+                  ),
                   onPressed: toggleViewMode,
                 ),
               ],

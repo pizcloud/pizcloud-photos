@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -28,7 +29,10 @@ class AlbumAdditionalSharedUserSelectionPage extends HookConsumerWidget {
 
     buildTileIcon(UserDto user) {
       if (sharedUsersList.value.contains(user)) {
-        return CircleAvatar(backgroundColor: context.primaryColor, child: const Icon(Icons.check_rounded, size: 25));
+        return CircleAvatar(
+          backgroundColor: context.primaryColor,
+          child: Icon(context.platformIcons.checkMark, size: 25),
+        );
       } else {
         return UserCircleAvatar(user: user);
       }
@@ -89,7 +93,7 @@ class AlbumAdditionalSharedUserSelectionPage extends HookConsumerWidget {
         title: const Text('invite_to_album').tr(),
         material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: Icon(context.platformIcons.clear),
           onPressed: () {
             context.maybePop(null);
           },

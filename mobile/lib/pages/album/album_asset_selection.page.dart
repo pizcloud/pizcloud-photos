@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -42,7 +43,7 @@ class AlbumAssetSelectionPage extends HookConsumerWidget {
     return PlatformScaffold(
       appBar: PlatformAppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: Icon(context.platformIcons.clear),
           onPressed: () {
             AutoRouter.of(context).popForced(null);
           },
