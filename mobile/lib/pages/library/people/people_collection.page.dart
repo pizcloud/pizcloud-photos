@@ -24,7 +24,7 @@ class PeopleCollectionPage extends HookConsumerWidget {
     final ValueNotifier<String?> search = useState(null);
 
     showNameEditModel(String personId, String personName) {
-      return showDialog(
+      return showPlatformDialog(
         context: context,
         useRootNavigator: false,
         builder: (BuildContext context) {

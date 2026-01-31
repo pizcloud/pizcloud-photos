@@ -26,7 +26,7 @@ class DriftPartnerPage extends HookConsumerWidget {
 
     addNewUsersHandler() async {
       // pizcloud: email-based partner selection.
-      final selectedEmails = await showDialog<List<String>>(
+      final selectedEmails = await showPlatformDialog<List<String>>(
         context: context,
         builder: (context) => const Dialog(insetPadding: EdgeInsets.zero, child: DriftPartnerEmailSelectionPage()),
       );
@@ -67,7 +67,7 @@ class DriftPartnerPage extends HookConsumerWidget {
       //   ImmichToast.show(context: context, msg: "partner_page_no_more_users".tr());
       //   return;
       // }
-      // final selectedUser = await showDialog<PartnerUserDto>(
+      // final selectedUser = await showPlatformDialog<PartnerUserDto>(
       //   context: context,
       //   builder: (context) {
       //     return SimpleDialog(
@@ -97,7 +97,7 @@ class DriftPartnerPage extends HookConsumerWidget {
     }
 
     onDeleteUser(PartnerUserDto partner) {
-      return showDialog(
+      return showPlatformDialog(
         context: context,
         builder: (BuildContext context) {
           return ConfirmDialog(

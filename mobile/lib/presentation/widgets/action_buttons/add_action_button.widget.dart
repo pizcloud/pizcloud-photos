@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/base_action_button.widget.dart';
@@ -8,6 +9,7 @@ import 'package:immich_mobile/providers/infrastructure/asset_viewer/current_asse
 import 'package:immich_mobile/presentation/widgets/album/album_selector.widget.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/routes.provider.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 
@@ -122,19 +124,21 @@ class AddActionButton extends ConsumerWidget {
       AlbumSelector(onAlbumSelected: (album) => _addCurrentAssetToAlbum(context, ref, album)),
     ];
 
-    showModalBottomSheet(
+    showPlatformModalSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      material: MaterialModalSheetData(isScrollControlled: true, backgroundColor: Colors.transparent),
       builder: (_) {
-        return BaseBottomSheet(
-          actions: const [],
-          slivers: slivers,
-          initialChildSize: 0.6,
-          minChildSize: 0.3,
-          maxChildSize: 0.95,
-          expand: false,
-          backgroundColor: context.isDarkTheme ? Colors.black : Colors.white,
+        return platformSheetWrapper(
+          context,
+          BaseBottomSheet(
+            actions: const [],
+            slivers: slivers,
+            initialChildSize: 0.6,
+            minChildSize: 0.3,
+            maxChildSize: 0.95,
+            expand: false,
+            backgroundColor: context.isDarkTheme ? Colors.black : Colors.white,
+          ),
         );
       },
     );

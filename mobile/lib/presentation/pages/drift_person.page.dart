@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/person.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -8,6 +9,7 @@ import 'package:immich_mobile/presentation/widgets/timeline/timeline.widget.dart
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/utils/people.utils.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/widgets/common/person_sliver_app_bar.dart';
 
 @RoutePage()
@@ -50,21 +52,26 @@ class _DriftPersonPageState extends ConsumerState<DriftPersonPage> {
   }
 
   void showOptionSheet(BuildContext context) {
-    showModalBottomSheet(
+    showPlatformModalSheet(
       context: context,
-      backgroundColor: context.colorScheme.surface,
-      isScrollControlled: false,
+      material: MaterialModalSheetData(
+        backgroundColor: context.colorScheme.surface,
+        isScrollControlled: false,
+      ),
       builder: (context) {
-        return PersonOptionSheet(
-          onEditName: () async {
-            await handleEditName(context);
-            context.pop();
-          },
-          onEditBirthday: () async {
-            await handleEditBirthday(context);
-            context.pop();
-          },
-          birthdayExists: _person.birthDate != null,
+        return platformSheetWrapper(
+          context,
+          PersonOptionSheet(
+            onEditName: () async {
+              await handleEditName(context);
+              context.pop();
+            },
+            onEditBirthday: () async {
+              await handleEditBirthday(context);
+              context.pop();
+            },
+            birthdayExists: _person.birthDate != null,
+          ),
         );
       },
     );

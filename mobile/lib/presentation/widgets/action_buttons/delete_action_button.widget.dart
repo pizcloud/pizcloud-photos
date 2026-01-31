@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
@@ -26,7 +27,7 @@ class DeleteActionButton extends ConsumerWidget {
     }
 
     if (showConfirmation) {
-      final confirm = await showDialog<bool>(
+      final confirm = await showPlatformDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('delete'.t(context: context)),

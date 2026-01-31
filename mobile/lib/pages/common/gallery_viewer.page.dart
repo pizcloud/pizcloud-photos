@@ -18,6 +18,7 @@ import 'package:immich_mobile/pages/common/gallery_stacked_children.dart';
 import 'package:immich_mobile/pages/common/native_video_viewer.page.dart';
 import 'package:immich_mobile/providers/app_settings.provider.dart';
 import 'package:immich_mobile/providers/asset_viewer/asset_stack.provider.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/providers/asset_viewer/current_asset.provider.dart';
 import 'package:immich_mobile/providers/asset_viewer/is_motion_video_playing.provider.dart';
 import 'package:immich_mobile/providers/asset_viewer/show_controls.provider.dart';
@@ -146,28 +147,34 @@ class GalleryViewerPage extends HookConsumerWidget {
       if (asset == null) {
         return;
       }
-      showModalBottomSheet(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(15.0))),
-        barrierColor: Colors.transparent,
-        isScrollControlled: true,
-        showDragHandle: true,
-        enableDrag: true,
+      showPlatformModalSheet(
         context: context,
-        useSafeArea: true,
+        material: MaterialModalSheetData(
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(15.0))),
+          barrierColor: Colors.transparent,
+          isScrollControlled: true,
+          showDragHandle: true,
+          enableDrag: true,
+          useSafeArea: true,
+        ),
+        cupertino: CupertinoModalSheetData(barrierColor: Colors.black54),
         builder: (context) {
-          return DraggableScrollableSheet(
-            minChildSize: 0.5,
-            maxChildSize: 1,
-            initialChildSize: 0.75,
-            expand: false,
-            builder: (context, scrollController) {
-              return Padding(
+          return platformSheetWrapper(
+            context,
+            DraggableScrollableSheet(
+              minChildSize: 0.5,
+              maxChildSize: 1,
+              initialChildSize: 0.75,
+              expand: false,
+              builder: (context, scrollController) {
+                return Padding(
                 padding: EdgeInsets.only(bottom: context.viewInsets.bottom),
                 child: ref.watch(appSettingsServiceProvider).getSetting<bool>(AppSettingsEnum.advancedTroubleshooting)
                     ? AdvancedBottomSheet(assetDetail: asset, scrollController: scrollController)
                     : DetailPanel(asset: asset, scrollController: scrollController),
               );
             },
+          ),
           );
         },
       );

@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/person.model.dart';
@@ -32,7 +33,7 @@ class _SheetPeopleDetailsState extends ConsumerState<SheetPeopleDetails> {
     final peopleFuture = ref.watch(driftPeopleAssetProvider(asset.id));
 
     Future<void> showNameEditModal(DriftPerson person) async {
-      await showDialog(
+      await showPlatformDialog(
         context: context,
         useRootNavigator: false,
         builder: (BuildContext context) {

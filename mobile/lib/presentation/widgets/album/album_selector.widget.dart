@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
@@ -530,7 +531,7 @@ class _AlbumList extends ConsumerWidget {
                 ),
                 direction: DismissDirection.endToStart,
                 confirmDismiss: (direction) {
-                  return showDialog<bool>(
+                  return showPlatformDialog<bool>(
                     context: context,
                     builder: (context) => ConfirmDialog(
                       onOk: () => true,

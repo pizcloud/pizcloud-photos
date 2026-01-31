@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
@@ -20,7 +21,7 @@ class CastActionButton extends ConsumerWidget {
       iconColor: isCasting ? context.primaryColor : null, // null = default color
       label: "cast".t(context: context),
       onPressed: () {
-        showDialog(context: context, builder: (context) => const CastDialog());
+        showPlatformDialog(context: context, builder: (context) => const CastDialog());
       },
       menuItem: menuItem,
     );

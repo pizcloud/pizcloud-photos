@@ -11,6 +11,7 @@ import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/widgets/search/person_name_edit_form.dart';
 import 'package:immich_mobile/widgets/asset_grid/multiselect_grid.dart';
 import 'package:immich_mobile/utils/image_url_builder.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 
 @RoutePage()
 class PersonResultPage extends HookConsumerWidget {
@@ -24,7 +25,7 @@ class PersonResultPage extends HookConsumerWidget {
     final name = useState(personName);
 
     showEditNameDialog() {
-      showDialog(
+      showPlatformDialog(
         context: context,
         useRootNavigator: false,
         builder: (BuildContext context) {
@@ -38,14 +39,17 @@ class PersonResultPage extends HookConsumerWidget {
     }
 
     void buildBottomSheet() {
-      showModalBottomSheet(
-        backgroundColor: context.scaffoldBackgroundColor,
-        isScrollControlled: false,
+      showPlatformModalSheet(
         context: context,
-        useSafeArea: true,
+        material: MaterialModalSheetData(
+          backgroundColor: context.scaffoldBackgroundColor,
+          isScrollControlled: false,
+          useSafeArea: true,
+        ),
         builder: (context) {
-          return SafeArea(
-            child: Column(
+          return platformSheetWrapper(
+            context,
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(

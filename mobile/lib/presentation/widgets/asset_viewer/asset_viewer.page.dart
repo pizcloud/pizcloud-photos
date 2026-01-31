@@ -14,6 +14,7 @@ import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/platform_extensions.dart';
 import 'package:immich_mobile/extensions/scroll_extensions.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/download_status_floating_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/asset_viewer/activities_bottom_sheet.widget.dart';
 import 'package:immich_mobile/presentation/widgets/asset_viewer/asset_stack.provider.dart';
@@ -492,18 +493,23 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
     previousExtent = _kBottomSheetMinimumExtent;
     if (isCupertino(ctx)) {
       _isModalBottomSheetOpen = true;
-      showModalBottomSheet<void>(
+      showPlatformModalSheet<void>(
         context: ctx,
-        isScrollControlled: true,
-        constraints: const BoxConstraints(maxWidth: double.infinity),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.0))),
-        backgroundColor: ctx.colorScheme.surfaceContainerLowest,
+        material: MaterialModalSheetData(
+          isScrollControlled: true,
+          constraints: const BoxConstraints(maxWidth: double.infinity),
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.0))),
+          backgroundColor: ctx.colorScheme.surfaceContainerLowest,
+        ),
         builder: (_) {
-          return NotificationListener<Notification>(
-            onNotification: _onNotification,
-            child: activitiesMode
-                ? ActivitiesBottomSheet(controller: bottomSheetController, initialChildSize: extent)
-                : AssetDetailBottomSheet(controller: bottomSheetController, initialChildSize: extent),
+          return platformSheetWrapper(
+            ctx,
+            NotificationListener<Notification>(
+              onNotification: _onNotification,
+              child: activitiesMode
+                  ? ActivitiesBottomSheet(controller: bottomSheetController, initialChildSize: extent)
+                  : AssetDetailBottomSheet(controller: bottomSheetController, initialChildSize: extent),
+            ),
           );
         },
       ).whenComplete(() {

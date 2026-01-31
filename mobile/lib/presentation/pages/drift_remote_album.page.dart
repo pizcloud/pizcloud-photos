@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart'; // pizcloud
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/remote_album_bottom_sheet.widget.dart';
 import 'package:immich_mobile/presentation/widgets/remote_album/drift_album_option.widget.dart';
@@ -138,7 +140,7 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
   }
 
   Future<void> deleteAlbum(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showPlatformDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -188,7 +190,7 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
   }
 
   Future<void> showEditTitleAndDescription(BuildContext context) async {
-    final result = await showDialog<_EditAlbumData?>(
+    final result = await showPlatformDialog<_EditAlbumData?>(
       context: context,
       barrierDismissible: true,
       builder: (context) => _EditAlbumDialog(album: _album),
@@ -213,54 +215,59 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
         await ref.read(remoteAlbumServiceProvider).getUserRole(_album.id, user?.id ?? '') == AlbumUserRole.editor;
 
     unawaited(
-      showModalBottomSheet(
+      showPlatformModalSheet(
         context: context,
-        backgroundColor: context.colorScheme.surface,
-        isScrollControlled: false,
+        material: MaterialModalSheetData(
+          backgroundColor: context.colorScheme.surface,
+          isScrollControlled: false,
+        ),
         builder: (context) {
-          return DriftRemoteAlbumOption(
-            onDeleteAlbum: isOwner
-                ? () async {
-                    await deleteAlbum(context);
-                    if (context.mounted) {
+          return platformSheetWrapper(
+            context,
+            DriftRemoteAlbumOption(
+              onDeleteAlbum: isOwner
+                  ? () async {
+                      await deleteAlbum(context);
+                      if (context.mounted) {
+                        context.pop();
+                      }
+                    }
+                  : null,
+              onAddUsers: isOwner
+                  ? () async {
+                      await addUsers(context);
                       context.pop();
                     }
-                  }
-                : null,
-            onAddUsers: isOwner
-                ? () async {
-                    await addUsers(context);
-                    context.pop();
-                  }
-                : null,
-            onAddPhotos: isOwner || canAddPhotos
-                ? () async {
-                    await addAssets(context);
-                    context.pop();
-                  }
-                : null,
-            onToggleAlbumOrder: isOwner
-                ? () async {
-                    await toggleAlbumOrder();
-                    context.pop();
-                  }
-                : null,
-            onEditAlbum: isOwner
-                ? () async {
-                    context.pop();
-                    await showEditTitleAndDescription(context);
-                  }
-                : null,
-            onCreateSharedLink: isOwner
-                ? () async {
-                    context.pop();
-                    unawaited(context.pushRoute(SharedLinkEditRoute(albumId: _album.id)));
-                  }
-                : null,
-            onShowOptions: () {
-              context.pop();
-              context.pushRoute(DriftAlbumOptionsRoute(album: _album));
-            },
+                  : null,
+              onAddPhotos: isOwner || canAddPhotos
+                  ? () async {
+                      await addAssets(context);
+                      context.pop();
+                    }
+                  : null,
+              onToggleAlbumOrder: isOwner
+                  ? () async {
+                      await toggleAlbumOrder();
+                      context.pop();
+                    }
+                  : null,
+              onEditAlbum: isOwner
+                  ? () async {
+                      context.pop();
+                      await showEditTitleAndDescription(context);
+                    }
+                  : null,
+              onCreateSharedLink: isOwner
+                  ? () async {
+                      context.pop();
+                      unawaited(context.pushRoute(SharedLinkEditRoute(albumId: _album.id)));
+                    }
+                  : null,
+              onShowOptions: () {
+                context.pop();
+                context.pushRoute(DriftAlbumOptionsRoute(album: _album));
+              },
+            ),
           );
         },
       ),

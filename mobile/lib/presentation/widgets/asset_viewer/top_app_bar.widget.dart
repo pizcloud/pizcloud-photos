@@ -113,6 +113,9 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
               : actions,
           cupertino: (_, __) => CupertinoNavigationBarData(
             transitionBetweenRoutes: false,
+            padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
+            backgroundColor: Colors.black.withAlpha(125),
+            border: null,
           ),
           material: (_, __) => MaterialAppBarData(
             iconTheme: const IconThemeData(size: 22, color: Colors.white),

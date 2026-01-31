@@ -148,7 +148,16 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                 items: bottomItems,
                 currentIndex: tabsRouter.activeIndex,
                 itemChanged: (index) => _onNavigationSelected(tabsRouter, index, ref),
-                cupertino: (_, __) => CupertinoTabBarData(height: 65),
+                cupertino: (_, __) => CupertinoTabBarData(
+                  height: 65,
+                  iconSize: 22,
+                  activeColor: context.primaryColor,
+                  inactiveColor: context.colorScheme.onSurface.withValues(alpha: 0.6),
+                  backgroundColor: context.colorScheme.surface.withValues(alpha: 0.94),
+                  border: Border(
+                    top: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2)),
+                  ),
+                ),
                 material3: (_, __) => MaterialNavigationBarData(
                   items: navigationDestinations,
                   selectedIndex: tabsRouter.activeIndex,

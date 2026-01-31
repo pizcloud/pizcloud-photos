@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/infrastructure/entities/user.entity.dart' as entity;
 import 'package:immich_mobile/providers/album/album.provider.dart';
@@ -111,13 +112,17 @@ class AlbumOptionsPage extends HookConsumerWidget {
         ];
       }
 
-      showModalBottomSheet(
-        backgroundColor: context.colorScheme.surfaceContainer,
-        isScrollControlled: false,
+      showPlatformModalSheet(
         context: context,
+        material: MaterialModalSheetData(
+          backgroundColor: context.colorScheme.surfaceContainer,
+          isScrollControlled: false,
+          useSafeArea: true,
+        ),
         builder: (context) {
-          return SafeArea(
-            child: Padding(
+          return platformSheetWrapper(
+            context,
+            Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(mainAxisSize: MainAxisSize.min, children: [...actions]),
             ),

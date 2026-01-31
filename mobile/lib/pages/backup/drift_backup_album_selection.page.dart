@@ -254,7 +254,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                             color: context.primaryColor,
                           ),
                           onPressed: () {
-                            showDialog(
+                            showPlatformDialog(
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(

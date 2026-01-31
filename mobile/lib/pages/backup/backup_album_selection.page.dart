@@ -184,7 +184,7 @@ class BackupAlbumSelectionPage extends HookConsumerWidget {
                     ),
                     onPressed: () {
                       // show the dialog
-                      showDialog(
+                      showPlatformDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(

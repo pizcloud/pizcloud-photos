@@ -47,7 +47,7 @@ class TrashPage extends HookConsumerWidget {
     }
 
     handleEmptyTrash() async {
-      await showDialog(
+      await showPlatformDialog(
         context: context,
         builder: (context) => ConfirmDialog(
           onOk: () => onEmptyTrash(),
@@ -81,7 +81,7 @@ class TrashPage extends HookConsumerWidget {
     }
 
     handlePermanentDelete() async {
-      await showDialog(
+      await showPlatformDialog(
         context: context,
         builder: (context) => DeleteDialog(alert: "delete_dialog_alert_remote", onDelete: () => onPermanentlyDelete()),
       );

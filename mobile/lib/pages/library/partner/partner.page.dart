@@ -28,7 +28,7 @@ class PartnerPage extends HookConsumerWidget {
         return;
       }
 
-      final selectedUser = await showDialog<UserDto>(
+      final selectedUser = await showPlatformDialog<UserDto>(
         context: context,
         builder: (context) {
           return SimpleDialog(
@@ -59,7 +59,7 @@ class PartnerPage extends HookConsumerWidget {
     }
 
     onDeleteUser(UserDto u) {
-      return showDialog(
+      return showPlatformDialog(
         context: context,
         builder: (BuildContext context) {
           return ConfirmDialog(

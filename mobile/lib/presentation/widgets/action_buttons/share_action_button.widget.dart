@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
@@ -39,7 +40,7 @@ class ShareActionButton extends ConsumerWidget {
       return;
     }
 
-    await showDialog(
+    await showPlatformDialog(
       context: context,
       builder: (BuildContext buildContext) {
         ref.read(actionProvider.notifier).shareAssets(source, context).then((ActionResult result) {

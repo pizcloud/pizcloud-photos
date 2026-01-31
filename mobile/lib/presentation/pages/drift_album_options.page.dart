@@ -12,6 +12,7 @@ import 'package:immich_mobile/domain/models/user.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/presentation/pages/drift_user_selection.page.dart';
 import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart'; // pizcloud
 import 'package:immich_mobile/providers/auth.provider.dart';
@@ -180,13 +181,17 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
         ];
       }
 
-      showModalBottomSheet(
-        backgroundColor: context.colorScheme.surfaceContainer,
-        isScrollControlled: false,
+      showPlatformModalSheet(
         context: context,
+        material: MaterialModalSheetData(
+          backgroundColor: context.colorScheme.surfaceContainer,
+          isScrollControlled: false,
+          useSafeArea: true,
+        ),
         builder: (context) {
-          return SafeArea(
-            child: Padding(
+          return platformSheetWrapper(
+            context,
+            Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(mainAxisSize: MainAxisSize.min, children: [...actions]),
             ),
