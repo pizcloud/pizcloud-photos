@@ -42,7 +42,7 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
     return PlatformSliverAppBar(
       backgroundColor: context.colorScheme.surfaceContainer,
       leading: IconButton(
-        icon: const Icon(Icons.close_rounded),
+        icon: Icon(context.platformIcons.clear),
         onPressed: () {
           ref.read(multiSelectProvider.notifier).reset();
           context.pop<Set<BaseAsset>>(null);

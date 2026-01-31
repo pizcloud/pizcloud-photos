@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/providers/image/immich_local_thumbnail_provider.dart';
 import 'package:immich_mobile/providers/image/immich_remote_thumbnail_provider.dart';
@@ -50,7 +52,9 @@ class ImmichThumbnail extends HookConsumerWidget {
         color: Colors.grey,
         width: width,
         height: height,
-        child: const Center(child: Icon(Icons.no_photography)),
+        child: Center(
+          child: Icon(context.platformIcon(material: Icons.no_photography, cupertino: CupertinoIcons.photo)),
+        ),
       );
     }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -105,7 +106,7 @@ class CreateAlbumPage extends HookConsumerWidget {
                 backgroundColor: context.colorScheme.surfaceContainerHigh,
               ),
               onPressed: onSelectPhotosButtonPressed,
-              icon: Icon(Icons.add_rounded, color: context.primaryColor),
+              icon: Icon(context.platformIcons.add, color: context.primaryColor),
               label: Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: Text(
@@ -133,7 +134,10 @@ class CreateAlbumPage extends HookConsumerWidget {
             scrollDirection: Axis.horizontal,
             children: [
               AlbumActionFilledButton(
-                iconData: Icons.add_photo_alternate_outlined,
+                iconData: context.platformIcon(
+                  material: Icons.add_photo_alternate_outlined,
+                  cupertino: CupertinoIcons.photo_on_rectangle,
+                ),
                 onPressed: onSelectPhotosButtonPressed,
                 labelText: "add_photos".tr(),
               ),
@@ -190,7 +194,7 @@ class CreateAlbumPage extends HookConsumerWidget {
             selectedAssets.value = {};
             context.maybePop();
           },
-          icon: const Icon(Icons.close_rounded),
+          icon: Icon(context.platformIcons.clear),
         ),
         title: const Text('create_album').tr(),
         trailingActions: [

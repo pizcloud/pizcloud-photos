@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -132,8 +133,19 @@ class _ChangeExperiencePageState extends ConsumerState<ChangeExperiencePage> {
             AnimatedSwitcher(
               duration: Durations.long4,
               child: hasMigrated.when(
-                data: (data) => const Icon(Icons.check_circle_rounded, color: Colors.green, size: 48.0),
-                error: (error, stackTrace) => const Icon(Icons.error, color: Colors.red, size: 48.0),
+                data: (data) => Icon(
+                  context.platformIcon(
+                    material: Icons.check_circle_rounded,
+                    cupertino: CupertinoIcons.check_mark_circled_solid,
+                  ),
+                  color: Colors.green,
+                  size: 48.0,
+                ),
+                error: (error, stackTrace) => Icon(
+                  context.platformIcon(material: Icons.error, cupertino: CupertinoIcons.exclamationmark_triangle),
+                  color: Colors.red,
+                  size: 48.0,
+                ),
                 loading: () => const SizedBox(width: 50.0, height: 50.0, child: CircularProgressIndicator()),
               ),
             ),

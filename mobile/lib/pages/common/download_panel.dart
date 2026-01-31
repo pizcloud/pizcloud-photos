@@ -1,6 +1,8 @@
 import 'package:background_downloader/background_downloader.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/providers/asset_viewer/download.provider.dart';
@@ -83,10 +85,12 @@ class DownloadTaskTile extends StatelessWidget {
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
         child: ListTile(
           minVerticalPadding: 18,
-          leading: const Icon(Icons.video_file_outlined),
+          leading: Icon(
+            context.platformIcon(material: Icons.video_file_outlined, cupertino: CupertinoIcons.video_camera),
+          ),
           title: Text(getStatusText(), style: context.textTheme.labelLarge),
           trailing: IconButton(
-            icon: Icon(Icons.close, color: context.colorScheme.onError),
+            icon: Icon(context.platformIcons.clear, color: context.colorScheme.onError),
             onPressed: onCancelDownload,
             style: ElevatedButton.styleFrom(backgroundColor: context.colorScheme.error.withAlpha(200)),
           ),

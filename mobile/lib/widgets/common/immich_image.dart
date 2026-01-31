@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
@@ -55,7 +57,11 @@ class ImmichImage extends StatelessWidget {
         color: Colors.grey,
         width: width,
         height: height,
-        child: const Center(child: Icon(Icons.no_photography)),
+        child: Center(
+          child: Icon(
+            context.platformIcon(material: Icons.no_photography, cupertino: CupertinoIcons.photo),
+          ),
+        ),
       );
     }
 
@@ -77,7 +83,14 @@ class ImmichImage extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) {
         imageProviderInstance.evict();
 
-        return Icon(Icons.image_not_supported_outlined, size: 32, color: Colors.red[200]);
+        return Icon(
+          context.platformIcon(
+            material: Icons.image_not_supported_outlined,
+            cupertino: CupertinoIcons.exclamationmark_triangle,
+          ),
+          size: 32,
+          color: Colors.red[200],
+        );
       },
     );
   }

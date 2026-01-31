@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -109,14 +110,14 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
             context.maybePop(true);
           },
           splashRadius: 24,
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: Icon(context.platformIcons.back),
         ),
         trailingActions: [
           IconButton(
             onPressed: () {
               context.pushRoute(const DriftBackupOptionsRoute());
             },
-            icon: const Icon(Icons.settings_outlined),
+            icon: Icon(context.platformIcon(material: Icons.settings_outlined, cupertino: CupertinoIcons.settings)),
             tooltip: "backup_options".t(context: context),
           ),
         ],
@@ -151,7 +152,14 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.max,
                         children: [
-                          Icon(Icons.warning_rounded, color: context.colorScheme.error, fill: 1),
+                          Icon(
+                            context.platformIcon(
+                              material: Icons.warning_rounded,
+                              cupertino: CupertinoIcons.exclamationmark_triangle,
+                            ),
+                            color: context.colorScheme.error,
+                            fill: 1,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             IntlKeys.backup_error_sync_failed.t(),
@@ -163,7 +171,9 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
                     ),
                   },
                   TextButton.icon(
-                    icon: const Icon(Icons.info_outline_rounded),
+                    icon: Icon(
+                      context.platformIcon(material: Icons.info_outline_rounded, cupertino: CupertinoIcons.info),
+                    ),
                     onPressed: () => context.pushRoute(const DriftUploadDetailRoute()),
                     label: Text("view_details".t(context: context)),
                   ),
@@ -392,7 +402,7 @@ class _RemainderCard extends ConsumerWidget {
               "view_details".t(context: context),
               style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurface.withAlpha(200)),
             ),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: context.colorScheme.onSurfaceVariant),
+            trailing: Icon(context.platformIcons.rightChevron, size: 16, color: context.colorScheme.onSurfaceVariant),
           ),
         ],
       ),

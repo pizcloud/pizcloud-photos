@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
@@ -33,6 +34,17 @@ enum SettingSection {
   final String title;
   final String subtitle;
   final IconData icon;
+
+  IconData get cupertinoIcon => switch (this) {
+    SettingSection.advanced => CupertinoIcons.gear,
+    SettingSection.assetViewer => CupertinoIcons.photo,
+    SettingSection.backup => CupertinoIcons.cloud_upload,
+    SettingSection.languages => CupertinoIcons.globe,
+    SettingSection.notifications => CupertinoIcons.bell,
+    SettingSection.preferences => CupertinoIcons.slider_horizontal_3,
+    SettingSection.timeline => CupertinoIcons.square_grid_2x2,
+    SettingSection.beta => CupertinoIcons.arrow_2_circlepath,
+  };
 
   Widget get widget => switch (this) {
     SettingSection.advanced => const AdvancedSettings(),
@@ -77,7 +89,10 @@ class _MobileLayout extends StatelessWidget {
               ? [
                   if (Store.isBetaTimelineEnabled)
                     SettingsCard(
-                      icon: Icons.sync_outlined,
+                      icon: context.platformIcon(
+                        material: Icons.sync_outlined,
+                        cupertino: CupertinoIcons.arrow_2_circlepath,
+                      ),
                       title: 'sync_status'.tr(),
                       subtitle: 'sync_status_subtitle'.tr(),
                       settingRoute: const SyncStatusRoute(),
@@ -87,7 +102,7 @@ class _MobileLayout extends StatelessWidget {
                   SettingsCard(
                     title: setting.title.tr(),
                     subtitle: setting.subtitle.tr(),
-                    icon: setting.icon,
+                    icon: context.platformIcon(material: setting.icon, cupertino: setting.cupertinoIcon),
                     settingRoute: SettingsSubRoute(section: setting),
                   ),
                 ],
@@ -118,7 +133,7 @@ class _TabletLayout extends HookWidget {
                 (s) => SliverToBoxAdapter(
                   child: ListTile(
                     title: Text(s.title).tr(),
-                    leading: Icon(s.icon),
+                    leading: Icon(context.platformIcon(material: s.icon, cupertino: s.cupertinoIcon)),
                     selected: s.index == selectedSection.value.index,
                     selectedColor: context.primaryColor,
                     selectedTileColor: context.themeData.highlightColor,

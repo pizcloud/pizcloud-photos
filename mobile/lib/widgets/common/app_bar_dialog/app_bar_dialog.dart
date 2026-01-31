@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
@@ -60,7 +61,10 @@ class ImmichAppBarDialog extends HookConsumerWidget {
         child: Stack(
           alignment: Alignment.centerLeft,
           children: [
-            IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.close, size: 20)),
+            PlatformIconButton(
+              onPressed: () => context.pop(),
+              icon: Icon(context.platformIcons.clear, size: 20),
+            ),
             Align(
               alignment: Alignment.center,
               child: Padding(
@@ -93,12 +97,22 @@ class ImmichAppBarDialog extends HookConsumerWidget {
     }
 
     buildSettingButton() {
-      return buildActionButton(Icons.settings_outlined, "settings", () => context.pushRoute(const SettingsRoute()));
+      return buildActionButton(
+        context.platformIcon(material: Icons.settings_outlined, cupertino: CupertinoIcons.settings),
+        "settings",
+        () => context.pushRoute(const SettingsRoute()),
+      );
     }
 
     // pizcloud
     buildManageAccountButton() {
-      return buildActionButton(Icons.manage_accounts, "manage_account", () async {
+      return buildActionButton(
+        context.platformIcon(
+          material: Icons.manage_accounts,
+          cupertino: CupertinoIcons.person_crop_circle_badge_checkmark,
+        ),
+        "manage_account",
+        () async {
         try {
           final loginMethod = Store.tryGet(StoreKey.pizcloudLoginMethod);
           final baseUri = Uri.https(AppConfig.accountHost, '');
@@ -149,7 +163,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
 
     buildReferralProgramButton() {
       return buildActionButton(
-        Icons.wallet_giftcard,
+        context.platformIcon(material: Icons.wallet_giftcard, cupertino: CupertinoIcons.gift),
         "referral_program",
         () => context.pushRoute(ReferralRoute(userEmail: user?.email)),
       );
@@ -157,7 +171,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
 
     buildDiscountCodeButton() {
       return buildActionButton(
-        Icons.price_check,
+        context.platformIcon(material: Icons.price_check, cupertino: CupertinoIcons.tag),
         "referral.discount_code",
         () => context.pushRoute(DiscountCodeRoute(userEmail: user?.email)),
       );
@@ -170,7 +184,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
 
     buildAppLogButton() {
       return buildActionButton(
-        Icons.assignment_outlined,
+        context.platformIcon(material: Icons.assignment_outlined, cupertino: CupertinoIcons.doc_text),
         "profile_drawer_app_logs",
         () => context.pushRoute(const AppLogRoute()),
       );
@@ -178,7 +192,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
 
     buildSignOutButton() {
       return buildActionButton(
-        Icons.logout_rounded,
+        context.platformIcon(material: Icons.logout_rounded, cupertino: CupertinoIcons.square_arrow_left),
         "sign_out",
         () async {
           if (isLoggingOut.value) {
@@ -233,7 +247,10 @@ class ImmichAppBarDialog extends HookConsumerWidget {
           decoration: BoxDecoration(color: context.colorScheme.surface),
           child: ListTile(
             minLeadingWidth: 50,
-            leading: Icon(Icons.storage_rounded, color: theme.primaryColor),
+            leading: Icon(
+              context.platformIcon(material: Icons.storage_rounded, cupertino: CupertinoIcons.folder),
+              color: theme.primaryColor,
+            ),
             title: Text(
               "backup_controller_page_server_storage",
               style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
@@ -263,7 +280,12 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: FilledButton.icon(
-                      icon: const Icon(Icons.workspace_premium_rounded),
+                      icon: Icon(
+                        context.platformIcon(
+                          material: Icons.workspace_premium_rounded,
+                          cupertino: CupertinoIcons.star_circle,
+                        ),
+                      ),
                       label: const Text('upgrade').tr(),
                       onPressed: () {
                         final root = context.router.root;
@@ -376,12 +398,10 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       key: const Key('app_bar_dialog'),
       child: Dialog(
         clipBehavior: Clip.hardEdge,
-        alignment: Alignment.topCenter,
-        insetPadding: EdgeInsets.only(
-          top: isHorizontal ? 20 : 40,
-          left: horizontalPadding,
-          right: horizontalPadding,
-          bottom: isHorizontal ? 20 : 100,
+        alignment: Alignment.center,
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: isHorizontal ? 20 : 40,
         ),
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
         child: SizedBox(

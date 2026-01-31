@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 
@@ -22,9 +24,21 @@ class ImmichToast {
     };
 
     Icon getIcon(ToastType type) => switch (type) {
-      ToastType.info => Icon(Icons.info_outline_rounded, color: context.primaryColor),
-      ToastType.success => const Icon(Icons.check_circle_rounded, color: Color.fromARGB(255, 78, 140, 124)),
-      ToastType.error => const Icon(Icons.error_outline_rounded, color: Color.fromARGB(255, 240, 162, 156)),
+      ToastType.info => Icon(
+        context.platformIcon(material: Icons.info_outline_rounded, cupertino: CupertinoIcons.info),
+        color: context.primaryColor,
+      ),
+      ToastType.success => Icon(
+        context.platformIcon(material: Icons.check_circle_rounded, cupertino: CupertinoIcons.check_mark_circled_solid),
+        color: const Color.fromARGB(255, 78, 140, 124),
+      ),
+      ToastType.error => Icon(
+        context.platformIcon(
+          material: Icons.error_outline_rounded,
+          cupertino: CupertinoIcons.exclamationmark_triangle,
+        ),
+        color: const Color.fromARGB(255, 240, 162, 156),
+      ),
     };
 
     fToast.showToast(

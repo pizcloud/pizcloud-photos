@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -64,31 +65,53 @@ class TabControllerPage extends HookConsumerWidget {
     final navigationDestinations = [
       NavigationDestination(
         label: 'photos'.tr(),
-        icon: const Icon(Icons.photo_library_outlined),
+        icon: Icon(context.platformIcons.photoLibrary),
         selectedIcon: buildIcon(
           isProcessing: isRefreshingAssets,
-          icon: Icon(Icons.photo_library, color: context.primaryColor),
+          icon: Icon(context.platformIcons.photoLibrarySolid, color: context.primaryColor),
         ),
       ),
       NavigationDestination(
         label: 'search'.tr(),
-        icon: const Icon(Icons.search_rounded),
-        selectedIcon: Icon(Icons.search, color: context.primaryColor),
+        icon: Icon(context.platformIcons.search),
+        selectedIcon: Icon(context.platformIcons.search, color: context.primaryColor),
       ),
       NavigationDestination(
         label: 'albums'.tr(),
-        icon: const Icon(Icons.photo_album_outlined),
+        icon: Icon(
+          context.platformIcon(
+            material: Icons.photo_album_outlined,
+            cupertino: CupertinoIcons.rectangle_stack,
+          ),
+        ),
         selectedIcon: buildIcon(
           isProcessing: isRefreshingRemoteAlbums,
-          icon: Icon(Icons.photo_album_rounded, color: context.primaryColor),
+          icon: Icon(
+            context.platformIcon(
+              material: Icons.photo_album_rounded,
+              cupertino: CupertinoIcons.rectangle_stack_fill,
+            ),
+            color: context.primaryColor,
+          ),
         ),
       ),
       NavigationDestination(
         label: 'library'.tr(),
-        icon: const Icon(Icons.space_dashboard_outlined),
+        icon: Icon(
+          context.platformIcon(
+            material: Icons.space_dashboard_outlined,
+            cupertino: CupertinoIcons.square_grid_2x2,
+          ),
+        ),
         selectedIcon: buildIcon(
           isProcessing: isRefreshingAssets,
-          icon: Icon(Icons.space_dashboard_rounded, color: context.primaryColor),
+          icon: Icon(
+            context.platformIcon(
+              material: Icons.space_dashboard_rounded,
+              cupertino: CupertinoIcons.square_grid_2x2_fill,
+            ),
+            color: context.primaryColor,
+          ),
         ),
       ),
     ];

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -149,7 +150,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
         appBar: PlatformAppBar(
           leading: IconButton(
             onPressed: () async => await context.maybePop(),
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: Icon(context.platformIcons.back),
           ),
           title: _isSearchMode
               ? SearchField(
@@ -163,7 +164,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
           trailingActions: [
             if (!_isSearchMode)
               IconButton(
-                icon: const Icon(Icons.search),
+                icon: Icon(context.platformIcons.search),
                 onPressed: () => setState(() {
                   _isSearchMode = true;
                   _searchQuery = '';
@@ -171,7 +172,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
               )
             else
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: Icon(context.platformIcons.clear),
                 onPressed: () => setState(() {
                   _isSearchMode = false;
                   _searchQuery = '';
@@ -196,7 +197,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                           child: Row(
                             children: [
-                              const Icon(Icons.photo_library_outlined),
+                              Icon(context.platformIcons.photoLibrary),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -247,7 +248,11 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
                         ),
                         trailing: IconButton(
                           splashRadius: 16,
-                          icon: Icon(Icons.info, size: 20, color: context.primaryColor),
+                          icon: Icon(
+                            context.platformIcon(material: Icons.info, cupertino: CupertinoIcons.info),
+                            size: 20,
+                            color: context.primaryColor,
+                          ),
                           onPressed: () {
                             showDialog(
                               context: context,
@@ -467,7 +472,7 @@ class _SelectedAlbumNameChips extends ConsumerWidget {
                 ),
                 backgroundColor: context.primaryColor,
                 deleteIconColor: context.isDarkTheme ? Colors.black : Colors.white,
-                deleteIcon: const Icon(Icons.cancel_rounded, size: 15),
+                deleteIcon: Icon(context.platformIcons.clear, size: 15),
                 onDeleted: removeSelection,
               ),
             ),
@@ -507,7 +512,7 @@ class _ExcludedAlbumNameChips extends ConsumerWidget {
                 ),
                 backgroundColor: Colors.red[300],
                 deleteIconColor: context.scaffoldBackgroundColor,
-                deleteIcon: const Icon(Icons.cancel_rounded, size: 15),
+                deleteIcon: Icon(context.platformIcons.clear, size: 15),
                 onDeleted: removeSelection,
               ),
             ),
@@ -543,7 +548,7 @@ class _SelectAllButton extends ConsumerWidget {
                       }
                     }
                   : null,
-              icon: const Icon(Icons.select_all),
+              icon: Icon(context.platformIcon(material: Icons.select_all, cupertino: CupertinoIcons.checkmark_square)),
               label: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: Text("select_all".t(context: context)),
@@ -563,7 +568,7 @@ class _SelectAllButton extends ConsumerWidget {
                       }
                     }
                   : null,
-              icon: const Icon(Icons.deselect),
+              icon: Icon(context.platformIcon(material: Icons.deselect, cupertino: CupertinoIcons.square)),
               label: Text('deselect_all'.t(context: context)),
               style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12.0)),
             ),

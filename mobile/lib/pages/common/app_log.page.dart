@@ -55,7 +55,7 @@ class AppLogPage extends HookConsumerWidget {
         trailingActions: [
           IconButton(
             icon: Icon(
-              Icons.delete_outline_rounded,
+              context.platformIcons.deleteOutline,
               color: context.primaryColor,
               semanticLabel: "Clear logs",
               size: 20.0,
@@ -68,7 +68,12 @@ class AppLogPage extends HookConsumerWidget {
           Builder(
             builder: (BuildContext iconContext) {
               return IconButton(
-                icon: Icon(Icons.share_rounded, color: context.primaryColor, semanticLabel: "Share logs", size: 20.0),
+                icon: Icon(
+                  context.platformIcons.share,
+                  color: context.primaryColor,
+                  semanticLabel: "Share logs",
+                  size: 20.0,
+                ),
                 onPressed: () {
                   ImmichLogger.shareLogs(iconContext);
                 },
@@ -80,7 +85,7 @@ class AppLogPage extends HookConsumerWidget {
           onPressed: () {
             context.maybePop();
           },
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20.0),
+          icon: Icon(context.platformIcons.back, size: 20.0),
         ),
       ),
       body: ListView.separated(
@@ -92,7 +97,7 @@ class AppLogPage extends HookConsumerWidget {
           var logMessage = logMessages.data![index];
           return ListTile(
             onTap: () => context.pushRoute(AppLogDetailRoute(logMessage: logMessage)),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded),
+            trailing: Icon(context.platformIcons.rightChevron),
             visualDensity: VisualDensity.compact,
             dense: true,
             tileColor: getTileColor(logMessage.level),

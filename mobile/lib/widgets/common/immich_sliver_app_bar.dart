@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -54,7 +55,12 @@ class ImmichSliverAppBar extends ConsumerWidget {
             onPressed: () {
               showPlatformDialog(context: context, builder: (context) => const CastDialog());
             },
-            icon: Icon(isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded),
+            icon: Icon(
+              context.platformIcon(
+                material: isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded,
+                cupertino: CupertinoIcons.tv,
+              ),
+            ),
           ),
         ),
       const _SyncStatusIndicator(),
@@ -62,7 +68,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
         ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 16), child: action)),
       if ((kDebugMode || kProfileMode) && !isReadonlyModeEnabled)
         IconButton(
-          icon: const Icon(Icons.science_rounded),
+          icon: Icon(context.platformIcon(material: Icons.science_rounded, cupertino: CupertinoIcons.lab_flask)),
           onPressed: () => context.pushRoute(const FeatInDevRoute()),
         ),
       if (showUploadButton && !isReadonlyModeEnabled)
@@ -185,7 +191,10 @@ class _ProfileIndicator extends ConsumerWidget {
         isLabelVisible: versionWarningPresent,
         offset: const Offset(-2, -12),
         child: user == null
-            ? const Icon(Icons.face_outlined, size: widgetSize)
+            ? Icon(
+                context.platformIcon(material: Icons.face_outlined, cupertino: CupertinoIcons.person_crop_circle),
+                size: widgetSize,
+              )
             : Semantics(
                 label: "logged_in_as".tr(namedArgs: {"user": user.name}),
                 child: AbsorbPointer(child: UserCircleAvatar(radius: 17, size: 31, user: user)),
@@ -213,7 +222,11 @@ class _BackupIndicator extends ConsumerWidget {
         alignment: Alignment.bottomRight,
         isLabelVisible: indicatorIcon != null,
         offset: const Offset(-2, -12),
-        child: Icon(Icons.backup_rounded, size: _kBadgeWidgetSize, color: context.primaryColor),
+        child: Icon(
+          context.platformIcon(material: Icons.backup_rounded, cupertino: CupertinoIcons.cloud_upload),
+          size: _kBadgeWidgetSize,
+          color: context.primaryColor,
+        ),
       ),
     );
   }
@@ -234,7 +247,7 @@ class _BackupIndicator extends ConsumerWidget {
         if (!backupEnabled) {
           return _BadgeLabel(
             Icon(
-              Icons.cloud_off_rounded,
+              context.platformIcon(material: Icons.cloud_off_rounded, cupertino: CupertinoIcons.cloud),
               size: 9,
               color: iconColor,
               semanticLabel: 'backup_controller_page_backup'.tr(),
@@ -245,7 +258,7 @@ class _BackupIndicator extends ConsumerWidget {
         if (hasError) {
           return _BadgeLabel(
             Icon(
-              Icons.warning_rounded,
+              context.platformIcon(material: Icons.warning_rounded, cupertino: CupertinoIcons.exclamationmark_triangle),
               size: 12,
               color: context.colorScheme.error,
               semanticLabel: 'backup_controller_page_backup'.tr(),
@@ -274,7 +287,12 @@ class _BackupIndicator extends ConsumerWidget {
         }
 
         return _BadgeLabel(
-          Icon(Icons.check_outlined, size: 9, color: iconColor, semanticLabel: 'backup_controller_page_backup'.tr()),
+          Icon(
+            context.platformIcons.checkMark,
+            size: 9,
+            color: iconColor,
+            semanticLabel: 'backup_controller_page_backup'.tr(),
+          ),
         );
       },
     );
@@ -368,7 +386,11 @@ class _SyncStatusIndicatorState extends ConsumerState<_SyncStatusIndicator> with
               opacity: isSyncing ? 1.0 : _dismissalAnimation.value,
               child: Transform.rotate(
                 angle: _rotationAnimation.value * 2 * 3.14159 * -1, // Rotate counter-clockwise
-                child: Icon(Icons.sync, size: 24, color: context.primaryColor),
+                child: Icon(
+                  context.platformIcon(material: Icons.sync, cupertino: CupertinoIcons.arrow_2_circlepath),
+                  size: 24,
+                  color: context.primaryColor,
+                ),
               ),
             ),
           ),

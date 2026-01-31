@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -17,7 +18,7 @@ class ArchivePage extends HookConsumerWidget {
       final archiveRenderList = ref.watch(archiveTimelineProvider);
       final count = archiveRenderList.value?.totalAssets.toString() ?? "?";
       return PlatformAppBar(
-        leading: IconButton(onPressed: () => context.maybePop(), icon: const Icon(Icons.arrow_back_ios_rounded)),
+        leading: IconButton(onPressed: () => context.maybePop(), icon: Icon(context.platformIcons.back)),
         automaticallyImplyLeading: false,
         title: const Text('archive_page_title').tr(namedArgs: {'count': count}),
         material: (_, __) => MaterialAppBarData(centerTitle: true),

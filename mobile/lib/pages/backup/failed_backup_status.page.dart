@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -25,7 +26,7 @@ class FailedBackupStatusPage extends HookConsumerWidget {
             context.maybePop(true);
           },
           splashRadius: 24,
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: Icon(context.platformIcons.back),
         ),
         material: (_, __) => MaterialAppBarData(elevation: 0),
       ),
@@ -82,7 +83,11 @@ class FailedBackupStatusPage extends HookConsumerWidget {
                                   color: context.isDarkTheme ? Colors.white70 : Colors.grey[800],
                                 ),
                               ),
-                              Icon(Icons.error, color: Colors.red.withAlpha(200), size: 18),
+                              Icon(
+                                context.platformIcon(material: Icons.error, cupertino: CupertinoIcons.exclamationmark_triangle),
+                                color: Colors.red.withAlpha(200),
+                                size: 18,
+                              ),
                             ],
                           ),
                           Padding(

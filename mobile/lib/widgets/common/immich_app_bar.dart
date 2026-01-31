@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_svg/svg.dart';
@@ -46,14 +47,21 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
         child: Badge(
           label: Container(
             decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(widgetSize / 2)),
-            child: const Icon(Icons.info, color: Color.fromARGB(255, 243, 188, 106), size: widgetSize / 2),
+            child: Icon(
+              context.platformIcon(material: Icons.info, cupertino: CupertinoIcons.info),
+              color: const Color.fromARGB(255, 243, 188, 106),
+              size: widgetSize / 2,
+            ),
           ),
           backgroundColor: Colors.transparent,
           alignment: Alignment.bottomRight,
           isLabelVisible: versionWarningPresent,
           offset: const Offset(-2, -12),
           child: user == null
-              ? const Icon(Icons.face_outlined, size: widgetSize)
+              ? Icon(
+                  context.platformIcon(material: Icons.face_outlined, cupertino: CupertinoIcons.person_crop_circle),
+                  size: widgetSize,
+                )
               : Semantics(
                   label: "logged_in_as".tr(namedArgs: {"user": user.name}),
                   child: UserCircleAvatar(radius: 17, size: 31, user: user),
@@ -79,7 +87,7 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
         } else if (backupState.backupProgress != BackUpProgressEnum.inBackground &&
             backupState.backupProgress != BackUpProgressEnum.manualInProgress) {
           return Icon(
-            Icons.check_outlined,
+            context.platformIcons.checkMark,
             size: 9,
             color: iconColor,
             semanticLabel: 'backup_controller_page_backup'.tr(),
@@ -89,7 +97,7 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
       if (!isEnableAutoBackup) {
         return Icon(
-          Icons.cloud_off_rounded,
+          context.platformIcon(material: Icons.cloud_off_rounded, cupertino: CupertinoIcons.cloud),
           size: 9,
           color: iconColor,
           semanticLabel: 'backup_controller_page_backup'.tr(),
@@ -119,7 +127,11 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
           alignment: Alignment.bottomRight,
           isLabelVisible: indicatorIcon != null,
           offset: const Offset(-2, -12),
-          child: Icon(Icons.backup_rounded, size: widgetSize, color: context.primaryColor),
+          child: Icon(
+            context.platformIcon(material: Icons.backup_rounded, cupertino: CupertinoIcons.cloud_upload),
+            size: widgetSize,
+            color: context.primaryColor,
+          ),
         ),
       );
     }
@@ -141,14 +153,19 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   height: 40,
                 ),
               ),
-              const Tooltip(
+              Tooltip(
                 triggerMode: TooltipTriggerMode.tap,
                 showDuration: Duration(seconds: 4),
                 message:
                     "The old timeline is deprecated and will be removed in a future release. Kindly switch to the new timeline under Advanced Settings.",
                 child: Padding(
-                  padding: EdgeInsets.only(top: 3.0),
-                  child: Icon(Icons.error_rounded, fill: 1, color: Colors.amber, size: 20),
+                  padding: const EdgeInsets.only(top: 3.0),
+                  child: Icon(
+                    context.platformIcon(material: Icons.error_rounded, cupertino: CupertinoIcons.exclamationmark_triangle),
+                    fill: 1,
+                    color: Colors.amber,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -165,7 +182,7 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 16), child: action)),
         if (kDebugMode || kProfileMode)
           IconButton(
-            icon: const Icon(Icons.science_rounded),
+            icon: Icon(context.platformIcon(material: Icons.science_rounded, cupertino: CupertinoIcons.lab_flask)),
             onPressed: () => context.pushRoute(const FeatInDevRoute()),
           ),
         if (isCasting)
@@ -175,7 +192,12 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
               onPressed: () {
                 showPlatformDialog(context: context, builder: (context) => const CastDialog());
               },
-              icon: Icon(isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded),
+              icon: Icon(
+                context.platformIcon(
+                  material: isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded,
+                  cupertino: CupertinoIcons.tv,
+                ),
+              ),
             ),
           ),
         if (showUploadButton) Padding(padding: const EdgeInsets.only(right: 20), child: buildBackupIndicator()),

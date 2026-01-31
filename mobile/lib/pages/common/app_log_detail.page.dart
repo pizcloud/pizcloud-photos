@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -45,7 +46,11 @@ class AppLogDetailPage extends HookConsumerWidget {
                       );
                     });
                   },
-                  icon: Icon(Icons.copy, size: 16.0, color: context.primaryColor),
+                  icon: Icon(
+                    context.platformIcon(material: Icons.copy, cupertino: CupertinoIcons.doc_on_doc),
+                    size: 16.0,
+                    color: context.primaryColor,
+                  ),
                 ),
               ],
             ),
