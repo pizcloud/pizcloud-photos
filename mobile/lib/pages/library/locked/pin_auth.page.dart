@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' show useState;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -63,8 +65,14 @@ class PinAuthPage extends HookConsumerWidget {
                         registerBiometric(pinCode);
                       },
                       autoFocus: true,
-                      icon: Icons.fingerprint_rounded,
-                      successIcon: Icons.fingerprint_rounded,
+                      icon: context.platformIcon(
+                        material: Icons.fingerprint_rounded,
+                        cupertino: CupertinoIcons.lock_fill,
+                      ),
+                      successIcon: context.platformIcon(
+                        material: Icons.fingerprint_rounded,
+                        cupertino: CupertinoIcons.lock_fill,
+                      ),
                     ),
                   ],
                 ),
@@ -103,7 +111,10 @@ class PinAuthPage extends HookConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(right: 16.0),
                           child: TextButton.icon(
-                            icon: const Icon(Icons.fingerprint, size: 28),
+                            icon: Icon(
+                              context.platformIcon(material: Icons.fingerprint, cupertino: CupertinoIcons.lock_fill),
+                              size: 28,
+                            ),
                             onPressed: enableBiometricAuth,
                             label: Text(
                               'use_biometric'.tr(),

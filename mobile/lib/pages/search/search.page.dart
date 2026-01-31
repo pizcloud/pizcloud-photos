@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -408,11 +409,15 @@ class SearchPage extends HookConsumerWidget {
       search();
     }
 
-    IconData getSearchPrefixIcon() => switch (textSearchType.value) {
-      TextSearchType.context => Icons.image_search_rounded,
-      TextSearchType.filename => Icons.abc_rounded,
-      TextSearchType.description => Icons.text_snippet_outlined,
-      TextSearchType.ocr => Icons.document_scanner_outlined,
+    IconData getSearchPrefixIcon(BuildContext context) => switch (textSearchType.value) {
+      TextSearchType.context =>
+        context.platformIcon(material: Icons.image_search_rounded, cupertino: CupertinoIcons.search),
+      TextSearchType.filename =>
+        context.platformIcon(material: Icons.abc_rounded, cupertino: CupertinoIcons.doc_text),
+      TextSearchType.description =>
+        context.platformIcon(material: Icons.text_snippet_outlined, cupertino: CupertinoIcons.text_bubble),
+      TextSearchType.ocr =>
+        context.platformIcon(material: Icons.document_scanner_outlined, cupertino: CupertinoIcons.doc_text),
     };
 
     return PlatformScaffold(
@@ -438,14 +443,16 @@ class SearchPage extends HookConsumerWidget {
                       controller.open();
                     }
                   },
-                  icon: const Icon(Icons.more_vert_rounded),
+                  icon: Icon(context.platformIcon(material: Icons.more_vert_rounded, cupertino: CupertinoIcons.ellipsis)),
                   tooltip: 'show_text_search_menu'.tr(),
                 );
               },
               menuChildren: [
                 MenuItemButton(
                   child: ListTile(
-                    leading: const Icon(Icons.image_search_rounded),
+                    leading: Icon(
+                      context.platformIcon(material: Icons.image_search_rounded, cupertino: CupertinoIcons.search),
+                    ),
                     title: Text(
                       'search_by_context'.tr(),
                       style: context.textTheme.bodyLarge?.copyWith(
@@ -463,7 +470,9 @@ class SearchPage extends HookConsumerWidget {
                 ),
                 MenuItemButton(
                   child: ListTile(
-                    leading: const Icon(Icons.abc_rounded),
+                    leading: Icon(
+                      context.platformIcon(material: Icons.abc_rounded, cupertino: CupertinoIcons.doc_text),
+                    ),
                     title: Text(
                       'search_filter_filename'.tr(),
                       style: context.textTheme.bodyLarge?.copyWith(
@@ -481,7 +490,9 @@ class SearchPage extends HookConsumerWidget {
                 ),
                 MenuItemButton(
                   child: ListTile(
-                    leading: const Icon(Icons.text_snippet_outlined),
+                    leading: Icon(
+                      context.platformIcon(material: Icons.text_snippet_outlined, cupertino: CupertinoIcons.text_bubble),
+                    ),
                     title: Text(
                       'search_by_description'.tr(),
                       style: context.textTheme.bodyLarge?.copyWith(
@@ -499,7 +510,12 @@ class SearchPage extends HookConsumerWidget {
                 ),
                 MenuItemButton(
                   child: ListTile(
-                    leading: const Icon(Icons.document_scanner_outlined),
+                    leading: Icon(
+                      context.platformIcon(
+                        material: Icons.document_scanner_outlined,
+                        cupertino: CupertinoIcons.doc_text,
+                      ),
+                    ),
                     title: Text(
                       'search_filter_ocr'.tr(),
                       style: context.textTheme.bodyLarge?.copyWith(
@@ -541,7 +557,8 @@ class SearchPage extends HookConsumerWidget {
             key: const Key('search_text_field'),
             controller: textSearchController,
             contentPadding: prefilter != null ? const EdgeInsets.only(left: 24) : const EdgeInsets.all(8),
-            prefixIcon: prefilter != null ? null : Icon(getSearchPrefixIcon(), color: context.colorScheme.primary),
+            prefixIcon:
+                prefilter != null ? null : Icon(getSearchPrefixIcon(context), color: context.colorScheme.primary),
             onSubmitted: handleTextSubmitted,
             focusNode: ref.watch(searchInputFocusProvider),
           ),
@@ -560,38 +577,47 @@ class SearchPage extends HookConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   SearchFilterChip(
-                    icon: Icons.people_alt_outlined,
+                    icon: context.platformIcon(material: Icons.people_alt_outlined, cupertino: CupertinoIcons.person_2),
                     onTap: showPeoplePicker,
                     label: 'people'.tr(),
                     currentFilter: peopleCurrentFilterWidget.value,
                   ),
                   SearchFilterChip(
-                    icon: Icons.location_on_outlined,
+                    icon: context.platformIcon(
+                      material: Icons.location_on_outlined,
+                      cupertino: CupertinoIcons.location,
+                    ),
                     onTap: showLocationPicker,
                     label: 'search_filter_location'.tr(),
                     currentFilter: locationCurrentFilterWidget.value,
                   ),
                   SearchFilterChip(
-                    icon: Icons.camera_alt_outlined,
+                    icon: context.platformIcon(material: Icons.camera_alt_outlined, cupertino: CupertinoIcons.camera),
                     onTap: showCameraPicker,
                     label: 'camera'.tr(),
                     currentFilter: cameraCurrentFilterWidget.value,
                   ),
                   SearchFilterChip(
-                    icon: Icons.date_range_outlined,
+                    icon: context.platformIcon(material: Icons.date_range_outlined, cupertino: CupertinoIcons.calendar),
                     onTap: showDatePicker,
                     label: 'search_filter_date'.tr(),
                     currentFilter: dateRangeCurrentFilterWidget.value,
                   ),
                   SearchFilterChip(
                     key: const Key('media_type_chip'),
-                    icon: Icons.video_collection_outlined,
+                    icon: context.platformIcon(
+                      material: Icons.video_collection_outlined,
+                      cupertino: CupertinoIcons.video_camera,
+                    ),
                     onTap: showMediaTypePicker,
                     label: 'search_filter_media_type'.tr(),
                     currentFilter: mediaTypeCurrentFilterWidget.value,
                   ),
                   SearchFilterChip(
-                    icon: Icons.display_settings_outlined,
+                    icon: context.platformIcon(
+                      material: Icons.display_settings_outlined,
+                      cupertino: CupertinoIcons.slider_horizontal_3,
+                    ),
                     onTap: showDisplayOptionPicker,
                     label: 'search_filter_display_options'.tr(),
                     currentFilter: displayOptionCurrentFilterWidget.value,
@@ -706,18 +732,21 @@ class QuickLinkList extends StatelessWidget {
         children: [
           QuickLink(
             title: 'recently_taken'.tr(),
-            icon: Icons.schedule_outlined,
+            icon: context.platformIcon(material: Icons.schedule_outlined, cupertino: CupertinoIcons.clock),
             isTop: true,
             onTap: () => context.pushRoute(const RecentlyTakenRoute()),
           ),
           QuickLink(
             title: 'videos'.tr(),
-            icon: Icons.play_circle_outline_rounded,
+            icon: context.platformIcon(
+              material: Icons.play_circle_outline_rounded,
+              cupertino: CupertinoIcons.play_circle,
+            ),
             onTap: () => context.pushRoute(const AllVideosRoute()),
           ),
           QuickLink(
             title: 'favorites'.tr(),
-            icon: Icons.favorite_border_rounded,
+            icon: context.platformIcon(material: Icons.favorite_border_rounded, cupertino: CupertinoIcons.heart),
             isBottom: true,
             onTap: () => context.pushRoute(const FavoritesRoute()),
           ),

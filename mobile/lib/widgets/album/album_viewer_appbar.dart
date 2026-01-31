@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -124,12 +125,14 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
       return [
         album.ownerId == userId
             ? ListTile(
-                leading: const Icon(Icons.delete_forever_rounded),
+                leading: Icon(context.platformIcon(material: Icons.delete_forever_rounded, cupertino: CupertinoIcons.delete)),
                 title: const Text('delete_album', style: TextStyle(fontWeight: FontWeight.w500)).tr(),
                 onTap: onDeleteAlbumPressed,
               )
             : ListTile(
-                leading: const Icon(Icons.person_remove_rounded),
+                leading: Icon(
+                  context.platformIcon(material: Icons.person_remove_rounded, cupertino: CupertinoIcons.person_crop_circle_badge_minus),
+                ),
                 title: const Text(
                   'album_viewer_appbar_share_leave',
                   style: TextStyle(fontWeight: FontWeight.w500),
@@ -158,7 +161,9 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
     void buildBottomSheet() {
       final ownerActions = [
         ListTile(
-          leading: const Icon(Icons.person_add_alt_rounded),
+          leading: Icon(
+            context.platformIcon(material: Icons.person_add_alt_rounded, cupertino: CupertinoIcons.person_add),
+          ),
           onTap: () {
             context.pop();
             final onAddUsers = this.onAddUsers;
@@ -169,12 +174,16 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
           title: const Text("album_viewer_page_share_add_users", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
         ListTile(
-          leading: const Icon(Icons.swap_vert_rounded),
+          leading: Icon(
+            context.platformIcon(material: Icons.swap_vert_rounded, cupertino: CupertinoIcons.arrow_up_arrow_down),
+          ),
           onTap: onSortOrderToggled,
           title: const Text("change_display_order", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
         ListTile(
-          leading: const Icon(Icons.link_rounded),
+          leading: Icon(
+            context.platformIcon(material: Icons.link_rounded, cupertino: CupertinoIcons.link),
+          ),
           onTap: () {
             context.pushRoute(SharedLinkEditRoute(albumId: album.remoteId));
             context.pop();
@@ -182,7 +191,9 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
           title: const Text("control_bottom_app_bar_share_link", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
         ListTile(
-          leading: const Icon(Icons.settings_rounded),
+          leading: Icon(
+            context.platformIcon(material: Icons.settings_rounded, cupertino: CupertinoIcons.settings),
+          ),
           onTap: () => context.navigateTo(const AlbumOptionsRoute()),
           title: const Text("options", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
@@ -190,7 +201,12 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
 
       final commonActions = [
         ListTile(
-          leading: const Icon(Icons.add_photo_alternate_outlined),
+          leading: Icon(
+            context.platformIcon(
+              material: Icons.add_photo_alternate_outlined,
+              cupertino: CupertinoIcons.photo_on_rectangle,
+            ),
+          ),
           onTap: () {
             context.pop();
             final onAddPhotos = this.onAddPhotos;
@@ -229,7 +245,9 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
         icon: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Icon(Icons.mode_comment_outlined),
+            Icon(
+              context.platformIcon(material: Icons.mode_comment_outlined, cupertino: CupertinoIcons.chat_bubble),
+            ),
             if (comments != 0)
               Padding(
                 padding: const EdgeInsets.only(left: 5),
@@ -277,13 +295,13 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
               ref.read(albumViewerProvider.notifier).disableEditAlbum();
             }
           },
-          icon: const Icon(Icons.check_rounded),
+          icon: Icon(context.platformIcons.checkMark),
           splashRadius: 25,
         );
       } else {
         return IconButton(
           onPressed: context.maybePop,
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: Icon(context.platformIcons.back),
           splashRadius: 25,
         );
       }
@@ -295,7 +313,11 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
       trailingActions: [
         if (album.shared && (album.activityEnabled || comments != 0)) buildActivitiesButton(),
         if (album.isRemote) ...[
-          IconButton(splashRadius: 25, onPressed: buildBottomSheet, icon: const Icon(Icons.more_horiz_rounded)),
+          IconButton(
+            splashRadius: 25,
+            onPressed: buildBottomSheet,
+            icon: Icon(context.platformIcon(material: Icons.more_horiz_rounded, cupertino: CupertinoIcons.ellipsis)),
+          ),
         ],
       ],
       cupertino: (_, __) => CupertinoNavigationBarData(

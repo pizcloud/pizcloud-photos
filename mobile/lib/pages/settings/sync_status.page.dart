@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
@@ -16,7 +17,7 @@ class SyncStatusPage extends StatelessWidget {
         leading: IconButton(
           onPressed: () => context.maybePop(true),
           splashRadius: 24,
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: Icon(context.platformIcons.back),
         ),
         material: (_, __) => MaterialAppBarData(elevation: 0),
       ),

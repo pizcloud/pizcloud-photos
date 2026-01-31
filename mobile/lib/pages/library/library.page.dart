@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -43,13 +44,13 @@ class LibraryPage extends ConsumerWidget {
                 children: [
                   ActionButton(
                     onPressed: () => context.pushRoute(const FavoritesRoute()),
-                    icon: Icons.favorite_outline_rounded,
+                    icon: context.platformIcon(material: Icons.favorite_outline_rounded, cupertino: CupertinoIcons.heart),
                     label: IntlKeys.favorites.tr(),
                   ),
                   const SizedBox(width: 8),
                   ActionButton(
                     onPressed: () => context.pushRoute(const ArchiveRoute()),
-                    icon: Icons.archive_outlined,
+                    icon: context.platformIcon(material: Icons.archive_outlined, cupertino: CupertinoIcons.archivebox),
                     label: IntlKeys.archived.tr(),
                   ),
                 ],
@@ -60,14 +61,14 @@ class LibraryPage extends ConsumerWidget {
               children: [
                 ActionButton(
                   onPressed: () => context.pushRoute(const SharedLinkRoute()),
-                  icon: Icons.link_outlined,
+                  icon: context.platformIcon(material: Icons.link_outlined, cupertino: CupertinoIcons.link),
                   label: IntlKeys.shared_links.tr(),
                 ),
                 SizedBox(width: trashEnabled ? 8 : 0),
                 trashEnabled
                     ? ActionButton(
                         onPressed: () => context.pushRoute(const TrashRoute()),
-                        icon: Icons.delete_outline_rounded,
+                        icon: context.platformIcon(material: Icons.delete_outline_rounded, cupertino: CupertinoIcons.delete),
                         label: IntlKeys.trash.tr(),
                       )
                     : const SizedBox.shrink(),
@@ -122,7 +123,10 @@ class QuickAccessButtons extends ConsumerWidget {
                 bottomRight: Radius.circular(partners.isEmpty ? 20 : 0),
               ),
             ),
-            leading: const Icon(Icons.folder_outlined, size: 26),
+            leading: Icon(
+              context.platformIcon(material: Icons.folder_outlined, cupertino: CupertinoIcons.folder),
+              size: 26,
+            ),
             title: Text(
               IntlKeys.folders.tr(),
               style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500),
@@ -130,7 +134,10 @@ class QuickAccessButtons extends ConsumerWidget {
             onTap: () => context.pushRoute(FolderRoute()),
           ),
           ListTile(
-            leading: const Icon(Icons.lock_outline_rounded, size: 26),
+            leading: Icon(
+              context.platformIcon(material: Icons.lock_outline_rounded, cupertino: CupertinoIcons.lock),
+              size: 26,
+            ),
             title: Text(
               IntlKeys.locked_folder.tr(),
               style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500),
@@ -138,7 +145,10 @@ class QuickAccessButtons extends ConsumerWidget {
             onTap: () => context.pushRoute(const LockedRoute()),
           ),
           ListTile(
-            leading: const Icon(Icons.group_outlined, size: 26),
+            leading: Icon(
+              context.platformIcon(material: Icons.group_outlined, cupertino: CupertinoIcons.person_2),
+              size: 26,
+            ),
             title: Text(
               IntlKeys.partners.tr(),
               style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500),

@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -262,7 +264,11 @@ class _PlanCard extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.local_offer, size: 14, color: Colors.green[700]),
+                                Icon(
+                                  context.platformIcon(material: Icons.local_offer, cupertino: CupertinoIcons.tag),
+                                  size: 14,
+                                  color: Colors.green[700],
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '-30%',
@@ -362,7 +368,14 @@ class _PlanCard extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle, size: 18, color: theme.colorScheme.primary),
+                      Icon(
+                        context.platformIcon(
+                          material: Icons.check_circle,
+                          cupertino: CupertinoIcons.check_mark_circled_solid,
+                        ),
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(child: Text(f, style: theme.textTheme.bodyMedium?.copyWith(height: 1.2))),
                     ],
@@ -376,7 +389,11 @@ class _PlanCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, size: 16, color: Colors.green[700]),
+                      Icon(
+                        context.platformIcon(material: Icons.info_outline, cupertino: CupertinoIcons.info),
+                        size: 16,
+                        color: Colors.green[700],
+                      ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -728,7 +745,11 @@ class BillingPage extends HookConsumerWidget {
                     color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(Icons.lock_outline, size: 28, color: theme.colorScheme.primary),
+                  child: Icon(
+                    context.platformIcon(material: Icons.lock_outline, cupertino: CupertinoIcons.lock),
+                    size: 28,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -804,13 +825,19 @@ class BillingPage extends HookConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _WhyRow(
-                    icon: Icons.verified_user_outlined,
+                    icon: context.platformIcon(
+                      material: Icons.verified_user_outlined,
+                      cupertino: CupertinoIcons.checkmark_shield,
+                    ),
                     title: 'subscription.why_secure_title'.tr(),
                     subtitle: 'subscription.why_secure_sub'.tr(),
                   ),
                   const SizedBox(height: 10),
                   _WhyRow(
-                    icon: Icons.sync_outlined,
+                    icon: context.platformIcon(
+                      material: Icons.sync_outlined,
+                      cupertino: CupertinoIcons.arrow_2_circlepath,
+                    ),
                     title: 'subscription.why_sync_title'.tr(),
                     subtitle: 'subscription.why_sync_sub'.tr(),
                   ),

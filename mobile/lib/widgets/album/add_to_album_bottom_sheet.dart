@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -71,7 +73,7 @@ class AddToAlbumBottomSheet extends HookConsumerWidget {
                     children: [
                       Text('add_to_album'.tr(), style: context.textTheme.displayMedium),
                       TextButton.icon(
-                        icon: Icon(Icons.add, color: context.primaryColor),
+                        icon: Icon(context.platformIcons.add, color: context.primaryColor),
                         label: Text('common_create_new_album'.tr(), style: TextStyle(color: context.primaryColor)),
                         onPressed: () {
                           context.pushRoute(CreateAlbumRoute(assets: assets));

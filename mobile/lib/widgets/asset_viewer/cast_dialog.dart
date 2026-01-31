@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -78,11 +79,15 @@ class CastDialog extends ConsumerWidget {
                       style: TextStyle(color: isCurrentDevice(deviceName) ? context.colorScheme.primary : null),
                     ),
                     leading: Icon(
-                      type == CastDestinationType.googleCast ? Icons.cast : Icons.cast_connected,
+                      context.platformIcon(
+                        material:
+                            type == CastDestinationType.googleCast ? Icons.cast : Icons.cast_connected,
+                        cupertino: CupertinoIcons.tv,
+                      ),
                       color: isCurrentDevice(deviceName) ? context.colorScheme.primary : null,
                     ),
                     trailing: isCurrentDevice(deviceName)
-                        ? Icon(Icons.check, color: context.colorScheme.primary)
+                        ? Icon(context.platformIcons.checkMark, color: context.colorScheme.primary)
                         : isDeviceConnecting(deviceName)
                         ? const PlatformCircularProgressIndicator()
                         : null,

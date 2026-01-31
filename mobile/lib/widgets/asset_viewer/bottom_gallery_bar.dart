@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -150,7 +152,13 @@ class BottomGalleryBar extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.filter_none_outlined, size: 18),
+                    leading: Icon(
+                      context.platformIcon(
+                        material: Icons.filter_none_outlined,
+                        cupertino: CupertinoIcons.square_stack_3d_up,
+                      ),
+                      size: 18,
+                    ),
                     onTap: () async {
                       await unStack();
                       ctx.pop();
@@ -250,7 +258,7 @@ class BottomGalleryBar extends ConsumerWidget {
     final List<Map<BottomNavigationBarItem, Function(int)>> albumActions = [
       {
         BottomNavigationBarItem(
-          icon: Icon(Platform.isAndroid ? Icons.share_rounded : Icons.ios_share_rounded),
+          icon: Icon(context.platformIcons.share),
           label: 'share'.tr(),
           tooltip: 'share'.tr(),
         ): (_) =>
@@ -259,7 +267,7 @@ class BottomGalleryBar extends ConsumerWidget {
       if (asset.isImage && !isInLockedView)
         {
           BottomNavigationBarItem(
-            icon: const Icon(Icons.tune_outlined),
+            icon: Icon(context.platformIcon(material: Icons.tune_outlined, cupertino: CupertinoIcons.slider_horizontal_3)),
             label: 'edit'.tr(),
             tooltip: 'edit'.tr(),
           ): (_) =>
@@ -269,12 +277,16 @@ class BottomGalleryBar extends ConsumerWidget {
         {
           asset.isArchived
               ? BottomNavigationBarItem(
-                  icon: const Icon(Icons.unarchive_rounded),
+                  icon: Icon(
+                    context.platformIcon(material: Icons.unarchive_rounded, cupertino: CupertinoIcons.archivebox),
+                  ),
                   label: 'unarchive'.tr(),
                   tooltip: 'unarchive'.tr(),
                 )
               : BottomNavigationBarItem(
-                  icon: const Icon(Icons.archive_outlined),
+                  icon: Icon(
+                    context.platformIcon(material: Icons.archive_outlined, cupertino: CupertinoIcons.archivebox),
+                  ),
                   label: 'archive'.tr(),
                   tooltip: 'archive'.tr(),
                 ): (_) =>
@@ -283,7 +295,12 @@ class BottomGalleryBar extends ConsumerWidget {
       if (isOwner && asset.stackCount > 0 && !isInLockedView)
         {
           BottomNavigationBarItem(
-            icon: const Icon(Icons.burst_mode_outlined),
+            icon: Icon(
+              context.platformIcon(
+                material: Icons.burst_mode_outlined,
+                cupertino: CupertinoIcons.square_stack_3d_up,
+              ),
+            ),
             label: 'stack'.tr(),
             tooltip: 'stack'.tr(),
           ): (_) =>
@@ -292,7 +309,7 @@ class BottomGalleryBar extends ConsumerWidget {
       if (isOwner && !isInAlbum)
         {
           BottomNavigationBarItem(
-            icon: const Icon(Icons.delete_outline),
+            icon: Icon(context.platformIcons.deleteOutline),
             label: 'delete'.tr(),
             tooltip: 'delete'.tr(),
           ): (_) =>
@@ -301,7 +318,7 @@ class BottomGalleryBar extends ConsumerWidget {
       if (!isOwner)
         {
           BottomNavigationBarItem(
-            icon: const Icon(Icons.download_outlined),
+            icon: Icon(context.platformIcon(material: Icons.download_outlined, cupertino: CupertinoIcons.cloud_download)),
             label: 'download'.tr(),
             tooltip: 'download'.tr(),
           ): (_) =>
@@ -310,7 +327,9 @@ class BottomGalleryBar extends ConsumerWidget {
       if (isInAlbum)
         {
           BottomNavigationBarItem(
-            icon: const Icon(Icons.remove_circle_outline),
+            icon: Icon(
+              context.platformIcon(material: Icons.remove_circle_outline, cupertino: CupertinoIcons.minus_circle),
+            ),
             label: 'remove_from_album'.tr(),
             tooltip: 'remove_from_album'.tr(),
           ): (_) =>

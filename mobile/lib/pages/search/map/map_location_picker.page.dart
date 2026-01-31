@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -57,7 +58,7 @@ class MapLocationPickerPage extends HookConsumerWidget {
       mapBuilder: (style) => Builder(
         builder: (ctx) => PlatformScaffold(
           backgroundColor: ctx.themeData.cardColor,
-          appBar: _buildAppBar(onClose: onClose),
+          appBar: _buildAppBar(context, onClose: onClose),
           body: style.widgetWhen(
             onData: (style) => Container(
               clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -92,7 +93,7 @@ class MapLocationPickerPage extends HookConsumerWidget {
   }
 }
 
-PlatformAppBar _buildAppBar({required VoidCallback onClose}) {
+PlatformAppBar _buildAppBar(BuildContext context, {required VoidCallback onClose}) {
   return PlatformAppBar(
     automaticallyImplyLeading: false,
     backgroundColor: Colors.transparent,
@@ -101,7 +102,7 @@ PlatformAppBar _buildAppBar({required VoidCallback onClose}) {
       child: ElevatedButton(
         onPressed: onClose,
         style: ElevatedButton.styleFrom(shape: const CircleBorder()),
-        child: const Icon(Icons.arrow_back_ios_new_rounded),
+        child: Icon(context.platformIcons.back),
       ),
     ),
     material: (_, __) => MaterialAppBarData(elevation: 0),
@@ -128,7 +129,7 @@ class _BottomBar extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.public, size: 18),
+                Icon(context.platformIcon(material: Icons.public, cupertino: CupertinoIcons.globe), size: 18),
                 const SizedBox(width: 15),
                 ValueListenableBuilder(
                   valueListenable: selectedLatLng,
@@ -144,7 +145,10 @@ class _BottomBar extends StatelessWidget {
                   onPressed: onUseLocation,
                   child: const Text("map_location_picker_page_use_location").tr(),
                 ),
-                ElevatedButton(onPressed: onGetCurrentLocation, child: const Icon(Icons.my_location)),
+                ElevatedButton(
+                  onPressed: onGetCurrentLocation,
+                  child: Icon(context.platformIcon(material: Icons.my_location, cupertino: CupertinoIcons.location)),
+                ),
               ],
             ),
           ],

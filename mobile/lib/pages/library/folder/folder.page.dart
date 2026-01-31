@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -77,7 +78,14 @@ class FolderPage extends HookConsumerWidget {
       appBar: PlatformAppBar(
         title: Text(currentFolder.value?.name ?? tr("folders")),
         material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
-        trailingActions: [IconButton(icon: const Icon(Icons.swap_vert), onPressed: onToggleSortOrder)],
+        trailingActions: [
+          IconButton(
+            icon: Icon(
+              context.platformIcon(material: Icons.swap_vert, cupertino: CupertinoIcons.arrow_up_arrow_down),
+            ),
+            onPressed: onToggleSortOrder,
+          ),
+        ],
       ),
       body: folderState.when(
         data: (rootFolder) {
@@ -146,7 +154,11 @@ class FolderContent extends HookConsumerWidget {
                   if (folder!.subfolders.isNotEmpty)
                     ...folder!.subfolders.map(
                       (subfolder) => LargeLeadingTile(
-                        leading: Icon(Icons.folder, color: context.primaryColor, size: 48),
+                        leading: Icon(
+                          context.platformIcon(material: Icons.folder, cupertino: CupertinoIcons.folder),
+                          color: context.primaryColor,
+                          size: 48,
+                        ),
                         title: Text(
                           subfolder.name,
                           softWrap: false,

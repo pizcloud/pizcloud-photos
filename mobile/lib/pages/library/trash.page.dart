@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -130,8 +131,8 @@ class TrashPage extends HookConsumerWidget {
                   selection.value = {};
                 },
           icon: !selectionEnabledHook.value
-              ? const Icon(Icons.arrow_back_ios_rounded)
-              : const Icon(Icons.close_rounded),
+              ? Icon(context.platformIcons.back)
+              : Icon(context.platformIcons.clear),
         ),
         automaticallyImplyLeading: false,
         title: Text(getAppBarTitle(count)),
@@ -163,7 +164,10 @@ class TrashPage extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton.icon(
-                    icon: Icon(Icons.delete_forever, color: Colors.red[400]),
+                    icon: Icon(
+                      context.platformIcon(material: Icons.delete_forever, cupertino: CupertinoIcons.delete),
+                      color: Colors.red[400],
+                    ),
                     label: Text(
                       selection.value.isEmpty ? 'trash_page_delete_all'.tr() : 'delete'.tr(),
                       style: TextStyle(fontSize: 14, color: Colors.red[400], fontWeight: FontWeight.bold),
@@ -175,7 +179,9 @@ class TrashPage extends HookConsumerWidget {
                         : handlePermanentDelete,
                   ),
                   TextButton.icon(
-                    icon: const Icon(Icons.history_rounded),
+                    icon: Icon(
+                      context.platformIcon(material: Icons.history_rounded, cupertino: CupertinoIcons.clock),
+                    ),
                     label: Text(
                       selection.value.isEmpty ? 'trash_page_restore_all'.tr() : 'restore'.tr(),
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),

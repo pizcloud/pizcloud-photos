@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -83,9 +84,11 @@ class DriftBackupAssetDetailPage extends ConsumerWidget {
                         child: Thumbnail.fromAsset(asset: asset, size: const Size(64, 64), fit: BoxFit.cover),
                       ),
                     ),
-                    trailing: const Padding(
-                      padding: EdgeInsets.only(right: 24, left: 8),
-                      child: Icon(Icons.image_search),
+                    trailing: Padding(
+                      padding: const EdgeInsets.only(right: 24, left: 8),
+                      child: Icon(
+                        context.platformIcon(material: Icons.image_search, cupertino: CupertinoIcons.search),
+                      ),
                     ),
                     onTap: () async {
                       await context.maybePop();

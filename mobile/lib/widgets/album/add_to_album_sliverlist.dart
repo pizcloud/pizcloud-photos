@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/providers/album/album_sort_by_options.provider.dart';
 import 'package:immich_mobile/widgets/album/album_thumbnail_listtile.dart';
@@ -39,7 +41,7 @@ class AddToAlbumSliverList extends HookConsumerWidget {
             child: ExpansionTile(
               title: Text('shared'.tr()),
               tilePadding: const EdgeInsets.symmetric(horizontal: 10.0),
-              leading: const Icon(Icons.group),
+              leading: Icon(context.platformIcon(material: Icons.group, cupertino: CupertinoIcons.person_2)),
               children: [
                 ListView.builder(
                   shrinkWrap: true,

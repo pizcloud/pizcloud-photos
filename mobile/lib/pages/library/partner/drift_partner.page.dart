@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -115,7 +116,7 @@ class DriftPartnerPage extends HookConsumerWidget {
           IconButton(
             // onPressed: potentialPartnersAsync.whenOrNull(data: (data) => addNewUsersHandler), // pizcloud
             onPressed: addNewUsersHandler, // pizcloud
-            icon: const Icon(Icons.person_add),
+            icon: Icon(context.platformIcon(material: Icons.person_add, cupertino: CupertinoIcons.person_add)),
             tooltip: "add_partner".tr(),
           ),
         ],
@@ -152,7 +153,7 @@ class _SharedToPartnerList extends ConsumerWidget {
                   alignment: Alignment.center,
                   child: ElevatedButton.icon(
                     onPressed: onAddPartner,
-                    icon: const Icon(Icons.person_add),
+                    icon: Icon(context.platformIcon(material: Icons.person_add, cupertino: CupertinoIcons.person_add)),
                     label: const Text("add_partner").tr(),
                   ),
                 ),
@@ -169,7 +170,12 @@ class _SharedToPartnerList extends ConsumerWidget {
               leading: PartnerUserAvatar(partner: partner),
               title: Text(partner.name),
               subtitle: Text(partner.email),
-              trailing: IconButton(icon: const Icon(Icons.person_remove), onPressed: () => onDeletePartner(partner)),
+              trailing: IconButton(
+                icon: Icon(
+                  context.platformIcon(material: Icons.person_remove, cupertino: CupertinoIcons.person_crop_circle_badge_minus),
+                ),
+                onPressed: () => onDeletePartner(partner),
+              ),
             );
           },
         );

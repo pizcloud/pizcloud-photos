@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -19,7 +20,7 @@ class AllPlacesPage extends HookConsumerWidget {
     return PlatformScaffold(
       appBar: PlatformAppBar(
         title: const Text('places').tr(),
-        leading: IconButton(onPressed: () => context.maybePop(), icon: const Icon(Icons.arrow_back_ios_rounded)),
+        leading: IconButton(onPressed: () => context.maybePop(), icon: Icon(context.platformIcons.back)),
       ),
       body: places.widgetWhen(onData: (data) => ExploreGrid(curatedContent: data)),
     );

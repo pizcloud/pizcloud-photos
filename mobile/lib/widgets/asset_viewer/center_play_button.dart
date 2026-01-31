@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/widgets/asset_viewer/animated_play_pause.dart';
 
 class CenterPlayButton extends StatelessWidget {
@@ -34,7 +36,13 @@ class CenterPlayButton extends StatelessWidget {
                 iconSize: 32,
                 padding: const EdgeInsets.all(12.0),
                 icon: isFinished
-                    ? Icon(Icons.replay, color: iconColor)
+                    ? Icon(
+                        context.platformIcon(
+                          material: Icons.replay,
+                          cupertino: CupertinoIcons.arrow_clockwise,
+                        ),
+                        color: iconColor,
+                      )
                     : AnimatedPlayPause(color: iconColor, playing: isPlaying),
                 onPressed: onPressed,
               ),

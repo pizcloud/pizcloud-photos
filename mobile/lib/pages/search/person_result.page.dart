@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
@@ -48,7 +49,7 @@ class PersonResultPage extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.edit_outlined),
+                  leading: Icon(context.platformIcon(material: Icons.edit_outlined, cupertino: CupertinoIcons.pencil)),
                   title: const Text('edit_name', style: TextStyle(fontWeight: FontWeight.bold)).tr(),
                   onTap: showEditNameDialog,
                 ),
@@ -80,8 +81,13 @@ class PersonResultPage extends HookConsumerWidget {
     return PlatformScaffold(
       appBar: PlatformAppBar(
         title: Text(name.value),
-        leading: IconButton(onPressed: () => context.maybePop(), icon: const Icon(Icons.arrow_back_ios_rounded)),
-        trailingActions: [IconButton(onPressed: buildBottomSheet, icon: const Icon(Icons.more_vert_rounded))],
+        leading: IconButton(onPressed: () => context.maybePop(), icon: Icon(context.platformIcons.back)),
+        trailingActions: [
+          IconButton(
+            onPressed: buildBottomSheet,
+            icon: Icon(context.platformIcon(material: Icons.more_vert_rounded, cupertino: CupertinoIcons.ellipsis)),
+          ),
+        ],
       ),
       body: MultiselectGrid(
         renderListProvider: personAssetsProvider(personId),

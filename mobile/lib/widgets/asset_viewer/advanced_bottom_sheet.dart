@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -50,7 +52,11 @@ class AdvancedBottomSheet extends HookConsumerWidget {
                                 );
                               });
                             },
-                            icon: Icon(Icons.copy, size: 16.0, color: context.primaryColor),
+                            icon: Icon(
+                              context.platformIcon(material: Icons.copy, cupertino: CupertinoIcons.doc_on_doc),
+                              size: 16.0,
+                              color: context.primaryColor,
+                            ),
                           ),
                         ),
                         SelectableText(

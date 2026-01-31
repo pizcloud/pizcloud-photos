@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/album.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -32,7 +34,11 @@ class AlbumThumbnailCard extends ConsumerWidget {
             width: cardSize,
             decoration: BoxDecoration(color: context.colorScheme.surfaceContainerHigh),
             child: Center(
-              child: Icon(Icons.no_photography, size: cardSize * .15, color: context.colorScheme.primary),
+              child: Icon(
+                context.platformIcon(material: Icons.no_photography, cupertino: CupertinoIcons.photo),
+                size: cardSize * .15,
+                color: context.colorScheme.primary,
+              ),
             ),
           );
         }

@@ -1,7 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/entities/album.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
@@ -26,7 +28,9 @@ class AlbumThumbnailListTile extends StatelessWidget {
         child: SizedBox(
           height: cardSize,
           width: cardSize,
-          child: const Center(child: Icon(Icons.no_photography)),
+          child: Center(
+            child: Icon(context.platformIcon(material: Icons.no_photography, cupertino: CupertinoIcons.photo)),
+          ),
         ),
       );
     }
@@ -40,7 +44,12 @@ class AlbumThumbnailListTile extends StatelessWidget {
         imageUrl: getAlbumThumbnailUrl(album, type: AssetMediaSize.thumbnail),
         httpHeaders: ApiService.getRequestHeaders(),
         cacheKey: getAlbumThumbNailCacheKey(album, type: AssetMediaSize.thumbnail),
-        errorWidget: (context, url, error) => const Icon(Icons.image_not_supported_outlined),
+        errorWidget: (context, url, error) => Icon(
+          context.platformIcon(
+            material: Icons.image_not_supported_outlined,
+            cupertino: CupertinoIcons.exclamationmark_triangle,
+          ),
+        ),
       );
     }
 

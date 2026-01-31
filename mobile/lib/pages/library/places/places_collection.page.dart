@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
@@ -43,7 +44,9 @@ class PlacesCollectionPage extends HookConsumerWidget {
             : Text('places'.tr()),
         trailingActions: [
           IconButton(
-            icon: Icon(search.value != null ? Icons.close : Icons.search),
+            icon: Icon(
+              search.value != null ? context.platformIcons.clear : context.platformIcons.search,
+            ),
             onPressed: () {
               search.value = search.value == null ? '' : null;
             },
@@ -131,7 +134,12 @@ class PlaceTile extends StatelessWidget {
           fit: BoxFit.cover,
           imageUrl: thumbnailUrl,
           httpHeaders: ApiService.getRequestHeaders(),
-          errorWidget: (context, url, error) => const Icon(Icons.image_not_supported_outlined),
+          errorWidget: (context, url, error) => Icon(
+            context.platformIcon(
+              material: Icons.image_not_supported_outlined,
+              cupertino: CupertinoIcons.exclamationmark_triangle,
+            ),
+          ),
         ),
       ),
     );

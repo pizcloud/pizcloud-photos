@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -90,7 +91,7 @@ class PartnerPage extends HookConsumerWidget {
                   leading: userAvatar(context, users[index]),
                   title: Text(users[index].email, style: context.textTheme.bodyLarge),
                   trailing: IconButton(
-                    icon: const Icon(Icons.person_remove),
+                    icon: Icon(context.platformIcon(material: Icons.person_remove, cupertino: CupertinoIcons.person_crop_circle_badge_minus)),
                     onPressed: () => onDeleteUser(users[index]),
                   ),
                 );
@@ -110,7 +111,7 @@ class PartnerPage extends HookConsumerWidget {
                     alignment: Alignment.center,
                     child: ElevatedButton.icon(
                       onPressed: availableUsers.whenOrNull(data: (data) => addNewUsersHandler),
-                      icon: const Icon(Icons.person_add),
+                      icon: Icon(context.platformIcon(material: Icons.person_add, cupertino: CupertinoIcons.person_add)),
                       label: const Text("add_partner").tr(),
                     ),
                   ),
@@ -127,7 +128,7 @@ class PartnerPage extends HookConsumerWidget {
         trailingActions: [
           IconButton(
             onPressed: availableUsers.whenOrNull(data: (data) => addNewUsersHandler),
-            icon: const Icon(Icons.person_add),
+            icon: Icon(context.platformIcon(material: Icons.person_add, cupertino: CupertinoIcons.person_add)),
             tooltip: "add_partner".tr(),
           ),
         ],
