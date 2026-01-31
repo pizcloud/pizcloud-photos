@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -119,7 +120,7 @@ class _MesmerizingSliverAppBarState extends ConsumerState<PersonSliverAppBar> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
+            context.platformIcons.back,
             color: Color.lerp(Colors.white, context.primaryColor, _scrollProgress),
             shadows: [
               _scrollProgress < 0.95
@@ -133,7 +134,11 @@ class _MesmerizingSliverAppBarState extends ConsumerState<PersonSliverAppBar> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.more_vert, color: actionIconColor, shadows: actionIconShadows),
+            icon: Icon(
+              context.platformIcon(material: Icons.more_vert, cupertino: CupertinoIcons.ellipsis),
+              color: actionIconColor,
+              shadows: actionIconShadows,
+            ),
             onPressed: widget.onShowOptions,
           ),
         ],
@@ -150,7 +155,7 @@ class _MesmerizingSliverAppBarState extends ConsumerState<PersonSliverAppBar> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            Platform.isIOS ? Icons.arrow_back_ios_new_rounded : Icons.arrow_back,
+            context.platformIcons.back,
             color: Color.lerp(Colors.white, context.primaryColor, _scrollProgress),
             shadows: [
               _scrollProgress < 0.95
@@ -164,7 +169,11 @@ class _MesmerizingSliverAppBarState extends ConsumerState<PersonSliverAppBar> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.more_vert, color: actionIconColor, shadows: actionIconShadows),
+            icon: Icon(
+              context.platformIcon(material: Icons.more_vert, cupertino: CupertinoIcons.ellipsis),
+              color: actionIconColor,
+              shadows: actionIconShadows,
+            ),
             onPressed: widget.onShowOptions,
           ),
         ],
@@ -319,7 +328,11 @@ class _ExpandedBackgroundState extends ConsumerState<_ExpandedBackground> with S
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.cake_rounded, color: Colors.white, size: 14),
+                            Icon(
+                              context.platformIcon(material: Icons.cake_rounded, cupertino: CupertinoIcons.gift),
+                              color: Colors.white,
+                              size: 14,
+                            ),
                             const SizedBox(width: 4),
 
                             if (widget.person.birthDate != null)

@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/domain/models/exif.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 
@@ -13,7 +15,10 @@ class CameraInfo extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.all(0),
       dense: true,
-      leading: Icon(Icons.camera, color: textColor.withAlpha(200)),
+      leading: Icon(
+        context.platformIcon(material: Icons.camera, cupertino: CupertinoIcons.camera),
+        color: textColor.withAlpha(200),
+      ),
       title: Text("${exifInfo.make} ${exifInfo.model}", style: context.textTheme.labelLarge),
       subtitle: exifInfo.f != null || exifInfo.exposureSeconds != null || exifInfo.mm != null || exifInfo.iso != null
           ? Text(

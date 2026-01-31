@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/colors.dart';
@@ -89,9 +91,9 @@ class PrimaryColorSetting extends HookConsumerWidget {
                     borderRadius: const BorderRadius.all(Radius.circular(100)),
                     color: Colors.grey[900]?.withValues(alpha: .4),
                   ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(3),
-                    child: Icon(Icons.check_rounded, color: Colors.white, size: 25),
+                  child: Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: Icon(context.platformIcons.checkMark, color: Colors.white, size: 25),
                   ),
                 ),
               ),

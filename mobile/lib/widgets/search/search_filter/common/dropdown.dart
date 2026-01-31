@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 
 class SearchDropdown<T> extends StatelessWidget {
   const SearchDropdown({
@@ -33,8 +35,12 @@ class SearchDropdown<T> extends StatelessWidget {
           dropdownMenuEntries: dropdownMenuEntries,
           label: label,
           menuStyle: menuStyle,
-          trailingIcon: const Icon(Icons.arrow_drop_down_rounded),
-          selectedTrailingIcon: const Icon(Icons.arrow_drop_up_rounded),
+          trailingIcon: Icon(
+            context.platformIcon(material: Icons.arrow_drop_down_rounded, cupertino: CupertinoIcons.chevron_down),
+          ),
+          selectedTrailingIcon: Icon(
+            context.platformIcon(material: Icons.arrow_drop_up_rounded, cupertino: CupertinoIcons.chevron_up),
+          ),
           onSelected: onSelected,
         );
       },

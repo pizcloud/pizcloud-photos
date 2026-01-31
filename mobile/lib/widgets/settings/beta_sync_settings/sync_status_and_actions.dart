@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/platform_extensions.dart';
@@ -122,7 +124,9 @@ class SyncStatusAndActions extends HookConsumerWidget {
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             subtitle: Text("tap_to_run_job".t(context: context)),
-            leading: const Icon(Icons.sync),
+            leading: Icon(
+              context.platformIcon(material: Icons.sync, cupertino: CupertinoIcons.arrow_2_circlepath),
+            ),
             trailing: _SyncStatusIcon(status: ref.watch(syncStatusProvider).localSyncStatus),
             onTap: () {
               ref.read(backgroundSyncProvider).syncLocal(full: true);
@@ -134,7 +138,9 @@ class SyncStatusAndActions extends HookConsumerWidget {
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             subtitle: Text("tap_to_run_job".t(context: context)),
-            leading: const Icon(Icons.cloud_sync),
+            leading: Icon(
+              context.platformIcon(material: Icons.cloud_sync, cupertino: CupertinoIcons.cloud_upload),
+            ),
             trailing: _SyncStatusIcon(status: ref.watch(syncStatusProvider).remoteSyncStatus),
             onTap: () {
               ref.read(backgroundSyncProvider).syncRemote();
@@ -145,7 +151,9 @@ class SyncStatusAndActions extends HookConsumerWidget {
               "hash_asset".t(context: context),
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
-            leading: const Icon(Icons.tag),
+            leading: Icon(
+              context.platformIcon(material: Icons.tag, cupertino: CupertinoIcons.tag),
+            ),
             subtitle: Text("tap_to_run_job".t(context: context)),
             trailing: _SyncStatusIcon(status: ref.watch(syncStatusProvider).hashJobStatus),
             onTap: () {
@@ -160,7 +168,9 @@ class SyncStatusAndActions extends HookConsumerWidget {
               "clear_file_cache".t(context: context),
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
-            leading: const Icon(Icons.playlist_remove_rounded),
+            leading: Icon(
+              context.platformIcon(material: Icons.playlist_remove_rounded, cupertino: CupertinoIcons.trash),
+            ),
             onTap: clearFileCache,
           ),
           ListTile(
@@ -169,7 +179,9 @@ class SyncStatusAndActions extends HookConsumerWidget {
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             subtitle: Text("export_database_description".t(context: context)),
-            leading: const Icon(Icons.download),
+            leading: Icon(
+              context.platformIcon(material: Icons.download, cupertino: CupertinoIcons.cloud_download),
+            ),
             onTap: exportDatabase,
           ),
           ListTile(
@@ -177,7 +189,13 @@ class SyncStatusAndActions extends HookConsumerWidget {
               "reset_sqlite".t(context: context),
               style: TextStyle(color: context.colorScheme.error, fontWeight: FontWeight.w500),
             ),
-            leading: Icon(Icons.settings_backup_restore_rounded, color: context.colorScheme.error),
+            leading: Icon(
+              context.platformIcon(
+                material: Icons.settings_backup_restore_rounded,
+                cupertino: CupertinoIcons.arrow_counterclockwise,
+              ),
+              color: context.colorScheme.error,
+            ),
             onTap: () async {
               await resetSqliteDb(context);
             },
@@ -196,10 +214,27 @@ class _SyncStatusIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (status) {
-      SyncStatus.idle => const Icon(Icons.pause_circle_outline_rounded),
+      SyncStatus.idle => Icon(
+        context.platformIcon(
+          material: Icons.pause_circle_outline_rounded,
+          cupertino: CupertinoIcons.pause_circle,
+        ),
+      ),
       SyncStatus.syncing => const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)),
-      SyncStatus.success => const Icon(Icons.check_circle_outline, color: Colors.green),
-      SyncStatus.error => Icon(Icons.error_outline, color: context.colorScheme.error),
+      SyncStatus.success => Icon(
+        context.platformIcon(
+          material: Icons.check_circle_outline,
+          cupertino: CupertinoIcons.check_mark_circled,
+        ),
+        color: Colors.green,
+      ),
+      SyncStatus.error => Icon(
+        context.platformIcon(
+          material: Icons.error_outline,
+          cupertino: CupertinoIcons.exclamationmark_triangle,
+        ),
+        color: context.colorScheme.error,
+      ),
     };
   }
 }
@@ -293,14 +328,17 @@ class _SyncStatsCounts extends ConsumerWidget {
                     child: EntitiyCountTile(
                       label: "local".t(context: context),
                       count: localAssetCount,
-                      icon: Icons.smartphone,
+                      icon: context.platformIcon(
+                        material: Icons.smartphone,
+                        cupertino: CupertinoIcons.device_phone_portrait,
+                      ),
                     ),
                   ),
                   Expanded(
                     child: EntitiyCountTile(
                       label: "remote".t(context: context),
                       count: remoteAssetCount,
-                      icon: Icons.cloud,
+                      icon: context.platformIcon(material: Icons.cloud, cupertino: CupertinoIcons.cloud),
                     ),
                   ),
                 ],
@@ -318,14 +356,17 @@ class _SyncStatsCounts extends ConsumerWidget {
                     child: EntitiyCountTile(
                       label: "local".t(context: context),
                       count: localAlbumCount,
-                      icon: Icons.smartphone,
+                      icon: context.platformIcon(
+                        material: Icons.smartphone,
+                        cupertino: CupertinoIcons.device_phone_portrait,
+                      ),
                     ),
                   ),
                   Expanded(
                     child: EntitiyCountTile(
                       label: "remote".t(context: context),
                       count: remoteAlbumCount,
-                      icon: Icons.cloud,
+                      icon: context.platformIcon(material: Icons.cloud, cupertino: CupertinoIcons.cloud),
                     ),
                   ),
                 ],
@@ -343,14 +384,17 @@ class _SyncStatsCounts extends ConsumerWidget {
                     child: EntitiyCountTile(
                       label: "memories".t(context: context),
                       count: memoryCount,
-                      icon: Icons.calendar_today,
+                      icon: context.platformIcon(
+                        material: Icons.calendar_today,
+                        cupertino: CupertinoIcons.calendar,
+                      ),
                     ),
                   ),
                   Expanded(
                     child: EntitiyCountTile(
                       label: "hashed_assets".t(context: context),
                       count: localHashedCount,
-                      icon: Icons.tag,
+                      icon: context.platformIcon(material: Icons.tag, cupertino: CupertinoIcons.tag),
                     ),
                   ),
                 ],
@@ -375,14 +419,17 @@ class _SyncStatsCounts extends ConsumerWidget {
                             child: EntitiyCountTile(
                               label: "local".t(context: context),
                               count: c.total,
-                              icon: Icons.delete_outline,
+                              icon: context.platformIcon(
+                                material: Icons.delete_outline,
+                                cupertino: CupertinoIcons.delete,
+                              ),
                             ),
                           ),
                           Expanded(
                             child: EntitiyCountTile(
                               label: "hashed_assets".t(context: context),
                               count: c.hashed,
-                              icon: Icons.tag,
+                              icon: context.platformIcon(material: Icons.tag, cupertino: CupertinoIcons.tag),
                             ),
                           ),
                         ],

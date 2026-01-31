@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/widgets/backup/asset_info_table.dart';
 import 'package:immich_mobile/widgets/backup/error_chip.dart';
@@ -16,7 +18,11 @@ class CurrentUploadingAssetInfoBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       isThreeLine: true,
-      leading: Icon(Icons.image_outlined, color: context.primaryColor, size: 30),
+      leading: Icon(
+        context.platformIcon(material: Icons.image_outlined, cupertino: CupertinoIcons.photo),
+        color: context.primaryColor,
+        size: 30,
+      ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

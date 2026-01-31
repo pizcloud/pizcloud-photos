@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -130,7 +132,11 @@ class LocalNetworkPreference extends HookConsumerWidget {
                 Positioned(
                   bottom: -36,
                   right: -36,
-                  child: Icon(Icons.home_outlined, size: 120, color: context.primaryColor.withValues(alpha: 0.05)),
+                  child: Icon(
+                    context.platformIcon(material: Icons.home_outlined, cupertino: CupertinoIcons.home),
+                    size: 120,
+                    color: context.primaryColor.withValues(alpha: 0.05),
+                  ),
                 ),
                 ListView(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -146,7 +152,9 @@ class LocalNetworkPreference extends HookConsumerWidget {
                     ListTile(
                       enabled: enabled,
                       contentPadding: const EdgeInsets.only(left: 24, right: 8),
-                      leading: const Icon(Icons.wifi_rounded),
+                      leading: Icon(
+                        context.platformIcon(material: Icons.wifi_rounded, cupertino: CupertinoIcons.wifi),
+                      ),
                       title: Text("wifi_name".tr()),
                       subtitle: wifiNameText.value.isEmpty
                           ? Text("enter_wifi_name".tr())
@@ -160,13 +168,17 @@ class LocalNetworkPreference extends HookConsumerWidget {
                             ),
                       trailing: IconButton(
                         onPressed: enabled ? handleEditWifiName : null,
-                        icon: const Icon(Icons.edit_rounded),
+                        icon: Icon(
+                          context.platformIcon(material: Icons.edit_rounded, cupertino: CupertinoIcons.pencil),
+                        ),
                       ),
                     ),
                     ListTile(
                       enabled: enabled,
                       contentPadding: const EdgeInsets.only(left: 24, right: 8),
-                      leading: const Icon(Icons.lan_rounded),
+                      leading: Icon(
+                        context.platformIcon(material: Icons.lan_rounded, cupertino: CupertinoIcons.globe),
+                      ),
                       title: Text("server_endpoint".tr()),
                       subtitle: localEndpointText.value.isEmpty
                           ? const Text("http://local-ip:2283")
@@ -180,7 +192,9 @@ class LocalNetworkPreference extends HookConsumerWidget {
                             ),
                       trailing: IconButton(
                         onPressed: enabled ? handleEditServerEndpoint : null,
-                        icon: const Icon(Icons.edit_rounded),
+                        icon: Icon(
+                          context.platformIcon(material: Icons.edit_rounded, cupertino: CupertinoIcons.pencil),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -189,7 +203,9 @@ class LocalNetworkPreference extends HookConsumerWidget {
                       child: SizedBox(
                         height: 48,
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.wifi_find_rounded),
+                          icon: Icon(
+                            context.platformIcon(material: Icons.wifi_find_rounded, cupertino: CupertinoIcons.wifi),
+                          ),
                           label: Text('use_current_connection'.tr().toUpperCase()),
                           onPressed: enabled ? autofillCurrentNetwork : null,
                         ),

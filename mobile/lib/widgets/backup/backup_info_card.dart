@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
@@ -95,7 +97,11 @@ class BackupInfoCard extends StatelessWidget {
                 "view_details".t(context: context),
                 style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurface.withAlpha(200)),
               ),
-              trailing: Icon(Icons.arrow_forward_ios, size: 16, color: context.colorScheme.onSurfaceVariant),
+              trailing: Icon(
+                context.platformIcons.rightChevron,
+                size: 16,
+                color: context.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ],

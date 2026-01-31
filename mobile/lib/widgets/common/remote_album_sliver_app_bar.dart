@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -129,26 +130,41 @@ class _MesmerizingSliverAppBarState extends ConsumerState<RemoteAlbumSliverAppBa
             ? const SizedBox.shrink()
             : IconButton(
                 icon: Icon(
-                  Icons.arrow_back_ios_new_rounded,
+                  context.platformIcons.back,
                   color: actionIconColor,
                   shadows: actionIconShadows,
                 ),
                 onPressed: () => context.maybePop(),
               ),
         actions: [
-          if (widget.onToggleAlbumOrder != null)
-            IconButton(
-              icon: Icon(Icons.swap_vert_rounded, color: actionIconColor, shadows: actionIconShadows),
-              onPressed: widget.onToggleAlbumOrder,
-            ),
-          if (currentAlbum.isActivityEnabled && currentAlbum.isShared)
-            IconButton(
-              icon: Icon(Icons.chat_outlined, color: actionIconColor, shadows: actionIconShadows),
-              onPressed: widget.onActivity,
-            ),
+            if (widget.onToggleAlbumOrder != null)
+              IconButton(
+                icon: Icon(
+                  context.platformIcon(
+                    material: Icons.swap_vert_rounded,
+                    cupertino: CupertinoIcons.arrow_up_arrow_down,
+                  ),
+                  color: actionIconColor,
+                  shadows: actionIconShadows,
+                ),
+                onPressed: widget.onToggleAlbumOrder,
+              ),
+            if (currentAlbum.isActivityEnabled && currentAlbum.isShared)
+              IconButton(
+                icon: Icon(
+                  context.platformIcon(material: Icons.chat_outlined, cupertino: CupertinoIcons.chat_bubble),
+                  color: actionIconColor,
+                  shadows: actionIconShadows,
+                ),
+                onPressed: widget.onActivity,
+              ),
           if (widget.onShowOptions != null)
             IconButton(
-              icon: Icon(Icons.more_vert, color: actionIconColor, shadows: actionIconShadows),
+              icon: Icon(
+                context.platformIcon(material: Icons.more_vert, cupertino: CupertinoIcons.ellipsis),
+                color: actionIconColor,
+                shadows: actionIconShadows,
+              ),
               onPressed: widget.onShowOptions,
             ),
         ],
@@ -168,7 +184,7 @@ class _MesmerizingSliverAppBarState extends ConsumerState<RemoteAlbumSliverAppBa
             ? const SizedBox.shrink()
             : IconButton(
                 icon: Icon(
-                  Platform.isIOS ? Icons.arrow_back_ios_new_rounded : Icons.arrow_back,
+                  context.platformIcons.back,
                   color: actionIconColor,
                   shadows: actionIconShadows,
                 ),
@@ -177,17 +193,32 @@ class _MesmerizingSliverAppBarState extends ConsumerState<RemoteAlbumSliverAppBa
         actions: [
           if (widget.onToggleAlbumOrder != null)
             IconButton(
-              icon: Icon(Icons.swap_vert_rounded, color: actionIconColor, shadows: actionIconShadows),
+              icon: Icon(
+                context.platformIcon(
+                  material: Icons.swap_vert_rounded,
+                  cupertino: CupertinoIcons.arrow_up_arrow_down,
+                ),
+                color: actionIconColor,
+                shadows: actionIconShadows,
+              ),
               onPressed: widget.onToggleAlbumOrder,
             ),
           if (currentAlbum.isActivityEnabled && currentAlbum.isShared)
             IconButton(
-              icon: Icon(Icons.chat_outlined, color: actionIconColor, shadows: actionIconShadows),
+              icon: Icon(
+                context.platformIcon(material: Icons.chat_outlined, cupertino: CupertinoIcons.chat_bubble),
+                color: actionIconColor,
+                shadows: actionIconShadows,
+              ),
               onPressed: widget.onActivity,
             ),
           if (widget.onShowOptions != null)
             IconButton(
-              icon: Icon(Icons.more_vert, color: actionIconColor, shadows: actionIconShadows),
+              icon: Icon(
+                context.platformIcon(material: Icons.more_vert, cupertino: CupertinoIcons.ellipsis),
+                color: actionIconColor,
+                shadows: actionIconShadows,
+              ),
               onPressed: widget.onShowOptions,
             ),
         ],

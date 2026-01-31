@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 
 // Error widget to be used in Scaffold when an AsyncError is received
@@ -21,7 +23,10 @@ class ScaffoldErrorBody extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(top: 15),
               child: Icon(
-                Icons.error_outline,
+                context.platformIcon(
+                  material: Icons.error_outline,
+                  cupertino: CupertinoIcons.exclamationmark_triangle,
+                ),
                 size: 100,
                 color: context.themeData.iconTheme.color?.withValues(alpha: 0.5),
               ),

@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
@@ -38,7 +40,10 @@ class FileInfo extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.all(0),
       dense: true,
-      leading: Icon(Icons.image, color: textColor.withAlpha(200)),
+      leading: Icon(
+        context.platformIcon(material: Icons.image, cupertino: CupertinoIcons.photo),
+        color: textColor.withAlpha(200),
+      ),
       titleAlignment: ListTileTitleAlignment.center,
       title: Text(title, style: context.textTheme.labelLarge),
       subtitle: subtitle == null ? null : Text(subtitle),

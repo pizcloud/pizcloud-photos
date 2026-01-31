@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/duration_extensions.dart';
@@ -144,13 +146,20 @@ class _DateTimePicker extends HookWidget {
               const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
               1,
             ),
-            trailing: Icon(Icons.edit_outlined, size: 18, color: context.primaryColor),
+            trailing: Icon(
+              context.platformIcon(material: Icons.edit_outlined, cupertino: CupertinoIcons.pencil),
+              size: 18,
+              color: context.primaryColor,
+            ),
             title: Text(DateFormat("dd-MM-yyyy hh:mm a").format(date.value), style: context.textTheme.bodyMedium),
             onTap: pickDate,
           ),
           const SizedBox(height: 24),
           DropdownSearchMenu(
-            trailingIcon: Icon(Icons.arrow_drop_down, color: context.primaryColor),
+            trailingIcon: Icon(
+              context.platformIcon(material: Icons.arrow_drop_down, cupertino: CupertinoIcons.chevron_down),
+              color: context.primaryColor,
+            ),
             hintText: "timezone".tr(),
             label: const Text('timezone').tr(),
             textStyle: context.textTheme.bodyMedium,

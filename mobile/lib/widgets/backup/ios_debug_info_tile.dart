@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
@@ -43,7 +45,10 @@ class IosDebugInfoTile extends HookConsumerWidget {
         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: context.primaryColor),
       ),
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 14)),
-      leading: Icon(Icons.bug_report, color: context.primaryColor),
+      leading: Icon(
+        context.platformIcon(material: Icons.bug_report, cupertino: CupertinoIcons.ant),
+        color: context.primaryColor,
+      ),
     );
   }
 }

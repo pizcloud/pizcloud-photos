@@ -54,7 +54,7 @@ class _MesmerizingSliverAppBarState extends ConsumerState<MesmerizingSliverAppBa
 
     final leading = IconButton(
       icon: Icon(
-        Platform.isIOS ? Icons.arrow_back_ios_new_rounded : Icons.arrow_back,
+        context.platformIcons.back,
         color: Color.lerp(Colors.white, context.primaryColor, _scrollProgress),
         shadows: [
           _scrollProgress < 0.95

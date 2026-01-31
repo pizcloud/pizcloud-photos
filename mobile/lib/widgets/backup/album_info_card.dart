@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -171,7 +173,11 @@ class AlbumInfoCard extends HookConsumerWidget {
                     onPressed: () {
                       context.pushRoute(AlbumPreviewRoute(album: album.album));
                     },
-                    icon: Icon(Icons.image_outlined, color: context.primaryColor, size: 24),
+                    icon: Icon(
+                      context.platformIcon(material: Icons.image_outlined, cupertino: CupertinoIcons.photo),
+                      color: context.primaryColor,
+                      size: 24,
+                    ),
                     splashRadius: 25,
                   ),
                 ],

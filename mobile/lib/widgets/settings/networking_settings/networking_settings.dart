@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -92,7 +94,10 @@ class NetworkingSettings extends HookConsumerWidget {
           padding: const EdgeInsets.only(top: 8, left: 16, bottom: 8),
           child: NetworkPreferenceTitle(
             title: "current_server_address".tr().toUpperCase(),
-            icon: (currentEndpoint?.startsWith('https') ?? false) ? Icons.https_outlined : Icons.http_outlined,
+            icon: context.platformIcon(
+              material: (currentEndpoint?.startsWith('https') ?? false) ? Icons.https_outlined : Icons.http_outlined,
+              cupertino: CupertinoIcons.lock,
+            ),
           ),
         ),
         Padding(
@@ -105,8 +110,19 @@ class NetworkingSettings extends HookConsumerWidget {
             ),
             child: ListTile(
               leading: currentEndpoint != null
-                  ? const Icon(Icons.check_circle_rounded, color: Colors.green)
-                  : const Icon(Icons.circle_outlined),
+                  ? Icon(
+                      context.platformIcon(
+                        material: Icons.check_circle_rounded,
+                        cupertino: CupertinoIcons.check_mark_circled_solid,
+                      ),
+                      color: Colors.green,
+                    )
+                  : Icon(
+                      context.platformIcon(
+                        material: Icons.circle_outlined,
+                        cupertino: CupertinoIcons.circle,
+                      ),
+                    ),
               title: Text(
                 currentEndpoint ?? "--",
                 style: TextStyle(
@@ -131,12 +147,18 @@ class NetworkingSettings extends HookConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.only(top: 8, left: 16, bottom: 16),
-          child: NetworkPreferenceTitle(title: "local_network".tr().toUpperCase(), icon: Icons.home_outlined),
+          child: NetworkPreferenceTitle(
+            title: "local_network".tr().toUpperCase(),
+            icon: context.platformIcon(material: Icons.home_outlined, cupertino: CupertinoIcons.home),
+          ),
         ),
         LocalNetworkPreference(enabled: featureEnabled.value),
         Padding(
           padding: const EdgeInsets.only(top: 32, left: 16, bottom: 16),
-          child: NetworkPreferenceTitle(title: "external_network".tr().toUpperCase(), icon: Icons.dns_outlined),
+          child: NetworkPreferenceTitle(
+            title: "external_network".tr().toUpperCase(),
+            icon: context.platformIcon(material: Icons.dns_outlined, cupertino: CupertinoIcons.globe),
+          ),
         ),
         ExternalNetworkPreference(enabled: featureEnabled.value),
       ],
@@ -190,16 +212,43 @@ class NetworkStatusIcon extends StatelessWidget {
     ),
     AuxCheckStatus.valid =>
       enabled
-          ? const Icon(Icons.check_circle_rounded, color: Colors.green, key: ValueKey('success'))
+          ? Icon(
+              context.platformIcon(
+                material: Icons.check_circle_rounded,
+                cupertino: CupertinoIcons.check_mark_circled_solid,
+              ),
+              color: Colors.green,
+              key: const ValueKey('success'),
+            )
           : Icon(
-              Icons.check_circle_rounded,
+              context.platformIcon(
+                material: Icons.check_circle_rounded,
+                cupertino: CupertinoIcons.check_mark_circled_solid,
+              ),
               color: context.colorScheme.onSurface.withAlpha(100),
               key: const ValueKey('success'),
             ),
     AuxCheckStatus.error =>
       enabled
-          ? const Icon(Icons.error_rounded, color: Colors.red, key: ValueKey('error'))
-          : const Icon(Icons.error_rounded, color: Colors.grey, key: ValueKey('error')),
-    _ => const Icon(Icons.circle_outlined, key: ValueKey('unknown')),
+          ? Icon(
+              context.platformIcon(
+                material: Icons.error_rounded,
+                cupertino: CupertinoIcons.exclamationmark_triangle,
+              ),
+              color: Colors.red,
+              key: const ValueKey('error'),
+            )
+          : Icon(
+              context.platformIcon(
+                material: Icons.error_rounded,
+                cupertino: CupertinoIcons.exclamationmark_triangle,
+              ),
+              color: Colors.grey,
+              key: const ValueKey('error'),
+            ),
+    _ => Icon(
+      context.platformIcon(material: Icons.circle_outlined, cupertino: CupertinoIcons.circle),
+      key: const ValueKey('unknown'),
+    ),
   };
 }

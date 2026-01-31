@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -98,14 +100,19 @@ class EndpointInputState extends ConsumerState<EndpointInput> {
         color: Colors.red,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: Icon(
+          context.platformIcon(material: Icons.delete, cupertino: CupertinoIcons.delete),
+          color: Colors.white,
+        ),
       ),
       child: PlatformListTile(
         title: const SizedBox.shrink(),
         trailing: ReorderableDragStartListener(
           enabled: widget.enabled,
           index: widget.index,
-          child: const Icon(Icons.drag_handle_rounded),
+          child: Icon(
+            context.platformIcon(material: Icons.drag_handle_rounded, cupertino: CupertinoIcons.line_horizontal_3),
+          ),
         ),
         leading: NetworkStatusIcon(
           key: ValueKey('status_$auxCheckStatus'),

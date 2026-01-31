@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/exif.model.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -29,7 +31,7 @@ class AssetLocation extends HookConsumerWidget {
           ? ListTile(
               minLeadingWidth: 0,
               contentPadding: const EdgeInsets.all(0),
-              leading: const Icon(Icons.location_on),
+              leading: Icon(context.platformIcon(material: Icons.location_on, cupertino: CupertinoIcons.location)),
               title: Text(
                 "add_a_location",
                 style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: context.primaryColor),
@@ -70,7 +72,11 @@ class AssetLocation extends HookConsumerWidget {
                 ),
               ).tr(),
               if (asset.isRemote)
-                IconButton(onPressed: editLocation, icon: const Icon(Icons.edit_outlined), iconSize: 20),
+                IconButton(
+                  onPressed: editLocation,
+                  icon: Icon(context.platformIcon(material: Icons.edit_outlined, cupertino: CupertinoIcons.pencil)),
+                  iconSize: 20,
+                ),
             ],
           ),
           asset.isRemote ? const SizedBox.shrink() : const SizedBox(height: 16),

@@ -1,5 +1,7 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/colors.dart';
 import 'package:immich_mobile/providers/backup/error_backup_list.provider.dart';
@@ -17,7 +19,10 @@ class BackupErrorChip extends ConsumerWidget {
     }
 
     return ActionChip(
-      avatar: const Icon(Icons.info, color: red400),
+      avatar: Icon(
+        context.platformIcon(material: Icons.info, cupertino: CupertinoIcons.info),
+        color: red400,
+      ),
       elevation: 1,
       visualDensity: VisualDensity.compact,
       label: const BackupErrorChipText(),

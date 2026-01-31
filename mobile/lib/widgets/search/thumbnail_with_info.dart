@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/widgets/search/thumbnail_with_info_container.dart';
 import 'package:immich_mobile/services/api.service.dart';
@@ -36,10 +38,24 @@ class ThumbnailWithInfo extends StatelessWidget {
                 fit: BoxFit.cover,
                 imageUrl: imageUrl!,
                 httpHeaders: ApiService.getRequestHeaders(),
-                errorWidget: (context, url, error) => const Icon(Icons.image_not_supported_outlined),
+                errorWidget: (context, url, error) => Icon(
+                  context.platformIcon(
+                    material: Icons.image_not_supported_outlined,
+                    cupertino: CupertinoIcons.exclamationmark_triangle,
+                  ),
+                ),
               ),
             )
-          : Center(child: Icon(noImageIcon ?? Icons.not_listed_location, color: textAndIconColor)),
+          : Center(
+              child: Icon(
+                noImageIcon ??
+                    context.platformIcon(
+                      material: Icons.not_listed_location,
+                      cupertino: CupertinoIcons.location,
+                    ),
+                color: textAndIconColor,
+              ),
+            ),
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
@@ -94,7 +96,11 @@ class ExternalNetworkPreference extends HookConsumerWidget {
             Positioned(
               bottom: -36,
               right: -36,
-              child: Icon(Icons.dns_rounded, size: 120, color: context.primaryColor.withValues(alpha: 0.05)),
+              child: Icon(
+                context.platformIcon(material: Icons.dns_rounded, cupertino: CupertinoIcons.globe),
+                size: 120,
+                color: context.primaryColor.withValues(alpha: 0.05),
+              ),
             ),
             ListView(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -134,7 +140,7 @@ class ExternalNetworkPreference extends HookConsumerWidget {
                   child: SizedBox(
                     height: 48,
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.add),
+                      icon: Icon(context.platformIcons.add),
                       label: Text('add_endpoint'.tr().toUpperCase()),
                       onPressed: enabled
                           ? () {

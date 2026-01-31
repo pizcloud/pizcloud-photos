@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
 import 'package:immich_mobile/extensions/asset_extensions.dart';
@@ -37,7 +39,12 @@ class AssetDateTime extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(formattedDateTime, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-        if (asset.isRemote) IconButton(onPressed: editDateTime, icon: const Icon(Icons.edit_outlined), iconSize: 20),
+        if (asset.isRemote)
+          IconButton(
+            onPressed: editDateTime,
+            icon: Icon(context.platformIcon(material: Icons.edit_outlined, cupertino: CupertinoIcons.pencil)),
+            iconSize: 20,
+          ),
       ],
     );
   }

@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/providers/backup/backup_verification.provider.dart';
@@ -48,7 +50,10 @@ class BackupSettings extends HookConsumerWidget {
         ),
       if (Platform.isAndroid && isAdvancedTroubleshooting.value)
         SettingsButtonListTile(
-          icon: Icons.warning_rounded,
+          icon: context.platformIcon(
+            material: Icons.warning_rounded,
+            cupertino: CupertinoIcons.exclamationmark_triangle,
+          ),
           title: 'check_corrupt_asset_backup'.tr(),
           subtitle: isCorruptCheckInProgress
               ? const Column(
@@ -67,7 +72,10 @@ class BackupSettings extends HookConsumerWidget {
         ),
       if (albumSync.value)
         SettingsButtonListTile(
-          icon: Icons.photo_album_outlined,
+          icon: context.platformIcon(
+            material: Icons.photo_album_outlined,
+            cupertino: CupertinoIcons.photo_on_rectangle,
+          ),
           title: 'sync_albums'.tr(),
           subtitle: Text("sync_albums_manual_subtitle".tr()),
           buttonText: 'sync_albums'.tr(),

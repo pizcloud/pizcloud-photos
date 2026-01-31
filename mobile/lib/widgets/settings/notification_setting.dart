@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/providers/notification_permission.provider.dart';
@@ -49,7 +51,10 @@ class NotificationSetting extends HookConsumerWidget {
     final notificationSettings = [
       if (!hasPermission)
         SettingsButtonListTile(
-          icon: Icons.notifications_outlined,
+          icon: context.platformIcon(
+            material: Icons.notifications_outlined,
+            cupertino: CupertinoIcons.bell,
+          ),
           title: 'notification_permission_list_tile_title'.tr(),
           subtileText: 'notification_permission_list_tile_content'.tr(),
           buttonText: 'notification_permission_list_tile_enable_button'.tr(),

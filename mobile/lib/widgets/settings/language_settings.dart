@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -149,9 +151,9 @@ class _LanguageSearchBar extends StatelessWidget {
           autofocus: false,
           contentPadding: const EdgeInsets.all(12),
           hintText: 'language_search_hint'.t(context: context),
-          prefixIcon: const Icon(Icons.search_rounded),
+          prefixIcon: Icon(context.platformIcons.search),
           suffixIcon: controller.text.isNotEmpty
-              ? IconButton(icon: const Icon(Icons.clear_rounded), onPressed: onClear)
+              ? IconButton(icon: Icon(context.platformIcons.clear), onPressed: onClear)
               : null,
           controller: controller,
           onChanged: onChanged,
@@ -172,7 +174,11 @@ class _LanguageNotFound extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 64, color: context.colorScheme.onSurface.withValues(alpha: 0.4)),
+          Icon(
+            context.platformIcon(material: Icons.search_off_rounded, cupertino: CupertinoIcons.search),
+            size: 64,
+            color: context.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: 8),
           Text(
             'language_no_results_title'.t(context: context),
@@ -252,7 +258,7 @@ class _LanguageItem extends StatelessWidget {
               color: isSelected ? context.colorScheme.primary : context.colorScheme.onSurfaceVariant,
             ),
           ),
-          trailing: isSelected ? Icon(Icons.check, color: context.colorScheme.primary, size: 20) : null,
+          trailing: isSelected ? Icon(context.platformIcons.checkMark, color: context.colorScheme.primary, size: 20) : null,
           onTap: onTap,
           selected: isSelected,
           selectedTileColor: context.colorScheme.primary.withValues(alpha: .15),

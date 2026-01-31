@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/local_album.model.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
@@ -166,7 +168,12 @@ class _AlbumSyncActionButtonState extends ConsumerState<_AlbumSyncActionButton> 
                                   )
                                 : IconButton(
                                     onPressed: _manualSyncAlbums,
-                                    icon: const Icon(Icons.sync_rounded),
+                                    icon: Icon(
+                                      context.platformIcon(
+                                        material: Icons.sync_rounded,
+                                        cupertino: CupertinoIcons.arrow_2_circlepath,
+                                      ),
+                                    ),
                                     color: context.colorScheme.onSurface.withValues(alpha: 0.7),
                                     iconSize: 20,
                                     constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

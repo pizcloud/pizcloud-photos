@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
 
 class SettingsActionTile extends StatelessWidget {
@@ -66,7 +68,11 @@ class SettingsActionTile extends StatelessWidget {
           style: subtitleStyle ?? theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceSecondary),
         ),
       ),
-      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
+      trailing: Icon(
+        context.platformIcons.rightChevron,
+        size: 16,
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
       contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
     );
   }

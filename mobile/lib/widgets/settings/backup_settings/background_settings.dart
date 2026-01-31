@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -64,7 +66,7 @@ class BackgroundBackupSettings extends ConsumerWidget {
 
     if (!isBackgroundEnabled) {
       return SettingsButtonListTile(
-        icon: Icons.cloud_sync_outlined,
+        icon: context.platformIcon(material: Icons.cloud_sync_outlined, cupertino: CupertinoIcons.cloud_upload),
         title: 'backup_controller_page_background_is_off'.tr(),
         subtileText: 'backup_controller_page_background_description'.tr(),
         buttonText: 'backup_controller_page_background_turn_on'.tr(),
@@ -95,7 +97,7 @@ class _IOSBackgroundRefreshDisabled extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsButtonListTile(
-      icon: Icons.task_outlined,
+      icon: context.platformIcon(material: Icons.task_outlined, cupertino: CupertinoIcons.list_bullet),
       title: 'backup_controller_page_background_app_refresh_disabled_title'.tr(),
       subtileText: 'backup_controller_page_background_app_refresh_disabled_content'.tr(),
       buttonText: 'backup_controller_page_background_app_refresh_enable_button_text'.tr(),
@@ -162,7 +164,7 @@ class _BackgroundSettingsEnabled extends HookConsumerWidget {
     );
 
     return SettingsButtonListTile(
-      icon: Icons.cloud_sync_rounded,
+      icon: context.platformIcon(material: Icons.cloud_sync_rounded, cupertino: CupertinoIcons.cloud_upload),
       iconColor: context.primaryColor,
       title: 'backup_controller_page_background_is_on'.tr(),
       buttonText: 'backup_controller_page_background_turn_off'.tr(),
@@ -174,7 +176,7 @@ class _BackgroundSettingsEnabled extends HookConsumerWidget {
           SettingsSwitchListTile(
             valueNotifier: isWifiRequiredNotifier,
             title: 'backup_controller_page_background_wifi'.tr(),
-            icon: Icons.wifi,
+            icon: context.platformIcon(material: Icons.wifi, cupertino: CupertinoIcons.wifi),
             onChanged: (enabled) => ref
                 .read(backupProvider.notifier)
                 .configureBackgroundBackup(requireWifi: enabled, onError: onError, onBatteryInfo: onBatteryInfo),
@@ -182,7 +184,7 @@ class _BackgroundSettingsEnabled extends HookConsumerWidget {
           SettingsSwitchListTile(
             valueNotifier: isChargingRequiredNotifier,
             title: 'backup_controller_page_background_charging'.tr(),
-            icon: Icons.charging_station,
+            icon: context.platformIcon(material: Icons.charging_station, cupertino: CupertinoIcons.battery_charging),
             onChanged: (enabled) => ref
                 .read(backupProvider.notifier)
                 .configureBackgroundBackup(requireCharging: enabled, onError: onError, onBatteryInfo: onBatteryInfo),

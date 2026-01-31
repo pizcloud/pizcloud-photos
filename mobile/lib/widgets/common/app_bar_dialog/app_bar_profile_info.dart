@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
@@ -107,7 +109,14 @@ class AppBarProfileInfoBox extends HookConsumerWidget {
                       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(50.0))),
                       child: Padding(
                         padding: const EdgeInsets.all(5.0),
-                        child: Icon(Icons.camera_alt_outlined, color: context.primaryColor, size: 14),
+                        child: Icon(
+                          context.platformIcon(
+                            material: Icons.camera_alt_outlined,
+                            cupertino: CupertinoIcons.camera,
+                          ),
+                          color: context.primaryColor,
+                          size: 14,
+                        ),
                       ),
                     ),
                   ),
