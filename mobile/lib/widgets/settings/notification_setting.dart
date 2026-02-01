@@ -34,7 +34,7 @@ class NotificationSetting extends HookConsumerWidget {
     // When permissions are permanently denied, you need to go to settings to
     // allow them
     showPermissionsDialog() {
-      showDialog(
+      showPlatformDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           content: const Text('notification_permission_dialog_content').tr(),

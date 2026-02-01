@@ -10,6 +10,7 @@ import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/providers/theme.provider.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/theme/color_scheme.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/theme/dynamic_theme.dart';
 import 'package:immich_mobile/utils/hooks/app_settings_update_hook.dart';
 
@@ -153,11 +154,14 @@ class PrimaryColorSetting extends HookConsumerWidget {
     }
 
     return ListTile(
-      onTap: () => showModalBottomSheet(
+      onTap: () => showPlatformModalSheet(
         context: context,
-        isScrollControlled: true,
+        material: MaterialModalSheetData(isScrollControlled: true),
         builder: (BuildContext ctx) {
-          return Padding(padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 0), child: bottomSheetContent());
+          return platformSheetWrapper(
+            ctx,
+            Padding(padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 0), child: bottomSheetContent()),
+          );
         },
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),

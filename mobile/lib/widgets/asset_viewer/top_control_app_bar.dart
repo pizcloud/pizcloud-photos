@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -59,7 +60,13 @@ class TopControlAppBar extends HookConsumerWidget {
     Widget buildFavoriteButton(a) {
       return IconButton(
         onPressed: () => onFavorite(a),
-        icon: Icon(a.isFavorite ? Icons.favorite : Icons.favorite_border, color: Colors.grey[200]),
+        icon: Icon(
+          context.platformIcon(
+            material: a.isFavorite ? Icons.favorite : Icons.favorite_border,
+            cupertino: a.isFavorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+          ),
+          color: Colors.grey[200],
+        ),
       );
     }
 
@@ -68,7 +75,10 @@ class TopControlAppBar extends HookConsumerWidget {
         onPressed: () {
           onLocatePressed();
         },
-        icon: Icon(Icons.image_search, color: Colors.grey[200]),
+        icon: Icon(
+          context.platformIcon(material: Icons.image_search, cupertino: CupertinoIcons.search),
+          color: Colors.grey[200],
+        ),
       );
     }
 
@@ -77,14 +87,20 @@ class TopControlAppBar extends HookConsumerWidget {
         onPressed: () {
           onMoreInfoPressed();
         },
-        icon: Icon(Icons.info_outline_rounded, color: Colors.grey[200]),
+        icon: Icon(
+          context.platformIcon(material: Icons.info_outline_rounded, cupertino: CupertinoIcons.info),
+          color: Colors.grey[200],
+        ),
       );
     }
 
     Widget buildDownloadButton() {
       return IconButton(
         onPressed: onDownloadPressed,
-        icon: Icon(Icons.cloud_download_outlined, color: Colors.grey[200]),
+        icon: Icon(
+          context.platformIcon(material: Icons.cloud_download_outlined, cupertino: CupertinoIcons.cloud_download),
+          color: Colors.grey[200],
+        ),
       );
     }
 
@@ -93,7 +109,7 @@ class TopControlAppBar extends HookConsumerWidget {
         onPressed: () {
           onAddToAlbumPressed();
         },
-        icon: Icon(Icons.add, color: Colors.grey[200]),
+        icon: Icon(context.platformIcons.add, color: Colors.grey[200]),
       );
     }
 
@@ -102,7 +118,10 @@ class TopControlAppBar extends HookConsumerWidget {
         onPressed: () {
           onRestorePressed();
         },
-        icon: Icon(Icons.history_rounded, color: Colors.grey[200]),
+        icon: Icon(
+          context.platformIcon(material: Icons.history_rounded, cupertino: CupertinoIcons.clock),
+          color: Colors.grey[200],
+        ),
       );
     }
 
@@ -114,7 +133,10 @@ class TopControlAppBar extends HookConsumerWidget {
         icon: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(Icons.mode_comment_outlined, color: Colors.grey[200]),
+            Icon(
+              context.platformIcon(material: Icons.mode_comment_outlined, cupertino: CupertinoIcons.chat_bubble),
+              color: Colors.grey[200],
+            ),
             if (comments != 0)
               Padding(
                 padding: const EdgeInsets.only(left: 5),
@@ -131,7 +153,10 @@ class TopControlAppBar extends HookConsumerWidget {
     Widget buildUploadButton() {
       return IconButton(
         onPressed: onUploadPressed,
-        icon: Icon(Icons.backup_outlined, color: Colors.grey[200]),
+        icon: Icon(
+          context.platformIcon(material: Icons.backup_outlined, cupertino: CupertinoIcons.cloud_upload),
+          color: Colors.grey[200],
+        ),
       );
     }
 
@@ -140,17 +165,20 @@ class TopControlAppBar extends HookConsumerWidget {
         onPressed: () {
           context.maybePop();
         },
-        icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20.0, color: Colors.grey[200]),
+        icon: Icon(context.platformIcons.back, size: 20.0, color: Colors.grey[200]),
       );
     }
 
     Widget buildCastButton() {
       return IconButton(
         onPressed: () {
-          showDialog(context: context, builder: (context) => const CastDialog());
+          showPlatformDialog(context: context, builder: (context) => const CastDialog());
         },
         icon: Icon(
-          isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded,
+          context.platformIcon(
+            material: isCasting ? Icons.cast_connected_rounded : Icons.cast_rounded,
+            cupertino: CupertinoIcons.tv,
+          ),
           size: 20.0,
           color: isCasting ? context.primaryColor : Colors.grey[200],
         ),
@@ -177,6 +205,9 @@ class TopControlAppBar extends HookConsumerWidget {
       ],
       cupertino: (_, __) => CupertinoNavigationBarData(
         transitionBetweenRoutes: false,
+        padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
+        backgroundColor: Colors.black.withAlpha(140),
+        border: null,
       ),
       material: (_, __) => MaterialAppBarData(
         foregroundColor: Colors.grey[100],

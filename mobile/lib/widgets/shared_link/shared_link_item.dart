@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -92,7 +93,7 @@ class SharedLinkItem extends ConsumerWidget {
     }
 
     Future<void> deleteShareLink() async {
-      return showDialog(
+      return showPlatformDialog(
         context: context,
         builder: (BuildContext context) {
           return ConfirmDialog(

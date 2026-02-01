@@ -31,7 +31,7 @@ class NetworkingSettings extends HookConsumerWidget {
       bool? isGrantLocationAlwaysPermission;
 
       if (!hasLocationInUse) {
-        await showDialog(
+        await showPlatformDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
@@ -53,7 +53,7 @@ class NetworkingSettings extends HookConsumerWidget {
       }
 
       if (!hasLocationAlways) {
-        isGrantLocationAlwaysPermission = await showDialog(
+        isGrantLocationAlwaysPermission = await showPlatformDialog(
           context: context,
           builder: (context) {
             return AlertDialog(

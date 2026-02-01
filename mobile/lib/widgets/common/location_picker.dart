@@ -11,7 +11,7 @@ import 'package:immich_mobile/routing/router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 Future<LatLng?> showLocationPicker({required BuildContext context, LatLng? initialLatLng}) {
-  return showDialog<LatLng?>(
+  return showPlatformDialog<LatLng?>(
     context: context,
     useRootNavigator: false,
     builder: (ctx) => _LocationPicker(initialLatLng: initialLatLng),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:immich_mobile/models/map/map_marker.model.dart';
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
@@ -70,7 +71,7 @@ class MapUtils {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled && !silent) {
-        unawaited(showDialog(context: context, builder: (context) => _LocationServiceDisabledDialog()));
+        unawaited(showPlatformDialog(context: context, builder: (context) => _LocationServiceDisabledDialog()));
         return (null, LocationPermission.deniedForever);
       }
 
@@ -78,7 +79,7 @@ class MapUtils {
       bool shouldRequestPermission = false;
 
       if (permission == LocationPermission.denied && !silent) {
-        shouldRequestPermission = await showDialog(
+        shouldRequestPermission = await showPlatformDialog(
           context: context,
           builder: (context) => _LocationPermissionDisabledDialog(),
         );

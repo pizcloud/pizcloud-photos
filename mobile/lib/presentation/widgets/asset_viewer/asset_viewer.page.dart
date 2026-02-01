@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -724,7 +725,15 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
                 right: 0,
                 child: SafeArea(
                   bottom: false,
-                  child: const ViewerTopAppBar(),
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        child: const ViewerTopAppBar(),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             if (isCupertino(context))

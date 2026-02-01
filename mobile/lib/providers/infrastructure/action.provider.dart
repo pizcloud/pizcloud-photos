@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/constants/enums.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/services/asset.service.dart';
@@ -267,7 +268,7 @@ class ActionNotifier extends Notifier<void> {
     final assets = _getAssets(source);
     bool? backedUpOnly = assets.every((asset) => asset.storage == AssetState.merged)
         ? true
-        : await showDialog<bool>(
+        : await showPlatformDialog<bool>(
             context: context,
             builder: (BuildContext context) => DeleteLocalOnlyDialog(onDeleteLocal: (_) {}),
           );

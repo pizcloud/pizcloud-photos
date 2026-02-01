@@ -15,6 +15,7 @@ import 'package:immich_mobile/providers/album/album_viewer.provider.dart';
 import 'package:immich_mobile/providers/album/current_album.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 
 class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidget {
   const AlbumViewerAppbar({
@@ -74,7 +75,7 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
     }
 
     Future<void> onDeleteAlbumPressed() {
-      return showDialog<void>(
+      return showPlatformDialog<void>(
         context: context,
         barrierDismissible: false, // user must tap button!
         builder: (BuildContext context) {
@@ -217,13 +218,17 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
           title: const Text("add_photos", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
       ];
-      showModalBottomSheet(
-        backgroundColor: context.scaffoldBackgroundColor,
-        isScrollControlled: false,
+      showPlatformModalSheet(
         context: context,
+        material: MaterialModalSheetData(
+          backgroundColor: context.scaffoldBackgroundColor,
+          isScrollControlled: false,
+          useSafeArea: true,
+        ),
         builder: (context) {
-          return SafeArea(
-            child: Padding(
+          return platformSheetWrapper(
+            context,
+            Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: ListView(
                 shrinkWrap: true,
@@ -322,6 +327,11 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
       ],
       cupertino: (_, __) => CupertinoNavigationBarData(
         transitionBetweenRoutes: false,
+        padding: const EdgeInsetsDirectional.only(start: 12, end: 12),
+        backgroundColor: context.colorScheme.surface.withValues(alpha: 0.92),
+        border: Border(
+          bottom: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2)),
+        ),
       ),
       material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
     );

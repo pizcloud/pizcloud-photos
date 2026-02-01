@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/widgets/activities/activity_tile.dart';
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 
@@ -21,7 +22,7 @@ class DismissibleActivity extends StatelessWidget {
       dismissThresholds: const {DismissDirection.horizontal: 0.7},
       direction: DismissDirection.horizontal,
       confirmDismiss: (direction) => onDismiss != null
-          ? showDialog(
+          ? showPlatformDialog(
               context: context,
               builder: (context) => ConfirmDialog(
                 onOk: () {},

@@ -16,7 +16,7 @@ Future<String?> showDateTimePicker({
   String? initialTZ,
   Duration? initialTZOffset,
 }) {
-  return showDialog<String?>(
+  return showPlatformDialog<String?>(
     context: context,
     builder: (context) =>
         _DateTimePicker(initialDateTime: initialDateTime, initialTZ: initialTZ, initialTZOffset: initialTZOffset),

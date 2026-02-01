@@ -6,10 +6,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/pages/editing/edit.page.dart';
 import 'package:immich_mobile/providers/album/album.provider.dart';
@@ -116,7 +116,7 @@ class BottomGalleryBar extends ConsumerWidget {
 
       // Asset is permanently removed
       unawaited(
-        showDialog(
+        showPlatformDialog(
           context: context,
           builder: (BuildContext _) {
             return DeleteDialog(
@@ -141,12 +141,13 @@ class BottomGalleryBar extends ConsumerWidget {
     }
 
     void showStackActionItems() {
-      showModalBottomSheet<void>(
+      showPlatformModalSheet<void>(
         context: context,
-        enableDrag: false,
+        material: MaterialModalSheetData(enableDrag: false, useSafeArea: true),
         builder: (BuildContext ctx) {
-          return SafeArea(
-            child: Padding(
+          return platformSheetWrapper(
+            ctx,
+            Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

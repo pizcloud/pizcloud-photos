@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
@@ -17,7 +18,7 @@ import 'package:immich_mobile/widgets/common/share_dialog.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 void handleShareAssets(WidgetRef ref, BuildContext context, Iterable<Asset> selection) {
-  showDialog(
+  showPlatformDialog(
     context: context,
     builder: (BuildContext buildContext) {
       ref.watch(shareServiceProvider).shareAssets(selection.toList(), context).then((bool status) {

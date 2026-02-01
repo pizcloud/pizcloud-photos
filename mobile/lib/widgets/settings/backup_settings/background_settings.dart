@@ -33,7 +33,7 @@ class BackgroundBackupSettings extends ConsumerWidget {
     }
 
     void showBatteryOptimizationInfoToUser() {
-      showDialog<void>(
+      showPlatformDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext ctx) {

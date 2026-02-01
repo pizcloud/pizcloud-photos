@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -162,7 +163,7 @@ class DownloadStateNotifier extends StateNotifier<DownloadState> {
 
   void shareAsset(Asset asset, BuildContext context) async {
     unawaited(
-      showDialog(
+      showPlatformDialog(
         context: context,
         builder: (BuildContext buildContext) {
           _shareService.shareAsset(asset, context).then((bool status) {

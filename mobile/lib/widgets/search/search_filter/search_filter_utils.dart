@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 
 Future<T> showFilterBottomSheet<T>({
   required BuildContext context,
@@ -6,14 +8,16 @@ Future<T> showFilterBottomSheet<T>({
   bool isScrollControlled = false,
   bool isDismissible = true,
 }) async {
-  return await showModalBottomSheet(
+  return await showPlatformModalSheet(
     context: context,
-    isScrollControlled: isScrollControlled,
-    useSafeArea: false,
-    isDismissible: isDismissible,
-    showDragHandle: isDismissible,
+    material: MaterialModalSheetData(
+      isScrollControlled: isScrollControlled,
+      useSafeArea: false,
+      isDismissible: isDismissible,
+      showDragHandle: isDismissible,
+    ),
     builder: (BuildContext context) {
-      return child;
+      return platformSheetWrapper(context, child);
     },
   );
 }

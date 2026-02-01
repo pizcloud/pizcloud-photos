@@ -80,7 +80,7 @@ class SyncStatusAndActions extends HookConsumerWidget {
     }
 
     Future<void> resetSqliteDb(BuildContext context) {
-      return showDialog(
+      return showPlatformDialog(
         context: context,
         builder: (context) {
           return AlertDialog(

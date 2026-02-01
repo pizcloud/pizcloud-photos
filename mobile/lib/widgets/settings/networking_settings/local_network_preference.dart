@@ -18,7 +18,7 @@ class LocalNetworkPreference extends HookConsumerWidget {
   Future<String?> _showEditDialog(BuildContext context, String title, String hintText, String initialValue) {
     final controller = TextEditingController(text: initialValue);
 
-    return showDialog<String>(
+    return showPlatformDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),

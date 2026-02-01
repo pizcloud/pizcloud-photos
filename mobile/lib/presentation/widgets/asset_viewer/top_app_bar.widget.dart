@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -52,6 +53,7 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
         isOwner;
 
     final isShowingSheet = ref.watch(assetViewerProvider.select((state) => state.showingBottomSheet));
+    final barColor = Colors.transparent;
     int opacity = ref.watch(assetViewerProvider.select((state) => state.backgroundOpacity));
     final showControls = ref.watch(assetViewerProvider.select((s) => s.showingControls));
 
@@ -104,7 +106,7 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
         opacity: opacity / 255,
         duration: Durations.short2,
         child: PlatformAppBar(
-          backgroundColor: isShowingSheet ? Colors.transparent : Colors.black.withAlpha(125),
+          backgroundColor: barColor,
           leading: const _AppBarBackButton(),
           trailingActions: isShowingSheet || isReadonlyModeEnabled
               ? null
@@ -114,10 +116,15 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
           cupertino: (_, __) => CupertinoNavigationBarData(
             transitionBetweenRoutes: false,
             padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
-            backgroundColor: Colors.black.withAlpha(125),
+            backgroundColor: barColor,
             border: null,
           ),
           material: (_, __) => MaterialAppBarData(
+            backgroundColor: barColor,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            toolbarHeight: 50,
+            actionsPadding: const EdgeInsets.only(right: 4),
             iconTheme: const IconThemeData(size: 22, color: Colors.white),
             actionsIconTheme: const IconThemeData(size: 22, color: Colors.white),
             shape: const Border(),
@@ -140,7 +147,9 @@ class _KebabMenu extends ConsumerWidget {
       onPressed: () {
         EventStream.shared.emit(const ViewerOpenBottomSheetEvent());
       },
-      icon: const Icon(Icons.more_vert_rounded),
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      icon: Icon(context.platformIcon(material: Icons.more_vert_rounded, cupertino: CupertinoIcons.ellipsis)),
     );
   }
 }
@@ -151,22 +160,32 @@ class _AppBarBackButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isShowingSheet = ref.watch(assetViewerProvider.select((state) => state.showingBottomSheet));
-    final backgroundColor = isShowingSheet && !context.isDarkTheme ? Colors.white : Colors.black;
+    final backgroundColor = isShowingSheet && !context.isDarkTheme ? Colors.white : Colors.black.withAlpha(90);
     final foregroundColor = isShowingSheet && !context.isDarkTheme ? Colors.black : Colors.white;
 
     return Padding(
-      padding: const EdgeInsets.only(left: 12.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          shape: const CircleBorder(),
-          iconSize: 22,
-          iconColor: foregroundColor,
-          padding: EdgeInsets.zero,
-          elevation: isShowingSheet ? 4 : 0,
+      padding: const EdgeInsets.only(left: 8.0),
+      child: PlatformWidget(
+        cupertino: (_, __) => CupertinoButton(
+          padding: const EdgeInsets.all(6),
+          minSize: 32,
+          borderRadius: BorderRadius.circular(20),
+          color: backgroundColor.withAlpha(160),
+          onPressed: context.maybePop,
+          child: Icon(context.platformIcons.back, size: 20, color: foregroundColor),
         ),
-        onPressed: context.maybePop,
-        child: const Icon(Icons.arrow_back_rounded),
+        material: (_, __) => Material(
+          color: backgroundColor,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: context.maybePop,
+            child: Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: Icon(Icons.arrow_back_rounded, size: 20, color: foregroundColor),
+            ),
+          ),
+        ),
       ),
     );
   }

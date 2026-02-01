@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
@@ -61,7 +62,7 @@ class _SslClientCertSettingsState extends State<SslClientCertSettings> {
   }
 
   void showMessage(BuildContext context, String message) {
-    showDialog(
+    showPlatformDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         content: Text(message),
@@ -89,7 +90,7 @@ class _SslClientCertSettingsState extends State<SslClientCertSettings> {
 
   void setPassword(BuildContext context, Uint8List data) {
     final password = TextEditingController();
-    showDialog(
+    showPlatformDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(

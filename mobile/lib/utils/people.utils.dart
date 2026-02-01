@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/domain/models/person.model.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/presentation/widgets/people/person_edit_birthday_modal.widget.dart';
@@ -34,7 +35,7 @@ int _calculateAgeInMonths(DateTime birthDate, DateTime referenceDate) {
 }
 
 Future<String?> showNameEditModal(BuildContext context, DriftPerson person) {
-  return showDialog<String?>(
+  return showPlatformDialog<String?>(
     context: context,
     useRootNavigator: false,
     builder: (BuildContext context) {
@@ -44,7 +45,7 @@ Future<String?> showNameEditModal(BuildContext context, DriftPerson person) {
 }
 
 Future<DateTime?> showBirthdayEditModal(BuildContext context, DriftPerson person) {
-  return showDialog<DateTime?>(
+  return showPlatformDialog<DateTime?>(
     context: context,
     useRootNavigator: false,
     builder: (BuildContext context) {

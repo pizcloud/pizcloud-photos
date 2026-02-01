@@ -174,6 +174,11 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
       ),
       cupertino: (_, __) => CupertinoNavigationBarData(
         transitionBetweenRoutes: false,
+        padding: const EdgeInsetsDirectional.only(start: 12, end: 12),
+        backgroundColor: context.colorScheme.surface.withValues(alpha: 0.92),
+        border: Border(
+          bottom: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2)),
+        ),
       ),
       material: (_, __) => MaterialAppBarData(
       ),

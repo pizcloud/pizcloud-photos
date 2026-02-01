@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/providers/album/album.provider.dart';
@@ -10,6 +11,7 @@ import 'package:immich_mobile/providers/routes.provider.dart';
 import 'package:immich_mobile/widgets/album/add_to_album_sliverlist.dart';
 import 'package:immich_mobile/widgets/album/add_to_album_bottom_sheet.dart';
 import 'package:immich_mobile/models/asset_selection_state.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/widgets/asset_grid/delete_dialog.dart';
 import 'package:immich_mobile/widgets/asset_grid/upload_dialog.dart';
 import 'package:immich_mobile/providers/server_info.provider.dart';
@@ -96,7 +98,7 @@ class ControlBottomAppBar extends HookConsumerWidget {
     }, []);
 
     void showForceDeleteDialog(Function(bool) deleteCb, {String? alertMsg}) {
-      showDialog(
+      showPlatformDialog(
         context: context,
         builder: (BuildContext context) {
           return DeleteDialog(alert: alertMsg, onDelete: () => deleteCb(true));
@@ -106,12 +108,14 @@ class ControlBottomAppBar extends HookConsumerWidget {
 
     /// Show existing AddToAlbumBottomSheet
     void showAddToAlbumBottomSheet() {
-      showModalBottomSheet(
-        elevation: 0,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(15.0))),
+      showPlatformModalSheet(
         context: context,
-        builder: (BuildContext _) {
-          return AddToAlbumBottomSheet(assets: selectedAssets);
+        material: MaterialModalSheetData(
+          elevation: 0,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(15.0))),
+        ),
+        builder: (BuildContext sheetContext) {
+          return platformSheetWrapper(sheetContext, AddToAlbumBottomSheet(assets: selectedAssets));
         },
       );
     }
@@ -212,7 +216,7 @@ class ControlBottomAppBar extends HookConsumerWidget {
                         return onDeleteLocal?.call(true);
                       }
 
-                      showDialog(
+                      showPlatformDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return DeleteLocalOnlyDialog(onDeleteLocal: onDeleteLocal!);
@@ -272,7 +276,7 @@ class ControlBottomAppBar extends HookConsumerWidget {
             iconData: Icons.backup_outlined,
             label: "upload".tr(),
             onPressed: enabled
-                ? () => showDialog(
+                ? () => showPlatformDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return UploadDialog(onUpload: onUpload);

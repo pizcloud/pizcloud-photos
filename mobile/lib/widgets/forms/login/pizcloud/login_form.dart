@@ -5,6 +5,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -102,7 +103,7 @@ class LoginForm extends HookConsumerWidget {
     getManageMediaPermission() async {
       final hasPermission = await ref.read(localFilesManagerRepositoryProvider).hasManageMediaPermission();
       if (!hasPermission) {
-        await showDialog(
+        await showPlatformDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(

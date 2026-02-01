@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
 import 'package:immich_mobile/providers/asset.provider.dart';
 import 'package:immich_mobile/providers/backup/backup.provider.dart';
@@ -58,7 +59,7 @@ class BackupVerification extends _$BackupVerification {
         }
       } else {
         if (context.mounted) {
-          await showDialog(
+          await showPlatformDialog(
             context: context,
             builder: (ctx) => ConfirmDialog(
               onOk: () => _performDeletion(context, toDelete),

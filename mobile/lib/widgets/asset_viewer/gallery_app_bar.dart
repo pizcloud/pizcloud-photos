@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
@@ -10,6 +11,7 @@ import 'package:immich_mobile/providers/asset_viewer/current_asset.provider.dart
 import 'package:immich_mobile/providers/asset_viewer/download.provider.dart';
 import 'package:immich_mobile/providers/asset_viewer/scroll_to_date_notifier.provider.dart';
 import 'package:immich_mobile/providers/asset_viewer/show_controls.provider.dart';
+import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/providers/backup/manual_upload.provider.dart';
 import 'package:immich_mobile/providers/partner.provider.dart';
 import 'package:immich_mobile/providers/tab.provider.dart';
@@ -56,7 +58,7 @@ class GalleryAppBar extends ConsumerWidget {
     }
 
     handleUpload(Asset asset) {
-      showDialog(
+      showPlatformDialog(
         context: context,
         builder: (BuildContext _) {
           return UploadDialog(
@@ -69,12 +71,14 @@ class GalleryAppBar extends ConsumerWidget {
     }
 
     addToAlbum(Asset addToAlbumAsset) {
-      showModalBottomSheet(
-        elevation: 0,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(15.0))),
+      showPlatformModalSheet(
         context: context,
-        builder: (BuildContext _) {
-          return AddToAlbumBottomSheet(assets: [addToAlbumAsset]);
+        material: MaterialModalSheetData(
+          elevation: 0,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(15.0))),
+        ),
+        builder: (BuildContext sheetContext) {
+          return platformSheetWrapper(sheetContext, AddToAlbumBottomSheet(assets: [addToAlbumAsset]));
         },
       );
     }
