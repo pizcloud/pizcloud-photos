@@ -718,24 +718,7 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
               backgroundDecoration: BoxDecoration(color: backgroundColor),
               enablePanAlways: true,
             ),
-            if (isCupertino(context))
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: SafeArea(
-                  bottom: false,
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                      child: Container(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        child: const ViewerTopAppBar(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            if (isCupertino(context)) const Positioned(top: 0, left: 0, right: 0, child: ViewerTopAppBar()),
             if (isCupertino(context))
               Positioned(
                 right: 16,
@@ -754,17 +737,14 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: SafeArea(
-                  top: false,
-                  child: showingBottomSheet
-                      ? const SizedBox.shrink()
-                      : const Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [AssetStackRow(), ViewerBottomBar()],
-                        ),
-                ),
+                child: showingBottomSheet
+                    ? const SizedBox.shrink()
+                    : const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [AssetStackRow(), ViewerBottomBar()],
+                      ),
               ),
           ],
         ),

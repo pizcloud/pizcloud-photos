@@ -67,6 +67,22 @@ class AlbumAssetSelectionPage extends HookConsumerWidget {
               ).tr(),
             ),
         ],
+        cupertino: (_, __) => CupertinoNavigationBarData(
+          trailing: (selected.value.isNotEmpty || canDeselect)
+              ? CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  onPressed: () {
+                    var payload = AssetSelectionPageResult(selectedAssets: selected.value);
+                    AutoRouter.of(context).popForced<AssetSelectionPageResult>(payload);
+                  },
+                  child: Text(
+                    canDeselect ? "done" : "add",
+                    style: TextStyle(fontWeight: FontWeight.w600, color: context.primaryColor),
+                  ).tr(),
+                )
+              : null,
+        ),
         material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
       ),
       body: assetSelectionRenderList.widgetWhen(onData: (data) => buildBody(data)),

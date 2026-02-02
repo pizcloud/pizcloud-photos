@@ -126,13 +126,18 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
       return [
         album.ownerId == userId
             ? ListTile(
-                leading: Icon(context.platformIcon(material: Icons.delete_forever_rounded, cupertino: CupertinoIcons.delete)),
+                leading: Icon(
+                  context.platformIcon(material: Icons.delete_forever_rounded, cupertino: CupertinoIcons.delete),
+                ),
                 title: const Text('delete_album', style: TextStyle(fontWeight: FontWeight.w500)).tr(),
                 onTap: onDeleteAlbumPressed,
               )
             : ListTile(
                 leading: Icon(
-                  context.platformIcon(material: Icons.person_remove_rounded, cupertino: CupertinoIcons.person_crop_circle_badge_minus),
+                  context.platformIcon(
+                    material: Icons.person_remove_rounded,
+                    cupertino: CupertinoIcons.person_crop_circle_badge_minus,
+                  ),
                 ),
                 title: const Text(
                   'album_viewer_appbar_share_leave',
@@ -182,9 +187,7 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
           title: const Text("change_display_order", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
         ListTile(
-          leading: Icon(
-            context.platformIcon(material: Icons.link_rounded, cupertino: CupertinoIcons.link),
-          ),
+          leading: Icon(context.platformIcon(material: Icons.link_rounded, cupertino: CupertinoIcons.link)),
           onTap: () {
             context.pushRoute(SharedLinkEditRoute(albumId: album.remoteId));
             context.pop();
@@ -192,9 +195,7 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
           title: const Text("control_bottom_app_bar_share_link", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
         ListTile(
-          leading: Icon(
-            context.platformIcon(material: Icons.settings_rounded, cupertino: CupertinoIcons.settings),
-          ),
+          leading: Icon(context.platformIcon(material: Icons.settings_rounded, cupertino: CupertinoIcons.settings)),
           onTap: () => context.navigateTo(const AlbumOptionsRoute()),
           title: const Text("options", style: TextStyle(fontWeight: FontWeight.w500)).tr(),
         ),
@@ -228,15 +229,20 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
         builder: (context) {
           return platformSheetWrapper(
             context,
-            Padding(
-              padding: const EdgeInsets.only(top: 24.0),
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  ...buildBottomSheetActions(),
-                  if (onAddPhotos != null) ...commonActions,
-                  if (onAddPhotos != null && userId == album.ownerId) ...ownerActions,
-                ],
+            MediaQuery.removePadding(
+              context: context,
+              removeTop: true,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  children: [
+                    ...buildBottomSheetActions(),
+                    if (onAddPhotos != null) ...commonActions,
+                    if (onAddPhotos != null && userId == album.ownerId) ...ownerActions,
+                  ],
+                ),
               ),
             ),
           );
@@ -250,9 +256,7 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
         icon: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              context.platformIcon(material: Icons.mode_comment_outlined, cupertino: CupertinoIcons.chat_bubble),
-            ),
+            Icon(context.platformIcon(material: Icons.mode_comment_outlined, cupertino: CupertinoIcons.chat_bubble)),
             if (comments != 0)
               Padding(
                 padding: const EdgeInsets.only(left: 5),
@@ -304,11 +308,7 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
           splashRadius: 25,
         );
       } else {
-        return IconButton(
-          onPressed: context.maybePop,
-          icon: Icon(context.platformIcons.back),
-          splashRadius: 25,
-        );
+        return IconButton(onPressed: context.maybePop, icon: Icon(context.platformIcons.back), splashRadius: 25);
       }
     }
 
@@ -329,9 +329,7 @@ class AlbumViewerAppbar extends HookConsumerWidget implements PreferredSizeWidge
         transitionBetweenRoutes: false,
         padding: const EdgeInsetsDirectional.only(start: 12, end: 12),
         backgroundColor: context.colorScheme.surface.withValues(alpha: 0.92),
-        border: Border(
-          bottom: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2)),
-        ),
+        border: Border(bottom: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2))),
       ),
       material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
     );

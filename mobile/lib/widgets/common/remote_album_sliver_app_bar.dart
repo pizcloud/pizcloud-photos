@@ -129,35 +129,28 @@ class _MesmerizingSliverAppBarState extends ConsumerState<RemoteAlbumSliverAppBa
         leading: isMultiSelectEnabled
             ? const SizedBox.shrink()
             : IconButton(
-                icon: Icon(
-                  context.platformIcons.back,
-                  color: actionIconColor,
-                  shadows: actionIconShadows,
-                ),
+                icon: Icon(context.platformIcons.back, color: actionIconColor, shadows: actionIconShadows),
                 onPressed: () => context.maybePop(),
               ),
         actions: [
-            if (widget.onToggleAlbumOrder != null)
-              IconButton(
-                icon: Icon(
-                  context.platformIcon(
-                    material: Icons.swap_vert_rounded,
-                    cupertino: CupertinoIcons.arrow_up_arrow_down,
-                  ),
-                  color: actionIconColor,
-                  shadows: actionIconShadows,
-                ),
-                onPressed: widget.onToggleAlbumOrder,
+          if (widget.onToggleAlbumOrder != null)
+            IconButton(
+              icon: Icon(
+                context.platformIcon(material: Icons.swap_vert_rounded, cupertino: CupertinoIcons.arrow_up_arrow_down),
+                color: actionIconColor,
+                shadows: actionIconShadows,
               ),
-            if (currentAlbum.isActivityEnabled && currentAlbum.isShared)
-              IconButton(
-                icon: Icon(
-                  context.platformIcon(material: Icons.chat_outlined, cupertino: CupertinoIcons.chat_bubble),
-                  color: actionIconColor,
-                  shadows: actionIconShadows,
-                ),
-                onPressed: widget.onActivity,
+              onPressed: widget.onToggleAlbumOrder,
+            ),
+          if (currentAlbum.isActivityEnabled && currentAlbum.isShared)
+            IconButton(
+              icon: Icon(
+                context.platformIcon(material: Icons.chat_outlined, cupertino: CupertinoIcons.chat_bubble),
+                color: actionIconColor,
+                shadows: actionIconShadows,
               ),
+              onPressed: widget.onActivity,
+            ),
           if (widget.onShowOptions != null)
             IconButton(
               icon: Icon(
@@ -183,21 +176,14 @@ class _MesmerizingSliverAppBarState extends ConsumerState<RemoteAlbumSliverAppBa
         leading: isMultiSelectEnabled
             ? const SizedBox.shrink()
             : IconButton(
-                icon: Icon(
-                  context.platformIcons.back,
-                  color: actionIconColor,
-                  shadows: actionIconShadows,
-                ),
+                icon: Icon(context.platformIcons.back, color: actionIconColor, shadows: actionIconShadows),
                 onPressed: () => context.maybePop(),
               ),
         actions: [
           if (widget.onToggleAlbumOrder != null)
             IconButton(
               icon: Icon(
-                context.platformIcon(
-                  material: Icons.swap_vert_rounded,
-                  cupertino: CupertinoIcons.arrow_up_arrow_down,
-                ),
+                context.platformIcon(material: Icons.swap_vert_rounded, cupertino: CupertinoIcons.arrow_up_arrow_down),
                 color: actionIconColor,
                 shadows: actionIconShadows,
               ),

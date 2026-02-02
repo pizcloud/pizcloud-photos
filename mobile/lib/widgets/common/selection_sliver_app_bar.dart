@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -30,11 +31,24 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
     }
 
     final titleWidget = Text("Select {count}".t(context: context, args: {'count': filteredAssets.length.toString()}));
-    final doneButton = PlatformTextButton(
+    final doneButtonMaterial = TextButton(
       onPressed: () => onDone(filteredAssets),
       child: Text(
         'done'.t(context: context),
         style: context.textTheme.titleSmall?.copyWith(color: context.colorScheme.primary),
+      ),
+    );
+
+    final doneButtonCupertino = CupertinoButton(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      minimumSize: Size.zero,
+      onPressed: () => onDone(filteredAssets),
+      child: Text(
+        'done'.t(context: context),
+        style: TextStyle(
+          color: context.colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
 
@@ -56,7 +70,7 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
         centerTitle: true,
         title: titleWidget,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-        actions: [doneButton],
+        actions: [doneButtonMaterial],
       ),
       cupertino: (_, __) => CupertinoSliverAppBarData(
         automaticallyImplyTitle: false,
@@ -64,7 +78,7 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
         middle: titleWidget,
         alwaysShowMiddle: true,
         transitionBetweenRoutes: false,
-        trailing: doneButton,
+        trailing: doneButtonCupertino,
       ),
     );
   }

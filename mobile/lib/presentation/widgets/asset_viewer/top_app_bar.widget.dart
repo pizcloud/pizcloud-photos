@@ -100,34 +100,52 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       const _KebabMenu(),
     ];
 
+    final trailing = isShowingSheet || isReadonlyModeEnabled
+        ? null
+        : isInLockedView
+        ? lockedViewActions
+        : actions;
+
     return IgnorePointer(
       ignoring: opacity < 255,
       child: AnimatedOpacity(
         opacity: opacity / 255,
         duration: Durations.short2,
-        child: PlatformAppBar(
-          backgroundColor: barColor,
-          leading: const _AppBarBackButton(),
-          trailingActions: isShowingSheet || isReadonlyModeEnabled
-              ? null
-              : isInLockedView
-              ? lockedViewActions
-              : actions,
-          cupertino: (_, __) => CupertinoNavigationBarData(
-            transitionBetweenRoutes: false,
-            padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
-            backgroundColor: barColor,
-            border: null,
-          ),
-          material: (_, __) => MaterialAppBarData(
-            backgroundColor: barColor,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            toolbarHeight: 50,
-            actionsPadding: const EdgeInsets.only(right: 4),
+        child: Theme(
+          data: context.themeData.copyWith(
             iconTheme: const IconThemeData(size: 22, color: Colors.white),
-            actionsIconTheme: const IconThemeData(size: 22, color: Colors.white),
-            shape: const Border(),
+            textTheme: context.themeData.textTheme.copyWith(
+              labelLarge: context.themeData.textTheme.labelLarge?.copyWith(color: Colors.white),
+            ),
+          ),
+          child: Container(
+            height: context.padding.top + 52,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.black.withAlpha(70), Colors.black.withAlpha(110)],
+              ),
+            ),
+            padding: EdgeInsets.only(top: context.padding.top, left: 4, right: 4),
+            child: Align(
+              alignment: Alignment.center,
+              child: SizedBox(
+                height: 44,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const _AppBarBackButton(),
+                    const Spacer(),
+                    if (trailing != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Row(children: trailing),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -168,9 +186,9 @@ class _AppBarBackButton extends ConsumerWidget {
       child: PlatformWidget(
         cupertino: (_, __) => CupertinoButton(
           padding: const EdgeInsets.all(6),
-          minSize: 32,
+          minimumSize: const Size(32, 32),
           borderRadius: BorderRadius.circular(20),
-          color: backgroundColor.withAlpha(160),
+          color: backgroundColor.withAlpha(120),
           onPressed: context.maybePop,
           child: Icon(context.platformIcons.back, size: 20, color: foregroundColor),
         ),
