@@ -69,38 +69,67 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
 
     final navigationDestinations = [
       NavigationDestination(
-        label: 'photos'.tr(),
+        label: 'library'.tr(),
         icon: Icon(context.platformIcons.photoLibrary),
         selectedIcon: Icon(context.platformIcons.photoLibrarySolid, color: context.primaryColor),
       ),
       NavigationDestination(
-        label: 'search'.tr(),
-        icon: Icon(context.platformIcons.search),
-        selectedIcon: Icon(context.platformIcons.search, color: context.primaryColor),
+        label: 'backup'.tr(),
+        icon: Icon(context.platformIcons.cloudUploadSolid),
+        selectedIcon: Icon(context.platformIcons.cloudUploadSolid, color: context.primaryColor),
         enabled: !isReadonlyModeEnabled,
       ),
       NavigationDestination(
-        label: 'albums'.tr(),
-        icon: Icon(
-          context.platformIcon(material: Icons.photo_album_outlined, cupertino: CupertinoIcons.rectangle_stack),
-        ),
+        label: 'activity'.tr(),
+        icon: Icon(context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid)),
         selectedIcon: Icon(
-          context.platformIcon(material: Icons.photo_album_rounded, cupertino: CupertinoIcons.rectangle_stack_fill),
+          context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid),
           color: context.primaryColor,
         ),
         enabled: !isReadonlyModeEnabled,
       ),
       NavigationDestination(
-        label: 'library'.tr(),
-        icon: Icon(
-          context.platformIcon(material: Icons.space_dashboard_outlined, cupertino: CupertinoIcons.square_grid_2x2),
-        ),
+        label: 'settings'.tr(),
+        icon: Icon(context.platformIcon(material: Icons.settings, cupertino: CupertinoIcons.gear_solid)),
         selectedIcon: Icon(
-          context.platformIcon(material: Icons.space_dashboard_rounded, cupertino: CupertinoIcons.square_grid_2x2_fill),
+          context.platformIcon(material: Icons.settings, cupertino: CupertinoIcons.gear_solid),
           color: context.primaryColor,
         ),
         enabled: !isReadonlyModeEnabled,
       ),
+      // NavigationDestination(
+      //   label: 'photos'.tr(),
+      //   icon: Icon(context.platformIcons.photoLibrary),
+      //   selectedIcon: Icon(context.platformIcons.photoLibrarySolid, color: context.primaryColor),
+      // ),
+      // NavigationDestination(
+      //   label: 'search'.tr(),
+      //   icon: Icon(context.platformIcons.search),
+      //   selectedIcon: Icon(context.platformIcons.search, color: context.primaryColor),
+      //   enabled: !isReadonlyModeEnabled,
+      // ),
+      // NavigationDestination(
+      //   label: 'albums'.tr(),
+      //   icon: Icon(
+      //     context.platformIcon(material: Icons.photo_album_outlined, cupertino: CupertinoIcons.rectangle_stack),
+      //   ),
+      //   selectedIcon: Icon(
+      //     context.platformIcon(material: Icons.photo_album_rounded, cupertino: CupertinoIcons.rectangle_stack_fill),
+      //     color: context.primaryColor,
+      //   ),
+      //   enabled: !isReadonlyModeEnabled,
+      // ),
+      // NavigationDestination(
+      //   label: 'library'.tr(),
+      //   icon: Icon(
+      //     context.platformIcon(material: Icons.space_dashboard_outlined, cupertino: CupertinoIcons.square_grid_2x2),
+      //   ),
+      //   selectedIcon: Icon(
+      //     context.platformIcon(material: Icons.space_dashboard_rounded, cupertino: CupertinoIcons.square_grid_2x2_fill),
+      //     color: context.primaryColor,
+      //   ),
+      //   enabled: !isReadonlyModeEnabled,
+      // ),
     ];
 
     Widget navigationRail(TabsRouter tabsRouter) {
@@ -123,7 +152,8 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
     }
 
     return AutoTabsRouter(
-      routes: const [MainTimelineRoute(), DriftSearchRoute(), DriftAlbumsRoute(), DriftLibraryRoute()],
+      routes: const [MainTimelineRoute(), DriftBackupRoute(), DriftAlbumsRoute(), SettingsTabRoute()],
+      // routes: const [MainTimelineRoute(), DriftSearchRoute(), DriftAlbumsRoute(), DriftLibraryRoute()],
       duration: const Duration(milliseconds: 600),
       transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
       builder: (context, child) {
@@ -154,9 +184,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                   activeColor: context.primaryColor,
                   inactiveColor: context.colorScheme.onSurface.withValues(alpha: 0.6),
                   backgroundColor: context.colorScheme.surface.withValues(alpha: 0.94),
-                  border: Border(
-                    top: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2)),
-                  ),
+                  border: Border(top: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2))),
                 ),
                 material3: (_, __) => MaterialNavigationBarData(
                   items: navigationDestinations,

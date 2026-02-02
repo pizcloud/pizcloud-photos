@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
@@ -23,30 +24,24 @@ import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_profile_info.dart';
-// import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_server_info.dart';
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
-// import 'package:immich_mobile/widgets/common/immich_logo.dart';
-// import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/account_api.service.dart'; // pizcloud
 import 'package:immich_mobile/services/pizcloud/google.service.dart'; // pizcloud
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart'; // pizcloud
+import 'package:url_launcher/url_launcher.dart';
 
-class ImmichAppBarDialog extends HookConsumerWidget {
-  const ImmichAppBarDialog({super.key});
+@RoutePage()
+class SettingsTabPage extends HookConsumerWidget {
+  const SettingsTabPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(localeProvider);
     BackUpState backupState = ref.watch(backupProvider);
     final theme = context.themeData;
-    bool isHorizontal = !context.isMobile;
-    final horizontalPadding = isHorizontal ? 100.0 : 20.0;
     final user = ref.watch(currentUserProvider);
     final isLoggingOut = useState(false);
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
-
     final AccountApi accountApiService = AccountApi(); // pizcloud
 
     useEffect(() {
@@ -55,33 +50,11 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       return null;
     }, []);
 
-    buildTopRow() {
-      return SizedBox(
-        height: 56,
-        child: Stack(
-          alignment: Alignment.centerLeft,
-          children: [
-            PlatformIconButton(onPressed: () => context.pop(), icon: Icon(context.platformIcons.clear, size: 20)),
-            Align(
-              alignment: Alignment.center,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Image.asset(
-                  context.isDarkTheme ? 'assets/pizcloud-text-dark.png' : 'assets/pizcloud-text-light.png', // pizcloud
-                  height: 16,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    buildActionButton(IconData icon, String text, Function() onTap, {Widget? trailing}) {
+    Widget buildActionButton(IconData icon, String text, VoidCallback onTap, {Widget? trailing}) {
       return ListTile(
         dense: true,
         visualDensity: VisualDensity.standard,
-        contentPadding: const EdgeInsets.only(left: 30, right: 30),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 30),
         minLeadingWidth: 40,
         leading: SizedBox(child: Icon(icon, color: theme.textTheme.labelLarge?.color?.withAlpha(250), size: 20)),
         title: Text(
@@ -93,16 +66,16 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    buildSettingButton() {
+    Widget buildSettingButton() {
       return buildActionButton(
         context.platformIcon(material: Icons.settings_outlined, cupertino: CupertinoIcons.settings),
-        "settings",
+        "system_settings",
         () => context.pushRoute(const SettingsRoute()),
       );
     }
 
     // pizcloud
-    buildManageAccountButton() {
+    Widget buildManageAccountButton() {
       return buildActionButton(
         context.platformIcon(
           material: Icons.manage_accounts,
@@ -159,7 +132,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    buildReferralProgramButton() {
+    Widget buildReferralProgramButton() {
       return buildActionButton(
         context.platformIcon(material: Icons.wallet_giftcard, cupertino: CupertinoIcons.gift),
         "referral_program",
@@ -167,7 +140,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    buildDiscountCodeButton() {
+    Widget buildDiscountCodeButton() {
       return buildActionButton(
         context.platformIcon(material: Icons.price_check, cupertino: CupertinoIcons.tag),
         "referral.discount_code",
@@ -175,12 +148,12 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    removeServerCookies() async {
+    Future<void> removeServerCookies() async {
       await accountApiService.logout();
     }
     // #pizcloud
 
-    buildAppLogButton() {
+    Widget buildAppLogButton() {
       return buildActionButton(
         context.platformIcon(material: Icons.assignment_outlined, cupertino: CupertinoIcons.doc_text),
         "profile_drawer_app_logs",
@@ -188,7 +161,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    buildSignOutButton() {
+    Widget buildSignOutButton() {
       return buildActionButton(
         context.platformIcon(material: Icons.logout_rounded, cupertino: CupertinoIcons.square_arrow_left),
         "sign_out",
@@ -286,11 +259,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                       ),
                       label: const Text('upgrade').tr(),
                       onPressed: () {
-                        final root = context.router.root;
-                        context.pop();
-                        Future.microtask(() {
-                          root.push(const BillingRoute());
-                        });
+                        context.pushRoute(const BillingRoute());
                       },
                     ),
                   ),
@@ -303,7 +272,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    buildFooter() {
+    Widget buildFooter() {
       return Padding(
         padding: const EdgeInsets.only(top: 10, bottom: 20),
         child: Row(
@@ -312,71 +281,30 @@ class ImmichAppBarDialog extends HookConsumerWidget {
             // pizcloud
             InkWell(
               onTap: () {
-                context.pop();
-                launchUrl(
-                  Uri.parse('https://pizcloud.com/en/terms/'),
-                  mode: LaunchMode.externalApplication,
-                ); // pizcloud
+                launchUrl(Uri.parse('https://pizcloud.com/en/terms/'), mode: LaunchMode.externalApplication);
               },
               child: Text("terms", style: context.textTheme.bodySmall).tr(),
             ),
             const SizedBox(width: 20, child: Text("•", textAlign: TextAlign.center)),
             InkWell(
               onTap: () {
-                context.pop();
-                launchUrl(
-                  Uri.parse('https://pizcloud.com/en/privacy/'),
-                  mode: LaunchMode.externalApplication,
-                ); // pizcloud
+                launchUrl(Uri.parse('https://pizcloud.com/en/privacy/'), mode: LaunchMode.externalApplication);
               },
               child: Text("policy", style: context.textTheme.bodySmall).tr(),
             ),
-
-            // InkWell(
-            //   onTap: () {
-            //     context.pop();
-            //     launchUrl(Uri.parse('https://immich.app'), mode: LaunchMode.externalApplication);
-            //   },
-            //   child: Text("documentation", style: context.textTheme.bodySmall).tr(),
-            // ),
-            // const SizedBox(width: 20, child: Text("•", textAlign: TextAlign.center)),
-            // InkWell(
-            //   onTap: () {
-            //     context.pop();
-            //     launchUrl(Uri.parse('https://github.com/immich-app/immich'), mode: LaunchMode.externalApplication);
-            //   },
-            //   child: Text("profile_drawer_github", style: context.textTheme.bodySmall).tr(),
-            // ),
-            // const SizedBox(width: 20, child: Text("•", textAlign: TextAlign.center)),
-            // InkWell(
-            //   onTap: () async {
-            //     context.pop();
-            //     final packageInfo = await PackageInfo.fromPlatform();
-            //     showLicensePage(
-            //       context: context,
-            //       applicationIcon: const Padding(
-            //         padding: EdgeInsetsGeometry.symmetric(vertical: 10),
-            //         child: ImmichLogo(size: 40),
-            //       ),
-            //       applicationVersion: packageInfo.version,
-            //     );
-            //   },
-            //   child: Text("licenses", style: context.textTheme.bodySmall).tr(),
-            // ),
-
             // #pizcloud
           ],
         ),
       );
     }
 
-    buildReadonlyMessage() {
+    Widget buildReadonlyMessage() {
       return Padding(
-        padding: const EdgeInsets.only(left: 10.0, right: 10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10.0),
         child: ListTile(
           dense: true,
           visualDensity: VisualDensity.standard,
-          contentPadding: const EdgeInsets.only(left: 20, right: 20),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20),
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
           minLeadingWidth: 20,
           tileColor: theme.primaryColor.withAlpha(80),
@@ -389,36 +317,27 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    return Dismissible(
-      behavior: HitTestBehavior.translucent,
-      direction: DismissDirection.down,
-      onDismissed: (_) => context.pop(),
-      key: const Key('app_bar_dialog'),
-      child: Dialog(
-        clipBehavior: Clip.hardEdge,
-        alignment: Alignment.center,
-        insetPadding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: isHorizontal ? 20 : 40),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
-        child: SizedBox(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(padding: const EdgeInsets.symmetric(horizontal: 8), child: buildTopRow()),
-                const AppBarProfileInfoBox(),
-                buildStorageInformation(),
-                // const AppBarServerInfo(), // pizcloud
-                if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
-                if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
-                // buildReferralProgramButton(), // pizcloud
-                // buildDiscountCodeButton(), // pizcloud
-                // buildSettingButton(),
-                buildManageAccountButton(), // pizcloud
-                buildSignOutButton(),
-                buildFooter(),
-              ],
-            ),
-          ),
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: const Text('settings').tr(),
+        material: (_, __) => MaterialAppBarData(centerTitle: false),
+      ),
+      body: SafeArea(
+        child: ListView(
+          physics: const ClampingScrollPhysics(),
+          padding: const EdgeInsets.only(top: 10.0, bottom: 16),
+          children: [
+            const AppBarProfileInfoBox(),
+            buildStorageInformation(),
+            if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
+            if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
+            buildReferralProgramButton(), // pizcloud
+            buildDiscountCodeButton(), // pizcloud
+            buildManageAccountButton(), // pizcloud
+            buildSettingButton(),
+            // buildSignOutButton(),
+            // buildFooter(),
+          ],
         ),
       ),
     );

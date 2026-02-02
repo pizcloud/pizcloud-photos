@@ -71,7 +71,7 @@ class SettingsPage extends StatelessWidget {
     context.locale;
     return PlatformScaffold(
       appBar: PlatformAppBar(
-        title: const Text('settings').tr(),
+        title: const Text('system_settings').tr(),
         material: (_, __) => MaterialAppBarData(centerTitle: false),
       ),
       body: context.isMobile ? const SafeArea(child: _MobileLayout()) : const SafeArea(child: _TabletLayout()),

@@ -79,18 +79,12 @@ class TabControllerPage extends HookConsumerWidget {
       NavigationDestination(
         label: 'albums'.tr(),
         icon: Icon(
-          context.platformIcon(
-            material: Icons.photo_album_outlined,
-            cupertino: CupertinoIcons.rectangle_stack,
-          ),
+          context.platformIcon(material: Icons.photo_album_outlined, cupertino: CupertinoIcons.rectangle_stack),
         ),
         selectedIcon: buildIcon(
           isProcessing: isRefreshingRemoteAlbums,
           icon: Icon(
-            context.platformIcon(
-              material: Icons.photo_album_rounded,
-              cupertino: CupertinoIcons.rectangle_stack_fill,
-            ),
+            context.platformIcon(material: Icons.photo_album_rounded, cupertino: CupertinoIcons.rectangle_stack_fill),
             color: context.primaryColor,
           ),
         ),
@@ -98,10 +92,7 @@ class TabControllerPage extends HookConsumerWidget {
       NavigationDestination(
         label: 'library'.tr(),
         icon: Icon(
-          context.platformIcon(
-            material: Icons.space_dashboard_outlined,
-            cupertino: CupertinoIcons.square_grid_2x2,
-          ),
+          context.platformIcon(material: Icons.space_dashboard_outlined, cupertino: CupertinoIcons.square_grid_2x2),
         ),
         selectedIcon: buildIcon(
           isProcessing: isRefreshingAssets,

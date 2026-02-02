@@ -41,6 +41,7 @@ import 'package:immich_mobile/pages/common/gallery_viewer.page.dart';
 import 'package:immich_mobile/pages/common/headers_settings.page.dart';
 import 'package:immich_mobile/pages/common/native_video_viewer.page.dart';
 import 'package:immich_mobile/pages/common/settings.page.dart';
+import 'package:immich_mobile/pages/common/settings_tab.page.dart';
 import 'package:immich_mobile/pages/common/splash_screen.page.dart';
 import 'package:immich_mobile/pages/common/tab_controller.page.dart';
 import 'package:immich_mobile/pages/common/tab_shell.page.dart';
@@ -194,9 +195,11 @@ class AppRouter extends RootStackRouter {
       guards: [_authGuard, _duplicateGuard],
       children: [
         AutoRoute(page: MainTimelineRoute.page, guards: [_authGuard, _duplicateGuard]),
-        AutoRoute(page: DriftSearchRoute.page, guards: [_authGuard, _duplicateGuard], maintainState: false),
-        AutoRoute(page: DriftLibraryRoute.page, guards: [_authGuard, _duplicateGuard]),
+        AutoRoute(page: DriftBackupRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
+        // AutoRoute(page: DriftSearchRoute.page, guards: [_authGuard, _duplicateGuard], maintainState: false), //pizcloud
         AutoRoute(page: DriftAlbumsRoute.page, guards: [_authGuard, _duplicateGuard]),
+        // AutoRoute(page: DriftLibraryRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
+        AutoRoute(page: SettingsTabRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
       ],
       transitionsBuilder: TransitionsBuilders.fadeIn,
     ),

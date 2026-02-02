@@ -2746,6 +2746,22 @@ class SettingsRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [SettingsTabPage]
+class SettingsTabRoute extends PageRouteInfo<void> {
+  const SettingsTabRoute({List<PageRouteInfo>? children})
+    : super(SettingsTabRoute.name, initialChildren: children);
+
+  static const String name = 'SettingsTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SettingsTabPage();
+    },
+  );
+}
+
+/// generated route for
 /// [SettingsSubPage]
 class SettingsSubRoute extends PageRouteInfo<SettingsSubRouteArgs> {
   SettingsSubRoute({

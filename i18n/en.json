@@ -2245,6 +2245,7 @@
   "sync_status": "Sync Status",
   "sync_status_subtitle": "View and manage the sync system",
   "sync_upload_album_setting_subtitle": "Create and upload your photos and videos to the selected albums on PizCloud",
+  "system_settings": "System Settings",
   "tag": "Tag",
   "tag_assets": "Tag assets",
   "tag_created": "Created tag: {tag}",
