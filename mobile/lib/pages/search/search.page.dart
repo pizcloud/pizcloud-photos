@@ -410,14 +410,19 @@ class SearchPage extends HookConsumerWidget {
     }
 
     IconData getSearchPrefixIcon(BuildContext context) => switch (textSearchType.value) {
-      TextSearchType.context =>
-        context.platformIcon(material: Icons.image_search_rounded, cupertino: CupertinoIcons.search),
-      TextSearchType.filename =>
-        context.platformIcon(material: Icons.abc_rounded, cupertino: CupertinoIcons.doc_text),
-      TextSearchType.description =>
-        context.platformIcon(material: Icons.text_snippet_outlined, cupertino: CupertinoIcons.text_bubble),
-      TextSearchType.ocr =>
-        context.platformIcon(material: Icons.document_scanner_outlined, cupertino: CupertinoIcons.doc_text),
+      TextSearchType.context => context.platformIcon(
+        material: Icons.image_search_rounded,
+        cupertino: CupertinoIcons.search,
+      ),
+      TextSearchType.filename => context.platformIcon(material: Icons.abc_rounded, cupertino: CupertinoIcons.doc_text),
+      TextSearchType.description => context.platformIcon(
+        material: Icons.text_snippet_outlined,
+        cupertino: CupertinoIcons.text_bubble,
+      ),
+      TextSearchType.ocr => context.platformIcon(
+        material: Icons.document_scanner_outlined,
+        cupertino: CupertinoIcons.doc_text,
+      ),
     };
 
     return PlatformScaffold(
@@ -443,7 +448,9 @@ class SearchPage extends HookConsumerWidget {
                       controller.open();
                     }
                   },
-                  icon: Icon(context.platformIcon(material: Icons.more_vert_rounded, cupertino: CupertinoIcons.ellipsis)),
+                  icon: Icon(
+                    context.platformIcon(material: Icons.more_vert_rounded, cupertino: CupertinoIcons.ellipsis),
+                  ),
                   tooltip: 'show_text_search_menu'.tr(),
                 );
               },
@@ -491,7 +498,10 @@ class SearchPage extends HookConsumerWidget {
                 MenuItemButton(
                   child: ListTile(
                     leading: Icon(
-                      context.platformIcon(material: Icons.text_snippet_outlined, cupertino: CupertinoIcons.text_bubble),
+                      context.platformIcon(
+                        material: Icons.text_snippet_outlined,
+                        cupertino: CupertinoIcons.text_bubble,
+                      ),
                     ),
                     title: Text(
                       'search_by_description'.tr(),
@@ -535,9 +545,8 @@ class SearchPage extends HookConsumerWidget {
             ),
           ),
         ],
-        cupertino: (_, __) => CupertinoNavigationBarData(
-          transitionBetweenRoutes: false,
-        ),
+        cupertino: (_, __) =>
+            CupertinoNavigationBarData(transitionBetweenRoutes: false, heroTag: const ValueKey('search-page')),
         title: Container(
           decoration: BoxDecoration(
             border: Border.all(color: context.colorScheme.onSurface.withAlpha(0), width: 0),
@@ -557,8 +566,9 @@ class SearchPage extends HookConsumerWidget {
             key: const Key('search_text_field'),
             controller: textSearchController,
             contentPadding: prefilter != null ? const EdgeInsets.only(left: 24) : const EdgeInsets.all(8),
-            prefixIcon:
-                prefilter != null ? null : Icon(getSearchPrefixIcon(context), color: context.colorScheme.primary),
+            prefixIcon: prefilter != null
+                ? null
+                : Icon(getSearchPrefixIcon(context), color: context.colorScheme.primary),
             onSubmitted: handleTextSubmitted,
             focusNode: ref.watch(searchInputFocusProvider),
           ),

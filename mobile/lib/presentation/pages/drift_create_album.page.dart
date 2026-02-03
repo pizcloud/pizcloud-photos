@@ -306,7 +306,12 @@ class _AlbumTitleTextFieldState extends State<_AlbumTitleTextField> {
   Widget build(BuildContext context) {
     return TextField(
       focusNode: widget.focusNode,
-      style: TextStyle(fontSize: 28.0, color: context.colorScheme.onSurface, fontWeight: FontWeight.bold),
+      style: TextStyle(
+        fontSize: 20.0,
+        height: 1.3,
+        color: context.colorScheme.onSurface,
+        fontWeight: FontWeight.w600,
+      ),
       controller: widget.textController,
       onTap: () {
         if (widget.textController.text == 'create_album_page_untitled'.t(context: context)) {
@@ -314,7 +319,7 @@ class _AlbumTitleTextFieldState extends State<_AlbumTitleTextField> {
         }
       },
       decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         suffixIcon: widget.textController.text.isNotEmpty && widget.isFocus
             ? IconButton(
                 onPressed: () {
@@ -326,20 +331,21 @@ class _AlbumTitleTextFieldState extends State<_AlbumTitleTextField> {
             : null,
         enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.transparent),
-          borderRadius: BorderRadius.all(Radius.circular(16.0)),
+          borderRadius: BorderRadius.all(Radius.circular(14.0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: context.primaryColor.withValues(alpha: 0.3)),
-          borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+          borderRadius: const BorderRadius.all(Radius.circular(14.0)),
         ),
         hintText: 'add_a_title'.t(),
         hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(
-          fontSize: 28.0,
-          fontWeight: FontWeight.bold,
+          fontSize: 18.0,
+          fontWeight: FontWeight.w500,
           height: 1.2,
+          color: context.colorScheme.onSurface.withValues(alpha: 0.6),
         ),
         focusColor: Colors.grey[300],
-        fillColor: context.colorScheme.surfaceContainerHigh,
+        fillColor: context.colorScheme.surfaceContainerLow,
         filled: true,
       ),
     );

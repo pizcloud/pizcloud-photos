@@ -25,6 +25,7 @@ import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_profile_info.dart';
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
+import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
 import 'package:immich_mobile/services/pizcloud/account_api.service.dart'; // pizcloud
 import 'package:immich_mobile/services/pizcloud/google.service.dart'; // pizcloud
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart'; // pizcloud
@@ -318,27 +319,33 @@ class SettingsTabPage extends HookConsumerWidget {
     }
 
     return PlatformScaffold(
-      appBar: PlatformAppBar(
-        title: const Text('settings').tr(),
-        material: (_, __) => MaterialAppBarData(centerTitle: false),
-      ),
-      body: SafeArea(
-        child: ListView(
-          physics: const ClampingScrollPhysics(),
-          padding: const EdgeInsets.only(top: 10.0, bottom: 16),
-          children: [
-            const AppBarProfileInfoBox(),
-            buildStorageInformation(),
-            if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
-            if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
-            buildReferralProgramButton(), // pizcloud
-            buildDiscountCodeButton(), // pizcloud
-            buildManageAccountButton(), // pizcloud
-            buildSettingButton(),
-            // buildSignOutButton(),
-            // buildFooter(),
-          ],
-        ),
+      body: CustomScrollView(
+        slivers: [
+          const ImmichSliverAppBar(
+            pinned: true,
+            floating: false,
+            snap: false,
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(top: 10.0, bottom: 16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  const AppBarProfileInfoBox(),
+                  buildStorageInformation(),
+                  if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
+                  if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
+                  buildReferralProgramButton(), // pizcloud
+                  buildDiscountCodeButton(), // pizcloud
+                  buildManageAccountButton(), // pizcloud
+                  buildSettingButton(),
+                  // buildSignOutButton(),
+                  // buildFooter(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

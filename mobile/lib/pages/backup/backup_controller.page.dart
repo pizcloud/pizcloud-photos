@@ -241,9 +241,8 @@ class BackupControllerPage extends HookConsumerWidget {
             ),
           ),
         ],
-        cupertino: (_, __) => CupertinoNavigationBarData(
-          transitionBetweenRoutes: false,
-        ),
+        cupertino: (_, __) =>
+            CupertinoNavigationBarData(transitionBetweenRoutes: false, heroTag: const ValueKey('backup-controller')),
         material: (_, __) => MaterialAppBarData(elevation: 0),
       ),
       body: Stack(

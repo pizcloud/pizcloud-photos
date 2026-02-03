@@ -38,11 +38,7 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
     buildProfileIndicator() {
       return InkWell(
         onTap: () =>
-            showPlatformDialog(
-              context: context,
-              useRootNavigator: false,
-              builder: (ctx) => const ImmichAppBarDialog(),
-            ),
+            showPlatformDialog(context: context, useRootNavigator: false, builder: (ctx) => const ImmichAppBarDialog()),
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Badge(
           label: Container(
@@ -161,7 +157,10 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 3.0),
                   child: Icon(
-                    context.platformIcon(material: Icons.error_rounded, cupertino: CupertinoIcons.exclamationmark_triangle),
+                    context.platformIcon(
+                      material: Icons.error_rounded,
+                      cupertino: CupertinoIcons.exclamationmark_triangle,
+                    ),
                     fill: 1,
                     color: Colors.amber,
                     size: 20,
@@ -174,14 +173,12 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
       ),
       cupertino: (_, __) => CupertinoNavigationBarData(
         transitionBetweenRoutes: false,
+        heroTag: const ValueKey('pizcloud-app-bar'),
         padding: const EdgeInsetsDirectional.only(start: 12, end: 12),
         backgroundColor: context.colorScheme.surface.withValues(alpha: 0.92),
-        border: Border(
-          bottom: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2)),
-        ),
+        border: Border(bottom: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.2))),
       ),
-      material: (_, __) => MaterialAppBarData(
-      ),
+      material: (_, __) => MaterialAppBarData(),
       trailingActions: [
         if (actions != null)
           ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 16), child: action)),

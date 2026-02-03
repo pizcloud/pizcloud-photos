@@ -178,6 +178,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: PermissionOnboardingRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: LoginRoute.page, guards: [_duplicateGuard]),
     AutoRoute(page: ChangePasswordRoute.page),
+    AutoRoute(page: DriftSearchRoute.page, guards: [_authGuard, _duplicateGuard], maintainState: false), // pizcloud
     AutoRoute(page: SearchRoute.page, guards: [_authGuard, _duplicateGuard], maintainState: false),
     CustomRoute(
       page: TabControllerRoute.page,

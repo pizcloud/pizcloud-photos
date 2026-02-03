@@ -68,6 +68,7 @@ class AlbumAssetSelectionPage extends HookConsumerWidget {
             ),
         ],
         cupertino: (_, __) => CupertinoNavigationBarData(
+          heroTag: const ValueKey('album-asset-selection'),
           trailing: (selected.value.isNotEmpty || canDeselect)
               ? CupertinoButton(
                   padding: EdgeInsets.zero,

@@ -80,14 +80,23 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
         enabled: !isReadonlyModeEnabled,
       ),
       NavigationDestination(
-        label: 'activity'.tr(),
-        icon: Icon(context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid)),
+        label: 'collection'.tr(),
+        icon: Icon(context.platformIcon(material: Icons.collections, cupertino: CupertinoIcons.collections_solid)),
         selectedIcon: Icon(
-          context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid),
+          context.platformIcon(material: Icons.collections, cupertino: CupertinoIcons.collections_solid),
           color: context.primaryColor,
         ),
         enabled: !isReadonlyModeEnabled,
       ),
+      // NavigationDestination(
+      //   label: 'activity'.tr(),
+      //   icon: Icon(context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid)),
+      //   selectedIcon: Icon(
+      //     context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid),
+      //     color: context.primaryColor,
+      //   ),
+      //   enabled: !isReadonlyModeEnabled,
+      // ),
       NavigationDestination(
         label: 'settings'.tr(),
         icon: Icon(context.platformIcon(material: Icons.settings, cupertino: CupertinoIcons.gear_solid)),
@@ -195,10 +204,14 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
             : null;
 
         Widget buildTabContent() {
+          final content = showMediaPermissionBanner
+              ? MediaQuery.removePadding(context: context, removeTop: true, child: child)
+              : child;
+
           return Column(
             children: [
               if (showMediaPermissionBanner) const MediaPermissionBanner(),
-              Expanded(child: child),
+              Expanded(child: content),
               if (isCupertino(context) && bottomBar != null) SafeArea(top: false, child: bottomBar),
             ],
           );

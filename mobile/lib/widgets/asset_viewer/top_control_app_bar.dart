@@ -205,6 +205,7 @@ class TopControlAppBar extends HookConsumerWidget {
       ],
       cupertino: (_, __) => CupertinoNavigationBarData(
         transitionBetweenRoutes: false,
+        heroTag: const ValueKey('top-control-app-bar'),
         padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
         backgroundColor: Colors.black.withAlpha(140),
         border: null,

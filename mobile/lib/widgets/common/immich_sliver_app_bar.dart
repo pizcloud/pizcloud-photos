@@ -71,8 +71,17 @@ class ImmichSliverAppBar extends ConsumerWidget {
           icon: Icon(context.platformIcon(material: Icons.science_rounded, cupertino: CupertinoIcons.lab_flask)),
           onPressed: () => context.pushRoute(const FeatInDevRoute()),
         ),
+      // if (showUploadButton && !isReadonlyModeEnabled)
+      //   const Padding(padding: EdgeInsets.only(right: 20), child: _BackupIndicator()),
       if (showUploadButton && !isReadonlyModeEnabled)
-        const Padding(padding: EdgeInsets.only(right: 20), child: _BackupIndicator()),
+        Padding(
+          padding: const EdgeInsets.only(right: 20),
+          child: IconButton(
+            // push on app router because DriftSearchRoute is not a TabShell child
+            onPressed: () => ref.read(appRouterProvider).push(const DriftSearchRoute()),
+            icon: Icon(context.platformIcons.search),
+          ),
+        ),
       const Padding(padding: EdgeInsets.only(right: 20), child: _ProfileIndicator()),
     ];
 

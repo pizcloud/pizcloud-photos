@@ -560,9 +560,8 @@ class DriftSearchPage extends HookConsumerWidget {
             ),
           ),
         ],
-        cupertino: (_, __) => CupertinoNavigationBarData(
-          transitionBetweenRoutes: false,
-        ),
+        cupertino: (_, __) =>
+            CupertinoNavigationBarData(transitionBetweenRoutes: false, heroTag: const ValueKey('drift-search-nav')),
         title: Container(
           decoration: BoxDecoration(
             border: Border.all(color: context.colorScheme.onSurface.withAlpha(0), width: 0),
@@ -577,14 +576,17 @@ class DriftSearchPage extends HookConsumerWidget {
               end: Alignment.bottomRight,
             ),
           ),
-          child: SearchField(
-            hintText: searchHintText.value,
-            key: const Key('search_text_field'),
-            controller: textSearchController,
-            contentPadding: preFilter != null ? const EdgeInsets.only(left: 24) : const EdgeInsets.all(8),
-            prefixIcon: preFilter != null ? null : Icon(getSearchPrefixIcon(), color: context.colorScheme.primary),
-            onSubmitted: handleTextSubmitted,
-            focusNode: ref.watch(searchInputFocusProvider),
+          child: Material(
+            color: Colors.transparent,
+            child: SearchField(
+              hintText: searchHintText.value,
+              key: const Key('search_text_field'),
+              controller: textSearchController,
+              contentPadding: preFilter != null ? const EdgeInsets.only(left: 24) : const EdgeInsets.all(8),
+              prefixIcon: preFilter != null ? null : Icon(getSearchPrefixIcon(), color: context.colorScheme.primary),
+              onSubmitted: handleTextSubmitted,
+              focusNode: ref.watch(searchInputFocusProvider),
+            ),
           ),
         ),
       ),
