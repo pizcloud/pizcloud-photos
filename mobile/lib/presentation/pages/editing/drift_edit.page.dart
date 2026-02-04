@@ -93,7 +93,7 @@ class DriftEditImagePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bottomBar = Container(
       height: 70,
-      margin: const EdgeInsets.only(bottom: 10, right: 10, left: 10, top: 10),
+      margin: const EdgeInsets.only(bottom: 30, right: 10, left: 10, top: 10),
       decoration: BoxDecoration(
         color: context.scaffoldBackgroundColor,
         borderRadius: const BorderRadius.all(Radius.circular(30)),
