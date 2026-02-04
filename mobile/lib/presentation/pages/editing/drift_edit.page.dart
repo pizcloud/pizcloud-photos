@@ -93,7 +93,7 @@ class DriftEditImagePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bottomBar = Container(
       height: 70,
-      margin: const EdgeInsets.only(bottom: 60, right: 10, left: 10, top: 10),
+      margin: const EdgeInsets.only(bottom: 10, right: 10, left: 10, top: 10),
       decoration: BoxDecoration(
         color: context.scaffoldBackgroundColor,
         borderRadius: const BorderRadius.all(Radius.circular(30)),
@@ -170,17 +170,10 @@ class DriftEditImagePage extends ConsumerWidget {
             ),
           ),
           if (isCupertino(context))
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SafeArea(top: false, child: bottomBar),
-            ),
+            Positioned(left: 0, right: 0, bottom: 0, child: SafeArea(top: false, child: bottomBar)),
         ],
       ),
-      material: (_, __) => MaterialScaffoldData(
-        bottomNavBar: bottomBar,
-      ),
+      material: (_, __) => MaterialScaffoldData(bottomNavBar: bottomBar),
     );
   }
 }

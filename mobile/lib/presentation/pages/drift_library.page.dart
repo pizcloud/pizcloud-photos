@@ -26,10 +26,29 @@ class DriftLibraryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const PlatformScaffold(
-      body: CustomScrollView(
+    // Previous layout with ImmichSliverAppBar (kept for reference)
+    // return const PlatformScaffold(
+    //   body: CustomScrollView(
+    //     slivers: [
+    //       ImmichSliverAppBar(snap: false, floating: false, pinned: true, showUploadButton: false),
+    //       _ActionButtonGrid(),
+    //       _CollectionCards(),
+    //       _QuickAccessButtonList(),
+    //     ],
+    //   ),
+    // );
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: Text('library'.t(context: context)),
+        leading: IconButton(
+          onPressed: () => context.maybePop(),
+          icon: Icon(context.platformIcons.back),
+          splashRadius: 24,
+        ),
+        material: (_, __) => MaterialAppBarData(centerTitle: false),
+      ),
+      body: const CustomScrollView(
         slivers: [
-          ImmichSliverAppBar(snap: false, floating: false, pinned: true, showUploadButton: false),
           _ActionButtonGrid(),
           _CollectionCards(),
           _QuickAccessButtonList(),

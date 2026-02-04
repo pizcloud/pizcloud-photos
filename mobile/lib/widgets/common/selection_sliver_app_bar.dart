@@ -30,7 +30,7 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
       context.pop<Set<BaseAsset>>(selected);
     }
 
-    final titleWidget = Text("Select {count}".t(context: context, args: {'count': filteredAssets.length.toString()}));
+    final titleWidget = Text("select_count".t(context: context, args: {'count': filteredAssets.length.toString()}));
     final doneButtonMaterial = TextButton(
       onPressed: () => onDone(filteredAssets),
       child: Text(
@@ -45,10 +45,7 @@ class _SelectionSliverAppBarState extends ConsumerState<SelectionSliverAppBar> {
       onPressed: () => onDone(filteredAssets),
       child: Text(
         'done'.t(context: context),
-        style: TextStyle(
-          color: context.colorScheme.primary,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: context.colorScheme.primary, fontWeight: FontWeight.w600),
       ),
     );
 

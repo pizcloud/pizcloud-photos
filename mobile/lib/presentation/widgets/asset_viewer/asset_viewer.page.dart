@@ -718,7 +718,8 @@ class _AssetViewerState extends ConsumerState<AssetViewer> {
               backgroundDecoration: BoxDecoration(color: backgroundColor),
               enablePanAlways: true,
             ),
-            if (isCupertino(context)) const Positioned(top: 0, left: 0, right: 0, child: ViewerTopAppBar()),
+            // if (isCupertino(context)) const Positioned(top: 0, left: 0, right: 0, child: ViewerTopAppBar()),
+            const Positioned(top: 0, left: 0, right: 0, child: ViewerTopAppBar()),
             if (isCupertino(context))
               Positioned(
                 right: 16,

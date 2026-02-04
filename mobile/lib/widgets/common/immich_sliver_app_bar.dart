@@ -50,7 +50,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
     final materialActions = <Widget>[
       if (isCasting && !isReadonlyModeEnabled)
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: 10),
           child: IconButton(
             onPressed: () {
               showPlatformDialog(context: context, builder: (context) => const CastDialog());
@@ -65,21 +65,32 @@ class ImmichSliverAppBar extends ConsumerWidget {
         ),
       const _SyncStatusIndicator(),
       if (actions != null)
-        ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 16), child: action)),
-      if ((kDebugMode || kProfileMode) && !isReadonlyModeEnabled)
-        IconButton(
-          icon: Icon(context.platformIcon(material: Icons.science_rounded, cupertino: CupertinoIcons.lab_flask)),
-          onPressed: () => context.pushRoute(const FeatInDevRoute()),
-        ),
+        ...actions!.map((action) => Padding(padding: const EdgeInsets.only(right: 12), child: action)),
+      // if ((kDebugMode || kProfileMode) && !isReadonlyModeEnabled)
+      //   IconButton(
+      //     icon: Icon(context.platformIcon(material: Icons.science_rounded, cupertino: CupertinoIcons.lab_flask)),
+      //     onPressed: () => context.pushRoute(const FeatInDevRoute()),
+      //   ),
       // if (showUploadButton && !isReadonlyModeEnabled)
       //   const Padding(padding: EdgeInsets.only(right: 20), child: _BackupIndicator()),
       if (showUploadButton && !isReadonlyModeEnabled)
         Padding(
-          padding: const EdgeInsets.only(right: 20),
+          padding: const EdgeInsets.only(right: 5),
           child: IconButton(
-            // push on app router because DriftSearchRoute is not a TabShell child
+            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric()),
+            // padding: const EdgeInsetsGeometry.all(2),
             onPressed: () => ref.read(appRouterProvider).push(const DriftSearchRoute()),
-            icon: Icon(context.platformIcons.search),
+            icon: Icon(context.platformIcon(material: Icons.search, cupertino: CupertinoIcons.search)),
+          ),
+        ),
+      if (showUploadButton && !isReadonlyModeEnabled)
+        Padding(
+          padding: const EdgeInsets.only(right: 15),
+          child: IconButton(
+            onPressed: () => ref.read(appRouterProvider).push(const DriftLibraryRoute()),
+            icon: Icon(
+              context.platformIcon(material: Icons.space_dashboard_outlined, cupertino: CupertinoIcons.square_grid_2x2),
+            ),
           ),
         ),
       const Padding(padding: EdgeInsets.only(right: 20), child: _ProfileIndicator()),
@@ -175,8 +186,12 @@ class _ProfileIndicator extends ConsumerWidget {
     }
 
     return InkWell(
-      onTap: () =>
-          showPlatformDialog(context: context, useRootNavigator: false, builder: (ctx) => const ImmichAppBarDialog()),
+      onTap: () => showPlatformDialog(
+        context: context,
+        useRootNavigator: false,
+        barrierDismissible: true,
+        builder: (ctx) => const ImmichAppBarDialog(),
+      ),
       onLongPress: () => toggleReadonlyMode(),
       borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: Badge(
