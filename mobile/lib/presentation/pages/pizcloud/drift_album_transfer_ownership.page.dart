@@ -1,0 +1,357 @@
+import 'package:auto_route/auto_route.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/domain/models/album/album.model.dart';
+import 'package:immich_mobile/domain/models/album/pizcloud/album_transfer.model.dart';
+import 'package:immich_mobile/domain/models/album/pizcloud/shared_email.model.dart';
+import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
+import 'package:immich_mobile/extensions/build_context_extensions.dart';
+import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart';
+import 'package:immich_mobile/providers/api.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/album_share_email.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart';
+import 'package:immich_mobile/services/pizcloud/album_share_email_api.service.dart';
+import 'package:immich_mobile/services/pizcloud/album_transfer_api.service.dart';
+import 'package:immich_mobile/widgets/common/immich_toast.dart';
+
+@RoutePage()
+class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
+  final RemoteAlbum album;
+
+  const DriftAlbumTransferOwnershipPage({super.key, required this.album});
+
+  bool _isValidEmail(String value) {
+    final email = value.trim();
+    final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return regex.hasMatch(email);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sharedEmailsAsync = ref.watch(albumSharedEmailsProvider(album.id));
+    final pendingTransferAsync = ref.watch(albumTransferByAlbumProvider(album.id));
+    final pendingTransfer = pendingTransferAsync.asData?.value;
+    final hasPendingTransfer = pendingTransfer != null && pendingTransfer.isPending;
+
+    final emailController = useTextEditingController();
+    final isSubmitting = useState(false);
+    final selectedEmail = useState<String?>(null);
+
+    String normalizeEmail(String value) => value.trim().toLowerCase();
+
+    bool isSelected(String email) => selectedEmail.value == normalizeEmail(email);
+
+    void setSelected(String email) {
+      final normalized = normalizeEmail(email);
+      if (selectedEmail.value == normalized) {
+        selectedEmail.value = null;
+      } else {
+        selectedEmail.value = normalized;
+      }
+    }
+
+    Future<void> onApply() async {
+      final raw = emailController.text.trim();
+      final email = raw.toLowerCase();
+
+      if (email.isEmpty) {
+        ImmichToast.show(context: context, msg: 'please_enter_email'.tr(), toastType: ToastType.info);
+        return;
+      }
+      if (!_isValidEmail(email)) {
+        ImmichToast.show(context: context, msg: 'invalid_email'.tr(), toastType: ToastType.info);
+        return;
+      }
+
+      try {
+        isSubmitting.value = true;
+        await AlbumShareEmailApiService.addSharedEmail(albumId: album.id, email: email);
+        emailController.clear();
+        selectedEmail.value = email;
+        ref.invalidate(albumSharedEmailsProvider(album.id));
+        ImmichToast.show(context: context, msg: 'add_successfully'.tr(), toastType: ToastType.success);
+      } catch (_) {
+        ImmichToast.show(context: context, msg: 'add_failed'.tr(), toastType: ToastType.error);
+      } finally {
+        isSubmitting.value = false;
+      }
+    }
+
+    Future<void> onRemove(String email) async {
+      try {
+        isSubmitting.value = true;
+        await AlbumShareEmailApiService.removeSharedEmail(albumId: album.id, email: email);
+        if (isSelected(email)) {
+          selectedEmail.value = null;
+        }
+        ref.invalidate(albumSharedEmailsProvider(album.id));
+        ImmichToast.show(context: context, msg: 'removed'.tr(), toastType: ToastType.success);
+      } catch (_) {
+        ImmichToast.show(context: context, msg: 'remove_failed'.tr(), toastType: ToastType.error);
+      } finally {
+        isSubmitting.value = false;
+      }
+    }
+
+    Future<void> onRequestTransfer() async {
+      final email = selectedEmail.value;
+      if (email == null || email.isEmpty) {
+        ImmichToast.show(context: context, msg: 'transfer_select_email'.tr(), toastType: ToastType.info);
+        return;
+      }
+
+      try {
+        isSubmitting.value = true;
+        final apiService = ref.read(apiServiceProvider);
+        final resolution = await resolveShareUserIdsByEmail(apiService: apiService, albumId: album.id, emails: [email]);
+
+        if (resolution.missingEmails.isNotEmpty) {
+          final preview = resolution.missingEmails.take(3).join(', ');
+          final suffix = resolution.missingEmails.length > 3 ? '...' : '';
+          ImmichToast.show(context: context, msg: 'Not found in Pizcloud: $preview$suffix', toastType: ToastType.info);
+          return;
+        }
+
+        if (resolution.userIds.isEmpty) {
+          ImmichToast.show(context: context, msg: 'transfer_user_not_found'.tr(), toastType: ToastType.info);
+          return;
+        }
+
+        await AlbumTransferApiService.requestTransfer(
+          apiService,
+          albumId: album.id,
+          toUserId: resolution.userIds.first,
+        );
+
+        ref.invalidate(albumTransferByAlbumProvider(album.id));
+        ImmichToast.show(context: context, msg: 'transfer_request_sent'.tr(), toastType: ToastType.success);
+      } catch (e) {
+        ImmichToast.show(context: context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
+      } finally {
+        isSubmitting.value = false;
+      }
+    }
+
+    Future<void> onCancelTransfer(AlbumTransferDto transfer) async {
+      final confirmed = await showPlatformDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('transfer_cancel_title'.tr()),
+          content: Text('transfer_cancel_confirm'.tr()),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('cancel'.tr())),
+            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text('confirm'.tr())),
+          ],
+        ),
+      );
+
+      if (confirmed != true) {
+        return;
+      }
+
+      try {
+        isSubmitting.value = true;
+        final apiService = ref.read(apiServiceProvider);
+        await AlbumTransferApiService.cancelTransfer(apiService, album.id);
+        ref.invalidate(albumTransferByAlbumProvider(album.id));
+        ImmichToast.show(context: context, msg: 'transfer_request_canceled'.tr(), toastType: ToastType.success);
+      } catch (_) {
+        ImmichToast.show(context: context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
+      } finally {
+        isSubmitting.value = false;
+      }
+    }
+
+    Widget buildInput(bool disabled) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => disabled ? null : onApply(),
+                enabled: !disabled,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'enter_email_to_share'.tr(),
+                  prefixIcon: const Icon(Icons.alternate_email_rounded),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            SizedBox(
+              height: 30,
+              child: ElevatedButton.icon(
+                onPressed: disabled || isSubmitting.value ? null : onApply,
+                icon: isSubmitting.value
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.add_rounded),
+                label: Text('add'.tr()),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget buildList(List<SharedEmailDto> items, bool disabled) {
+      if (items.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Text('no_shared_emails_yet'.tr(), style: const TextStyle(fontSize: 13, color: Colors.grey)),
+        );
+      }
+
+      return ListView.separated(
+        padding: const EdgeInsets.only(bottom: 24),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final selected = isSelected(item.email);
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor: context.primaryColor.withValues(alpha: 0.12),
+              child: Text(
+                item.email.isNotEmpty ? item.email[0].toUpperCase() : '?',
+                style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.bold),
+              ),
+            ),
+            dense: true,
+            title: Text(item.email, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!disabled)
+                  Icon(
+                    selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                    color: selected ? context.primaryColor : Colors.grey,
+                  ),
+                if (!disabled)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    onPressed: isSubmitting.value ? null : () => onRemove(item.email),
+                    tooltip: 'remove'.tr(),
+                  ),
+              ],
+            ),
+            onTap: disabled ? null : () => setSelected(item.email),
+          );
+        },
+      );
+    }
+
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: Text('transfer_ownership'.tr()),
+        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
+        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => context.maybePop()),
+        trailingActions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: SizedBox(
+              height: 32,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 15)),
+                onPressed: isSubmitting.value || hasPendingTransfer ? null : onRequestTransfer,
+                icon: isSubmitting.value
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.swap_horiz_rounded),
+                label: Text('transfer_send'.tr()),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: pendingTransferAsync.widgetWhen(
+        onData: (pendingTransfer) {
+          final disabled = pendingTransfer != null && pendingTransfer.isPending;
+
+          return sharedEmailsAsync.widgetWhen(
+            onData: (items) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Text(
+                      'transfer_ownership_hint'.tr(),
+                      style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 112, 111, 111)),
+                    ),
+                  ),
+                  if (pendingTransfer != null && pendingTransfer.isPending)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Card(
+                        elevation: 0,
+                        color: context.colorScheme.surfaceContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('transfer_pending_title'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 6),
+                              Text(
+                                'transfer_pending_description'.tr(namedArgs: {'email': pendingTransfer.toUser.email}),
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                              // Text(
+                              //   'transfer_pending_description'.tr(args: [pendingTransfer.toUser.email]),
+                              //   style: const TextStyle(fontSize: 13),
+                              // ),
+                              const SizedBox(height: 12),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: isSubmitting.value ? null : () => onCancelTransfer(pendingTransfer),
+                                  icon: const Icon(Icons.cancel_outlined),
+                                  label: Text('transfer_cancel'.tr()),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Text(
+                      'transfer_warning'.tr(),
+                      style: const TextStyle(fontSize: 13, color: Color.fromARGB(255, 125, 79, 79)),
+                    ),
+                  ),
+                  buildInput(disabled),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'shared_with'.tr(),
+                      style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(child: buildList(items, disabled)),
+                ],
+              );
+            },
+            onLoading: () => const Center(child: CircularProgressIndicator()),
+            onError: (e, _) => Center(
+              child: Padding(padding: const EdgeInsets.all(16), child: Text('failed_to_load_shared_emails'.tr())),
+            ),
+          );
+        },
+        onLoading: () => const Center(child: CircularProgressIndicator()),
+        onError: (e, _) => Center(
+          child: Padding(padding: const EdgeInsets.all(16), child: Text('transfer_request_failed'.tr())),
+        ),
+      ),
+    );
+  }
+}

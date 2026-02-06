@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:easy_localization/easy_localization.dart'; // pizcloud
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/presentation/widgets/album/album_selector.widget.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
+import 'package:immich_mobile/presentation/pages/pizcloud/drift_album_transfer_inbox.page.dart'; // pizcloud
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
 
@@ -18,11 +21,14 @@ class DriftAlbumsPage extends ConsumerStatefulWidget {
 
 class _DriftAlbumsPageState extends ConsumerState<DriftAlbumsPage> {
   Future<void> onRefresh() async {
+    ref.invalidate(albumIncomingTransfersProvider); // pizcloud
     await ref.read(remoteAlbumProvider.notifier).refresh();
   }
 
   @override
   Widget build(BuildContext context) {
+    final incomingTransfersAsync = ref.watch(albumIncomingTransfersProvider); // pizcloud
+
     return RefreshIndicator(
       onRefresh: onRefresh,
       edgeOffset: 100,
@@ -40,6 +46,33 @@ class _DriftAlbumsPageState extends ConsumerState<DriftAlbumsPage> {
             ],
             showUploadButton: false,
           ),
+          // pizcloud
+          SliverToBoxAdapter(
+            child: incomingTransfersAsync.maybeWhen(
+              data: (items) {
+                if (items.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.swap_horiz_rounded),
+                      title: Text('transfer_inbox_banner_title'.tr(namedArgs: {'count': '${items.length}'})),
+                      // title: Text('transfer_inbox_banner_title'.tr(args: ['${items.length}'])),
+                      subtitle: Text('transfer_inbox_banner_subtitle'.tr()),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => Navigator.of(
+                        context,
+                      ).push(MaterialPageRoute(builder: (_) => const DriftAlbumTransferInboxPage())),
+                    ),
+                  ),
+                );
+              },
+              orElse: () => const SizedBox.shrink(),
+            ),
+          ),
+          // #pizcloud
           AlbumSelector(
             onAlbumSelected: (album) {
               context.router.push(RemoteAlbumRoute(album: album));

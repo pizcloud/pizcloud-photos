@@ -11,6 +11,7 @@ import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart'; // pizcloud
+import 'package:immich_mobile/presentation/pages/pizcloud/drift_album_transfer_ownership.page.dart'; // pizcloud
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/remote_album_bottom_sheet.widget.dart';
 import 'package:immich_mobile/presentation/widgets/remote_album/drift_album_option.widget.dart';
 import 'package:immich_mobile/presentation/widgets/timeline/timeline.widget.dart';
@@ -217,10 +218,7 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
     unawaited(
       showPlatformModalSheet(
         context: context,
-        material: MaterialModalSheetData(
-          backgroundColor: context.colorScheme.surface,
-          isScrollControlled: false,
-        ),
+        material: MaterialModalSheetData(backgroundColor: context.colorScheme.surface, isScrollControlled: false),
         builder: (context) {
           return platformSheetWrapper(
             context,
@@ -239,6 +237,16 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
                       context.pop();
                     }
                   : null,
+              // pizcloud
+              onTransferOwnership: isOwner
+                  ? () async {
+                      context.pop();
+                      await Navigator.of(
+                        context,
+                      ).push(MaterialPageRoute(builder: (context) => DriftAlbumTransferOwnershipPage(album: _album)));
+                    }
+                  : null,
+              // #pizcloud
               onAddPhotos: isOwner || canAddPhotos
                   ? () async {
                       await addAssets(context);
