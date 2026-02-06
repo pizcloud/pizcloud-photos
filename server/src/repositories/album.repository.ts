@@ -398,6 +398,29 @@ export class AlbumRepository {
       .execute();
   }
 
+  // pizcloud
+  @GenerateSql({ params: [DummyValue.UUID, DummyValue.UUID] })
+  async getUsageForAlbumOwner(albumId: string, ownerId: string): Promise<{ assetCount: number; totalBytes: number }> {
+    const result = await this.db
+      .selectFrom('album_asset')
+      .innerJoin('asset', 'asset.id', 'album_asset.assetId')
+      .leftJoin('asset_exif', 'asset_exif.assetId', 'asset.id')
+      .select((eb) => [
+        sql<number>`${eb.fn.count('asset.id')}::int`.as('assetCount'),
+        eb.fn.coalesce(eb.fn.sum<number>('asset_exif.fileSizeInByte'), eb.lit(0)).as('totalBytes'),
+      ])
+      .where('album_asset.albumId', '=', albumId)
+      .where('asset.ownerId', '=', ownerId)
+      .where('asset.libraryId', 'is', null)
+      .executeTakeFirst();
+
+    return {
+      assetCount: Number(result?.assetCount ?? 0),
+      totalBytes: Number(result?.totalBytes ?? 0),
+    };
+  }
+  // #pizcloud
+
   @GenerateSql({ params: [{ sourceAssetId: DummyValue.UUID, targetAssetId: DummyValue.UUID }] })
   async copyAlbums({ sourceAssetId, targetAssetId }: { sourceAssetId: string; targetAssetId: string }) {
     return this.db

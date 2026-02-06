@@ -1,5 +1,6 @@
 import { AccessRepository } from 'src/repositories/access.repository';
 import { ActivityRepository } from 'src/repositories/activity.repository';
+import { AlbumTransferRepository } from 'src/repositories/album-transfer.repository'; // pizcloud
 import { AlbumUserRepository } from 'src/repositories/album-user.repository';
 import { AlbumRepository } from 'src/repositories/album.repository';
 import { ApiKeyRepository } from 'src/repositories/api-key.repository';
@@ -54,6 +55,7 @@ export const repositories = [
   AccessRepository,
   ActivityRepository,
   AlbumRepository,
+  AlbumTransferRepository, // pizcloud
   AlbumUserRepository,
   AuditRepository,
   ApiKeyRepository,

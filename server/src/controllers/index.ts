@@ -1,4 +1,5 @@
 import { ActivityController } from 'src/controllers/activity.controller';
+import { AlbumTransferController } from 'src/controllers/album-transfer.controller'; // pizcloud
 import { AlbumController } from 'src/controllers/album.controller';
 import { ApiKeyController } from 'src/controllers/api-key.controller';
 import { AppController } from 'src/controllers/app.controller';
@@ -44,6 +45,7 @@ export const controllers = [
   ApiKeyController,
   ActivityController,
   AlbumController,
+  AlbumTransferController, // pizcloud
   AppController,
   AssetController,
   AssetMediaController,

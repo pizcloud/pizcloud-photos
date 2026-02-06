@@ -152,10 +152,18 @@ export function toJson<DB, TB extends keyof DB & string, T extends TB | Expressi
 }
 
 export const ASSET_CHECKSUM_CONSTRAINT = 'UQ_assets_owner_checksum';
+export const ASSET_CHECKSUM_LIBRARY_CONSTRAINT = 'UQ_assets_owner_library_checksum'; // pizcloud
 
 export const isAssetChecksumConstraint = (error: unknown) => {
   return (error as PostgresError)?.constraint_name === 'UQ_assets_owner_checksum';
 };
+
+// pizcloud
+export const isAssetChecksumConflict = (error: unknown) => {
+  const constraint = (error as PostgresError)?.constraint_name;
+  return constraint === ASSET_CHECKSUM_CONSTRAINT || constraint === ASSET_CHECKSUM_LIBRARY_CONSTRAINT;
+};
+// #pizcloud
 
 export function withDefaultVisibility<O>(qb: SelectQueryBuilder<DB, 'asset', O>) {
   return qb.where('asset.visibility', 'in', [sql.lit(AssetVisibility.Archive), sql.lit(AssetVisibility.Timeline)]);

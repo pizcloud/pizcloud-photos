@@ -1,4 +1,4 @@
-import { AssetStatus, AssetVisibility, SourceType } from 'src/enum';
+import { AlbumTransferStatus, AssetStatus, AssetVisibility, SourceType } from 'src/enum';
 import { registerEnum } from 'src/sql-tools';
 
 export const assets_status_enum = registerEnum({
@@ -15,3 +15,10 @@ export const asset_visibility_enum = registerEnum({
   name: 'asset_visibility_enum',
   values: Object.values(AssetVisibility),
 });
+
+// pizcloud
+export const album_transfer_status_enum = registerEnum({
+  name: 'album_transfer_status_enum',
+  values: Object.values(AlbumTransferStatus),
+});
+// #pizcloud

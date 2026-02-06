@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
+import { AlbumTransferRequestDto, AlbumTransferResponseDto } from 'src/dtos/album-transfer.dto'; // pizcloud
 import {
   AddUsersDto,
   AlbumInfoDto,
@@ -209,4 +210,49 @@ export class AlbumController {
   ): Promise<void> {
     return this.service.removeUser(auth, id, userId);
   }
+
+  // pizcloud
+  @Post(':id/transfer')
+  @Authenticated({ permission: Permission.AlbumShare })
+  @Endpoint({
+    summary: 'Request album ownership transfer',
+    description: 'Create a pending ownership transfer request for an album.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  requestOwnershipTransfer(
+    @Auth() auth: AuthDto,
+    @Param() { id }: UUIDParamDto,
+    @Body() dto: AlbumTransferRequestDto,
+  ): Promise<AlbumTransferResponseDto> {
+    return this.service.requestOwnershipTransfer(auth, id, dto);
+  }
+
+  @Get(':id/transfer')
+  @Authenticated({ permission: Permission.AlbumShare })
+  @Endpoint({
+    summary: 'Get pending album ownership transfer',
+    description: 'Get the pending ownership transfer request for an album, if any.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  getOwnershipTransfer(
+    @Auth() auth: AuthDto,
+    @Param() { id }: UUIDParamDto,
+  ): Promise<AlbumTransferResponseDto | null> {
+    return this.service.getOwnershipTransfer(auth, id);
+  }
+
+  @Post(':id/transfer/cancel')
+  @Authenticated({ permission: Permission.AlbumShare })
+  @Endpoint({
+    summary: 'Cancel album ownership transfer',
+    description: 'Cancel a pending album ownership transfer request.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  cancelOwnershipTransfer(
+    @Auth() auth: AuthDto,
+    @Param() { id }: UUIDParamDto,
+  ): Promise<AlbumTransferResponseDto> {
+    return this.service.cancelOwnershipTransfer(auth, id);
+  }
+  // #pizcloud
 }

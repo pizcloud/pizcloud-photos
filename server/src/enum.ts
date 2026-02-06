@@ -61,6 +61,15 @@ export enum AlbumUserRole {
   Viewer = 'viewer',
 }
 
+// pizcloud
+export enum AlbumTransferStatus {
+  Pending = 'pending',
+  Accepted = 'accepted',
+  Declined = 'declined',
+  Canceled = 'canceled',
+}
+// #pizcloud
+
 export enum AssetOrder {
   Asc = 'asc',
   Desc = 'desc',

@@ -1,4 +1,9 @@
-import { asset_face_source_type, asset_visibility_enum, assets_status_enum } from 'src/schema/enums';
+import {
+  album_transfer_status_enum,
+  asset_face_source_type,
+  asset_visibility_enum,
+  assets_status_enum,
+} from 'src/schema/enums';
 import {
   album_delete_audit,
   album_user_after_insert,
@@ -23,6 +28,7 @@ import { ActivityTable } from 'src/schema/tables/activity.table';
 import { AlbumAssetAuditTable } from 'src/schema/tables/album-asset-audit.table';
 import { AlbumAssetTable } from 'src/schema/tables/album-asset.table';
 import { AlbumAuditTable } from 'src/schema/tables/album-audit.table';
+import { AlbumTransferTable } from 'src/schema/tables/album-transfer.table'; // pizcloud
 import { AlbumUserAuditTable } from 'src/schema/tables/album-user-audit.table';
 import { AlbumUserTable } from 'src/schema/tables/album-user.table';
 import { AlbumTable } from 'src/schema/tables/album.table';
@@ -81,6 +87,7 @@ export class ImmichDatabase {
     AlbumAssetTable,
     AlbumAssetAuditTable,
     AlbumAuditTable,
+    AlbumTransferTable, // pizcloud
     AlbumUserAuditTable,
     AlbumUserTable,
     AlbumTable,
@@ -156,7 +163,7 @@ export class ImmichDatabase {
     asset_face_audit,
   ];
 
-  enum = [assets_status_enum, asset_face_source_type, asset_visibility_enum];
+  enum = [assets_status_enum, asset_face_source_type, asset_visibility_enum, album_transfer_status_enum]; // pizcloud
 }
 
 export interface Migrations {
@@ -172,6 +179,7 @@ export interface DB {
   album_audit: AlbumAuditTable;
   album_asset: AlbumAssetTable;
   album_asset_audit: AlbumAssetAuditTable;
+  album_transfer: AlbumTransferTable; // pizcloud
   album_user: AlbumUserTable;
   album_user_audit: AlbumUserAuditTable;
 

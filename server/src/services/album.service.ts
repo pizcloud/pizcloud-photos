@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { AlbumTransferRequestDto, AlbumTransferResponseDto, mapAlbumTransfer } from 'src/dtos/album-transfer.dto'; // pizcloud
 import {
   AddUsersDto,
   AlbumInfoDto,
@@ -19,10 +20,12 @@ import {
 } from 'src/dtos/album.dto';
 import { BulkIdErrorReason, BulkIdResponseDto, BulkIdsDto } from 'src/dtos/asset-ids.response.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { Permission } from 'src/enum';
+import { AlbumTransferStatus, Permission } from 'src/enum';
+import { AlbumTransferEntity } from 'src/repositories/album-transfer.repository'; // pizcloud
 import { AlbumAssetCount, AlbumInfoOptions } from 'src/repositories/album.repository';
 import { BaseService } from 'src/services/base.service';
 import { addAssets, removeAssets } from 'src/utils/asset.util';
+import { isAssetChecksumConflict } from 'src/utils/database'; // pizcloud
 import { getPreferences } from 'src/utils/preferences';
 
 @Injectable()
@@ -334,6 +337,176 @@ export class AlbumService extends BaseService {
   }
   // #pizcloud
 
+  // pizcloud
+  async requestOwnershipTransfer(
+    auth: AuthDto,
+    id: string,
+    dto: AlbumTransferRequestDto,
+  ): Promise<AlbumTransferResponseDto> {
+    await this.requireAccess({ auth, permission: Permission.AlbumShare, ids: [id] });
+
+    const album = await this.findOrFail(id, { withAssets: false });
+
+    if (album.ownerId === dto.toUserId) {
+      throw new BadRequestException('Cannot transfer album to current owner');
+    }
+
+    const targetUser = await this.userRepository.get(dto.toUserId, {});
+    if (!targetUser) {
+      throw new BadRequestException('User not found');
+    }
+
+    const pending = await this.albumTransferRepository.getPendingByAlbumId(id);
+    if (pending) {
+      throw new BadRequestException('Album already has a pending transfer');
+    }
+
+    const transfer = await this.albumTransferRepository.create({
+      albumId: id,
+      fromUserId: album.ownerId,
+      toUserId: dto.toUserId,
+      status: AlbumTransferStatus.Pending,
+    });
+
+    const usage = await this.albumRepository.getUsageForAlbumOwner(id, album.ownerId);
+    return this.mapTransferResponse(transfer, usage);
+  }
+
+  async getOwnershipTransfer(auth: AuthDto, id: string): Promise<AlbumTransferResponseDto | null> {
+    await this.requireAccess({ auth, permission: Permission.AlbumShare, ids: [id] });
+
+    const transfer = await this.albumTransferRepository.getPendingByAlbumId(id);
+    if (!transfer) {
+      return null;
+    }
+
+    const usage = await this.albumRepository.getUsageForAlbumOwner(id, transfer.fromUserId);
+    return this.mapTransferResponse(transfer, usage);
+  }
+
+  async cancelOwnershipTransfer(auth: AuthDto, id: string): Promise<AlbumTransferResponseDto> {
+    await this.requireAccess({ auth, permission: Permission.AlbumShare, ids: [id] });
+
+    const transfer = await this.albumTransferRepository.getPendingByAlbumId(id);
+    if (!transfer) {
+      throw new BadRequestException('Album has no pending transfer');
+    }
+
+    if (transfer.fromUserId !== auth.user.id) {
+      throw new BadRequestException('Only the owner can cancel this transfer');
+    }
+
+    const updated = await this.albumTransferRepository.updateStatus(transfer.id, {
+      status: AlbumTransferStatus.Canceled,
+      respondedAt: new Date(),
+    });
+
+    if (!updated) {
+      throw new BadRequestException('Failed to cancel transfer');
+    }
+
+    const usage = await this.albumRepository.getUsageForAlbumOwner(id, transfer.fromUserId);
+    return this.mapTransferResponse(updated, usage);
+  }
+
+  async getIncomingTransfers(auth: AuthDto): Promise<AlbumTransferResponseDto[]> {
+    const transfers = await this.albumTransferRepository.getIncoming(auth.user.id);
+
+    return Promise.all(
+      transfers.map(async (transfer) => {
+        const usage = await this.albumRepository.getUsageForAlbumOwner(transfer.albumId, transfer.fromUserId);
+        return this.mapTransferResponse(transfer, usage);
+      }),
+    );
+  }
+
+  async acceptOwnershipTransfer(auth: AuthDto, transferId: string): Promise<AlbumTransferResponseDto> {
+    const transfer = await this.albumTransferRepository.getById(transferId);
+    if (!transfer) {
+      throw new BadRequestException('Transfer not found');
+    }
+
+    if (transfer.status !== AlbumTransferStatus.Pending) {
+      throw new BadRequestException('Transfer is no longer pending');
+    }
+
+    if (transfer.toUserId !== auth.user.id) {
+      throw new BadRequestException('Not authorized to accept this transfer');
+    }
+
+    const album = await this.findOrFail(transfer.albumId, { withAssets: false });
+    if (album.ownerId !== transfer.fromUserId) {
+      throw new BadRequestException('Album ownership has changed');
+    }
+
+    const usage = await this.albumRepository.getUsageForAlbumOwner(transfer.albumId, transfer.fromUserId);
+    if (
+      auth.user.quotaSizeInBytes !== null &&
+      auth.user.quotaSizeInBytes < auth.user.quotaUsageInBytes + usage.totalBytes
+    ) {
+      throw new BadRequestException('insufficient_quota');
+    }
+
+    const hasConflict = await this.albumTransferRepository.hasOwnershipTransferConflict(
+      transfer.albumId,
+      transfer.fromUserId,
+      transfer.toUserId,
+    );
+    if (hasConflict) {
+      throw new BadRequestException('asset_conflict');
+    }
+
+    try {
+      await this.albumTransferRepository.applyTransfer({
+        transferId: transfer.id,
+        albumId: transfer.albumId,
+        fromUserId: transfer.fromUserId,
+        toUserId: transfer.toUserId,
+        movedBytes: usage.totalBytes,
+      });
+    } catch (error) {
+      if (isAssetChecksumConflict(error)) {
+        throw new BadRequestException('asset_conflict');
+      }
+      throw error;
+    }
+
+    const updated = await this.albumTransferRepository.getById(transfer.id);
+    if (!updated) {
+      throw new BadRequestException('Transfer not found');
+    }
+
+    return this.mapTransferResponse(updated, usage);
+  }
+
+  async declineOwnershipTransfer(auth: AuthDto, transferId: string): Promise<AlbumTransferResponseDto> {
+    const transfer = await this.albumTransferRepository.getById(transferId);
+    if (!transfer) {
+      throw new BadRequestException('Transfer not found');
+    }
+
+    if (transfer.status !== AlbumTransferStatus.Pending) {
+      throw new BadRequestException('Transfer is no longer pending');
+    }
+
+    if (transfer.toUserId !== auth.user.id) {
+      throw new BadRequestException('Not authorized to decline this transfer');
+    }
+
+    const updated = await this.albumTransferRepository.updateStatus(transfer.id, {
+      status: AlbumTransferStatus.Declined,
+      respondedAt: new Date(),
+    });
+
+    if (!updated) {
+      throw new BadRequestException('Failed to decline transfer');
+    }
+
+    const usage = await this.albumRepository.getUsageForAlbumOwner(transfer.albumId, transfer.fromUserId);
+    return this.mapTransferResponse(updated, usage);
+  }
+  // #pizcloud
+
   async removeUser(auth: AuthDto, id: string, userId: string | 'me'): Promise<void> {
     if (userId === 'me') {
       userId = auth.user.id;
@@ -370,4 +543,31 @@ export class AlbumService extends BaseService {
     }
     return album;
   }
+
+  // pizcloud
+  private mapTransferResponse(
+    transfer: AlbumTransferEntity,
+    usage: { assetCount: number; totalBytes: number },
+  ): AlbumTransferResponseDto {
+    if (!transfer) {
+      throw new BadRequestException('Transfer not found');
+    }
+
+    return mapAlbumTransfer({
+      id: transfer.id,
+      albumId: transfer.albumId,
+      albumName: transfer.albumName,
+      fromUserId: transfer.fromUserId,
+      toUserId: transfer.toUserId,
+      respondedAt: transfer.respondedAt,
+      createdAt: transfer.createdAt,
+      updatedAt: transfer.updatedAt,
+      status: transfer.status,
+      fromUser: transfer.fromUser,
+      toUser: transfer.toUser,
+      assetCount: usage.assetCount,
+      totalBytes: usage.totalBytes,
+    });
+  }
+  // #pizcloud
 }
