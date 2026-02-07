@@ -165,6 +165,14 @@ export class AlbumTransferRepository {
         .where('id', 'in', movedAssetsQuery)
         .execute();
 
+      // pizcloud - Bump album asset updateId so the new owner receives album-to-asset links in incremental sync.
+      await tx
+        .updateTable('album_asset')
+        .set({ updatedAt: new Date() })
+        .where('albumId', '=', albumId)
+        .execute();
+      // #pizcloud
+
       if (movedBytes !== 0) {
         await tx
           .updateTable('user')

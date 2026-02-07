@@ -253,22 +253,6 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
         title: Text('transfer_ownership'.tr()),
         material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
         leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => context.maybePop()),
-        trailingActions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: SizedBox(
-              height: 32,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 15)),
-                onPressed: isSubmitting.value || hasPendingTransfer ? null : onRequestTransfer,
-                icon: isSubmitting.value
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.swap_horiz_rounded),
-                label: Text('transfer_send'.tr()),
-              ),
-            ),
-          ),
-        ],
       ),
       body: pendingTransferAsync.widgetWhen(
         onData: (pendingTransfer) {
@@ -279,16 +263,9 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Text(
-                      'transfer_ownership_hint'.tr(),
-                      style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 112, 111, 111)),
-                    ),
-                  ),
                   if (pendingTransfer != null && pendingTransfer.isPending)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                       child: Card(
                         elevation: 0,
                         color: context.colorScheme.surfaceContainer,
@@ -322,10 +299,123 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                       ),
                     ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Text(
-                      'transfer_warning'.tr(),
-                      style: const TextStyle(fontSize: 13, color: Color.fromARGB(255, 125, 79, 79)),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: context.colorScheme.outlineVariant.withValues(alpha: 0.6)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: context.colorScheme.primary.withValues(alpha: 0.12),
+                                  ),
+                                  child: Icon(
+                                    Icons.swap_horiz_rounded,
+                                    color: context.colorScheme.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'transfer_ownership_hint'.tr(),
+                                    style: TextStyle(fontSize: 14, color: context.colorScheme.onSurfaceVariant),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: context.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: context.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    color: context.colorScheme.primary,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'transfer_warning'.tr(),
+                                      style: TextStyle(fontSize: 12, color: context.colorScheme.onSurfaceVariant),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (selectedEmail.value != null && selectedEmail.value!.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: context.colorScheme.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: context.colorScheme.primary.withValues(alpha: 0.35)),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      color: context.colorScheme.primary,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        selectedEmail.value!,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: context.colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 12),
+                            Align(
+                              alignment: Alignment.center,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  minimumSize: const Size(0, 30),
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                ),
+                                onPressed: isSubmitting.value || hasPendingTransfer ? null : onRequestTransfer,
+                                icon: isSubmitting.value
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.swap_horiz_rounded, size: 18),
+                                label: Text('transfer_send'.tr()),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   buildInput(disabled),
@@ -333,7 +423,11 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       'shared_with'.tr(),
-                      style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const Divider(height: 1),
