@@ -7,6 +7,7 @@ import {
   Column,
   CreateDateColumn,
   ForeignKeyColumn,
+  Generated,
   Index,
   PrimaryGeneratedColumn,
   Table,
@@ -20,7 +21,7 @@ import {
 @Index({ columns: ['toUserId', 'status'] })
 export class AlbumTransferTable {
   @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  id!: Generated<string>;
 
   @ForeignKeyColumn(() => AlbumTable, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   albumId!: string;
@@ -32,17 +33,17 @@ export class AlbumTransferTable {
   toUserId!: string;
 
   @Column({ enum: album_transfer_status_enum, default: AlbumTransferStatus.Pending })
-  status!: AlbumTransferStatus;
+  status!: Generated<AlbumTransferStatus>;
 
   @CreateDateColumn()
-  createdAt!: Timestamp;
+  createdAt!: Generated<Timestamp>;
 
   @UpdateDateColumn()
-  updatedAt!: Timestamp;
+  updatedAt!: Generated<Timestamp>;
 
   @Column({ type: 'timestamp with time zone', nullable: true })
   respondedAt!: Timestamp | null;
 
   @UpdateIdColumn({ index: true })
-  updateId!: string;
+  updateId!: Generated<string>;
 }
