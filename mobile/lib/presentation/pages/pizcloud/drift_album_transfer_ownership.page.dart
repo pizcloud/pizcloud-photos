@@ -260,10 +260,10 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
 
           return sharedEmailsAsync.widgetWhen(
             onData: (items) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (pendingTransfer != null && pendingTransfer.isPending)
+              if (pendingTransfer != null && pendingTransfer.isPending) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                       child: Card(
@@ -276,14 +276,30 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                             children: [
                               Text('transfer_pending_title'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                               const SizedBox(height: 6),
-                              Text(
-                                'transfer_pending_description'.tr(namedArgs: {'email': pendingTransfer.toUser.email}),
-                                style: const TextStyle(fontSize: 13),
+                              Builder(
+                                builder: (context) {
+                                  final email = pendingTransfer.toUser.email;
+                                  final description =
+                                      'transfer_pending_description'.tr(namedArgs: {'email': email});
+                                  final index = description.indexOf(email);
+                                  if (index == -1) {
+                                    return Text(description, style: const TextStyle(fontSize: 13));
+                                  }
+                                  return Text.rich(
+                                    TextSpan(
+                                      style: const TextStyle(fontSize: 13),
+                                      children: [
+                                        TextSpan(text: description.substring(0, index)),
+                                        TextSpan(
+                                          text: email,
+                                          style: const TextStyle(fontWeight: FontWeight.w700),
+                                        ),
+                                        TextSpan(text: description.substring(index + email.length)),
+                                      ],
+                                    ),
+                                  );
+                                },
                               ),
-                              // Text(
-                              //   'transfer_pending_description'.tr(args: [pendingTransfer.toUser.email]),
-                              //   style: const TextStyle(fontSize: 13),
-                              // ),
                               const SizedBox(height: 12),
                               Align(
                                 alignment: Alignment.centerRight,
@@ -298,6 +314,13 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                         ),
                       ),
                     ),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                     child: Container(
