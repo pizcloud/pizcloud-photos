@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/exif.model.dart';
 import 'package:immich_mobile/domain/models/stack.model.dart';
+import 'package:immich_mobile/extensions/string_extensions.dart'; // pizcloud
 import 'package:immich_mobile/infrastructure/entities/exif.entity.dart' hide ExifInfo;
 import 'package:immich_mobile/infrastructure/entities/exif.entity.drift.dart';
 import 'package:immich_mobile/infrastructure/entities/remote_asset.entity.dart';
@@ -9,6 +10,7 @@ import 'package:immich_mobile/infrastructure/entities/remote_asset.entity.drift.
 import 'package:immich_mobile/infrastructure/entities/stack.entity.drift.dart';
 import 'package:immich_mobile/infrastructure/repositories/db.repository.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:openapi/api.dart' as api; // pizcloud
 
 class RemoteAssetRepository extends DriftDatabaseRepository {
   final Drift _db;
@@ -138,6 +140,40 @@ class RemoteAssetRepository extends DriftDatabaseRepository {
     });
   }
 
+  // pizcloud
+  Future<void> upsertFromApiAssets(List<api.AssetResponseDto> assets) async {
+    await _db.batch((batch) {
+      for (final asset in assets) {
+        final companion = RemoteAssetEntityCompanion(
+          name: Value(asset.originalFileName),
+          type: Value(asset.type.toAssetType()),
+          createdAt: Value(asset.fileCreatedAt),
+          updatedAt: Value(asset.fileModifiedAt),
+          durationInSeconds: Value(asset.duration.toDuration()?.inSeconds ?? 0),
+          checksum: Value(asset.checksum),
+          isFavorite: Value(asset.isFavorite),
+          ownerId: Value(asset.ownerId),
+          localDateTime: Value(asset.localDateTime),
+          thumbHash: Value(asset.thumbhash),
+          deletedAt: Value(asset.isTrashed ? DateTime.now() : null),
+          visibility: Value(asset.visibility.toAssetVisibility()),
+          livePhotoVideoId: Value(asset.livePhotoVideoId),
+          stackId: Value(asset.stack?.id),
+          libraryId: Value(asset.libraryId),
+          width: Value(asset.exifInfo?.exifImageWidth?.toInt()),
+          height: Value(asset.exifInfo?.exifImageHeight?.toInt()),
+        );
+
+        batch.insert(
+          _db.remoteAssetEntity,
+          companion.copyWith(id: Value(asset.id)),
+          onConflict: DoUpdate((_) => companion),
+        );
+      }
+    });
+  }
+  // #pizcloud
+
   Future<void> trash(List<String> ids) {
     return _db.batch((batch) async {
       for (final id in ids) {
@@ -259,3 +295,26 @@ class RemoteAssetRepository extends DriftDatabaseRepository {
     return _db.managers.remoteAssetEntity.count();
   }
 }
+
+// pizcloud
+extension on api.AssetVisibility {
+  AssetVisibility toAssetVisibility() => switch (this) {
+    api.AssetVisibility.timeline => AssetVisibility.timeline,
+    api.AssetVisibility.hidden => AssetVisibility.hidden,
+    api.AssetVisibility.archive => AssetVisibility.archive,
+    api.AssetVisibility.locked => AssetVisibility.locked,
+    _ => AssetVisibility.timeline,
+  };
+}
+
+extension on api.AssetTypeEnum {
+  AssetType toAssetType() => switch (this) {
+    api.AssetTypeEnum.IMAGE => AssetType.image,
+    api.AssetTypeEnum.VIDEO => AssetType.video,
+    api.AssetTypeEnum.AUDIO => AssetType.audio,
+    api.AssetTypeEnum.OTHER => AssetType.other,
+    _ => throw Exception('Unknown AssetType value: $this'),
+  };
+}
+
+// #pizcloud

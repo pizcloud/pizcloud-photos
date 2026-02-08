@@ -8,6 +8,7 @@ import 'package:immich_mobile/infrastructure/entities/remote_album.entity.drift.
 import 'package:immich_mobile/infrastructure/entities/remote_album_asset.entity.drift.dart';
 import 'package:immich_mobile/infrastructure/entities/remote_album_user.entity.drift.dart';
 import 'package:immich_mobile/infrastructure/entities/remote_asset.entity.dart';
+import 'package:immich_mobile/infrastructure/entities/user.entity.drift.dart'; // pizcloud
 import 'package:immich_mobile/infrastructure/repositories/db.repository.dart';
 
 enum SortRemoteAlbumsBy { id, updatedAt }
@@ -121,6 +122,18 @@ class DriftRemoteAlbumRepository extends DriftDatabaseRepository {
 
     return query.map((row) => row.toDto(ownerName: '', isShared: false)).getSingleOrNull();
   }
+
+  // pizcloud
+  Future<bool> exists(String albumId) async {
+    final query = _db.remoteAlbumEntity.selectOnly()
+      ..addColumns([_db.remoteAlbumEntity.id])
+      ..where(_db.remoteAlbumEntity.id.equals(albumId))
+      ..limit(1);
+
+    final row = await query.getSingleOrNull();
+    return row != null;
+  }
+  // #pizcloud
 
   Future<void> create(RemoteAlbum album, List<String> assetIds) async {
     await _db.transaction(() async {
@@ -249,6 +262,72 @@ class DriftRemoteAlbumRepository extends DriftDatabaseRepository {
 
     return assetIds.length;
   }
+
+  // pizcloud
+  Future<int> getAlbumAssetLinkCount(String albumId) async {
+    final countExp = _db.remoteAlbumAssetEntity.assetId.count();
+    final query = _db.remoteAlbumAssetEntity.selectOnly()
+      ..addColumns([countExp])
+      ..where(_db.remoteAlbumAssetEntity.albumId.equals(albumId));
+
+    return query.map((row) => row.read(countExp) ?? 0).getSingle();
+  }
+
+  Future<void> replaceAssets(String albumId, List<String> assetIds) async {
+    await _db.transaction(() async {
+      await _db.remoteAlbumAssetEntity.deleteWhere((row) => row.albumId.equals(albumId));
+      if (assetIds.isEmpty) {
+        return;
+      }
+
+      final albumAssets = assetIds.map(
+        (assetId) => RemoteAlbumAssetEntityCompanion(albumId: Value(albumId), assetId: Value(assetId)),
+      );
+
+      await _db.batch((batch) {
+        batch.insertAll(_db.remoteAlbumAssetEntity, albumAssets);
+      });
+    });
+  }
+
+  Future<void> replaceUsers(String albumId, List<({String userId, AlbumUserRole role})> users) async {
+    await _db.transaction(() async {
+      await _db.remoteAlbumUserEntity.deleteWhere((row) => row.albumId.equals(albumId));
+      if (users.isEmpty) {
+        return;
+      }
+
+      final albumUsers = users.map(
+        (user) =>
+            RemoteAlbumUserEntityCompanion(albumId: Value(albumId), userId: Value(user.userId), role: Value(user.role)),
+      );
+
+      await _db.batch((batch) {
+        batch.insertAll(_db.remoteAlbumUserEntity, albumUsers);
+      });
+    });
+  }
+
+  Future<void> upsertUsers(List<UserDto> users) async {
+    if (users.isEmpty) {
+      return;
+    }
+
+    await _db.batch((batch) {
+      for (final user in users) {
+        final companion = UserEntityCompanion(
+          name: Value(user.name),
+          email: Value(user.email),
+          hasProfileImage: Value(user.hasProfileImage),
+          profileChangedAt: Value(user.profileChangedAt ?? DateTime.now()),
+          avatarColor: Value(user.avatarColor),
+        );
+
+        batch.insert(_db.userEntity, companion.copyWith(id: Value(user.id)), onConflict: DoUpdate((_) => companion));
+      }
+    });
+  }
+  // #pizcloud
 
   Future<void> addUsers(String albumId, List<String> userIds) {
     final albumUsers = userIds.map(

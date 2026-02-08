@@ -118,6 +118,7 @@ class SyncStreamService {
       }
 
       if (event.type == SyncEntityType.syncResetV1) {
+        await Store.put(StoreKey.shouldResetSync, true); // pizcloud
         reset();
       }
 

@@ -6,6 +6,7 @@ import 'package:immich_mobile/domain/services/local_album.service.dart';
 import 'package:immich_mobile/domain/services/remote_album.service.dart';
 import 'package:immich_mobile/infrastructure/repositories/local_album.repository.dart';
 import 'package:immich_mobile/infrastructure/repositories/remote_album.repository.dart';
+import 'package:immich_mobile/providers/infrastructure/asset.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/db.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/repositories/drift_album_api_repository.dart';
@@ -33,7 +34,11 @@ final remoteAlbumRepository = Provider<DriftRemoteAlbumRepository>(
 );
 
 final remoteAlbumServiceProvider = Provider<RemoteAlbumService>(
-  (ref) => RemoteAlbumService(ref.watch(remoteAlbumRepository), ref.watch(driftAlbumApiRepositoryProvider)),
+  (ref) => RemoteAlbumService(
+    ref.watch(remoteAlbumRepository),
+    ref.watch(driftAlbumApiRepositoryProvider),
+    ref.watch(remoteAssetRepositoryProvider), // pizcloud
+  ),
   dependencies: [remoteAlbumRepository],
 );
 

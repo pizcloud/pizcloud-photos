@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/user.model.dart';
+import 'package:immich_mobile/infrastructure/repositories/remote_asset.repository.dart'; // pizcloud
 import 'package:immich_mobile/infrastructure/repositories/remote_album.repository.dart';
 import 'package:immich_mobile/models/albums/album_search.model.dart';
 import 'package:immich_mobile/repositories/drift_album_api_repository.dart';
@@ -11,8 +12,9 @@ import 'package:immich_mobile/repositories/drift_album_api_repository.dart';
 class RemoteAlbumService {
   final DriftRemoteAlbumRepository _repository;
   final DriftAlbumApiRepository _albumApiRepository;
+  final RemoteAssetRepository _remoteAssetRepository; // pizcloud
 
-  const RemoteAlbumService(this._repository, this._albumApiRepository);
+  const RemoteAlbumService(this._repository, this._albumApiRepository, this._remoteAssetRepository); // pizcloud
 
   Stream<RemoteAlbum?> watchAlbum(String albumId) {
     return _repository.watchAlbum(albumId);
@@ -111,6 +113,44 @@ class RemoteAlbumService {
 
     return updatedAlbum;
   }
+
+  // pizcloud
+  Future<void> syncAlbumFromServer(String albumId) async {
+    final payload = await _albumApiRepository.getAlbumForSync(albumId);
+    await _repository.upsertUsers(payload.userDetails);
+    final exists = await _repository.exists(albumId);
+
+    if (!exists) {
+      await _remoteAssetRepository.upsertFromApiAssets(payload.assets);
+      await _repository.create(payload.album, payload.assetIds);
+      await _repository.replaceUsers(albumId, payload.users);
+      return;
+    }
+
+    await _remoteAssetRepository.upsertFromApiAssets(payload.assets);
+    await _repository.update(payload.album);
+    await _repository.replaceAssets(albumId, payload.assetIds);
+    await _repository.replaceUsers(albumId, payload.users);
+  }
+
+  Future<bool> ensureAlbumAssetsLoaded(String albumId, {int? expectedCount}) async {
+    final assets = await _repository.getAssets(albumId);
+    if (assets.isNotEmpty) {
+      return false;
+    }
+
+    if (expectedCount != null && expectedCount <= 0) {
+      final linkCount = await _repository.getAlbumAssetLinkCount(albumId);
+      if (linkCount == 0) {
+        return false;
+      }
+    }
+
+    await syncAlbumFromServer(albumId);
+    final refreshed = await _repository.getAssets(albumId);
+    return refreshed.isNotEmpty;
+  }
+  // #pizcloud
 
   FutureOr<(DateTime, DateTime)> getDateRange(String albumId) {
     return _repository.getDateRange(albumId);

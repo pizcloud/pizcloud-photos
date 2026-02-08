@@ -42,7 +42,17 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
   void initState() {
     super.initState();
     _album = widget.album;
+    Future.microtask(_ensureAssetsLoaded); // pizcloud
   }
+
+  // pizcloud
+  Future<void> _ensureAssetsLoaded() async {
+    await ref.read(remoteAlbumServiceProvider).ensureAlbumAssetsLoaded(_album.id, expectedCount: _album.assetCount);
+    if (!mounted) {
+      return;
+    }
+  }
+  // #pizcloud
 
   Future<void> addAssets(BuildContext context) async {
     final albumAssets = await ref.read(remoteAlbumProvider.notifier).getAssets(_album.id);

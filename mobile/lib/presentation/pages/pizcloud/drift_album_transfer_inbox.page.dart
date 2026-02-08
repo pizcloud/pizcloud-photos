@@ -7,6 +7,7 @@ import 'package:immich_mobile/domain/models/album/pizcloud/album_transfer.model.
 import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
 import 'package:immich_mobile/providers/api.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
+import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart';
 import 'package:immich_mobile/services/pizcloud/album_transfer_api.service.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
@@ -37,6 +38,8 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
       final apiService = ref.read(apiServiceProvider);
       await AlbumTransferApiService.acceptTransfer(apiService, transfer.id);
       ref.invalidate(albumIncomingTransfersProvider);
+      await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(transfer.albumId);
+      ref.invalidate(remoteAlbumSharedUsersProvider(transfer.albumId));
       await ref.read(remoteAlbumProvider.notifier).refresh();
       ImmichToast.show(context: context, msg: 'transfer_accept_success'.tr(), toastType: ToastType.success);
     } catch (e) {

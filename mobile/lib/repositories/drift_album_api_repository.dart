@@ -1,10 +1,13 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
+import 'package:immich_mobile/domain/models/user.model.dart'; // pizcloud
+import 'package:immich_mobile/infrastructure/utils/user.converter.dart'; // pizcloud
 import 'package:immich_mobile/providers/api.provider.dart';
 import 'package:immich_mobile/repositories/api.repository.dart';
 import 'package:immich_mobile/services/api.service.dart';
 // ignore: import_rule_openapi
-import 'package:openapi/api.dart';
+import 'package:openapi/api.dart' hide AlbumUserRole; // pizcloud
+import 'package:openapi/api.dart' as api show AlbumUserRole; // pizcloud
 
 final driftAlbumApiRepositoryProvider = Provider(
   (ref) => DriftAlbumApiRepository(ref.watch(apiServiceProvider)),
@@ -35,6 +38,38 @@ class DriftAlbumApiRepository extends ApiRepository {
 
     return responseDto.toRemoteAlbum();
   }
+
+  // pizcloud
+  Future<
+    ({
+      RemoteAlbum album,
+      List<String> assetIds,
+      List<AssetResponseDto> assets,
+      List<({String userId, AlbumUserRole role})> users,
+      List<UserDto> userDetails,
+    })
+  >
+  getAlbumForSync(String albumId) async {
+    final responseDto = await checkNullWithService(_apiService, () => _api.getAlbumInfo(albumId, withoutAssets: false));
+    final assets = responseDto.assets;
+    final assetIds = assets.map((asset) => asset.id).toList();
+    final users = responseDto.albumUsers
+        .where((albumUser) => albumUser.user.id != responseDto.ownerId)
+        .map((albumUser) => (userId: albumUser.user.id, role: albumUser.role.toAlbumUserRole()))
+        .toList();
+    final userMap = <String, UserDto>{responseDto.owner.id: UserConverter.fromSimpleUserDto(responseDto.owner)};
+    for (final albumUser in responseDto.albumUsers) {
+      userMap[albumUser.user.id] = UserConverter.fromSimpleUserDto(albumUser.user);
+    }
+    return (
+      album: responseDto.toRemoteAlbum(),
+      assetIds: assetIds,
+      assets: assets,
+      users: users,
+      userDetails: userMap.values.toList(),
+    );
+  }
+  // #pizcloud
 
   Future<({List<String> removed, List<String> failed})> removeAssets(String albumId, Iterable<String> assetIds) async {
     // pizcloud
@@ -173,3 +208,14 @@ extension on AlbumResponseDto {
     );
   }
 }
+
+// pizcloud
+extension on api.AlbumUserRole {
+  AlbumUserRole toAlbumUserRole() => switch (this) {
+    api.AlbumUserRole.editor => AlbumUserRole.editor,
+    api.AlbumUserRole.viewer => AlbumUserRole.viewer,
+    _ => throw Exception('Unknown AlbumUserRole value: $this'),
+  };
+}
+
+// #pizcloud

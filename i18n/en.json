@@ -2317,6 +2317,7 @@
   "transfer_ownership": "Transfer ownership",
   "transfer_ownership_hint": "Select an email to transfer this album.",
   "transfer_pending_description": "Waiting for {email} to accept the transfer.",
+  "transfer_pending_short": "Pending transfer",
   "transfer_pending_title": "Pending confirmation",
   "transfer_request_canceled": "Transfer request canceled.",
   "transfer_request_failed": "Unable to process transfer request.",
