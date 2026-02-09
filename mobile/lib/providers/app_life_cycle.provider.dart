@@ -15,11 +15,13 @@ import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/backup/ios_background_settings.provider.dart';
 import 'package:immich_mobile/providers/backup/manual_upload.provider.dart';
 import 'package:immich_mobile/providers/gallery_permission.provider.dart';
+import 'package:immich_mobile/providers/infrastructure/album.provider.dart' as drift_album; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/platform.provider.dart';
 import 'package:immich_mobile/providers/memory.provider.dart';
 import 'package:immich_mobile/providers/notification_permission.provider.dart';
 import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/tab.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/services/background.service.dart';
@@ -125,6 +127,15 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
       _ref.read(websocketProvider.notifier).connect();
       await _handleBetaTimelineResume();
     }
+    // pizcloud
+    if (isAuthenticated && _ref.read(tabProvider) == TabEnum.albums) {
+      if (!_shouldContinueOperation()) {
+        return;
+      }
+      await _safeRun(_ref.read(drift_album.remoteAlbumProvider.notifier).refresh(), "refreshDriftAlbumsOnResume");
+      _ref.invalidate(albumIncomingTransfersProvider);
+    }
+    // #pizcloud
 
     await _ref.read(notificationPermissionProvider.notifier).getNotificationPermission();
 

@@ -296,21 +296,18 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
         material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
         leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => context.maybePop(null)),
         trailingActions: [
-          // TextButton(
-          //   onPressed: canDone
-          //       ? () {
-          //           final items = sharedEmailsAsync.value ?? const <SharedEmailDto>[];
-          //           onDone(items);
-          //         }
-          //       : null,
-          //   child: const Text("share", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),
-          // ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
+          Align(
+            alignment: Alignment.centerRight,
             child: SizedBox(
-              height: 32,
+              height: 34,
               child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 15)),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  minimumSize: const Size(0, 30),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(horizontal: -1, vertical: -3),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
                 onPressed: canDone
                     ? () {
                         final items = sharedEmailsAsync.value ?? const <SharedEmailDto>[];
@@ -318,8 +315,8 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
                       }
                     : null,
                 icon: isSubmitting.value
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.send_rounded),
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.send_rounded, size: 16),
                 label: Text('share'.tr()),
               ),
             ),
