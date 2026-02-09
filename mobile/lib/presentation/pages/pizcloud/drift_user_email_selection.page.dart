@@ -13,6 +13,7 @@ import 'package:immich_mobile/providers/pizcloud/album_share_email.provider.dart
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/services/pizcloud/album_share_email_api.service.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
+import 'package:openapi/api.dart'; // pizcloud
 
 @RoutePage()
 class DriftUserEmailSelectionPage extends HookConsumerWidget {
@@ -43,6 +44,21 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
     String normalizeEmail(String value) => value.trim().toLowerCase();
 
     bool isSelected(String email) => selectedEmails.value.contains(normalizeEmail(email));
+
+    // pizcloud
+    useEffect(() {
+      // Ensure shared users are refreshed from server when opening the page.
+      // This prevents stale local data after ownership transfers or manual leaves.
+      Future.microtask(() async {
+        try {
+          await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(album.id);
+          ref.invalidate(remoteAlbumSharedUsersProvider(album.id));
+        } catch (_) {}
+      });
+
+      return null;
+    }, [album.id]);
+    // #pizcloud
 
     void toggleSelection(String email) {
       final normalized = normalizeEmail(email);
@@ -127,6 +143,21 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
         await ref.read(remoteAlbumProvider.notifier).removeUser(album.id, user.id);
         ref.invalidate(remoteAlbumSharedUsersProvider(album.id));
         _toast(context, 'removed'.tr());
+      } on ApiException catch (error) {
+        // pizcloud
+        final message = (error.message ?? '').toLowerCase();
+        final isAlreadyUnshared = message.contains('not shared');
+
+        if (isAlreadyUnshared) {
+          // failed fast on API error.
+          await ref.read(remoteAlbumRepository).removeUser(album.id, userId: user.id);
+          ref.invalidate(remoteAlbumSharedUsersProvider(album.id));
+          _toast(context, 'removed'.tr());
+          return;
+        }
+
+        _toast(context, 'remove_failed'.tr());
+        // #pizcloud
       } catch (_) {
         _toast(context, 'remove_failed'.tr());
       } finally {

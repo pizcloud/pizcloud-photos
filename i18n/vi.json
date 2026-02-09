@@ -2140,7 +2140,7 @@
   "transfer_select_email": "Vui lòng chọn email để chuyển quyền.",
   "transfer_send": "Gửi yêu cầu",
   "transfer_user_not_found": "Không tìm thấy user trong hệ thống.",
-  "transfer_warning": "User mới cần đồng ý. Dung lượng album sẽ tính cho user mới. User cũ trở thành editor và có thể bị xóa khỏi album.",
+  "transfer_warning": "Người dùng được chuyển cần đồng ý. Dung lượng album sẽ tính cho họ. Bạn trở thành editor và có thể bị xóa khỏi album.",
   "trash": "Thùng rác",
   "trash_all": "Xóa hết",
   "trash_count": "Xóa {count, number} mục",

@@ -20,6 +20,16 @@ class DriftAlbumsPage extends ConsumerStatefulWidget {
 }
 
 class _DriftAlbumsPageState extends ConsumerState<DriftAlbumsPage> {
+  // pizcloud
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(albumIncomingTransfersProvider);
+    });
+  }
+  // #pizcloud
+
   Future<void> onRefresh() async {
     ref.invalidate(albumIncomingTransfersProvider); // pizcloud
     await ref.read(remoteAlbumProvider.notifier).refresh();

@@ -18,13 +18,13 @@ import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart'; 
 import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/current_album.provider.dart';
-// import 'package:immich_mobile/providers/infrastructure/db.provider.dart'; // pizcloud // UPDATE
 import 'package:immich_mobile/providers/api.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/common/user_circle_avatar.dart';
+import 'package:openapi/api.dart'; // pizcloud
 
 @RoutePage()
 class DriftAlbumOptionsPage extends HookConsumerWidget {
@@ -37,8 +37,22 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
     final userId = ref.watch(authProvider).userId;
     final activityEnabled = useState(album.isActivityEnabled);
     final isOwner = album.ownerId == userId;
-    // pizcloud: For shared viewers, mask names/emails in Options.
     final maskForSharedViewer = !isOwner;
+
+    // pizcloud
+    useEffect(() {
+      // Refresh shared users when opening Options to avoid stale data
+      // after ownership transfers or manual leaves.
+      Future.microtask(() async {
+        try {
+          await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(album.id);
+          ref.invalidate(remoteAlbumSharedUsersProvider(album.id));
+        } catch (_) {}
+      });
+
+      return null;
+    }, [album.id]);
+    // #pizcloud
 
     String maskEmail(String email) {
       final normalized = email.trim().toLowerCase();
@@ -87,6 +101,19 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
       try {
         await ref.read(remoteAlbumProvider.notifier).removeUser(album.id, user.id);
         ref.invalidate(remoteAlbumSharedUsersProvider(album.id));
+      } on ApiException catch (error) {
+        // pizcloud
+        final message = (error.message ?? '').toLowerCase();
+        final isAlreadyUnshared = message.contains('not shared');
+
+        if (isAlreadyUnshared) {
+          // failed fast on API error
+          await ref.read(remoteAlbumRepository).removeUser(album.id, userId: user.id);
+          ref.invalidate(remoteAlbumSharedUsersProvider(album.id));
+        } else {
+          showErrorMessage();
+        }
+        // #pizcloud
       } catch (_) {
         showErrorMessage();
       }

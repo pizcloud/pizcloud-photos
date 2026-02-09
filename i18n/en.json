@@ -2325,7 +2325,7 @@
   "transfer_select_email": "Please select an email to transfer ownership.",
   "transfer_send": "Send request",
   "transfer_user_not_found": "User not found.",
-  "transfer_warning": "The new user must accept. Album storage will be billed to the new user. The old owner becomes an editor and can be removed.",
+  "transfer_warning": "The transferred user must agree. Album storage will count toward their quota. You will become an editor and can be removed from the album.",
   "trash": "Trash",
   "trash_action_prompt": "{count} moved to trash",
   "trash_all": "Trash All",

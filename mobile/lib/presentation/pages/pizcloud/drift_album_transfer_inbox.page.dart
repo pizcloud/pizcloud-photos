@@ -38,6 +38,7 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
       final apiService = ref.read(apiServiceProvider);
       await AlbumTransferApiService.acceptTransfer(apiService, transfer.id);
       ref.invalidate(albumIncomingTransfersProvider);
+      ref.invalidate(albumTransferByAlbumProvider(transfer.albumId)); // pizcloud
       await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(transfer.albumId);
       ref.invalidate(remoteAlbumSharedUsersProvider(transfer.albumId));
       await ref.read(remoteAlbumProvider.notifier).refresh();
@@ -61,6 +62,7 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
       final apiService = ref.read(apiServiceProvider);
       await AlbumTransferApiService.declineTransfer(apiService, transfer.id);
       ref.invalidate(albumIncomingTransfersProvider);
+      ref.invalidate(albumTransferByAlbumProvider(transfer.albumId)); // pizcloud
       ImmichToast.show(context: context, msg: 'transfer_decline_success'.tr(), toastType: ToastType.success);
     } catch (_) {
       ImmichToast.show(context: context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);

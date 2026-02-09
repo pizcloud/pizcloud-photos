@@ -42,7 +42,10 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
   void initState() {
     super.initState();
     _album = widget.album;
-    Future.microtask(_ensureAssetsLoaded); // pizcloud
+    // pizcloud
+    // Future.microtask(_ensureAssetsLoaded); // pizcloud
+    Future.microtask(_bootstrapAlbumData); // pizcloud
+    // #pizcloud
   }
 
   // pizcloud
@@ -51,6 +54,19 @@ class _RemoteAlbumPageState extends ConsumerState<RemoteAlbumPage> {
     if (!mounted) {
       return;
     }
+  }
+
+  // pizcloud
+  Future<void> _refreshSharedUsers() async {
+    try {
+      await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(_album.id);
+      ref.invalidate(remoteAlbumSharedUsersProvider(_album.id));
+    } catch (_) {}
+  }
+
+  Future<void> _bootstrapAlbumData() async {
+    await _ensureAssetsLoaded();
+    await _refreshSharedUsers();
   }
   // #pizcloud
 

@@ -19,6 +19,7 @@ import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.da
 import 'package:immich_mobile/providers/search/search_input_focus.provider.dart';
 import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/services/media_permission_service.dart'; // pizcloud
 import 'package:immich_mobile/providers/media_permission.provider.dart'; // pizcloud
@@ -269,6 +270,7 @@ void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
   // Album page
   if (index == kAlbumTabIndex) {
     ref.read(remoteAlbumProvider.notifier).refresh();
+    ref.invalidate(albumIncomingTransfersProvider); // pizcloud
   }
 
   // Library page

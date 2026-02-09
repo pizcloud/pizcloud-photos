@@ -158,6 +158,9 @@ class RemoteAlbumNotifier extends Notifier<RemoteAlbumState> {
   Future<void> leaveAlbum(String albumId, {required String userId}) async {
     await _remoteAlbumService.removeUser(albumId, userId: userId);
 
+    // pizcloud - only remove from in-memory state.
+    await _remoteAlbumService.deleteLocalAlbum(albumId);
+
     final updatedAlbums = state.albums.where((album) => album.id != albumId).toList();
     state = state.copyWith(albums: updatedAlbums);
   }

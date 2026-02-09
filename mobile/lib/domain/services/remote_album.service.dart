@@ -182,6 +182,11 @@ class RemoteAlbumService {
     await _repository.deleteAlbum(albumId);
   }
 
+  // pizcloud: local-only delete for when the current user leaves an album.
+  Future<void> deleteLocalAlbum(String albumId) async {
+    await _repository.deleteAlbum(albumId);
+  }
+
   Future<void> addUsers({required String albumId, required List<String> userIds}) async {
     await _albumApiRepository.addUsers(albumId, userIds);
 
