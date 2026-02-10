@@ -28,10 +28,19 @@ class _DriftAlbumsPageState extends ConsumerState<DriftAlbumsPage> {
       return;
     }
 
-    final albumIds = ownedAlbumIds(albums: ref.read(remoteAlbumProvider).albums, ownerId: userId);
-    for (final albumId in albumIds) {
-      ref.invalidate(albumTransferByAlbumProvider(albumId));
-    }
+    // pizcloud: invalidate all owned album transfer providers on each trigger.
+    // final albumIds = ownedAlbumIds(albums: ref.read(remoteAlbumProvider).albums, ownerId: userId);
+    // for (final albumId in albumIds) {
+    //   ref.invalidate(albumTransferByAlbumProvider(albumId));
+    // }
+    unawaited(
+      refreshTransferIndicatorsForWidget(
+        ref,
+        albums: ref.read(remoteAlbumProvider).albums,
+        ownerId: userId,
+        reason: TransferRefreshReason.pageOpen,
+      ),
+    );
   }
   // #pizcloud
 
@@ -40,16 +49,28 @@ class _DriftAlbumsPageState extends ConsumerState<DriftAlbumsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(albumIncomingTransfersProvider);
+      // ref.invalidate(albumIncomingTransfersProvider);
       _refreshOwnedTransferBadges(); // pizcloud
     });
   }
   // #pizcloud
 
   Future<void> onRefresh() async {
-    ref.invalidate(albumIncomingTransfersProvider); // pizcloud
+    // ref.invalidate(albumIncomingTransfersProvider); // pizcloud
     await ref.read(remoteAlbumProvider.notifier).refresh();
-    _refreshOwnedTransferBadges(); // pizcloud
+    // pizcloud
+    final userId = ref.read(authProvider).userId;
+    if (userId.isEmpty) {
+      return;
+    }
+    await refreshTransferIndicatorsForWidget(
+      ref,
+      albums: ref.read(remoteAlbumProvider).albums,
+      ownerId: userId,
+      reason: TransferRefreshReason.pullToRefresh,
+      force: true,
+    );
+    // #pizcloud
   }
 
   @override

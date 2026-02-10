@@ -11,6 +11,8 @@ import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/presentation/utils/album_share_email.utils.dart';
 import 'package:immich_mobile/providers/api.provider.dart';
+import 'package:immich_mobile/providers/auth.provider.dart';
+import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_share_email.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart';
 import 'package:immich_mobile/services/pizcloud/album_share_email_api.service.dart';
@@ -27,6 +29,22 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
     final email = value.trim();
     final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     return regex.hasMatch(email);
+  }
+
+  Future<void> _refreshTransferAfterLocalMutation(WidgetRef ref) async {
+    final userId = ref.read(authProvider).userId;
+    if (userId.isEmpty) {
+      return;
+    }
+
+    await refreshTransferIndicatorsForWidget(
+      ref,
+      albums: ref.read(remoteAlbumProvider).albums,
+      ownerId: userId,
+      reason: TransferRefreshReason.localMutation,
+      force: true,
+      includeIncoming: false,
+    );
   }
 
   @override
@@ -125,8 +143,8 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
           albumId: album.id,
           toUserId: resolution.userIds.first,
         );
-
-        ref.invalidate(albumTransferByAlbumProvider(album.id));
+        // ref.invalidate(albumTransferByAlbumProvider(album.id));
+        await _refreshTransferAfterLocalMutation(ref);
         ImmichToast.show(context: context, msg: 'transfer_request_sent'.tr(), toastType: ToastType.success);
       } catch (e) {
         ImmichToast.show(context: context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
@@ -156,7 +174,8 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
         isSubmitting.value = true;
         final apiService = ref.read(apiServiceProvider);
         await AlbumTransferApiService.cancelTransfer(apiService, album.id);
-        ref.invalidate(albumTransferByAlbumProvider(album.id));
+        // ref.invalidate(albumTransferByAlbumProvider(album.id));
+        await _refreshTransferAfterLocalMutation(ref);
         ImmichToast.show(context: context, msg: 'transfer_request_canceled'.tr(), toastType: ToastType.success);
       } catch (_) {
         ImmichToast.show(context: context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);

@@ -274,15 +274,23 @@ void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
     unawaited(() async {
       await ref.read(remoteAlbumProvider.notifier).refresh();
       final userId = ref.read(authProvider).userId;
-      if (userId.isNotEmpty) {
-        final albumIds = ownedAlbumIds(albums: ref.read(remoteAlbumProvider).albums, ownerId: userId);
-        for (final albumId in albumIds) {
-          ref.invalidate(albumTransferByAlbumProvider(albumId));
-        }
+      if (userId.isEmpty) {
+        return;
       }
+      // final albumIds = ownedAlbumIds(albums: ref.read(remoteAlbumProvider).albums, ownerId: userId);
+      // for (final albumId in albumIds) {
+      //   ref.invalidate(albumTransferByAlbumProvider(albumId));
+      // }
+      await refreshTransferIndicatorsForWidget(
+        ref,
+        albums: ref.read(remoteAlbumProvider).albums,
+        ownerId: userId,
+        reason: TransferRefreshReason.tabEnter,
+      );
     }());
     // #pizcloud
-    ref.invalidate(albumIncomingTransfersProvider); // pizcloud
+    // separate incoming invalidate.
+    // ref.invalidate(albumIncomingTransfersProvider); // pizcloud
   }
 
   // Library page

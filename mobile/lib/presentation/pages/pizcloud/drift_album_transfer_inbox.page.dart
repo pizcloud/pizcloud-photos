@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/album/pizcloud/album_transfer.model.dart';
 import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
 import 'package:immich_mobile/providers/api.provider.dart';
+import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart';
@@ -16,6 +17,22 @@ import 'package:immich_mobile/widgets/common/immich_toast.dart';
 @RoutePage()
 class DriftAlbumTransferInboxPage extends ConsumerWidget {
   const DriftAlbumTransferInboxPage({super.key});
+
+  Future<void> _refreshTransferAfterLocalMutation(WidgetRef ref, {required bool includeIncoming}) async {
+    final userId = ref.read(authProvider).userId;
+    if (userId.isEmpty) {
+      return;
+    }
+
+    await refreshTransferIndicatorsForWidget(
+      ref,
+      albums: ref.read(remoteAlbumProvider).albums,
+      ownerId: userId,
+      reason: TransferRefreshReason.localMutation,
+      force: true,
+      includeIncoming: includeIncoming,
+    );
+  }
 
   void _showToast(BuildContext context, {required String msg, ToastType toastType = ToastType.info}) {
     if (!context.mounted) {
@@ -63,19 +80,19 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
       return;
     }
 
-    // Refresh inbox immediately so accepted request disappears even when it was the last item.
-    ref.invalidate(albumIncomingTransfersProvider);
-    try {
-      final _ = await ref.refresh(albumIncomingTransfersProvider.future);
-    } catch (_) {}
-    ref.invalidate(albumTransferByAlbumProvider(transfer.albumId)); // pizcloud
-
     // Keep local cache aligned after a successful accept, but do not downgrade success to failure.
     try {
       await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(transfer.albumId);
       ref.invalidate(remoteAlbumSharedUsersProvider(transfer.albumId));
       await ref.read(remoteAlbumProvider.notifier).refresh();
     } catch (_) {}
+
+    // ref.invalidate(albumIncomingTransfersProvider);
+    // try {
+    //   final _ = await ref.refresh(albumIncomingTransfersProvider.future);
+    // } catch (_) {}
+    // ref.invalidate(albumTransferByAlbumProvider(transfer.albumId));
+    await _refreshTransferAfterLocalMutation(ref, includeIncoming: true);
 
     _showToast(context, msg: 'transfer_accept_success'.tr(), toastType: ToastType.success);
   }
@@ -84,11 +101,13 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
     try {
       final apiService = ref.read(apiServiceProvider);
       await AlbumTransferApiService.declineTransfer(apiService, transfer.id);
-      ref.invalidate(albumIncomingTransfersProvider);
-      try {
-        final _ = await ref.refresh(albumIncomingTransfersProvider.future);
-      } catch (_) {}
-      ref.invalidate(albumTransferByAlbumProvider(transfer.albumId)); // pizcloud
+
+      // ref.invalidate(albumIncomingTransfersProvider);
+      // try {
+      //   final _ = await ref.refresh(albumIncomingTransfersProvider.future);
+      // } catch (_) {}
+      // ref.invalidate(albumTransferByAlbumProvider(transfer.albumId));
+      await _refreshTransferAfterLocalMutation(ref, includeIncoming: true);
       _showToast(context, msg: 'transfer_decline_success'.tr(), toastType: ToastType.success);
     } catch (_) {
       _showToast(context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
