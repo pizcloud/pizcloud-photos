@@ -279,8 +279,7 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                               Builder(
                                 builder: (context) {
                                   final email = pendingTransfer.toUser.email;
-                                  final description =
-                                      'transfer_pending_description'.tr(namedArgs: {'email': email});
+                                  final description = 'transfer_pending_description'.tr(namedArgs: {'email': email});
                                   final index = description.indexOf(email);
                                   if (index == -1) {
                                     return Text(description, style: const TextStyle(fontSize: 13));
@@ -343,11 +342,7 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                                     shape: BoxShape.circle,
                                     color: context.colorScheme.primary.withValues(alpha: 0.12),
                                   ),
-                                  child: Icon(
-                                    Icons.swap_horiz_rounded,
-                                    color: context.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  child: Icon(Icons.swap_horiz_rounded, color: context.colorScheme.primary, size: 18),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -369,11 +364,7 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    Icons.info_outline_rounded,
-                                    color: context.colorScheme.primary,
-                                    size: 18,
-                                  ),
+                                  Icon(Icons.info_outline_rounded, color: context.colorScheme.primary, size: 18),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
@@ -395,11 +386,7 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 child: Row(
                                   children: [
-                                    Icon(
-                                      Icons.check_circle_rounded,
-                                      color: context.colorScheme.primary,
-                                      size: 18,
-                                    ),
+                                    Icon(Icons.check_circle_rounded, color: context.colorScheme.primary, size: 18),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
@@ -445,7 +432,7 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'shared_with'.tr(),
+                      'saved_list'.tr(),
                       style: TextStyle(
                         fontSize: 13,
                         color: context.colorScheme.onSurfaceVariant,

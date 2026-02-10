@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart'; // pizcloud
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/presentation/widgets/album/album_selector.widget.dart';
+import 'package:immich_mobile/providers/auth.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
 import 'package:immich_mobile/presentation/pages/pizcloud/drift_album_transfer_inbox.page.dart'; // pizcloud
@@ -21,11 +22,26 @@ class DriftAlbumsPage extends ConsumerStatefulWidget {
 
 class _DriftAlbumsPageState extends ConsumerState<DriftAlbumsPage> {
   // pizcloud
+  void _refreshOwnedTransferBadges() {
+    final userId = ref.read(authProvider).userId;
+    if (userId.isEmpty) {
+      return;
+    }
+
+    final albumIds = ownedAlbumIds(albums: ref.read(remoteAlbumProvider).albums, ownerId: userId);
+    for (final albumId in albumIds) {
+      ref.invalidate(albumTransferByAlbumProvider(albumId));
+    }
+  }
+  // #pizcloud
+
+  // pizcloud
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.invalidate(albumIncomingTransfersProvider);
+      _refreshOwnedTransferBadges(); // pizcloud
     });
   }
   // #pizcloud
@@ -33,6 +49,7 @@ class _DriftAlbumsPageState extends ConsumerState<DriftAlbumsPage> {
   Future<void> onRefresh() async {
     ref.invalidate(albumIncomingTransfersProvider); // pizcloud
     await ref.read(remoteAlbumProvider.notifier).refresh();
+    _refreshOwnedTransferBadges(); // pizcloud
   }
 
   @override

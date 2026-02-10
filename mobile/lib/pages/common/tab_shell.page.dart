@@ -11,6 +11,7 @@ import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/presentation/pages/search/paginated_search.provider.dart';
+import 'package:immich_mobile/providers/auth.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/haptic_feedback.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/memory.provider.dart';
@@ -269,7 +270,18 @@ void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
 
   // Album page
   if (index == kAlbumTabIndex) {
-    ref.read(remoteAlbumProvider.notifier).refresh();
+    // pizcloud
+    unawaited(() async {
+      await ref.read(remoteAlbumProvider.notifier).refresh();
+      final userId = ref.read(authProvider).userId;
+      if (userId.isNotEmpty) {
+        final albumIds = ownedAlbumIds(albums: ref.read(remoteAlbumProvider).albums, ownerId: userId);
+        for (final albumId in albumIds) {
+          ref.invalidate(albumTransferByAlbumProvider(albumId));
+        }
+      }
+    }());
+    // #pizcloud
     ref.invalidate(albumIncomingTransfersProvider); // pizcloud
   }
 

@@ -134,6 +134,13 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
       }
       await _safeRun(_ref.read(drift_album.remoteAlbumProvider.notifier).refresh(), "refreshDriftAlbumsOnResume");
       _ref.invalidate(albumIncomingTransfersProvider);
+      final userId = _ref.read(authProvider).userId;
+      if (userId.isNotEmpty) {
+        final albumIds = ownedAlbumIds(albums: _ref.read(drift_album.remoteAlbumProvider).albums, ownerId: userId);
+        for (final albumId in albumIds) {
+          _ref.invalidate(albumTransferByAlbumProvider(albumId));
+        }
+      }
     }
     // #pizcloud
 

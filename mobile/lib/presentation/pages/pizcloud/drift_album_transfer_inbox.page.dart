@@ -17,6 +17,17 @@ import 'package:immich_mobile/widgets/common/immich_toast.dart';
 class DriftAlbumTransferInboxPage extends ConsumerWidget {
   const DriftAlbumTransferInboxPage({super.key});
 
+  void _showToast(BuildContext context, {required String msg, ToastType toastType = ToastType.info}) {
+    if (!context.mounted) {
+      return;
+    }
+    try {
+      ImmichToast.show(context: context, msg: msg, toastType: toastType);
+    } catch (_) {
+      // Do not break accept/decline flow if toast rendering fails.
+    }
+  }
+
   Future<void> _handleAccept(BuildContext context, WidgetRef ref, AlbumTransferDto transfer) async {
     final confirmed = await showPlatformDialog<bool>(
       context: context,
@@ -34,27 +45,39 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
       return;
     }
 
+    final apiService = ref.read(apiServiceProvider);
+
     try {
-      final apiService = ref.read(apiServiceProvider);
       await AlbumTransferApiService.acceptTransfer(apiService, transfer.id);
-      ref.invalidate(albumIncomingTransfersProvider);
-      ref.invalidate(albumTransferByAlbumProvider(transfer.albumId)); // pizcloud
-      await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(transfer.albumId);
-      ref.invalidate(remoteAlbumSharedUsersProvider(transfer.albumId));
-      await ref.read(remoteAlbumProvider.notifier).refresh();
-      ImmichToast.show(context: context, msg: 'transfer_accept_success'.tr(), toastType: ToastType.success);
     } catch (e) {
       final message = e.toString().toLowerCase();
       if (message.contains('insufficient_quota')) {
-        ImmichToast.show(context: context, msg: 'transfer_insufficient_quota'.tr(), toastType: ToastType.info);
+        _showToast(context, msg: 'transfer_insufficient_quota'.tr(), toastType: ToastType.info);
         return;
       }
       if (message.contains('asset_conflict')) {
-        ImmichToast.show(context: context, msg: 'transfer_asset_conflict'.tr(), toastType: ToastType.info);
+        _showToast(context, msg: 'transfer_asset_conflict'.tr(), toastType: ToastType.info);
         return;
       }
-      ImmichToast.show(context: context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
+      _showToast(context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
+      return;
     }
+
+    // Refresh inbox immediately so accepted request disappears even when it was the last item.
+    ref.invalidate(albumIncomingTransfersProvider);
+    try {
+      final _ = await ref.refresh(albumIncomingTransfersProvider.future);
+    } catch (_) {}
+    ref.invalidate(albumTransferByAlbumProvider(transfer.albumId)); // pizcloud
+
+    // Keep local cache aligned after a successful accept, but do not downgrade success to failure.
+    try {
+      await ref.read(remoteAlbumServiceProvider).syncAlbumFromServer(transfer.albumId);
+      ref.invalidate(remoteAlbumSharedUsersProvider(transfer.albumId));
+      await ref.read(remoteAlbumProvider.notifier).refresh();
+    } catch (_) {}
+
+    _showToast(context, msg: 'transfer_accept_success'.tr(), toastType: ToastType.success);
   }
 
   Future<void> _handleDecline(BuildContext context, WidgetRef ref, AlbumTransferDto transfer) async {
@@ -62,10 +85,13 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
       final apiService = ref.read(apiServiceProvider);
       await AlbumTransferApiService.declineTransfer(apiService, transfer.id);
       ref.invalidate(albumIncomingTransfersProvider);
+      try {
+        final _ = await ref.refresh(albumIncomingTransfersProvider.future);
+      } catch (_) {}
       ref.invalidate(albumTransferByAlbumProvider(transfer.albumId)); // pizcloud
-      ImmichToast.show(context: context, msg: 'transfer_decline_success'.tr(), toastType: ToastType.success);
+      _showToast(context, msg: 'transfer_decline_success'.tr(), toastType: ToastType.success);
     } catch (_) {
-      ImmichToast.show(context: context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
+      _showToast(context, msg: 'transfer_request_failed'.tr(), toastType: ToastType.error);
     }
   }
 
@@ -116,6 +142,7 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pageContext = context;
     final transfersAsync = ref.watch(albumIncomingTransfersProvider);
 
     return PlatformScaffold(
@@ -131,7 +158,7 @@ class DriftAlbumTransferInboxPage extends ConsumerWidget {
           }
           return ListView.builder(
             itemCount: items.length,
-            itemBuilder: (context, index) => _buildTransferTile(context, ref, items[index]),
+            itemBuilder: (_, index) => _buildTransferTile(pageContext, ref, items[index]),
           );
         },
         onLoading: () => const Center(child: CircularProgressIndicator()),
