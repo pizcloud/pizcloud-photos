@@ -79,6 +79,7 @@
     mdiPlus,
     mdiPresentationPlay,
     mdiShareVariantOutline,
+    mdiSwapHorizontal,
     mdiUpload,
   } from '@mdi/js';
   import { onDestroy } from 'svelte';
@@ -397,6 +398,16 @@
     }
   };
 
+  // pizcloud
+  const handleTransferOwnership = async () => {
+    // transfer ownership was only reachable from AlbumOptionsModal.
+    const transferResult = await modalManager.show(AlbumTransferOwnershipModal, { album });
+    if (transferResult?.action === 'refreshAlbum') {
+      await refreshAlbum();
+    }
+  };
+  // #pizcloud
+
   const handleOptions = async () => {
     const result = await modalManager.show(AlbumOptionsModal, { album, order: albumOrder, user: $user });
 
@@ -415,10 +426,7 @@
       }
       // pizcloud
       case 'transferOwnership': {
-        const transferResult = await modalManager.show(AlbumTransferOwnershipModal, { album });
-        if (transferResult?.action === 'refreshAlbum') {
-          await refreshAlbum();
-        }
+        await handleTransferOwnership();
         break;
       }
       // #pizcloud
@@ -511,6 +519,16 @@
                       onclick={handleShare}
                       aria-label={$t('add_more_users')}
                     />
+                    <!-- pizcloud -->
+                    <IconButton
+                      shape="round"
+                      color="secondary"
+                      size="medium"
+                      icon={mdiSwapHorizontal}
+                      onclick={handleTransferOwnership}
+                      aria-label={$t('transfer_ownership')}
+                    />
+                    <!-- #pizcloud -->
                   {/if}
                 </div>
               {/if}
@@ -637,6 +655,16 @@
                 onclick={handleShare}
                 icon={mdiShareVariantOutline}
               />
+              <!-- pizcloud -->
+              <IconButton
+                shape="round"
+                variant="ghost"
+                color="secondary"
+                aria-label={$t('transfer_ownership')}
+                onclick={handleTransferOwnership}
+                icon={mdiSwapHorizontal}
+              />
+              <!-- #pizcloud -->
             {/if}
 
             {#if featureFlagsManager.value.map}

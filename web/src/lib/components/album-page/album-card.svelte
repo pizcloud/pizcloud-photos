@@ -62,7 +62,7 @@
   <!-- pizcloud -->
   {#if hasPendingTransfer}
     <div
-      class="absolute start-8 top-8 rounded-lg border border-amber-400 bg-amber-100/80 px-2 py-1 text-amber-800 dark:border-amber-500 dark:bg-amber-500/20 dark:text-amber-200"
+      class="absolute start-6 top-8 rounded-lg border border-amber-400 bg-amber-100/80 px-1 py-1 text-amber-800 dark:border-amber-500 dark:bg-amber-500/20 dark:text-amber-200"
     >
       <span class="inline-flex items-center gap-1 text-xs font-medium">
         <Icon icon={mdiSwapHorizontal} size="14" />

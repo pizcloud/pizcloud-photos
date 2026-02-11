@@ -11,6 +11,7 @@
   import AlbumEditModal from '$lib/modals/AlbumEditModal.svelte';
   // import AlbumShareModal from '$lib/modals/AlbumShareModal.svelte'; // pizcloud
   import AlbumShareUserEmailModal from '$lib/modals/pizcloud/AlbumShareUserEmailModal.svelte'; // pizcloud
+  import AlbumTransferOwnershipModal from '$lib/modals/pizcloud/AlbumTransferOwnershipModal.svelte'; // pizcloud
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
   import { handleDeleteAlbum, handleDownloadAlbum } from '$lib/services/album.service';
   import { isPendingTransfer } from '$lib/services/pizcloud/album-transfer.service';
@@ -265,7 +266,7 @@
     isOpen = false;
   };
 
-  const handleSelect = async (action: 'edit' | 'share' | 'download' | 'delete') => {
+  const handleSelect = async (action: 'edit' | 'share' | 'transfer' | 'download' | 'delete') => {
     closeAlbumContextMenu();
 
     if (!selectedAlbum) {
@@ -314,6 +315,19 @@
         }
         break;
       }
+
+      // pizcloud
+      case 'transfer': {
+        // Old behavior: right-click album context menu did not expose transfer ownership.
+        const transferResult = await modalManager.show(AlbumTransferOwnershipModal, { album: selectedAlbum });
+        if (transferResult?.action === 'refreshAlbum') {
+          const refreshed = await getAlbumInfo({ id: selectedAlbum.id, withoutAssets: true });
+          updateAlbumInfo(refreshed);
+          await invalidate('app:albums');
+        }
+        break;
+      }
+      // #pizcloud
 
       case 'download': {
         await handleDownloadAlbum(selectedAlbum);
@@ -409,7 +423,7 @@
 {#if allowEdit && incomingTransfers.length > 0}
   <button
     type="button"
-    class="mb-4 flex w-full items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 text-start transition-colors hover:bg-gray-100 dark:border-gray-800 dark:bg-immich-dark-gray dark:hover:bg-gray-800"
+    class="mt-4 mb-4 flex w-full items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 text-start transition-colors hover:bg-gray-100 dark:border-gray-800 dark:bg-immich-dark-gray dark:hover:bg-gray-800"
     onclick={() => goto(AppRoute.SHARING_TRANSFER_INBOX)}
   >
     <div class="flex items-center gap-3">
@@ -472,6 +486,8 @@
   {#if showFullContextMenu}
     <MenuOption icon={mdiRenameOutline} text={$t('edit_album')} onClick={() => handleSelect('edit')} />
     <MenuOption icon={mdiShareVariantOutline} text={$t('share')} onClick={() => handleSelect('share')} />
+    <MenuOption icon={mdiSwapHorizontal} text={$t('transfer_ownership')} onClick={() => handleSelect('transfer')} />
+    <!-- pizcloud -->
   {/if}
   <MenuOption icon={mdiDownload} text={$t('download')} onClick={() => handleSelect('download')} />
   {#if showFullContextMenu}
