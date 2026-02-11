@@ -15,7 +15,7 @@
   } from '$lib/stores/preferences.store';
   import { createAlbumAndRedirect } from '$lib/utils/album-utils';
   import { Button, HStack, Text } from '@immich/ui';
-  import { mdiLink, mdiPlusBoxOutline } from '@mdi/js';
+  import { mdiLink, mdiPlusBoxOutline, mdiSwapHorizontal } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
@@ -51,6 +51,17 @@
       <Button leadingIcon={mdiLink} href={AppRoute.SHARED_LINKS} size="small" variant="ghost" color="secondary">
         <Text class="hidden md:block">{$t('shared_links')}</Text>
       </Button>
+      <!-- pizcloud -->
+      <Button
+        leadingIcon={mdiSwapHorizontal}
+        href={AppRoute.SHARING_TRANSFER_INBOX}
+        size="small"
+        variant="ghost"
+        color="secondary"
+      >
+        <Text class="hidden md:block">{$t('transfer_inbox_title')}</Text>
+      </Button>
+      <!-- #pizcloud -->
     </HStack>
   {/snippet}
 

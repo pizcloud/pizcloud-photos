@@ -15,7 +15,7 @@
     type UserResponseDto,
   } from '@immich/sdk';
   import { Icon, Modal, ModalBody, modalManager, toastManager } from '@immich/ui';
-  import { mdiArrowDownThin, mdiArrowUpThin, mdiDotsVertical, mdiPlus } from '@mdi/js';
+  import { mdiArrowDownThin, mdiArrowUpThin, mdiDotsVertical, mdiPlus, mdiSwapHorizontal } from '@mdi/js';
   import { findKey } from 'lodash-es';
   import { t } from 'svelte-i18n';
   import SettingDropdown from '../components/shared-components/settings/setting-dropdown.svelte';
@@ -25,7 +25,11 @@
     order: AssetOrder | undefined;
     user: UserResponseDto;
     onClose: (
-      result?: { action: 'changeOrder'; order: AssetOrder } | { action: 'shareUser' } | { action: 'refreshAlbum' },
+      result?:
+        | { action: 'changeOrder'; order: AssetOrder }
+        | { action: 'shareUser' }
+        | { action: 'transferOwnership' } // pizcloud
+        | { action: 'refreshAlbum' },
     ) => void;
   }
 
@@ -139,6 +143,21 @@
             </div>
             <div>{$t('invite_people')}</div>
           </button>
+
+          <!-- pizcloud -->
+          {#if album.ownerId === user.id}
+            <button
+              type="button"
+              class="mt-2 flex items-center gap-2"
+              onclick={() => onClose({ action: 'transferOwnership' })}
+            >
+              <div class="rounded-full w-10 h-10 border border-gray-500 flex items-center justify-center">
+                <div><Icon icon={mdiSwapHorizontal} size="22" /></div>
+              </div>
+              <div>{$t('transfer_ownership')}</div>
+            </button>
+          {/if}
+          <!-- #pizcloud -->
 
           <div class="flex items-center gap-2 py-2 mt-2">
             <div>

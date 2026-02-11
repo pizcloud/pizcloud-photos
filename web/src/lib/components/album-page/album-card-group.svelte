@@ -18,6 +18,7 @@
     showOwner?: boolean;
     showDateRange?: boolean;
     showItemCount?: boolean;
+    pendingTransferByAlbumId?: Record<string, boolean>; // pizcloud
     onShowContextMenu?: ((position: ContextMenuPosition, album: AlbumResponseDto) => unknown) | undefined;
   }
 
@@ -27,6 +28,7 @@
     showOwner = false,
     showDateRange = false,
     showItemCount = false,
+    pendingTransferByAlbumId = {}, // pizcloud
     onShowContextMenu = undefined,
   }: Props = $props();
 
@@ -75,6 +77,7 @@
             {showOwner}
             {showDateRange}
             {showItemCount}
+            hasPendingTransfer={pendingTransferByAlbumId[album.id] ?? false}
             preload={index < 20}
             onShowContextMenu={onShowContextMenu ? (position) => showContextMenu(position, album) : undefined}
           />

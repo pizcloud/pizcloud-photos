@@ -7,15 +7,16 @@
   import type { ContextMenuPosition } from '$lib/utils/context-menu';
   import type { AlbumResponseDto } from '@immich/sdk';
   import { Icon } from '@immich/ui';
-  import { mdiShareVariantOutline } from '@mdi/js';
+  import { mdiShareVariantOutline, mdiSwapHorizontal } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
   interface Props {
     album: AlbumResponseDto;
+    hasPendingTransfer?: boolean; // pizcloud
     onShowContextMenu?: ((position: ContextMenuPosition, album: AlbumResponseDto) => unknown) | undefined;
   }
 
-  let { album, onShowContextMenu = undefined }: Props = $props();
+  let { album, hasPendingTransfer = false, onShowContextMenu = undefined }: Props = $props(); // pizcloud
 
   const showContextMenu = (position: ContextMenuPosition) => {
     onShowContextMenu?.(position, album);
@@ -38,6 +39,16 @@
 >
   <td class="text-md text-ellipsis text-start w-8/12 sm:w-4/12 md:w-4/12 xl:w-[30%] 2xl:w-[40%] items-center">
     {album.albumName}
+    <!-- pizcloud -->
+    {#if hasPendingTransfer}
+      <span
+        class="ms-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
+      >
+        <Icon icon={mdiSwapHorizontal} size="12" class="me-1" />
+        {$t('transfer_pending_short')}
+      </span>
+    {/if}
+    <!-- #pizcloud -->
     {#if album.shared}
       <Icon
         icon={mdiShareVariantOutline}

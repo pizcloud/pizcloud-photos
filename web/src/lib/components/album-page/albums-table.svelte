@@ -18,10 +18,16 @@
   interface Props {
     groupedAlbums: AlbumGroup[];
     albumGroupOption?: string;
+    pendingTransferByAlbumId?: Record<string, boolean>; // pizcloud
     onShowContextMenu?: ((position: ContextMenuPosition, album: AlbumResponseDto) => unknown) | undefined;
   }
 
-  let { groupedAlbums, albumGroupOption = AlbumGroupBy.None, onShowContextMenu }: Props = $props();
+  let {
+    groupedAlbums,
+    albumGroupOption = AlbumGroupBy.None,
+    pendingTransferByAlbumId = {}, // pizcloud
+    onShowContextMenu,
+  }: Props = $props();
 </script>
 
 <table class="mt-2 w-full text-start">
@@ -37,7 +43,7 @@
   {#if albumGroupOption === AlbumGroupBy.None}
     <tbody class="block w-full overflow-y-auto rounded-md border dark:border-immich-dark-gray dark:text-immich-dark-fg">
       {#each groupedAlbums[0].albums as album (album.id)}
-        <AlbumTableRow {album} {onShowContextMenu} />
+        <AlbumTableRow {album} hasPendingTransfer={pendingTransferByAlbumId[album.id] ?? false} {onShowContextMenu} />
       {/each}
     </tbody>
   {:else}
@@ -71,7 +77,11 @@
           transition:slide={{ duration: 300 }}
         >
           {#each albumGroup.albums as album (album.id)}
-            <AlbumTableRow {album} {onShowContextMenu} />
+            <AlbumTableRow
+              {album}
+              hasPendingTransfer={pendingTransferByAlbumId[album.id] ?? false}
+              {onShowContextMenu}
+            />
           {/each}
         </tbody>
       {/if}

@@ -36,6 +36,7 @@ export enum AppRoute {
   EXPLORE = '/explore',
   SHARE = '/share',
   SHARING = '/sharing',
+  SHARING_TRANSFER_INBOX = '/sharing/transfer-inbox', // pizcloud
   SHARED_LINKS = '/shared-links',
   SEARCH = '/search',
   MAP = '/map',

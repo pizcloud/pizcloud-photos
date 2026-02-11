@@ -36,6 +36,7 @@
   import AlbumOptionsModal from '$lib/modals/AlbumOptionsModal.svelte';
   // import AlbumShareModal from '$lib/modals/AlbumShareModal.svelte'; // pizcloud
   import AlbumShareUserEmailModal from '$lib/modals/pizcloud/AlbumShareUserEmailModal.svelte'; // pizcloud
+  import AlbumTransferOwnershipModal from '$lib/modals/pizcloud/AlbumTransferOwnershipModal.svelte'; // pizcloud
   import AlbumUsersModal from '$lib/modals/AlbumUsersModal.svelte';
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
   import { handleDeleteAlbum, handleDownloadAlbum } from '$lib/services/album.service';
@@ -412,6 +413,15 @@
         await handleShare();
         break;
       }
+      // pizcloud
+      case 'transferOwnership': {
+        const transferResult = await modalManager.show(AlbumTransferOwnershipModal, { album });
+        if (transferResult?.action === 'refreshAlbum') {
+          await refreshAlbum();
+        }
+        break;
+      }
+      // #pizcloud
       case 'refreshAlbum': {
         await refreshAlbum();
         break;

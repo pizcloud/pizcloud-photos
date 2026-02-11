@@ -13,13 +13,16 @@
   import AlbumShareUserEmailModal from '$lib/modals/pizcloud/AlbumShareUserEmailModal.svelte'; // pizcloud
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
   import { handleDeleteAlbum, handleDownloadAlbum } from '$lib/services/album.service';
+  import { isPendingTransfer } from '$lib/services/pizcloud/album-transfer.service';
+  import { albumTransferManager, TransferRefreshReason } from '$lib/stores/album-transfer-manager.svelte';
+  // pizcloud
   import {
     AlbumFilter,
     AlbumGroupBy,
     AlbumSortBy,
     AlbumViewMode,
-    SortOrder,
     locale,
+    SortOrder,
     type AlbumViewSettings,
   } from '$lib/stores/preferences.store';
   import { user } from '$lib/stores/user.store';
@@ -29,8 +32,8 @@
   import { handleError } from '$lib/utils/handle-error';
   import { normalizeSearchString } from '$lib/utils/string-utils';
   import { addUsersToAlbum, getAlbumInfo, type AlbumResponseDto, type AlbumUserAddDto } from '@immich/sdk';
-  import { modalManager, toastManager } from '@immich/ui';
-  import { mdiDeleteOutline, mdiDownload, mdiRenameOutline, mdiShareVariantOutline } from '@mdi/js';
+  import { Icon, modalManager, toastManager } from '@immich/ui';
+  import { mdiDeleteOutline, mdiDownload, mdiRenameOutline, mdiShareVariantOutline, mdiSwapHorizontal } from '@mdi/js';
   import { groupBy } from 'lodash-es';
   import { onMount, type Snippet } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -140,6 +143,33 @@
   let contextMenuPosition: ContextMenuPosition = $state({ x: 0, y: 0 });
   let selectedAlbum: AlbumResponseDto | undefined = $state();
   let isOpen = $state(false);
+  let transferRefreshKey = $state(''); // pizcloud
+
+  // pizcloud
+  let incomingTransfers = $derived(albumTransferManager.incomingTransfers);
+  let pendingTransferFlags = $derived.by(() => {
+    const flags: Record<string, boolean> = {};
+    for (const [albumId, transfer] of Object.entries(albumTransferManager.pendingTransferByAlbumId)) {
+      flags[albumId] = isPendingTransfer(transfer);
+    }
+    return flags;
+  });
+
+  const refreshTransferIndicators = async (reason: TransferRefreshReason, force = false) => {
+    if (!allowEdit) {
+      return;
+    }
+
+    const ownedAlbumIds = ownedAlbums.filter((album) => album.ownerId === $user.id).map((album) => album.id);
+
+    await albumTransferManager.refresh({
+      ownedAlbumIds,
+      reason,
+      force,
+      includeIncoming: true,
+    });
+  };
+  // #pizcloud
 
   // Step 1: Filter between Owned and Shared albums, or both.
   run(() => {
@@ -197,8 +227,30 @@
     if (allowEdit) {
       await invalidate('app:albums');
       // await removeAlbumsIfEmpty();
+      await refreshTransferIndicators(TransferRefreshReason.PageOpen); // pizcloud
     }
   });
+
+  // pizcloud
+  $effect(() => {
+    if (!allowEdit) {
+      return;
+    }
+
+    const nextKey = ownedAlbums
+      .filter((album) => album.ownerId === $user.id)
+      .map((album) => album.id)
+      .sort()
+      .join(',');
+
+    if (transferRefreshKey === nextKey) {
+      return;
+    }
+
+    transferRefreshKey = nextKey;
+    void refreshTransferIndicators(TransferRefreshReason.TabEnter);
+  });
+  // #pizcloud
 
   const showAlbumContextMenu = (contextMenuDetail: ContextMenuPosition, album: AlbumResponseDto) => {
     selectedAlbum = album;
@@ -347,10 +399,34 @@
   const onAlbumDelete = (album: AlbumResponseDto) => {
     ownedAlbums = ownedAlbums.filter(({ id }) => id !== album.id);
     sharedAlbums = sharedAlbums.filter(({ id }) => id !== album.id);
+    albumTransferManager.removeAlbum(album.id); // pizcloud
   };
 </script>
 
 <OnEvents {onAlbumDelete} />
+
+<!-- pizcloud -->
+{#if allowEdit && incomingTransfers.length > 0}
+  <button
+    type="button"
+    class="mb-4 flex w-full items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 text-start transition-colors hover:bg-gray-100 dark:border-gray-800 dark:bg-immich-dark-gray dark:hover:bg-gray-800"
+    onclick={() => goto(AppRoute.SHARING_TRANSFER_INBOX)}
+  >
+    <div class="flex items-center gap-3">
+      <span class="rounded-full bg-amber-100 p-2 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">
+        <Icon icon={mdiSwapHorizontal} size="18" />
+      </span>
+      <div>
+        <p class="font-medium text-sm">
+          {$t('transfer_inbox_banner_title', { values: { count: incomingTransfers.length } })}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">{$t('transfer_inbox_banner_subtitle')}</p>
+      </div>
+    </div>
+    <span class="text-xs font-semibold text-primary">{$t('transfer_inbox_title')}</span>
+  </button>
+{/if}
+<!-- #pizcloud -->
 
 {#if albums.length > 0}
   {#if userSettings.view === AlbumViewMode.Cover}
@@ -361,6 +437,7 @@
         {showOwner}
         showDateRange
         showItemCount
+        pendingTransferByAlbumId={pendingTransferFlags}
         onShowContextMenu={showAlbumContextMenu}
       />
     {:else}
@@ -371,13 +448,19 @@
           {showOwner}
           showDateRange
           showItemCount
+          pendingTransferByAlbumId={pendingTransferFlags}
           onShowContextMenu={showAlbumContextMenu}
         />
       {/each}
     {/if}
   {:else if userSettings.view === AlbumViewMode.List}
     <!-- Album Table -->
-    <AlbumsTable {groupedAlbums} {albumGroupOption} onShowContextMenu={showAlbumContextMenu} />
+    <AlbumsTable
+      {groupedAlbums}
+      {albumGroupOption}
+      pendingTransferByAlbumId={pendingTransferFlags}
+      onShowContextMenu={showAlbumContextMenu}
+    />
   {/if}
 {:else}
   <!-- Empty Message -->

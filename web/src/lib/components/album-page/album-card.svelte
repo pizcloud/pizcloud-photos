@@ -4,8 +4,8 @@
   import { getContextMenuPositionFromEvent, type ContextMenuPosition } from '$lib/utils/context-menu';
   import { getShortDateRange } from '$lib/utils/date-time';
   import type { AlbumResponseDto } from '@immich/sdk';
-  import { IconButton } from '@immich/ui';
-  import { mdiDotsVertical } from '@mdi/js';
+  import { Icon, IconButton } from '@immich/ui';
+  import { mdiDotsVertical, mdiSwapHorizontal } from '@mdi/js';
   import { t } from 'svelte-i18n';
 
   interface Props {
@@ -13,6 +13,7 @@
     showOwner?: boolean;
     showDateRange?: boolean;
     showItemCount?: boolean;
+    hasPendingTransfer?: boolean; // pizcloud
     preload?: boolean;
     onShowContextMenu?: ((position: ContextMenuPosition) => unknown) | undefined;
   }
@@ -22,6 +23,7 @@
     showOwner = false,
     showDateRange = false,
     showItemCount = false,
+    hasPendingTransfer = false, // pizcloud
     preload = false,
     onShowContextMenu = undefined,
   }: Props = $props();
@@ -57,6 +59,18 @@
   {/if}
 
   <AlbumCover {album} {preload} class="transition-all duration-300 hover:shadow-lg" />
+  <!-- pizcloud -->
+  {#if hasPendingTransfer}
+    <div
+      class="absolute start-8 top-8 rounded-lg border border-amber-400 bg-amber-100/80 px-2 py-1 text-amber-800 dark:border-amber-500 dark:bg-amber-500/20 dark:text-amber-200"
+    >
+      <span class="inline-flex items-center gap-1 text-xs font-medium">
+        <Icon icon={mdiSwapHorizontal} size="14" />
+        {$t('transfer_pending_short')}
+      </span>
+    </div>
+  {/if}
+  <!-- #pizcloud -->
 
   <div class="mt-4">
     <p
