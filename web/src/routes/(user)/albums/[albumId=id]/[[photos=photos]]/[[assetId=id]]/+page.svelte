@@ -705,6 +705,11 @@
                   />
                   <MenuOption icon={mdiCogOutline} text={$t('options')} onClick={handleOptions} />
                 {/if}
+                <MenuOption
+                  icon={mdiSwapHorizontal}
+                  text={$t('transfer_ownership')}
+                  onClick={handleTransferOwnership}
+                />
 
                 <MenuOption
                   icon={mdiDeleteOutline}
