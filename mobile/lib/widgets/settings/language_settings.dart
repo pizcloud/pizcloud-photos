@@ -73,12 +73,14 @@ class LanguageSettings extends HookConsumerWidget {
     return SafeArea(
       child: Column(
         children: [
-          _LanguageSearchBar(
-            controller: searchController,
-            focusNode: searchFocusNode,
-            onClear: clearSearch,
-            onChanged: (_) => onSearch(searchController.text),
-          ),
+          // pizcloud
+          // _LanguageSearchBar(
+          //   controller: searchController,
+          //   focusNode: searchFocusNode,
+          //   onClear: clearSearch,
+          //   onChanged: (_) => onSearch(searchController.text),
+          // ),
+          // #pizcloud
           Expanded(
             child: filteredLocaleEntries.value.isEmpty
                 ? const _LanguageNotFound()
@@ -258,7 +260,9 @@ class _LanguageItem extends StatelessWidget {
               color: isSelected ? context.colorScheme.primary : context.colorScheme.onSurfaceVariant,
             ),
           ),
-          trailing: isSelected ? Icon(context.platformIcons.checkMark, color: context.colorScheme.primary, size: 20) : null,
+          trailing: isSelected
+              ? Icon(context.platformIcons.checkMark, color: context.colorScheme.primary, size: 20)
+              : null,
           onTap: onTap,
           selected: isSelected,
           selectedTileColor: context.colorScheme.primary.withValues(alpha: .15),

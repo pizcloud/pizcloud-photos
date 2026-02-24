@@ -57,7 +57,7 @@ class DriftLibraryPage extends ConsumerWidget {
       // ),
       body: const CustomScrollView(
         slivers: [
-          // _LibraryIntroHeader(),
+          _LibraryIntroHeader(),
           _LibraryQuickActionsSection(),
           _LibraryExploreSection(),
           _LibraryManageSection(),
@@ -104,11 +104,11 @@ class _LibraryIntroHeader extends ConsumerWidget {
                   'library_header_title'.t(context: context),
                   style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'library_header_subtitle'.t(context: context),
-                  style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurface.withAlpha(160)),
-                ),
+                // const SizedBox(height: 4),
+                // Text(
+                //   'library_header_subtitle'.t(context: context),
+                //   style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurface.withAlpha(160)),
+                // ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
@@ -488,14 +488,8 @@ class _LibraryExploreLocalAlbumsCard extends ConsumerWidget {
             );
           }
 
-          return GridView.count(
-            crossAxisCount: 2,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            children: data.take(4).map((album) => LocalAlbumThumbnail(albumId: album.id)).toList(),
-          );
+          final previewAlbumIds = data.take(4).map((album) => album.id).toList();
+          return _LibraryLocalAlbumsPreviewCollage(albumIds: previewAlbumIds);
         },
         error: (_, __) => _CardEmptyState(
           icon: Icons.error_outline,
@@ -503,6 +497,76 @@ class _LibraryExploreLocalAlbumsCard extends ConsumerWidget {
         ),
         loading: () => const _CardSkeleton(),
       ),
+    );
+  }
+}
+
+class _LibraryLocalAlbumsPreviewCollage extends StatelessWidget {
+  const _LibraryLocalAlbumsPreviewCollage({required this.albumIds});
+
+  final List<String> albumIds;
+
+  @override
+  Widget build(BuildContext context) {
+    if (albumIds.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final overlayIds = albumIds.skip(1).take(3).toList();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final overlaySize = (constraints.maxHeight * 0.34).clamp(38.0, 52.0);
+
+        return ClipRRect(
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(child: LocalAlbumThumbnail(albumId: albumIds.first)),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.transparent, Colors.black.withAlpha(70)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+              if (overlayIds.isNotEmpty)
+                Positioned(
+                  left: 8,
+                  right: 8,
+                  bottom: 8,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: List.generate(overlayIds.length, (index) {
+                      final albumId = overlayIds[index];
+                      return Padding(
+                        padding: EdgeInsets.only(left: index == 0 ? 0 : 6),
+                        child: Container(
+                          width: overlaySize,
+                          height: overlaySize,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            border: Border.all(color: Colors.white.withAlpha(170), width: 1.1),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withAlpha(36), blurRadius: 8, offset: const Offset(0, 2)),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            child: LocalAlbumThumbnail(albumId: albumId),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

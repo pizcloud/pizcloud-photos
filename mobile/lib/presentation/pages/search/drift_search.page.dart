@@ -739,73 +739,136 @@ class _QuickLinkList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        border: Border.all(color: context.colorScheme.outline.withAlpha(10), width: 1),
-        gradient: LinearGradient(
-          colors: [
-            context.colorScheme.primary.withAlpha(10),
-            context.colorScheme.primary.withAlpha(15),
-            context.colorScheme.primary.withAlpha(20),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+    // pizcloud
+    final items = <_QuickLinkCardItem>[
+      _QuickLinkCardItem(
+        title: 'recently_taken'.t(context: context),
+        subtitle: 'search_quick_link_recently_taken_subtitle'.t(context: context),
+        icon: Icons.schedule_outlined,
+        onTap: () => context.pushRoute(const DriftRecentlyTakenRoute()),
       ),
-      child: ListView(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          _QuickLink(
-            title: 'recently_taken'.t(context: context),
-            icon: Icons.schedule_outlined,
-            isTop: true,
-            onTap: () => context.pushRoute(const DriftRecentlyTakenRoute()),
+      _QuickLinkCardItem(
+        title: 'videos'.t(context: context),
+        subtitle: 'search_quick_link_videos_subtitle'.t(context: context),
+        icon: Icons.play_circle_outline_rounded,
+        onTap: () => context.pushRoute(const DriftVideoRoute()),
+      ),
+      _QuickLinkCardItem(
+        title: 'favorites'.t(context: context),
+        subtitle: 'search_quick_link_favorites_subtitle'.t(context: context),
+        icon: Icons.favorite_border_rounded,
+        onTap: () => context.pushRoute(const DriftFavoriteRoute()),
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Text(
+        //   'search_quick_links_title'.t(context: context),
+        //   style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        // ),
+        // const SizedBox(height: 4),
+        // Text(
+        //   'search_quick_links_subtitle'.t(context: context),
+        //   style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurface.withAlpha(160)),
+        // ),
+        // const SizedBox(height: 10),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) => _QuickLinkCard(item: items[index]),
+        ),
+      ],
+    );
+    // #pizcloud
+  }
+}
+
+// pizcloud
+class _QuickLinkCardItem {
+  const _QuickLinkCardItem({required this.title, required this.subtitle, required this.icon, required this.onTap});
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+}
+
+class _QuickLinkCard extends StatelessWidget {
+  const _QuickLinkCard({required this.item});
+
+  final _QuickLinkCardItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: const BorderRadius.all(Radius.circular(18)),
+      onTap: item.onTap,
+      child: Ink(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(18)),
+          border: Border.all(color: context.colorScheme.outline.withAlpha(24)),
+          color: context.colorScheme.surfaceContainerLow,
+          gradient: LinearGradient(
+            colors: [context.colorScheme.primary.withAlpha(20), context.colorScheme.primary.withAlpha(10)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          _QuickLink(
-            title: 'videos'.t(context: context),
-            icon: Icons.play_circle_outline_rounded,
-            onTap: () => context.pushRoute(const DriftVideoRoute()),
-          ),
-          _QuickLink(
-            title: 'favorites'.t(context: context),
-            icon: Icons.favorite_border_rounded,
-            isBottom: true,
-            onTap: () => context.pushRoute(const DriftFavoriteRoute()),
-          ),
-        ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 34,
+              width: 34,
+              decoration: BoxDecoration(
+                color: context.colorScheme.primary.withAlpha(24),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Icon(item.icon, size: 20, color: context.primaryColor),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(item.title, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.fade,
+                    style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurface.withAlpha(150)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right_rounded, size: 18, color: context.colorScheme.onSurface.withAlpha(120)),
+          ],
+        ),
       ),
     );
   }
 }
+// #pizcloud
 
+// ignore: unused_element // pizcloud
 class _QuickLink extends StatelessWidget {
   final String title;
   final IconData icon;
   final VoidCallback onTap;
-  final bool isTop;
-  final bool isBottom;
 
-  const _QuickLink({
-    required this.title,
-    required this.icon,
-    required this.onTap,
-    this.isTop = false,
-    this.isBottom = false,
-  });
+  const _QuickLink({required this.title, required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.only(
-      topLeft: Radius.circular(isTop ? 20 : 0),
-      topRight: Radius.circular(isTop ? 20 : 0),
-      bottomLeft: Radius.circular(isBottom ? 20 : 0),
-      bottomRight: Radius.circular(isBottom ? 20 : 0),
-    );
-
     return ListTile(
-      shape: RoundedRectangleBorder(borderRadius: borderRadius),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
       leading: Icon(icon, size: 26),
       title: Text(title, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500)),
       onTap: onTap,
