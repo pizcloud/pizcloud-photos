@@ -1,7 +1,7 @@
 <p align="center"> 
   <br/>
   <a href="https://opensource.org/license/agpl-v3"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg?color=3F51B5&style=for-the-badge&label=License&logoColor=000000&labelColor=ececec" alt="License: AGPLv3"></a>
-  <a href="https://discord.immich.app">
+  <a href="https://discord.pizcloud.app">
     <img src="https://img.shields.io/discord/979116623879368755.svg?label=Discord&logo=Discord&style=for-the-badge&logoColor=000000&labelColor=ececec" alt="Discord"/>
   </a>
   <br/>
@@ -9,12 +9,15 @@
 </p>
 
 <p align="center">
-<img src="design/immich-logo-stacked-light.svg" width="300" title="Login With Custom URL">
+<img src="design/pizcloud-logo.png" width="300" title="Login With Custom URL">
 </p>
-<h3 align="center">High performance self-hosted photo and video management solution</h3>
+<p align="center">
+<img src="design/pizcloud-text-light.png" width="300" title="Login With Custom URL">
+</p>
+<h3 align="center">High performance backup photo and video management solution</h3>
 <br/>
-<a href="https://immich.app">
-<img src="design/immich-screenshots.png" title="Main Screenshot">
+<a href="https://pizcloud.com">
+<img src="design/pizcloud-screenshots.png" title="Main Screenshot">
 </a>
 <br/>
 
@@ -46,28 +49,28 @@
  
 
 > [!NOTE]
-> You can find the main documentation, including installation guides, at https://immich.app/.
+> You can find the main documentation, including installation guides, at https://pizcloud.com/.
 
 ## Links
 
-- [Documentation](https://docs.immich.app/)
-- [About](https://docs.immich.app/overview/introduction)
-- [Installation](https://docs.immich.app/install/requirements)
-- [Roadmap](https://immich.app/roadmap)
+- [Documentation](https://docs.pizcloud.app/)
+- [About](https://docs.pizcloud.app/overview/introduction)
+- [Installation](https://docs.pizcloud.app/install/requirements)
+- [Roadmap](https://pizcloud.app/roadmap)
 - [Demo](#demo)
 - [Features](#features)
-- [Translations](https://docs.immich.app/developer/translations)
-- [Contributing](https://docs.immich.app/overview/support-the-project)
+- [Translations](https://docs.pizcloud.app/developer/translations)
+- [Contributing](https://docs.pizcloud.app/overview/support-the-project)
 
 ## Demo
 
-Access the demo [here](https://demo.immich.app). For the mobile app, you can use `https://demo.immich.app` for the `Server Endpoint URL`.
+Access the demo [here](https://demo.pizcloud.app). For the mobile app, you can use `https://demo.pizcloud.app` for the `Server Endpoint URL`.
 
 ### Login credentials
 
 | Email           | Password |
 | --------------- | -------- |
-| demo@immich.app | demo     |
+| demo@pizcloud.app | demo     |
 
 ## Features
 
@@ -104,30 +107,30 @@ Access the demo [here](https://demo.immich.app). For the mobile app, you can use
 | Tags                                         | No     | Yes |
 | Folder View                                  | Yes    | Yes |
 
-## Translations
+<!-- ## Translations
 
-Read more about translations [here](https://docs.immich.app/developer/translations).
+Read more about translations [here](https://docs.pizcloud.app/developer/translations).
 
-<a href="https://hosted.weblate.org/engage/immich/">
-<img src="https://hosted.weblate.org/widget/immich/immich/multi-auto.svg" alt="Translation status" />
-</a>
+<a href="https://hosted.weblate.org/engage/pizcloud/">
+<img src="https://hosted.weblate.org/widget/pizcloud/pizcloud/multi-auto.svg" alt="Translation status" />
+</a> -->
 
-## Repository activity
+<!-- ## Repository activity
 
-![Activities](https://repobeats.axiom.co/api/embed/9e86d9dc3ddd137161f2f6d2e758d7863b1789cb.svg "Repobeats analytics image")
+![Activities](https://repobeats.axiom.co/api/embed/9e86d9dc3ddd137161f2f6d2e758d7863b1789cb.svg "Repobeats analytics image") -->
 
-## Star history
+<!-- ## Star history
 
-<a href="https://star-history.com/#immich-app/immich&type=date&legend=top-left">
+<a href="https://star-history.com/#pizcloud-app/pizcloud&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=immich-app/immich&type=date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=immich-app/immich&type=date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=immich-app/immich&type=date" width="100%" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=pizcloud-app/pizcloud&type=date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=pizcloud-app/pizcloud&type=date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=pizcloud-app/pizcloud&type=date" width="100%" />
  </picture>
-</a>
+</a> -->
 
-## Contributors
+<!-- ## Contributors
 
-<a href="https://github.com/immich-app/immich/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=immich-app/immich" width="100%"/>
-</a>
+<a href="https://github.com/pizcloud-app/pizcloud/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=pizcloud-app/pizcloud" width="100%"/>
+</a> -->

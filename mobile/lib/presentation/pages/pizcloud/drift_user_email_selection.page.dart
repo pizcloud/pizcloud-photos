@@ -290,13 +290,8 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
       orElse: () => false,
     );
 
-    return PlatformScaffold(
-      appBar: PlatformAppBar(
-        title: const Text('invite_to_album').tr(),
-        material: (_, __) => MaterialAppBarData(elevation: 0, centerTitle: false),
-        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => context.maybePop(null)),
-        trailingActions: [
-          Align(
+    final Widget shareAction = isCupertino(context)
+        ? Align(
             alignment: Alignment.centerRight,
             child: SizedBox(
               height: 34,
@@ -320,8 +315,41 @@ class DriftUserEmailSelectionPage extends HookConsumerWidget {
                 label: Text('share'.tr()),
               ),
             ),
-          ),
-        ],
+          )
+        : Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                  minimumSize: const Size(0, 36),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(horizontal: -1, vertical: -2),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                onPressed: canDone
+                    ? () {
+                        final items = sharedEmailsAsync.value ?? const <SharedEmailDto>[];
+                        onDone(items);
+                      }
+                    : null,
+                icon: isSubmitting.value
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.send_rounded, size: 16),
+                label: Text('share'.tr()),
+              ),
+            ),
+          );
+
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
+        title: const Text('invite_to_album').tr(),
+        material: (_, __) =>
+            MaterialAppBarData(elevation: 0, centerTitle: false, actionsPadding: const EdgeInsets.only(right: 4)),
+        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: () => context.maybePop(null)),
+        // Old behavior used one ElevatedButton action for both iOS and Android.
+        // Kept unchanged for iOS; Android now uses a Material-friendly FilledButton action.
+        trailingActions: [shareAction],
       ),
       body: sharedEmailsAsync.widgetWhen(
         onData: (items) {

@@ -1,7 +1,7 @@
 <p align="center"> 
   <br/>  
   <a href="https://opensource.org/license/agpl-v3"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg?color=3F51B5&style=for-the-badge&label=License&logoColor=000000&labelColor=ececec" alt="Giấy phép: AGPLv3"></a>
-  <a href="https://discord.immich.app">
+  <a href="https://discord.pizcloud.app">
     <img src="https://img.shields.io/discord/979116623879368755.svg?label=Discord&logo=Discord&style=for-the-badge&logoColor=000000&labelColor=ececec" alt="Discord"/>
   </a>
   <br/>  
@@ -9,12 +9,15 @@
 </p>
 
 <p align="center">
-<img src="../design/immich-logo-stacked-light.svg" width="300" title="Đăng nhập bằng URL Tuỳ chỉnh">
+<img src="../design/pizcloud-logo.png" width="300" title="Đăng nhập bằng URL Tuỳ chỉnh">
+</p>
+<p align="center">
+<img src="../design/pizcloud-text-light.png" width="300" title="Đăng nhập bằng URL Tuỳ chỉnh">
 </p>
 <h3 align="center">Giải pháp quản lý ảnh và video tự lưu trữ hiệu suất cao</h3>
 <br/>
-<a href="https://immich.app">
-<img src="../design/immich-screenshots.png" title="Ảnh chụp màn hình chính">
+<a href="https://pizcloud.com">
+<img src="../design/pizcloud-screenshots.png" title="Ảnh chụp màn hình chính">
 </a>
 <br/>
 <p align="center">
@@ -49,28 +52,28 @@
 - ⚠️ Luôn tuân thủ kế hoạch sao lưu [3-2-1](https://www.backblaze.com/blog/the-3-2-1-backup-strategy/) cho những bức ảnh và video quý giá của bạn!
 
 > [!NOTE]
-> Bạn có thể tìm thấy tài liệu chính, bao gồm hướng dẫn cài đặt, tại https://immich.app/.
+> Bạn có thể tìm thấy tài liệu chính, bao gồm hướng dẫn cài đặt, tại https://pizcloud.com/.
 
 ## Liên kết
 
-- [Tài liệu](https://docs.immich.app)
-- [Giới thiệu](https://docs.immich.app/overview/introduction)
-- [Cài đặt](https://docs.immich.app/install/requirements)
-- [Lộ trình](https://immich.app/roadmap)
+- [Tài liệu](https://docs.pizcloud.app)
+- [Giới thiệu](https://docs.pizcloud.app/overview/introduction)
+- [Cài đặt](https://docs.pizcloud.app/install/requirements)
+- [Lộ trình](https://pizcloud.app/roadmap)
 - [Demo](#demo)
 - [Tính năng](#Tính-năng)
-- [Dịch thuật](https://docs.immich.app/developer/translations)
-- [Đóng góp](https://docs.immich.app/overview/support-the-project)
+- [Dịch thuật](https://docs.pizcloud.app/developer/translations)
+- [Đóng góp](https://docs.pizcloud.app/overview/support-the-project)
 
 ## Demo
 
-Truy cập bản demo [tại đây](https://demo.immich.app). Đối với ứng dụng di động, bạn có thể sử dụng `https://demo.immich.app` cho `Server Endpoint URL`
+Truy cập bản demo [tại đây](https://demo.pizcloud.app). Đối với ứng dụng di động, bạn có thể sử dụng `https://demo.pizcloud.app` cho `Server Endpoint URL`
 
 ### Thông tin đăng nhập
 
 | Email           | Mật khẩu |
 | --------------- | -------- |
-| demo@immich.app | demo     |
+| demo@pizcloud.app | demo     |
 
 ## Tính năng
 
@@ -105,30 +108,30 @@ Truy cập bản demo [tại đây](https://demo.immich.app). Đối với ứng
 | Thư viện chỉ đọc                                     | Có     | Có    |
 | Ảnh xếp chồng                                        | Có     | Có    |
 
-## Dịch thuật
+<!-- ## Dịch thuật
 
-Đọc thêm về dịch thuật [tại đây](https://docs.immich.app/developer/translations).
+Đọc thêm về dịch thuật [tại đây](https://docs.pizcloud.app/developer/translations).
 
-<a href="https://hosted.weblate.org/engage/immich/">
-<img src="https://hosted.weblate.org/widget/immich/immich/multi-auto.svg" alt="Tình trạng dịch thuật" />
-</a>
+<a href="https://hosted.weblate.org/engage/pizcloud/">
+<img src="https://hosted.weblate.org/widget/pizcloud/pizcloud/multi-auto.svg" alt="Tình trạng dịch thuật" />
+</a> -->
 
-## Hoạt động của repository
+<!-- ## Hoạt động của repository
 
-![Hoạt động](https://repobeats.axiom.co/api/embed/9e86d9dc3ddd137161f2f6d2e758d7863b1789cb.svg "Hình ảnh phân tích Repobeats")
+![Hoạt động](https://repobeats.axiom.co/api/embed/9e86d9dc3ddd137161f2f6d2e758d7863b1789cb.svg "Hình ảnh phân tích Repobeats") -->
 
-## Lịch sử Đánh dấu sao
+<!-- ## Lịch sử Đánh dấu sao
 
-<a href="https://star-history.com/#immich-app/immich&Date">
+<a href="https://star-history.com/#pizcloud-app/pizcloud&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=immich-app/immich&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=immich-app/immich&type=Date" />
-   <img alt="Biểu đồ Lịch sử Đánh dấu" src="https://api.star-history.com/svg?repos=immich-app/immich&type=Date" width="100%" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=pizcloud-app/pizcloud&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=pizcloud-app/pizcloud&type=Date" />
+   <img alt="Biểu đồ Lịch sử Đánh dấu" src="https://api.star-history.com/svg?repos=pizcloud-app/pizcloud&type=Date" width="100%" />
  </picture>
-</a>
+</a> -->
 
-## Người đóng góp
+<!-- ## Người đóng góp
 
-<a href="https://github.com/alextran1502/immich/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=immich-app/immich" width="100%"/>
-</a>
+<a href="https://github.com/alextran1502/pizcloud/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=pizcloud-app/pizcloud" width="100%"/>
+</a> -->
