@@ -39,7 +39,7 @@ class DriftSearchPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textSearchType = useState<TextSearchType>(TextSearchType.context);
-    final searchHintText = useState<String>('sunrise_on_the_beach'.t(context: context));
+    final searchHintText = useState<String>('cozy_cafe_on_a_rainy_day'.t(context: context));
     final textSearchController = useTextEditingController();
     final preFilter = ref.watch(searchPreFilterProvider);
     final filter = useState<SearchFilter>(
@@ -496,7 +496,7 @@ class DriftSearchPage extends HookConsumerWidget {
                   ),
                   onPressed: () {
                     textSearchType.value = TextSearchType.context;
-                    searchHintText.value = 'sunrise_on_the_beach'.t(context: context);
+                    searchHintText.value = 'cozy_cafe_on_a_rainy_day'.t(context: context);
                   },
                 ),
                 MenuItemButton(

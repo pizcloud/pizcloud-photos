@@ -44,7 +44,7 @@
     type="text"
     id="context-input"
     name="context"
-    placeholder={$t('sunrise_on_the_beach')}
+    placeholder={$t('cozy_cafe_on_a_rainy_day')}
     bind:value={query}
   />
 {:else if queryType === 'metadata'}

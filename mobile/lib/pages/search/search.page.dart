@@ -35,7 +35,7 @@ class SearchPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textSearchType = useState<TextSearchType>(TextSearchType.context);
-    final searchHintText = useState<String>('sunrise_on_the_beach'.tr());
+    final searchHintText = useState<String>('cozy_cafe_on_a_rainy_day'.tr());
     final textSearchController = useTextEditingController();
     final filter = useState<SearchFilter>(
       SearchFilter(
@@ -472,7 +472,7 @@ class SearchPage extends HookConsumerWidget {
                   ),
                   onPressed: () {
                     textSearchType.value = TextSearchType.context;
-                    searchHintText.value = 'sunrise_on_the_beach'.tr();
+                    searchHintText.value = 'cozy_cafe_on_a_rainy_day'.tr();
                   },
                 ),
                 MenuItemButton(
