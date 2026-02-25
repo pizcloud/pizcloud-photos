@@ -400,6 +400,7 @@ class _QuickFilterButtonRow extends StatelessWidget {
         child: Wrap(
           spacing: 4,
           runSpacing: 4,
+          alignment: WrapAlignment.center,
           children: [
             _QuickFilterButton(
               label: 'all'.tr(),

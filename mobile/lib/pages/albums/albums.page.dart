@@ -73,15 +73,17 @@ class AlbumsPage extends HookConsumerWidget {
       onSearch('', QuickFilterMode.all);
     }
 
-    final appBar = ImmichAppBar(
-      showUploadButton: false,
-      actions: [
-        IconButton(
-          icon: Icon(context.platformIcons.add, size: 28),
-          onPressed: () => context.pushRoute(CreateAlbumRoute()),
-        ),
-      ],
-    ).build(context, ref) as PlatformAppBar;
+    final appBar =
+        ImmichAppBar(
+              showUploadButton: false,
+              actions: [
+                IconButton(
+                  icon: Icon(context.platformIcons.add, size: 28),
+                  onPressed: () => context.pushRoute(CreateAlbumRoute()),
+                ),
+              ],
+            ).build(context, ref)
+            as PlatformAppBar;
 
     return PlatformScaffold(
       appBar: appBar,

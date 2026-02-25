@@ -604,24 +604,6 @@ class DriftSearchPage extends HookConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children: [
                     SearchFilterChip(
-                      icon: Icons.people_alt_outlined,
-                      onTap: showPeoplePicker,
-                      label: 'people'.t(context: context),
-                      currentFilter: peopleCurrentFilterWidget.value,
-                    ),
-                    SearchFilterChip(
-                      icon: Icons.location_on_outlined,
-                      onTap: showLocationPicker,
-                      label: 'search_filter_location'.t(context: context),
-                      currentFilter: locationCurrentFilterWidget.value,
-                    ),
-                    SearchFilterChip(
-                      icon: Icons.camera_alt_outlined,
-                      onTap: showCameraPicker,
-                      label: 'camera'.t(context: context),
-                      currentFilter: cameraCurrentFilterWidget.value,
-                    ),
-                    SearchFilterChip(
                       icon: Icons.date_range_outlined,
                       onTap: showQuickDatePicker,
                       label: 'search_filter_date'.t(context: context),
@@ -639,6 +621,24 @@ class DriftSearchPage extends HookConsumerWidget {
                       onTap: showDisplayOptionPicker,
                       label: 'search_filter_display_options'.t(context: context),
                       currentFilter: displayOptionCurrentFilterWidget.value,
+                    ),
+                    SearchFilterChip(
+                      icon: Icons.people_alt_outlined,
+                      onTap: showPeoplePicker,
+                      label: 'people'.t(context: context),
+                      currentFilter: peopleCurrentFilterWidget.value,
+                    ),
+                    SearchFilterChip(
+                      icon: Icons.location_on_outlined,
+                      onTap: showLocationPicker,
+                      label: 'search_filter_location'.t(context: context),
+                      currentFilter: locationCurrentFilterWidget.value,
+                    ),
+                    SearchFilterChip(
+                      icon: Icons.camera_alt_outlined,
+                      onTap: showCameraPicker,
+                      label: 'camera'.t(context: context),
+                      currentFilter: cameraCurrentFilterWidget.value,
                     ),
                   ],
                 ),
