@@ -1,4 +1,4 @@
-import 'dart:async';
+// import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -13,23 +13,23 @@ import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/models/backup/backup_state.model.dart';
-import 'package:immich_mobile/providers/asset.provider.dart';
-import 'package:immich_mobile/providers/auth.provider.dart';
+// import 'package:immich_mobile/providers/asset.provider.dart';
+// import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/providers/backup/backup.provider.dart';
-import 'package:immich_mobile/providers/backup/manual_upload.provider.dart';
+// import 'package:immich_mobile/providers/backup/manual_upload.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
 import 'package:immich_mobile/providers/locale_provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
-import 'package:immich_mobile/providers/websocket.provider.dart';
+// import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_profile_info.dart';
-import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
+// import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
 import 'package:immich_mobile/services/pizcloud/account_api.service.dart'; // pizcloud
 import 'package:immich_mobile/services/pizcloud/google.service.dart'; // pizcloud
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart'; // pizcloud
-import 'package:url_launcher/url_launcher.dart';
+// import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class SettingsTabPage extends HookConsumerWidget {
@@ -41,7 +41,7 @@ class SettingsTabPage extends HookConsumerWidget {
     BackUpState backupState = ref.watch(backupProvider);
     final theme = context.themeData;
     final user = ref.watch(currentUserProvider);
-    final isLoggingOut = useState(false);
+    // final isLoggingOut = useState(false);
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
     final AccountApi accountApiService = AccountApi(); // pizcloud
 
@@ -51,19 +51,103 @@ class SettingsTabPage extends HookConsumerWidget {
       return null;
     }, []);
 
-    Widget buildActionButton(IconData icon, String text, VoidCallback onTap, {Widget? trailing}) {
-      return ListTile(
-        dense: true,
-        visualDensity: VisualDensity.standard,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 30),
-        minLeadingWidth: 40,
-        leading: SizedBox(child: Icon(icon, color: theme.textTheme.labelLarge?.color?.withAlpha(250), size: 20)),
-        title: Text(
-          text,
-          style: theme.textTheme.labelLarge?.copyWith(color: theme.textTheme.labelLarge?.color?.withAlpha(250)),
-        ).tr(),
-        onTap: onTap,
-        trailing: trailing,
+    Widget buildActionButton(IconData icon, String text, VoidCallback onTap, {String? subtitle, Widget? trailing}) {
+      // Legacy action button layout (kept for comparison)
+      // return ListTile(
+      //   dense: true,
+      //   visualDensity: VisualDensity.standard,
+      //   contentPadding: const EdgeInsets.symmetric(horizontal: 30),
+      //   minLeadingWidth: 40,
+      //   leading: SizedBox(child: Icon(icon, color: theme.textTheme.labelLarge?.color?.withAlpha(250), size: 20)),
+      //   title: Text(
+      //     text,
+      //     style: theme.textTheme.labelLarge?.copyWith(color: theme.textTheme.labelLarge?.color?.withAlpha(250)),
+      //   ).tr(),
+      //   onTap: onTap,
+      //   trailing: trailing,
+      // );
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
+            onTap: onTap,
+            child: Ink(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.2)),
+                gradient: LinearGradient(
+                  colors: [
+                    context.colorScheme.primary.withValues(alpha: 0.06),
+                    context.colorScheme.primary.withValues(alpha: 0.02),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: context.colorScheme.primary.withValues(alpha: 0.14),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    ),
+                    child: Icon(icon, color: theme.primaryColor, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          text.tr(),
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: theme.textTheme.labelLarge?.color?.withAlpha(250),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle.tr(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: context.colorScheme.onSurface.withValues(alpha: 0.65),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  trailing ??
+                      Icon(
+                        context.platformIcons.rightChevron,
+                        size: 16,
+                        color: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
+                      ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget buildActionSectionTitle(String title) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+        child: Text(
+          title.tr(),
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: context.colorScheme.onSurface.withValues(alpha: 0.7),
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
+        ),
       );
     }
 
@@ -71,6 +155,7 @@ class SettingsTabPage extends HookConsumerWidget {
       return buildActionButton(
         context.platformIcon(material: Icons.settings_outlined, cupertino: CupertinoIcons.settings),
         "system_settings",
+        subtitle: "settings_quick_system_subtitle",
         () => context.pushRoute(const SettingsRoute()),
       );
     }
@@ -83,6 +168,7 @@ class SettingsTabPage extends HookConsumerWidget {
           cupertino: CupertinoIcons.person_crop_circle_badge_checkmark,
         ),
         "manage_account",
+        subtitle: "settings_quick_manage_account_subtitle",
         () async {
           try {
             final loginMethod = Store.tryGet(StoreKey.pizcloudLoginMethod);
@@ -137,6 +223,7 @@ class SettingsTabPage extends HookConsumerWidget {
       return buildActionButton(
         context.platformIcon(material: Icons.wallet_giftcard, cupertino: CupertinoIcons.gift),
         "referral_program",
+        subtitle: "settings_quick_referral_subtitle",
         () => context.pushRoute(ReferralRoute(userEmail: user?.email)),
       );
     }
@@ -145,61 +232,63 @@ class SettingsTabPage extends HookConsumerWidget {
       return buildActionButton(
         context.platformIcon(material: Icons.price_check, cupertino: CupertinoIcons.tag),
         "referral.discount_code",
+        subtitle: "settings_quick_discount_subtitle",
         () => context.pushRoute(DiscountCodeRoute(userEmail: user?.email)),
       );
     }
 
-    Future<void> removeServerCookies() async {
-      await accountApiService.logout();
-    }
+    // Future<void> removeServerCookies() async {
+    //   await accountApiService.logout();
+    // }
     // #pizcloud
 
     Widget buildAppLogButton() {
       return buildActionButton(
         context.platformIcon(material: Icons.assignment_outlined, cupertino: CupertinoIcons.doc_text),
         "profile_drawer_app_logs",
+        subtitle: "settings_quick_applog_subtitle",
         () => context.pushRoute(const AppLogRoute()),
       );
     }
 
-    Widget buildSignOutButton() {
-      return buildActionButton(
-        context.platformIcon(material: Icons.logout_rounded, cupertino: CupertinoIcons.square_arrow_left),
-        "sign_out",
-        () async {
-          if (isLoggingOut.value) {
-            return;
-          }
+    // Widget buildSignOutButton() {
+    //   return buildActionButton(
+    //     context.platformIcon(material: Icons.logout_rounded, cupertino: CupertinoIcons.square_arrow_left),
+    //     "sign_out",
+    //     () async {
+    //       if (isLoggingOut.value) {
+    //         return;
+    //       }
 
-          unawaited(
-            showPlatformDialog(
-              context: context,
-              builder: (BuildContext ctx) {
-                return ConfirmDialog(
-                  title: "app_bar_signout_dialog_title",
-                  content: "app_bar_signout_dialog_content",
-                  ok: "yes",
-                  onOk: () async {
-                    isLoggingOut.value = true;
-                    await ref.read(authProvider.notifier).logout().whenComplete(() => isLoggingOut.value = false);
+    //       unawaited(
+    //         showPlatformDialog(
+    //           context: context,
+    //           builder: (BuildContext ctx) {
+    //             return ConfirmDialog(
+    //               title: "app_bar_signout_dialog_title",
+    //               content: "app_bar_signout_dialog_content",
+    //               ok: "yes",
+    //               onOk: () async {
+    //                 isLoggingOut.value = true;
+    //                 await ref.read(authProvider.notifier).logout().whenComplete(() => isLoggingOut.value = false);
 
-                    ref.read(manualUploadProvider.notifier).cancelBackup();
-                    ref.read(backupProvider.notifier).cancelBackup();
-                    unawaited(ref.read(assetProvider.notifier).clearAllAssets());
-                    ref.read(websocketProvider.notifier).disconnect();
-                    await removeServerCookies(); // pizcloud
-                    unawaited(context.replaceRoute(const LoginRoute()));
-                  },
-                );
-              },
-            ),
-          );
-        },
-        trailing: isLoggingOut.value
-            ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-            : null,
-      );
-    }
+    //                 ref.read(manualUploadProvider.notifier).cancelBackup();
+    //                 ref.read(backupProvider.notifier).cancelBackup();
+    //                 unawaited(ref.read(assetProvider.notifier).clearAllAssets());
+    //                 ref.read(websocketProvider.notifier).disconnect();
+    //                 await removeServerCookies(); // pizcloud
+    //                 unawaited(context.replaceRoute(const LoginRoute()));
+    //               },
+    //             );
+    //           },
+    //         ),
+    //       );
+    //     },
+    //     trailing: isLoggingOut.value
+    //         ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+    //         : null,
+    //   );
+    // }
 
     Widget buildStorageInformation() {
       var percentage = backupState.serverInfo.diskUsagePercentage / 100;
@@ -273,31 +362,31 @@ class SettingsTabPage extends HookConsumerWidget {
       );
     }
 
-    Widget buildFooter() {
-      return Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // pizcloud
-            InkWell(
-              onTap: () {
-                launchUrl(Uri.parse('https://pizcloud.com/en/terms/'), mode: LaunchMode.externalApplication);
-              },
-              child: Text("terms", style: context.textTheme.bodySmall).tr(),
-            ),
-            const SizedBox(width: 20, child: Text("•", textAlign: TextAlign.center)),
-            InkWell(
-              onTap: () {
-                launchUrl(Uri.parse('https://pizcloud.com/en/privacy/'), mode: LaunchMode.externalApplication);
-              },
-              child: Text("policy", style: context.textTheme.bodySmall).tr(),
-            ),
-            // #pizcloud
-          ],
-        ),
-      );
-    }
+    // Widget buildFooter() {
+    //   return Padding(
+    //     padding: const EdgeInsets.only(top: 10, bottom: 20),
+    //     child: Row(
+    //       mainAxisAlignment: MainAxisAlignment.center,
+    //       children: [
+    //         // pizcloud
+    //         InkWell(
+    //           onTap: () {
+    //             launchUrl(Uri.parse('https://pizcloud.com/en/terms/'), mode: LaunchMode.externalApplication);
+    //           },
+    //           child: Text("terms", style: context.textTheme.bodySmall).tr(),
+    //         ),
+    //         const SizedBox(width: 20, child: Text("•", textAlign: TextAlign.center)),
+    //         InkWell(
+    //           onTap: () {
+    //             launchUrl(Uri.parse('https://pizcloud.com/en/privacy/'), mode: LaunchMode.externalApplication);
+    //           },
+    //           child: Text("policy", style: context.textTheme.bodySmall).tr(),
+    //         ),
+    //         // #pizcloud
+    //       ],
+    //     ),
+    //   );
+    // }
 
     Widget buildReadonlyMessage() {
       return Padding(
@@ -321,28 +410,24 @@ class SettingsTabPage extends HookConsumerWidget {
     return PlatformScaffold(
       body: CustomScrollView(
         slivers: [
-          const ImmichSliverAppBar(
-            pinned: true,
-            floating: false,
-            snap: false,
-          ),
+          const ImmichSliverAppBar(pinned: true, floating: false, snap: false),
           SliverPadding(
             padding: const EdgeInsets.only(top: 10.0, bottom: 16),
             sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  const AppBarProfileInfoBox(),
-                  buildStorageInformation(),
-                  if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
-                  if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
-                  buildReferralProgramButton(), // pizcloud
-                  buildDiscountCodeButton(), // pizcloud
-                  buildManageAccountButton(), // pizcloud
-                  buildSettingButton(),
-                  // buildSignOutButton(),
-                  // buildFooter(),
-                ],
-              ),
+              delegate: SliverChildListDelegate([
+                const AppBarProfileInfoBox(),
+                buildStorageInformation(),
+                if (Store.isBetaTimelineEnabled && isReadonlyModeEnabled) buildReadonlyMessage(),
+                buildActionSectionTitle("settings_quick_account_section"),
+                buildReferralProgramButton(), // pizcloud
+                buildDiscountCodeButton(), // pizcloud
+                buildManageAccountButton(), // pizcloud
+                buildActionSectionTitle("settings_quick_system_section"),
+                if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
+                buildSettingButton(),
+                // buildSignOutButton(),
+                // buildFooter(),
+              ]),
             ),
           ),
         ],

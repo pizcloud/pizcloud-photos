@@ -304,49 +304,105 @@ class _AlbumTitleTextFieldState extends State<_AlbumTitleTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      focusNode: widget.focusNode,
-      style: TextStyle(
-        fontSize: 20.0,
-        height: 1.3,
-        color: context.colorScheme.onSurface,
-        fontWeight: FontWeight.w600,
+    // Legacy title input (kept for comparison)
+    // return TextField(
+    //   focusNode: widget.focusNode,
+    //   style: TextStyle(fontSize: 20.0, height: 1.3, color: context.colorScheme.onSurface, fontWeight: FontWeight.w600),
+    //   controller: widget.textController,
+    //   onTap: () {
+    //     if (widget.textController.text == 'create_album_page_untitled'.t(context: context)) {
+    //       widget.textController.clear();
+    //     }
+    //   },
+    //   decoration: InputDecoration(
+    //     contentPadding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+    //     suffixIcon: widget.textController.text.isNotEmpty && widget.isFocus
+    //         ? IconButton(
+    //             onPressed: () {
+    //               widget.textController.clear();
+    //             },
+    //             icon: Icon(Icons.cancel_rounded, color: context.primaryColor),
+    //             splashRadius: 10.0,
+    //           )
+    //         : null,
+    //     enabledBorder: const OutlineInputBorder(
+    //       borderSide: BorderSide(color: Colors.transparent),
+    //       borderRadius: BorderRadius.all(Radius.circular(14.0)),
+    //     ),
+    //     focusedBorder: OutlineInputBorder(
+    //       borderSide: BorderSide(color: context.primaryColor.withValues(alpha: 0.3)),
+    //       borderRadius: const BorderRadius.all(Radius.circular(14.0)),
+    //     ),
+    //     hintText: 'add_a_title'.t(),
+    //     hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(
+    //       fontSize: 18.0,
+    //       fontWeight: FontWeight.w500,
+    //       height: 1.2,
+    //       color: context.colorScheme.onSurface.withValues(alpha: 0.6),
+    //     ),
+    //     focusColor: Colors.grey[300],
+    //     fillColor: context.colorScheme.surfaceContainerLow,
+    //     filled: true,
+    //   ),
+    // );
+    final isFocused = widget.focusNode.hasFocus;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.circular(18)),
+        border: Border.all(
+          color: isFocused
+              ? context.primaryColor.withValues(alpha: 0.45)
+              : context.colorScheme.outline.withValues(alpha: 0.24),
+        ),
+        gradient: LinearGradient(
+          colors: [
+            context.colorScheme.primary.withValues(alpha: isFocused ? 0.10 : 0.06),
+            context.colorScheme.primary.withValues(alpha: isFocused ? 0.04 : 0.02),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      controller: widget.textController,
-      onTap: () {
-        if (widget.textController.text == 'create_album_page_untitled'.t(context: context)) {
-          widget.textController.clear();
-        }
-      },
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-        suffixIcon: widget.textController.text.isNotEmpty && widget.isFocus
-            ? IconButton(
-                onPressed: () {
-                  widget.textController.clear();
-                },
-                icon: Icon(Icons.cancel_rounded, color: context.primaryColor),
-                splashRadius: 10.0,
-              )
-            : null,
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.transparent),
-          borderRadius: BorderRadius.all(Radius.circular(14.0)),
+      child: TextField(
+        focusNode: widget.focusNode,
+        style: TextStyle(fontSize: 22, height: 1.3, color: context.colorScheme.onSurface, fontWeight: FontWeight.w700),
+        controller: widget.textController,
+        onTap: () {
+          if (widget.textController.text == 'create_album_page_untitled'.t(context: context)) {
+            widget.textController.clear();
+          }
+        },
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 8, right: 4),
+            child: Icon(Icons.photo_album_outlined, size: 20, color: context.primaryColor.withValues(alpha: 0.85)),
+          ),
+          prefixIconConstraints: const BoxConstraints(minWidth: 34),
+          suffixIcon: widget.textController.text.isNotEmpty && widget.isFocus
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: IconButton(
+                    onPressed: () {
+                      widget.textController.clear();
+                    },
+                    icon: Icon(Icons.cancel_rounded, color: context.primaryColor),
+                    splashRadius: 18,
+                    tooltip: 'clear'.t(context: context),
+                  ),
+                )
+              : null,
+          border: InputBorder.none,
+          hintText: 'add_a_title'.t(),
+          hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(
+            fontSize: 19,
+            fontWeight: FontWeight.w600,
+            height: 1.2,
+            color: context.colorScheme.onSurface.withValues(alpha: 0.58),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: context.primaryColor.withValues(alpha: 0.3)),
-          borderRadius: const BorderRadius.all(Radius.circular(14.0)),
-        ),
-        hintText: 'add_a_title'.t(),
-        hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(
-          fontSize: 18.0,
-          fontWeight: FontWeight.w500,
-          height: 1.2,
-          color: context.colorScheme.onSurface.withValues(alpha: 0.6),
-        ),
-        focusColor: Colors.grey[300],
-        fillColor: context.colorScheme.surfaceContainerLow,
-        filled: true,
       ),
     );
   }
@@ -391,8 +447,58 @@ class _AlbumViewerEditableDescriptionState extends State<_AlbumViewerEditableDes
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
+    // Legacy description input (kept for comparison)
+    // return Material(
+    //   color: Colors.transparent,
+    //   child: TextField(
+    //     focusNode: widget.focusNode,
+    //     style: context.textTheme.bodyLarge,
+    //     maxLines: 3,
+    //     minLines: 1,
+    //     controller: widget.textController,
+    //     decoration: InputDecoration(
+    //       contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+    //       suffixIcon: widget.focusNode.hasFocus && widget.textController.text.isNotEmpty
+    //           ? IconButton(
+    //               onPressed: () {
+    //                 widget.textController.clear();
+    //               },
+    //               icon: Icon(Icons.cancel_rounded, color: context.primaryColor),
+    //               splashRadius: 10.0,
+    //             )
+    //           : null,
+    //       enabledBorder: OutlineInputBorder(
+    //         borderSide: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.3)),
+    //         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+    //       ),
+    //       focusedBorder: OutlineInputBorder(
+    //         borderSide: BorderSide(color: context.primaryColor.withValues(alpha: 0.3)),
+    //         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+    //       ),
+    //       hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(
+    //         fontSize: 16.0,
+    //         color: context.colorScheme.onSurface.withValues(alpha: 0.6),
+    //       ),
+    //       focusColor: Colors.grey[300],
+    //       fillColor: context.scaffoldBackgroundColor,
+    //       filled: widget.focusNode.hasFocus,
+    //       hintText: 'add_a_description'.t(),
+    //     ),
+    //   ),
+    // );
+    final isFocused = widget.focusNode.hasFocus;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.circular(18)),
+        border: Border.all(
+          color: isFocused
+              ? context.primaryColor.withValues(alpha: 0.35)
+              : context.colorScheme.outline.withValues(alpha: 0.24),
+        ),
+        color: context.colorScheme.surfaceContainerLow.withValues(alpha: isFocused ? 0.6 : 0.35),
+      ),
       child: TextField(
         focusNode: widget.focusNode,
         style: context.textTheme.bodyLarge,
@@ -400,31 +506,30 @@ class _AlbumViewerEditableDescriptionState extends State<_AlbumViewerEditableDes
         minLines: 1,
         controller: widget.textController,
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 8, right: 4),
+            child: Icon(Icons.notes_rounded, size: 19, color: context.colorScheme.onSurface.withValues(alpha: 0.75)),
+          ),
+          prefixIconConstraints: const BoxConstraints(minWidth: 34),
           suffixIcon: widget.focusNode.hasFocus && widget.textController.text.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    widget.textController.clear();
-                  },
-                  icon: Icon(Icons.cancel_rounded, color: context.primaryColor),
-                  splashRadius: 10.0,
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: IconButton(
+                    onPressed: () {
+                      widget.textController.clear();
+                    },
+                    icon: Icon(Icons.cancel_rounded, color: context.primaryColor),
+                    splashRadius: 18,
+                    tooltip: 'clear'.t(context: context),
+                  ),
                 )
               : null,
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: context.colorScheme.outline.withValues(alpha: 0.3)),
-            borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: context.primaryColor.withValues(alpha: 0.3)),
-            borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-          ),
+          border: InputBorder.none,
           hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(
-            fontSize: 16.0,
+            fontSize: 16,
             color: context.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
-          focusColor: Colors.grey[300],
-          fillColor: context.scaffoldBackgroundColor,
-          filled: widget.focusNode.hasFocus,
           hintText: 'add_a_description'.t(),
         ),
       ),
