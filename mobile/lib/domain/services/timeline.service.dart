@@ -70,6 +70,12 @@ class TimelineFactory {
 
   TimelineService video(String userId) => TimelineService(_timelineRepository.video(userId, groupBy));
 
+  TimelineService videoWithLocal(String userId) =>
+      TimelineService(_timelineRepository.videoWithLocal(userId, groupBy)); // pizcloud
+
+  TimelineService videoLocal(String userId) =>
+      TimelineService(_timelineRepository.videoLocal(userId, groupBy)); // pizcloud
+
   TimelineService place(String place) => TimelineService(_timelineRepository.place(place, groupBy));
 
   TimelineService person(String userId, String personId) =>

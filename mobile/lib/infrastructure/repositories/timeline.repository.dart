@@ -301,6 +301,330 @@ class DriftTimelineRepository extends DriftDatabaseRepository {
     groupBy: groupBy,
   );
 
+  // pizcloud
+  TimelineQuery videoWithLocal(String userId, GroupAssetsBy groupBy) => (
+    bucketSource: () => _watchVideoBucketWithLocal(userId, groupBy: groupBy),
+    assetSource: (offset, count) => _getVideoAssetsWithLocal(userId, offset: offset, count: count),
+    origin: TimelineOrigin.video,
+  );
+
+  TimelineQuery videoLocal(String userId, GroupAssetsBy groupBy) => (
+    bucketSource: () => _watchLocalVideoBucket(groupBy: groupBy),
+    assetSource: (offset, count) => _getLocalVideoAssets(userId, offset: offset, count: count),
+    origin: TimelineOrigin.video,
+  );
+
+  Stream<List<Bucket>> _watchVideoBucketWithLocal(String userId, {GroupAssetsBy groupBy = GroupAssetsBy.day}) {
+    if (groupBy == GroupAssetsBy.none) {
+      final query = _db.customSelect(
+        '''
+SELECT COUNT(*) AS asset_count
+FROM (
+  SELECT rae.created_at
+  FROM remote_asset_entity AS rae
+  WHERE
+    rae.deleted_at IS NULL
+    AND rae.type = ?1
+    AND rae.visibility = ?2
+    AND rae.owner_id = ?3
+
+  UNION ALL
+
+  SELECT lae.created_at
+  FROM local_asset_entity AS lae
+  WHERE
+    lae.type = ?1
+    AND (
+      lae.checksum IS NULL
+      OR NOT EXISTS (
+        SELECT 1
+        FROM remote_asset_entity AS rae
+        WHERE
+          rae.owner_id = ?3
+          AND rae.type = ?1
+          AND rae.visibility = ?2
+          AND rae.deleted_at IS NULL
+          AND rae.checksum = lae.checksum
+      )
+    )
+)
+''',
+        variables: [
+          Variable<int>(AssetType.video.index),
+          Variable<int>(AssetVisibility.timeline.index),
+          Variable<String>(userId),
+        ],
+        readsFrom: {_db.remoteAssetEntity, _db.localAssetEntity},
+      );
+      return query.watchSingle().map((row) => _generateBuckets(row.read<int>('asset_count')));
+    }
+
+    final strftimeFormat = switch (groupBy) {
+      GroupAssetsBy.day || GroupAssetsBy.auto => '%Y-%m-%d',
+      GroupAssetsBy.month => '%Y-%m',
+      GroupAssetsBy.none => throw ArgumentError("GroupAssetsBy.none is not supported for date formatting"),
+    };
+
+    final query = _db.customSelect(
+      '''
+SELECT
+  COUNT(*) AS asset_count,
+  STRFTIME('$strftimeFormat', created_at, 'localtime') AS bucket_date
+FROM (
+  SELECT rae.created_at
+  FROM remote_asset_entity AS rae
+  WHERE
+    rae.deleted_at IS NULL
+    AND rae.type = ?1
+    AND rae.visibility = ?2
+    AND rae.owner_id = ?3
+
+  UNION ALL
+
+  SELECT lae.created_at
+  FROM local_asset_entity AS lae
+  WHERE
+    lae.type = ?1
+    AND (
+      lae.checksum IS NULL
+      OR NOT EXISTS (
+        SELECT 1
+        FROM remote_asset_entity AS rae
+        WHERE
+          rae.owner_id = ?3
+          AND rae.type = ?1
+          AND rae.visibility = ?2
+          AND rae.deleted_at IS NULL
+          AND rae.checksum = lae.checksum
+      )
+    )
+)
+GROUP BY bucket_date
+ORDER BY bucket_date DESC
+''',
+      variables: [
+        Variable<int>(AssetType.video.index),
+        Variable<int>(AssetVisibility.timeline.index),
+        Variable<String>(userId),
+      ],
+      readsFrom: {_db.remoteAssetEntity, _db.localAssetEntity},
+    );
+
+    return query.watch().map(
+      (rows) => rows
+          .map(
+            (row) => TimeBucket(
+              date: row.read<String>('bucket_date').truncateDate(groupBy),
+              assetCount: row.read<int>('asset_count'),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  Future<List<BaseAsset>> _getVideoAssetsWithLocal(String userId, {required int offset, required int count}) async {
+    final query = _db.customSelect(
+      '''
+SELECT
+  rae.id AS remote_id,
+  (
+    SELECT lae.id
+    FROM local_asset_entity AS lae
+    WHERE lae.checksum = rae.checksum
+    LIMIT 1
+  ) AS local_id,
+  rae.name,
+  rae.type,
+  rae.created_at,
+  rae.updated_at,
+  rae.width,
+  rae.height,
+  rae.duration_in_seconds,
+  rae.is_favorite,
+  rae.thumb_hash,
+  rae.checksum,
+  rae.owner_id,
+  rae.live_photo_video_id,
+  0 AS orientation,
+  rae.stack_id
+FROM remote_asset_entity AS rae
+WHERE
+  rae.deleted_at IS NULL
+  AND rae.type = ?1
+  AND rae.visibility = ?2
+  AND rae.owner_id = ?3
+
+UNION ALL
+
+SELECT
+  NULL AS remote_id,
+  lae.id AS local_id,
+  lae.name,
+  lae.type,
+  lae.created_at,
+  lae.updated_at,
+  lae.width,
+  lae.height,
+  lae.duration_in_seconds,
+  lae.is_favorite,
+  NULL AS thumb_hash,
+  lae.checksum,
+  NULL AS owner_id,
+  NULL AS live_photo_video_id,
+  lae.orientation,
+  NULL AS stack_id
+FROM local_asset_entity AS lae
+WHERE
+  lae.type = ?1
+  AND (
+    lae.checksum IS NULL
+    OR NOT EXISTS (
+      SELECT 1
+      FROM remote_asset_entity AS rae
+      WHERE
+        rae.owner_id = ?3
+        AND rae.type = ?1
+        AND rae.visibility = ?2
+        AND rae.deleted_at IS NULL
+        AND rae.checksum = lae.checksum
+    )
+  )
+
+ORDER BY created_at DESC
+LIMIT ?4 OFFSET ?5
+''',
+      variables: [
+        Variable<int>(AssetType.video.index),
+        Variable<int>(AssetVisibility.timeline.index),
+        Variable<String>(userId),
+        Variable<int>(count),
+        Variable<int>(offset),
+      ],
+      readsFrom: {_db.remoteAssetEntity, _db.localAssetEntity},
+    );
+
+    final rows = await query.get();
+    return rows.map(_mapVideoRowToAsset).toList(growable: false);
+  }
+
+  Stream<List<Bucket>> _watchLocalVideoBucket({GroupAssetsBy groupBy = GroupAssetsBy.day}) {
+    if (groupBy == GroupAssetsBy.none) {
+      return _db.localAssetEntity
+          .count(where: (row) => row.type.equalsValue(AssetType.video))
+          .map(_generateBuckets)
+          .watchSingle();
+    }
+
+    final assetCountExp = _db.localAssetEntity.id.count();
+    final dateExp = _db.localAssetEntity.createdAt.dateFmt(groupBy);
+
+    final query = _db.localAssetEntity.selectOnly()
+      ..addColumns([assetCountExp, dateExp])
+      ..where(_db.localAssetEntity.type.equalsValue(AssetType.video))
+      ..groupBy([dateExp])
+      ..orderBy([OrderingTerm.desc(dateExp)]);
+
+    return query.map((row) {
+      final timeline = row.read(dateExp)!.truncateDate(groupBy);
+      final assetCount = row.read(assetCountExp)!;
+      return TimeBucket(date: timeline, assetCount: assetCount);
+    }).watch();
+  }
+
+  Future<List<BaseAsset>> _getLocalVideoAssets(String userId, {required int offset, required int count}) async {
+    final query = _db.customSelect(
+      '''
+SELECT
+  NULL AS remote_id,
+  lae.id AS local_id,
+  lae.name,
+  lae.type,
+  lae.created_at,
+  lae.updated_at,
+  lae.width,
+  lae.height,
+  lae.duration_in_seconds,
+  lae.is_favorite,
+  NULL AS thumb_hash,
+  lae.checksum,
+  NULL AS owner_id,
+  NULL AS live_photo_video_id,
+  lae.orientation,
+  NULL AS stack_id,
+  (
+    SELECT rae.id
+    FROM remote_asset_entity AS rae
+    WHERE
+      rae.owner_id = ?2
+      AND rae.checksum = lae.checksum
+    LIMIT 1
+  ) AS linked_remote_id
+FROM local_asset_entity AS lae
+WHERE lae.type = ?1
+ORDER BY lae.created_at DESC
+LIMIT ?3 OFFSET ?4
+''',
+      variables: [
+        Variable<int>(AssetType.video.index),
+        Variable<String>(userId),
+        Variable<int>(count),
+        Variable<int>(offset),
+      ],
+      readsFrom: {_db.localAssetEntity, _db.remoteAssetEntity},
+    );
+
+    final rows = await query.get();
+    return rows
+        .map((row) {
+          final asset = _mapVideoRowToAsset(row);
+          if (asset is LocalAsset) {
+            return asset.copyWith(remoteId: row.readNullable<String>('linked_remote_id'));
+          }
+          return asset;
+        })
+        .toList(growable: false);
+  }
+
+  BaseAsset _mapVideoRowToAsset(QueryRow row) {
+    final remoteId = row.readNullable<String>('remote_id');
+    final type = AssetType.values[row.read<int>('type')];
+    if (remoteId != null) {
+      return RemoteAsset(
+        id: remoteId,
+        localId: row.readNullable<String>('local_id'),
+        name: row.read<String>('name'),
+        ownerId: row.read<String>('owner_id'),
+        checksum: row.readNullable<String>('checksum'),
+        type: type,
+        createdAt: row.read<DateTime>('created_at'),
+        updatedAt: row.read<DateTime>('updated_at'),
+        thumbHash: row.readNullable<String>('thumb_hash'),
+        width: row.readNullable<int>('width'),
+        height: row.readNullable<int>('height'),
+        isFavorite: row.read<bool>('is_favorite'),
+        durationInSeconds: row.readNullable<int>('duration_in_seconds'),
+        livePhotoVideoId: row.readNullable<String>('live_photo_video_id'),
+        stackId: row.readNullable<String>('stack_id'),
+        visibility: AssetVisibility.timeline,
+      );
+    }
+
+    return LocalAsset(
+      id: row.read<String>('local_id'),
+      name: row.read<String>('name'),
+      checksum: row.readNullable<String>('checksum'),
+      type: type,
+      createdAt: row.read<DateTime>('created_at'),
+      updatedAt: row.read<DateTime>('updated_at'),
+      width: row.readNullable<int>('width'),
+      height: row.readNullable<int>('height'),
+      isFavorite: row.read<bool>('is_favorite'),
+      durationInSeconds: row.readNullable<int>('duration_in_seconds'),
+      orientation: row.read<int>('orientation'),
+    );
+  }
+  // #pizcloud
+
   TimelineQuery place(String place, GroupAssetsBy groupBy) => (
     bucketSource: () => _watchPlaceBucket(place, groupBy: groupBy),
     assetSource: (offset, count) => _getPlaceBucketAssets(place, offset: offset, count: count),

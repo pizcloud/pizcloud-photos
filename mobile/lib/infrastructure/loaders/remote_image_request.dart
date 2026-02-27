@@ -40,7 +40,10 @@ class RemoteImageRequest extends ImageRequest {
         return cachedFileImage;
       }
 
-      rethrow;
+      // pizcloud
+      // rethrow;
+      log.warning('Remote image request failed for $uri', e);
+      return null;
     } finally {
       _request = null;
     }
@@ -64,6 +67,9 @@ class RemoteImageRequest extends ImageRequest {
     if (_isCancelled) {
       return null;
     }
+
+    // pizcloud
+    _validateResponse(url, response);
 
     final cacheManager = this.cacheManager;
     final streamController = StreamController<List<int>>(sync: true);
@@ -139,10 +145,25 @@ class RemoteImageRequest extends ImageRequest {
     }
 
     try {
-      final buffer = await ImmutableBuffer.fromFilePath(file.file.path);
+      // pizcloud
+      final bytes = await file.file.readAsBytes();
+      if (_isCancelled) {
+        return null;
+      }
+
+      // Skip decoding obvious non-image payloads (e.g. cached JSON/HTML error bodies)
+      // to avoid platform decoder errors and evict them immediately.
+      if (_isClearlyNotImageBytes(bytes)) {
+        log.warning('Cached payload is not an image, evicting: $url');
+        unawaited(_evictFile(url));
+        return null;
+      }
+
+      final buffer = await ImmutableBuffer.fromUint8List(bytes);
+      // #pizcloud
       return await _decodeBuffer(buffer, decode, scale);
     } catch (e) {
-      log.severe('Failed to decode cached image', e);
+      log.warning('Failed to decode cached image', e); // pizcloud
       unawaited(_evictFile(url));
       return null;
     }
@@ -176,4 +197,117 @@ class RemoteImageRequest extends ImageRequest {
     _request?.abort();
     _request = null;
   }
+
+  // pizcloud
+  void _validateResponse(String url, HttpClientResponse response) {
+    final statusCode = response.statusCode;
+    if (statusCode < HttpStatus.ok || statusCode >= HttpStatus.multipleChoices) {
+      throw HttpException('Unexpected status code $statusCode for $url');
+    }
+
+    final mimeType = response.headers.contentType?.mimeType.toLowerCase();
+    // If the server sets a specific content type and it is clearly not an image,
+    // fail early to avoid caching/decoding invalid payloads.
+    if (mimeType != null && mimeType.isNotEmpty && !_isLikelyImageMimeType(mimeType)) {
+      throw HttpException('Unexpected content type "$mimeType" for $url');
+    }
+  }
+
+  bool _isLikelyImageMimeType(String mimeType) {
+    if (mimeType.startsWith('image/')) {
+      return true;
+    }
+
+    // Some proxies/backends may serve image bytes with a generic mime type.
+    return mimeType == 'application/octet-stream';
+  }
+
+  bool _isClearlyNotImageBytes(Uint8List bytes) {
+    if (bytes.isEmpty) {
+      return true;
+    }
+
+    if (_hasKnownImageSignature(bytes)) {
+      return false;
+    }
+
+    // Common non-image response starts
+    int i = 0;
+    while (i < bytes.length && _isWhitespace(bytes[i])) {
+      i++;
+    }
+    if (i >= bytes.length) {
+      return true;
+    }
+
+    final first = bytes[i];
+    // '{' JSON object, '[' JSON array, '<' HTML/XML
+    return first == 0x7B || first == 0x5B || first == 0x3C;
+  }
+
+  bool _isWhitespace(int byte) => byte == 0x20 || byte == 0x09 || byte == 0x0A || byte == 0x0D;
+
+  bool _hasKnownImageSignature(Uint8List bytes) {
+    // JPEG: FF D8 FF
+    if (bytes.length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
+      return true;
+    }
+
+    // PNG: 89 50 4E 47 0D 0A 1A 0A
+    if (bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0D &&
+        bytes[5] == 0x0A &&
+        bytes[6] == 0x1A &&
+        bytes[7] == 0x0A) {
+      return true;
+    }
+
+    // GIF: "GIF8"
+    if (_hasAsciiAt(bytes, 0, 'GIF8')) {
+      return true;
+    }
+
+    // WEBP: "RIFF....WEBP"
+    if (_hasAsciiAt(bytes, 0, 'RIFF') && _hasAsciiAt(bytes, 8, 'WEBP')) {
+      return true;
+    }
+
+    // BMP: "BM"
+    if (_hasAsciiAt(bytes, 0, 'BM')) {
+      return true;
+    }
+
+    // TIFF: II*<NUL> / MM<NUL>*
+    if (bytes.length >= 4 &&
+        ((bytes[0] == 0x49 && bytes[1] == 0x49 && bytes[2] == 0x2A && bytes[3] == 0x00) ||
+            (bytes[0] == 0x4D && bytes[1] == 0x4D && bytes[2] == 0x00 && bytes[3] == 0x2A))) {
+      return true;
+    }
+
+    // HEIF/AVIF container marker
+    if (_hasAsciiAt(bytes, 4, 'ftyp')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  bool _hasAsciiAt(Uint8List bytes, int offset, String value) {
+    if (offset < 0 || bytes.length < offset + value.length) {
+      return false;
+    }
+
+    for (int i = 0; i < value.length; i++) {
+      if (bytes[offset + i] != value.codeUnitAt(i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // #pizcloud
 }
