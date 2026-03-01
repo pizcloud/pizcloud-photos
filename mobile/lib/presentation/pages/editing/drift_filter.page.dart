@@ -26,6 +26,7 @@ class DriftFilterImagePage extends HookWidget {
   Widget build(BuildContext context) {
     final colorFilter = useState<ColorFilter>(filters[0]);
     final selectedFilterIndex = useState<int>(0);
+    final showOriginalPreview = useState<bool>(false); // pizcloud
 
     Future<ui.Image> createFilteredImage(ui.Image inputImage, ColorFilter filter) {
       final completer = Completer<ui.Image>();
@@ -47,6 +48,13 @@ class DriftFilterImagePage extends HookWidget {
       colorFilter.value = filter;
       selectedFilterIndex.value = index;
     }
+
+    // pizcloud
+    void resetFilter() {
+      colorFilter.value = filters[0];
+      selectedFilterIndex.value = 0;
+    }
+    // #pizcloud
 
     Future<Image> applyFilterAndConvert(ColorFilter filter) async {
       final completer = Completer<ui.Image>();
@@ -72,6 +80,16 @@ class DriftFilterImagePage extends HookWidget {
         title: Text("filter".tr()),
         leading: CloseButton(color: context.primaryColor),
         trailingActions: [
+          // pizcloud trailingActions only had the done/confirm action.
+          IconButton(
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: selectedFilterIndex.value == 0 ? Colors.grey : context.primaryColor,
+              size: 22,
+            ),
+            onPressed: selectedFilterIndex.value == 0 ? null : resetFilter,
+          ),
+          // #pizcloud
           IconButton(
             icon: Icon(Icons.done_rounded, color: context.primaryColor, size: 24),
             onPressed: () async {
@@ -87,7 +105,41 @@ class DriftFilterImagePage extends HookWidget {
           SizedBox(
             height: context.height * 0.7,
             child: Center(
-              child: ColorFiltered(colorFilter: colorFilter.value, child: image),
+              // pizcloud
+              child: GestureDetector(
+                onLongPressStart: (_) => showOriginalPreview.value = true,
+                onLongPressEnd: (_) => showOriginalPreview.value = false,
+                onLongPressCancel: () => showOriginalPreview.value = false,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    // Previous preview always rendered:
+                    // ColorFiltered(colorFilter: colorFilter.value, child: image)
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 150),
+                      child: showOriginalPreview.value
+                          ? KeyedSubtree(key: const ValueKey('before_preview'), child: image)
+                          : KeyedSubtree(
+                              key: const ValueKey('after_preview'),
+                              child: ColorFiltered(colorFilter: colorFilter.value, child: image),
+                            ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        borderRadius: const BorderRadius.all(Radius.circular(999)),
+                      ),
+                      child: Text(
+                        showOriginalPreview.value ? 'Before' : 'After',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // #pizcloud
             ),
           ),
           SizedBox(

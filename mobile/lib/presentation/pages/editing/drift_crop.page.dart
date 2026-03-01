@@ -26,6 +26,19 @@ class DriftCropImagePage extends HookWidget {
   Widget build(BuildContext context) {
     final cropController = useCropController();
     final aspectRatio = useState<double?>(null);
+    // pizcloud
+    final ratioPresets = <MapEntry<String, double?>>[
+      const MapEntry('Free', null),
+      const MapEntry('1:1', 1.0),
+      const MapEntry('16:9', 16.0 / 9.0),
+      const MapEntry('3:2', 3.0 / 2.0),
+      const MapEntry('7:5', 7.0 / 5.0),
+      const MapEntry('4:5', 4.0 / 5.0),
+      const MapEntry('9:16', 9.0 / 16.0),
+      const MapEntry('2:3', 2.0 / 3.0),
+      const MapEntry('5:4', 5.0 / 4.0),
+    ];
+    // #pizcloud
 
     return PlatformScaffold(
       appBar: PlatformAppBar(
@@ -52,7 +65,20 @@ class DriftCropImagePage extends HookWidget {
                   padding: const EdgeInsets.only(top: 20),
                   width: constraints.maxWidth * 0.9,
                   height: constraints.maxHeight * 0.6,
-                  child: CropImage(controller: cropController, image: image, gridColor: Colors.white),
+                  // pizcloud
+                  // CropImage(controller: cropController, image: image, gridColor: Colors.white)
+                  child: CropImage(
+                    controller: cropController,
+                    image: image,
+                    gridColor: Colors.white,
+                    alwaysShowThirdLines: true,
+                    gridThinWidth: 1.5,
+                    gridThickWidth: 3,
+                    paddingSize: 8,
+                    minimumImageSize: 80,
+                    scrimColor: Colors.black.withValues(alpha: 0.55),
+                  ),
+                  // #pizcloud
                 ),
                 Expanded(
                   child: Container(
@@ -88,42 +114,28 @@ class DriftCropImagePage extends HookWidget {
                               ],
                             ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: <Widget>[
-                              _AspectRatioButton(
-                                cropController: cropController,
-                                aspectRatio: aspectRatio,
-                                ratio: null,
-                                label: 'Free',
-                              ),
-                              _AspectRatioButton(
-                                cropController: cropController,
-                                aspectRatio: aspectRatio,
-                                ratio: 1.0,
-                                label: '1:1',
-                              ),
-                              _AspectRatioButton(
-                                cropController: cropController,
-                                aspectRatio: aspectRatio,
-                                ratio: 16.0 / 9.0,
-                                label: '16:9',
-                              ),
-                              _AspectRatioButton(
-                                cropController: cropController,
-                                aspectRatio: aspectRatio,
-                                ratio: 3.0 / 2.0,
-                                label: '3:2',
-                              ),
-                              _AspectRatioButton(
-                                cropController: cropController,
-                                aspectRatio: aspectRatio,
-                                ratio: 7.0 / 5.0,
-                                label: '7:5',
-                              ),
-                            ],
+                          // pizcloud
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Row(
+                              children: ratioPresets
+                                  .map(
+                                    (preset) => Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                                      child: _AspectRatioButton(
+                                        cropController: cropController,
+                                        aspectRatio: aspectRatio,
+                                        ratio: preset.value,
+                                        label: preset.key,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
                           ),
                         ],
+                        // #pizcloud
                       ),
                     ),
                   ),
@@ -162,6 +174,12 @@ class _AspectRatioButton extends StatelessWidget {
             '16:9' => Icons.crop_16_9_rounded,
             '3:2' => Icons.crop_3_2_rounded,
             '7:5' => Icons.crop_7_5_rounded,
+            // pizcloud
+            '4:5' => Icons.crop_portrait_rounded,
+            '9:16' => Icons.crop_portrait_rounded,
+            '2:3' => Icons.crop_portrait_rounded,
+            '5:4' => Icons.crop_5_4_rounded,
+            // #pizcloud
             _ => Icons.crop_free_rounded,
           }, color: aspectRatio.value == ratio ? context.primaryColor : context.themeData.iconTheme.color),
           onPressed: () {
