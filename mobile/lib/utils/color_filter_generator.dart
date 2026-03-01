@@ -1,20 +1,31 @@
 import 'package:flutter/widgets.dart';
 
+// pizcloud
+const List<double> identityColorMatrix = <double>[
+  1, 0, 0, 0, 0, //
+  0, 1, 0, 0, 0, //
+  0, 0, 1, 0, 0, //
+  0, 0, 0, 1, 0, //
+];
+
+const List<double> invertColorMatrix = <double>[
+  -1, 0, 0, 0, 255, //
+  0, -1, 0, 0, 255, //
+  0, 0, -1, 0, 255, //
+  0, 0, 0, 1, 0, //
+];
+
+List<double> brightnessAdjustMatrix(double value) => _ColorFilterGenerator.brightnessAdjustMatrix(value);
+List<double> saturationAdjustMatrix(double value) => _ColorFilterGenerator.saturationAdjustMatrix(value);
+// #pizcloud
+
 class InvertionFilter extends StatelessWidget {
   final Widget? child;
   const InvertionFilter({super.key, this.child});
 
   @override
   Widget build(BuildContext context) {
-    return ColorFiltered(
-      colorFilter: const ColorFilter.matrix(<double>[
-        -1, 0, 0, 0, 255, //
-        0, -1, 0, 0, 255, //
-        0, 0, -1, 0, 255, //
-        0, 0, 0, 1, 0, //
-      ]),
-      child: child,
-    );
+    return ColorFiltered(colorFilter: const ColorFilter.matrix(invertColorMatrix), child: child);
   }
 }
 
@@ -26,10 +37,7 @@ class BrightnessFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColorFiltered(
-      colorFilter: ColorFilter.matrix(_ColorFilterGenerator.brightnessAdjustMatrix(brightness)),
-      child: child,
-    );
+    return ColorFiltered(colorFilter: ColorFilter.matrix(brightnessAdjustMatrix(brightness)), child: child);
   }
 }
 
@@ -41,10 +49,7 @@ class SaturationFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColorFiltered(
-      colorFilter: ColorFilter.matrix(_ColorFilterGenerator.saturationAdjustMatrix(saturation)),
-      child: child,
-    );
+    return ColorFiltered(colorFilter: ColorFilter.matrix(saturationAdjustMatrix(saturation)), child: child);
   }
 }
 
@@ -53,12 +58,7 @@ class _ColorFilterGenerator {
     value = value * 10;
 
     if (value == 0) {
-      return [
-        1, 0, 0, 0, 0, //
-        0, 1, 0, 0, 0, //
-        0, 0, 1, 0, 0, //
-        0, 0, 0, 1, 0, //
-      ];
+      return identityColorMatrix;
     }
 
     return List<double>.from(<double>[
@@ -70,12 +70,7 @@ class _ColorFilterGenerator {
     value = value * 100;
 
     if (value == 0) {
-      return [
-        1, 0, 0, 0, 0, //
-        0, 1, 0, 0, 0, //
-        0, 0, 1, 0, 0, //
-        0, 0, 0, 1, 0, //
-      ];
+      return identityColorMatrix;
     }
 
     double x = ((1 + ((value > 0) ? ((3 * value) / 100) : (value / 100)))).toDouble();

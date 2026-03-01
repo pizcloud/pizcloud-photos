@@ -26,6 +26,7 @@ class DriftFilterImagePage extends HookWidget {
   Widget build(BuildContext context) {
     final colorFilter = useState<ColorFilter>(filters[0]);
     final selectedFilterIndex = useState<int>(0);
+    final filterIntensity = useState<double>(1.0); // pizcloud
     final showOriginalPreview = useState<bool>(false); // pizcloud
 
     Future<ui.Image> createFilteredImage(ui.Image inputImage, ColorFilter filter) {
@@ -44,19 +45,44 @@ class DriftFilterImagePage extends HookWidget {
       return completer.future;
     }
 
+    // pizcloud
+    Future<ui.Image> blendImages(ui.Image baseImage, ui.Image filteredImage, double opacity) {
+      final completer = Completer<ui.Image>();
+      final size = Size(baseImage.width.toDouble(), baseImage.height.toDouble());
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      canvas.drawImage(baseImage, Offset.zero, Paint());
+      canvas.drawImage(
+        filteredImage,
+        Offset.zero,
+        Paint()..color = Color.fromRGBO(255, 255, 255, opacity.clamp(0.0, 1.0)),
+      );
+
+      recorder.endRecording().toImage(size.width.round(), size.height.round()).then((image) {
+        completer.complete(image);
+      });
+
+      return completer.future;
+    }
+    // #pizcloud
+
     void applyFilter(ColorFilter filter, int index) {
       colorFilter.value = filter;
       selectedFilterIndex.value = index;
+      // Previous behavior always applied selected preset fully (100%).
+      filterIntensity.value = 1.0; // pizcloud
     }
 
     // pizcloud
     void resetFilter() {
       colorFilter.value = filters[0];
       selectedFilterIndex.value = 0;
+      filterIntensity.value = 1.0;
     }
     // #pizcloud
 
-    Future<Image> applyFilterAndConvert(ColorFilter filter) async {
+    Future<Image> applyFilterAndConvert(ColorFilter filter, double intensity) async {
       final completer = Completer<ui.Image>();
       image.image
           .resolve(ImageConfiguration.empty)
@@ -67,8 +93,19 @@ class DriftFilterImagePage extends HookWidget {
           );
       final uiImage = await completer.future;
 
-      final filteredUiImage = await createFilteredImage(uiImage, filter);
-      final byteData = await filteredUiImage.toByteData(format: ui.ImageByteFormat.png);
+      // pizcloud
+      ui.Image outputImage = uiImage;
+      final clampedIntensity = intensity.clamp(0.0, 1.0);
+
+      if (clampedIntensity > 0) {
+        final filteredUiImage = await createFilteredImage(uiImage, filter);
+        outputImage = clampedIntensity >= 1
+            ? filteredUiImage
+            : await blendImages(uiImage, filteredUiImage, clampedIntensity);
+      }
+      // #pizcloud
+
+      final byteData = await outputImage.toByteData(format: ui.ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
 
       return Image.memory(pngBytes, fit: BoxFit.contain);
@@ -84,16 +121,18 @@ class DriftFilterImagePage extends HookWidget {
           IconButton(
             icon: Icon(
               Icons.refresh_rounded,
-              color: selectedFilterIndex.value == 0 ? Colors.grey : context.primaryColor,
+              color: (selectedFilterIndex.value == 0 && filterIntensity.value == 1.0)
+                  ? Colors.grey
+                  : context.primaryColor,
               size: 22,
             ),
-            onPressed: selectedFilterIndex.value == 0 ? null : resetFilter,
+            onPressed: (selectedFilterIndex.value == 0 && filterIntensity.value == 1.0) ? null : resetFilter,
           ),
           // #pizcloud
           IconButton(
             icon: Icon(Icons.done_rounded, color: context.primaryColor, size: 24),
             onPressed: () async {
-              final filteredImage = await applyFilterAndConvert(colorFilter.value);
+              final filteredImage = await applyFilterAndConvert(colorFilter.value, filterIntensity.value); // pizcloud
               unawaited(context.pushRoute(DriftEditImageRoute(asset: asset, image: filteredImage, isEdited: true)));
             },
           ),
@@ -103,7 +142,7 @@ class DriftFilterImagePage extends HookWidget {
       body: Column(
         children: [
           SizedBox(
-            height: context.height * 0.7,
+            height: context.height * 0.64, // pizcloud
             child: Center(
               // pizcloud
               child: GestureDetector(
@@ -121,7 +160,19 @@ class DriftFilterImagePage extends HookWidget {
                           ? KeyedSubtree(key: const ValueKey('before_preview'), child: image)
                           : KeyedSubtree(
                               key: const ValueKey('after_preview'),
-                              child: ColorFiltered(colorFilter: colorFilter.value, child: image),
+                              // pizcloud
+                              child: Stack(
+                                fit: StackFit.passthrough,
+                                children: [
+                                  image,
+                                  if (filterIntensity.value > 0)
+                                    Opacity(
+                                      opacity: filterIntensity.value,
+                                      child: ColorFiltered(colorFilter: colorFilter.value, child: image),
+                                    ),
+                                ],
+                              ),
+                              // #pizcloud
                             ),
                     ),
                     Container(
@@ -142,8 +193,35 @@ class DriftFilterImagePage extends HookWidget {
               // #pizcloud
             ),
           ),
+          // pizcloud
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                const SizedBox(width: 58, child: Text("Intensity", maxLines: 1, overflow: TextOverflow.ellipsis)),
+                Expanded(
+                  child: Slider(
+                    value: filterIntensity.value,
+                    min: 0,
+                    max: 1,
+                    divisions: 100,
+                    onChanged: (value) => filterIntensity.value = value,
+                  ),
+                ),
+                SizedBox(
+                  width: 44,
+                  child: Text(
+                    "${(filterIntensity.value * 100).round()}%",
+                    textAlign: TextAlign.right,
+                    style: context.themeData.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // #pizcloud
           SizedBox(
-            height: 120,
+            height: 114, // pizcloud
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: filters.length,

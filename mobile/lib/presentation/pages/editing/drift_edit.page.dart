@@ -11,6 +11,7 @@ import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/entities/asset.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
+import 'package:immich_mobile/presentation/pages/editing/drift_adjust.page.dart'; // pizcloud
 import 'package:immich_mobile/repositories/file_media.repository.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/services/upload.service.dart';
@@ -125,6 +126,28 @@ class DriftEditImagePage extends ConsumerWidget {
               Text("filter".tr(), style: context.textTheme.displayMedium),
             ],
           ),
+          // pizcloud
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.tune_rounded, color: context.themeData.iconTheme.color, size: 25),
+                onPressed: () {
+                  // Previous flow only had Crop + Filter actions.
+                  unawaited(
+                    context.navigator.push(
+                      platformPageRoute(
+                        context: context,
+                        builder: (_) => DriftAdjustImagePage(asset: asset, image: image),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              Text("Adjust", style: context.textTheme.displayMedium),
+            ],
+          ),
+          // #pizcloud
         ],
       ),
     );
