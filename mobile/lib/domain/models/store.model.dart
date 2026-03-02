@@ -95,7 +95,10 @@ enum StoreKey<T> {
   pizcloudSavedLoginAccounts<String>._(1011),
 
   // pizcloud login method: "google" | "email"
-  pizcloudLoginMethod<String>._(1012);
+  pizcloudLoginMethod<String>._(1012),
+
+  // pizcloud - backup reminder push notification preference
+  backupNotificationEnabled<bool>._(1013);
 
   const StoreKey._(this.id);
   final int id;
