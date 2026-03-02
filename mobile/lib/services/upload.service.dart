@@ -22,6 +22,7 @@ import 'package:immich_mobile/repositories/asset_media.repository.dart';
 import 'package:immich_mobile/repositories/upload.repository.dart';
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
+import 'package:immich_mobile/services/pizcloud/backup_success_api.service.dart'; // pizcloud
 import 'package:immich_mobile/utils/debug_print.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
@@ -73,6 +74,8 @@ class UploadService {
   Stream<TaskProgressUpdate> get taskProgressStream => _taskProgressController.stream;
 
   bool shouldAbortQueuingTasks = false;
+  bool _hasReportedBackupSuccessInRun = false; // pizcloud
+  bool _isReportingBackupSuccess = false; // pizcloud
 
   void _onTaskProgressCallback(TaskProgressUpdate update) {
     if (!_taskProgressController.isClosed) {
@@ -165,6 +168,7 @@ class UploadService {
     await _storageRepository.clearCache();
 
     shouldAbortQueuingTasks = false;
+    _resetBackupSuccessReportState(); // pizcloud
 
     final candidates = await _backupRepository.getCandidates(userId);
     if (candidates.isEmpty) {
@@ -200,6 +204,7 @@ class UploadService {
     await _storageRepository.clearCache();
 
     shouldAbortQueuingTasks = false;
+    _resetBackupSuccessReportState(); // pizcloud
 
     final candidates = await _backupRepository.getCandidates(userId);
     if (candidates.isEmpty) {
@@ -228,7 +233,13 @@ class UploadService {
       }
 
       if (tasks.isNotEmpty && !shouldAbortQueuingTasks) {
-        await _uploadRepository.backupWithDartClient(tasks, token);
+        // pizcloud
+        // await _uploadRepository.backupWithDartClient(tasks, token);
+        final hasSuccessfulUpload = await _uploadRepository.backupWithDartClient(tasks, token);
+        if (hasSuccessfulUpload) {
+          _tryReportBackupSuccessOnce(source: 'android_http_client');
+        }
+        // #pizcloud
       }
     }
   }
@@ -248,12 +259,22 @@ class UploadService {
   }
 
   Future<void> resumeBackup() {
+    _resetBackupSuccessReportState(); // pizcloud
     return _uploadRepository.start();
   }
 
   void _handleTaskStatusUpdate(TaskStatusUpdate update) async {
     switch (update.status) {
       case TaskStatus.complete:
+        // pizcloud
+        final isBackupTask = update.task.group == kBackupGroup || update.task.group == kBackupLivePhotoGroup;
+        final isSuccessfulStatusCode = update.responseStatusCode == 200 || update.responseStatusCode == 201;
+
+        if (isBackupTask && isSuccessfulStatusCode) {
+          _tryReportBackupSuccessOnce(source: 'background_downloader');
+        }
+        // #pizcloud
+
         unawaited(_handleLivePhoto(update));
 
         if (CurrentPlatform.isIOS) {
@@ -271,6 +292,38 @@ class UploadService {
         break;
     }
   }
+
+  // pizcloud
+  void _resetBackupSuccessReportState() {
+    _hasReportedBackupSuccessInRun = false;
+    _isReportingBackupSuccess = false;
+  }
+
+  void _tryReportBackupSuccessOnce({required String source}) {
+    if (_hasReportedBackupSuccessInRun || _isReportingBackupSuccess) {
+      return;
+    }
+
+    _isReportingBackupSuccess = true;
+    unawaited(
+      _reportBackupSuccess(source: source).whenComplete(() {
+        _isReportingBackupSuccess = false;
+      }),
+    );
+  }
+
+  Future<void> _reportBackupSuccess({required String source}) async {
+    try {
+      final timestamp = await BackupSuccessApiService.markBackupSuccess();
+      _hasReportedBackupSuccessInRun = true;
+      _logger.info(
+        'Reported backup success from $source${timestamp == null ? '' : ' at ${timestamp.toIso8601String()}'}',
+      );
+    } catch (error, stack) {
+      _logger.warning('Failed to report backup success from $source', error, stack);
+    }
+  }
+  // #pizcloud
 
   Future<void> _handleLivePhoto(TaskStatusUpdate update) async {
     try {
