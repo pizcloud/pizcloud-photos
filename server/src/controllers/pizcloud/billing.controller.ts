@@ -28,6 +28,17 @@ export class BillingController {
     return this.billingService.getEntitlement(userId);
   }
 
+  // GET /api/billing/subscription-status
+  @Get('subscription-status')
+  @Authenticated()
+  async getSubscriptionStatus(@Auth() auth: AuthDto) {
+    const userId = auth.user.id;
+    if (!userId) {
+      throw new UnauthorizedException('No authenticated user');
+    }
+    return this.billingService.getSubscriptionStatus(userId);
+  }
+
   // // =========================================================
   // //  POST /api/billing/iap/android/rtdn
   // //  → RTDN endpoint (Google Pub/Sub push) for Android

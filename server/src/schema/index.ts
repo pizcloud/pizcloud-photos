@@ -44,6 +44,8 @@ import { AssetMetadataTable } from 'src/schema/tables/asset-metadata.table';
 import { AssetOcrTable } from 'src/schema/tables/asset-ocr.table';
 import { AssetTable } from 'src/schema/tables/asset.table';
 import { AuditTable } from 'src/schema/tables/audit.table';
+import { BillingSubscriptionEventTable } from 'src/schema/tables/billing-subscription-event.table'; // pizcloud
+import { BillingSubscriptionStateTable } from 'src/schema/tables/billing-subscription-state.table'; // pizcloud
 import { FaceSearchTable } from 'src/schema/tables/face-search.table';
 import { GeodataPlacesTable } from 'src/schema/tables/geodata-places.table';
 import { LibraryTable } from 'src/schema/tables/library.table';
@@ -102,6 +104,8 @@ export class ImmichDatabase {
     AssetTable,
     AssetFileTable,
     AuditTable,
+    BillingSubscriptionStateTable, // pizcloud
+    BillingSubscriptionEventTable, // pizcloud
     AssetExifTable,
     FaceSearchTable,
     GeodataPlacesTable,
@@ -198,6 +202,9 @@ export interface DB {
   ocr_search: OcrSearchTable;
 
   audit: AuditTable;
+
+  billing_subscription_state: BillingSubscriptionStateTable; // pizcloud
+  billing_subscription_event: BillingSubscriptionEventTable; // pizcloud
 
   face_search: FaceSearchTable;
 

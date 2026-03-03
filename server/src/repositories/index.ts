@@ -8,6 +8,7 @@ import { AppRepository } from 'src/repositories/app.repository';
 import { AssetJobRepository } from 'src/repositories/asset-job.repository';
 import { AssetRepository } from 'src/repositories/asset.repository';
 import { AuditRepository } from 'src/repositories/audit.repository';
+import { BillingSubscriptionRepository } from 'src/repositories/billing-subscription.repository'; // pizcloud
 import { ConfigRepository } from 'src/repositories/config.repository';
 import { CronRepository } from 'src/repositories/cron.repository';
 import { CryptoRepository } from 'src/repositories/crypto.repository';
@@ -58,6 +59,7 @@ export const repositories = [
   AlbumTransferRepository, // pizcloud
   AlbumUserRepository,
   AuditRepository,
+  BillingSubscriptionRepository, // pizcloud
   ApiKeyRepository,
   AppRepository,
   AssetRepository,

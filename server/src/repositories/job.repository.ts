@@ -220,6 +220,15 @@ export class JobRepository {
       case JobName.FacialRecognitionQueueAll: {
         return { jobId: JobName.FacialRecognitionQueueAll };
       }
+      // pizcloud
+      case JobName.BillingApplyExpiry: {
+        const expiresKey = item.data.expectedExpiresAtMs ?? 'na';
+        return {
+          jobId: `billing-expiry:${item.data.userId}:${expiresKey}`,
+          delay: Math.max(0, Number(item.data.delayMs ?? 0)),
+        };
+      }
+      // #pizcloud
       default: {
         return null;
       }

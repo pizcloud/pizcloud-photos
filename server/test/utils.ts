@@ -16,6 +16,7 @@ import { AuthGuard } from 'src/middleware/auth.guard';
 import { FileUploadInterceptor } from 'src/middleware/file-upload.interceptor';
 import { AccessRepository } from 'src/repositories/access.repository';
 import { ActivityRepository } from 'src/repositories/activity.repository';
+import { AlbumTransferRepository } from 'src/repositories/album-transfer.repository';
 import { AlbumUserRepository } from 'src/repositories/album-user.repository';
 import { AlbumRepository } from 'src/repositories/album.repository';
 import { ApiKeyRepository } from 'src/repositories/api-key.repository';
@@ -211,6 +212,7 @@ export type ServiceOverrides = {
   access: AccessRepository;
   activity: ActivityRepository;
   album: AlbumRepository;
+  albumTransfer: AlbumTransferRepository;
   albumUser: AlbumUserRepository;
   apiKey: ApiKeyRepository;
   app: AppRepository;
@@ -287,6 +289,7 @@ export const getMocks = () => {
     activity: automock(ActivityRepository),
     audit: automock(AuditRepository),
     album: automock(AlbumRepository, { strict: false }),
+    albumTransfer: automock(AlbumTransferRepository, { strict: false }),
     albumUser: automock(AlbumUserRepository),
     asset: newAssetRepositoryMock(),
     assetJob: automock(AssetJobRepository),
@@ -352,6 +355,7 @@ export const newTestService = <T extends BaseService>(
     overrides.access || (mocks.access as IAccessRepository as AccessRepository),
     overrides.activity || (mocks.activity as As<ActivityRepository>),
     overrides.album || (mocks.album as As<AlbumRepository>),
+    overrides.albumTransfer || (mocks.albumTransfer as As<AlbumTransferRepository>),
     overrides.albumUser || (mocks.albumUser as As<AlbumUserRepository>),
     overrides.apiKey || (mocks.apiKey as As<ApiKeyRepository>),
     overrides.app || (mocks.app as As<AppRepository>),

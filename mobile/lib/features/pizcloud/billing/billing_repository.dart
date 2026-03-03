@@ -12,6 +12,7 @@ class BillingRepository {
   final String packageName;
 
   Future<Map<String, dynamic>?> loadEntitlement() => api.getEntitlements();
+  Future<Map<String, dynamic>?> loadSubscriptionStatus() => api.getSubscriptionStatus();
   Future<Map<String, dynamic>> loadUsage() => api.getUsage();
 
   Future<Map<String, dynamic>?> loadReferralSummary() => api.getReferralSummary();

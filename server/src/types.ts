@@ -265,6 +265,14 @@ export interface INotifyAlbumUpdateJob extends IEntityJob, IDelayedJob {
   recipientId: string;
 }
 
+// pizcloud
+export interface IBillingApplyExpiryJob extends IBaseJob {
+  userId: string;
+  expectedExpiresAtMs?: number;
+  delayMs?: number;
+}
+// #pizcloud
+
 export interface WorkflowData {
   [PluginTriggerType.AssetCreate]: {
     userId: string;
@@ -331,6 +339,9 @@ export type JobItem =
 
   // Notifications
   | { name: JobName.NotificationsCleanup; data?: IBaseJob }
+
+  // Billing // pizcloud
+  | { name: JobName.BillingApplyExpiry; data: IBillingApplyExpiryJob }
 
   // Sidecar Scanning
   | { name: JobName.SidecarQueueAll; data: IBaseJob }

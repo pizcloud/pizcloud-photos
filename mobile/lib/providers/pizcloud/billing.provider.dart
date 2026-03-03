@@ -7,6 +7,7 @@ import 'package:immich_mobile/features/pizcloud/billing/entitlement_api_client.d
 import 'package:immich_mobile/features/pizcloud/billing/iap_service.dart';
 import 'package:immich_mobile/features/pizcloud/billing/billing_repository.dart';
 import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
+import 'package:immich_mobile/features/pizcloud/billing/billing_state.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 
 /// Separate configuration for the billing-service and Android package name
@@ -18,9 +19,7 @@ class BillingConfig {
 }
 
 final billingConfigProvider = Provider<BillingConfig>((ref) {
-  return const BillingConfig(
-    androidPackageName: AppConfig.androidPackageName,
-  );
+  return const BillingConfig(androidPackageName: AppConfig.androidPackageName);
 });
 
 final iapServiceProvider = Provider<IapService>((ref) => IapService());
@@ -40,7 +39,7 @@ final billingRepositoryProvider = Provider<BillingRepository>((ref) {
   return BillingRepository(api: api, iap: iap, packageName: cfg.androidPackageName);
 });
 
-final billingControllerProvider = StateNotifierProvider<BillingController, dynamic>((ref) {
+final billingControllerProvider = StateNotifierProvider<BillingController, BillingState>((ref) {
   final ctl = BillingController(repo: ref.watch(billingRepositoryProvider), iap: ref.watch(iapServiceProvider));
   ctl.init();
   return ctl;

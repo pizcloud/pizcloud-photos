@@ -606,6 +606,7 @@ export enum JobName {
   NotifyUserSignup = 'NotifyUserSignup',
   NotifyAlbumInvite = 'NotifyAlbumInvite',
   NotifyAlbumUpdate = 'NotifyAlbumUpdate',
+  BillingApplyExpiry = 'BillingApplyExpiry', // pizcloud
 
   UserDelete = 'UserDelete',
   UserDeleteCheck = 'UserDeleteCheck',

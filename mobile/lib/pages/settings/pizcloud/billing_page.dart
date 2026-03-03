@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -64,6 +63,99 @@ Color _bannerColor(String s, BuildContext context) {
 }
 
 void _snack(BuildContext c, String msg) => ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));
+
+class _SubscriptionNotice {
+  const _SubscriptionNotice({
+    required this.backgroundColor,
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final Color backgroundColor;
+  final IconData icon;
+  final String title;
+  final String message;
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is int) {
+    return value;
+  }
+  return int.tryParse(value.toString());
+}
+
+String _formatMs(BuildContext context, int millis) {
+  final date = DateTime.fromMillisecondsSinceEpoch(millis).toLocal();
+  final locale = context.locale.toString();
+  return DateFormat.yMMMd(locale).add_Hm().format(date);
+}
+
+_SubscriptionNotice? _buildSubscriptionNotice({
+  required BuildContext context,
+  required Map<String, dynamic>? subscriptionStatus,
+  required Map<String, dynamic>? entitlement,
+}) {
+  final status = ((subscriptionStatus?['status'] ?? entitlement?['status']) as String?)?.toLowerCase();
+  final cancelAtPeriodEnd = (subscriptionStatus?['cancelAtPeriodEnd'] ?? entitlement?['cancelAtPeriodEnd']) == true;
+  final expiresAtMs = _toInt(subscriptionStatus?['expiresAtMs'] ?? entitlement?['expiresAtMs']);
+  final serverNowMs = _toInt(subscriptionStatus?['serverNowMs']) ?? DateTime.now().millisecondsSinceEpoch;
+  final hasFutureExpiry = expiresAtMs != null && expiresAtMs > serverNowMs;
+  final dateLabel = expiresAtMs != null ? _formatMs(context, expiresAtMs) : null;
+
+  if ((status == 'canceled' || (status == 'active' && cancelAtPeriodEnd)) && cancelAtPeriodEnd) {
+    if (hasFutureExpiry && dateLabel != null) {
+      return _SubscriptionNotice(
+        backgroundColor: Colors.amber.shade100,
+        icon: Icons.schedule,
+        title: 'subscription.notice_cancel_pending_title'.tr(),
+        message: 'subscription.notice_cancel_pending_body'.tr(namedArgs: {'date': dateLabel}),
+      );
+    }
+    return _SubscriptionNotice(
+      backgroundColor: Colors.amber.shade100,
+      icon: Icons.schedule,
+      title: 'subscription.notice_cancel_pending_title'.tr(),
+      message: 'subscription.notice_cancel_pending_body_generic'.tr(),
+    );
+  }
+
+  if (status == 'grace_period') {
+    return _SubscriptionNotice(
+      backgroundColor: Colors.orange.shade100,
+      icon: Icons.warning_amber_rounded,
+      title: 'subscription.notice_grace_period_title'.tr(),
+      message: dateLabel != null
+          ? 'subscription.notice_grace_period_body'.tr(namedArgs: {'date': dateLabel})
+          : 'subscription.notice_grace_period_body_generic'.tr(),
+    );
+  }
+
+  if (status == 'on_hold') {
+    return _SubscriptionNotice(
+      backgroundColor: Colors.orange.shade100,
+      icon: Icons.info_outline,
+      title: 'subscription.notice_on_hold_title'.tr(),
+      message: dateLabel != null
+          ? 'subscription.notice_on_hold_body'.tr(namedArgs: {'date': dateLabel})
+          : 'subscription.notice_on_hold_body_generic'.tr(),
+    );
+  }
+
+  if (status == 'expired' || status == 'revoked') {
+    return _SubscriptionNotice(
+      backgroundColor: Colors.red.shade100,
+      icon: Icons.error_outline,
+      title: 'subscription.notice_expired_title'.tr(),
+      message: 'subscription.notice_expired_body'.tr(),
+    );
+  }
+
+  return null;
+}
 
 List<String> _featuresFor(String idOrTitle) {
   final s = idOrTitle.toLowerCase();
@@ -443,11 +535,24 @@ class BillingPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    final state = ref.watch(billingControllerProvider) as dynamic;
+    final state = ref.watch(billingControllerProvider);
     final ctl = ref.read(billingControllerProvider.notifier);
 
-    final usage = state.usage as Map<String, dynamic>?;
-    final referral = state.referral as Map<String, dynamic>?;
+    final usage = state.usage;
+    final referral = state.referral;
+    final subscriptionStatus = state.subscriptionStatus;
+    final notice = _buildSubscriptionNotice(
+      context: context,
+      subscriptionStatus: subscriptionStatus,
+      entitlement: state.entitlement,
+    );
+
+    useOnAppLifecycleStateChange((_, current) {
+      if (current == AppLifecycleState.resumed) {
+        ctl.refreshSubscriptionStatus();
+        ctl.refreshUsage();
+      }
+    });
 
     // Check if the user has a valid referral discount
     bool hasReferralDiscount = false;
@@ -473,7 +578,7 @@ class BillingPage extends HookConsumerWidget {
     final selectedPlan = useState<PlanDisplay?>(null);
 
     // Real products if any
-    final List<ProductDetails> realProducts = (state.products as List<ProductDetails>? ?? const []);
+    final List<ProductDetails> realProducts = state.products;
 
     // Decide fake mode
     final bool isFakeMode = kUseFakeProducts && (realProducts.isEmpty || state.error != null);
@@ -629,70 +734,72 @@ class BillingPage extends HookConsumerWidget {
       // Sticky CTA
       material: (_, __) => MaterialScaffoldData(
         bottomNavBar: showCta
-          ? SafeArea(
-              top: false,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 12,
-                      offset: const Offset(0, -4),
-                      color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Summary line
-                    Text(
-                      'subscription.continue_with'.tr(
-                        namedArgs: {
-                          'plan': selectedPlan.value!.title,
-                          'price': selectedPlan.value!.price,
-                          'period': period.value == BillingPeriod.monthly
-                              ? 'subscription.period_month'.tr()
-                              : 'subscription.period_year'.tr(),
-                        },
+            ? SafeArea(
+                top: false,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 12,
+                        offset: const Offset(0, -4),
+                        color: theme.colorScheme.shadow.withValues(alpha: 0.08),
                       ),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final plan = selectedPlan.value!;
-                          if (plan.raw != null) {
-                            // Real purchase
-                            ref.read(billingControllerProvider.notifier).buy(plan.raw!, offerToken: plan.offerToken);
-                          } else {
-                            try {
-                              await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
-                              _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
-                            } catch (e) {
-                              _snack(context, 'Fake buy failed: $e');
-                            }
-
-                            // Fake purchase
-                            // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Summary line
+                      Text(
+                        'subscription.continue_with'.tr(
+                          namedArgs: {
+                            'plan': selectedPlan.value!.title,
+                            'price': selectedPlan.value!.price,
+                            'period': period.value == BillingPeriod.monthly
+                                ? 'subscription.period_month'.tr()
+                                : 'subscription.period_year'.tr(),
+                          },
                         ),
-                        child: const Text('subscription.buy_now').tr(),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final plan = selectedPlan.value!;
+                            if (plan.raw != null) {
+                              // Real purchase
+                              await ref
+                                  .read(billingControllerProvider.notifier)
+                                  .buy(plan.raw!, offerToken: plan.offerToken);
+                            } else {
+                              try {
+                                await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
+                                _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
+                              } catch (e) {
+                                _snack(context, 'Fake buy failed: $e');
+                              }
+
+                              // Fake purchase
+                              // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('subscription.buy_now').tr(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            )
-          : null,
+              )
+            : null,
       ),
       body: SafeArea(
         child: ListView(
@@ -729,6 +836,31 @@ class BillingPage extends HookConsumerWidget {
                         padding: const EdgeInsets.only(top: 6),
                         child: Text('subscription.blocked'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
                       ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            if (notice != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: notice.backgroundColor, borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(notice.icon, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(notice.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 2),
+                          Text(notice.message, style: theme.textTheme.bodyMedium),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -885,8 +1017,8 @@ class BillingPage extends HookConsumerWidget {
               height: 44,
               child: ElevatedButton(
                 onPressed: () async {
-                  final entitlement = state.entitlement as Map<String, dynamic>?;
-                  final activeProductId = entitlement?['productId'] as String?;
+                  final activeProductId =
+                      (state.subscriptionStatus?['productId'] ?? state.entitlement?['productId']) as String?;
                   await _openManageSubscription(context, ref, productId: activeProductId);
                 },
                 style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),

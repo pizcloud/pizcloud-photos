@@ -4,6 +4,7 @@ class BillingState {
   final bool loading;
   final List<ProductDetails> products;
   final Map<String, dynamic>? entitlement;
+  final Map<String, dynamic>? subscriptionStatus;
   final Map<String, dynamic>? usage;
   final Map<String, dynamic>? referral;
   final String? error;
@@ -12,6 +13,7 @@ class BillingState {
     required this.loading,
     required this.products,
     this.entitlement,
+    this.subscriptionStatus,
     this.usage,
     this.referral,
     this.error,
@@ -23,6 +25,7 @@ class BillingState {
     bool? loading,
     List<ProductDetails>? products,
     Map<String, dynamic>? entitlement,
+    Map<String, dynamic>? subscriptionStatus,
     Map<String, dynamic>? usage,
     Map<String, dynamic>? referral,
     String? error,
@@ -30,6 +33,7 @@ class BillingState {
     loading: loading ?? this.loading,
     products: products ?? this.products,
     entitlement: entitlement ?? this.entitlement,
+    subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
     usage: usage ?? this.usage,
     referral: referral ?? this.referral,
     error: error,
