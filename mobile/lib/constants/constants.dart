@@ -58,6 +58,7 @@ const int kPhotoTabIndex = 0;
 const int kSearchTabIndex = 1;
 const int kAlbumTabIndex = 2;
 const int kLibraryTabIndex = 3;
+const int kNewLibraryTabIndex = 4; // pizcloud
 
 // Workaround for SQLite's variable limit (SQLITE_MAX_VARIABLE_NUMBER = 32766)
 const int kDriftMaxChunk = 32000;

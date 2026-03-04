@@ -2257,6 +2257,23 @@ class NativeVideoViewerRouteArgs {
   }
 }
 
+/// generated route for // pizcloud
+/// [NewLibraryPage]
+class NewLibraryRoute extends PageRouteInfo<void> {
+  const NewLibraryRoute({List<PageRouteInfo>? children})
+    : super(NewLibraryRoute.name, initialChildren: children);
+
+  static const String name = 'NewLibraryRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const NewLibraryPage();
+    },
+  );
+}
+// #pizcloud
+
 /// generated route for
 /// [PartnerDetailPage]
 class PartnerDetailRoute extends PageRouteInfo<PartnerDetailRouteArgs> {

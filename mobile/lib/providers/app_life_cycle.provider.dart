@@ -121,6 +121,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
 
         case TabEnum.library:
         case TabEnum.search:
+        case TabEnum.newLibrary: // pizcloud
           break;
       }
     } else {

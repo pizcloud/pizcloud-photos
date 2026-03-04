@@ -21,6 +21,7 @@ import 'package:immich_mobile/providers/search/search_input_focus.provider.dart'
 import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
+import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart'; // pizcloud
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/services/media_permission_service.dart'; // pizcloud
 import 'package:immich_mobile/providers/media_permission.provider.dart'; // pizcloud
@@ -108,6 +109,14 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
         ),
         enabled: !isReadonlyModeEnabled,
       ),
+      NavigationDestination(
+        label: 'new_library'.tr(),
+        icon: Icon(context.platformIcon(material: Icons.grid_view_rounded, cupertino: CupertinoIcons.square_grid_2x2)),
+        selectedIcon: Icon(
+          context.platformIcon(material: Icons.grid_view_rounded, cupertino: CupertinoIcons.square_grid_2x2_fill),
+          color: context.primaryColor,
+        ),
+      ),
       // NavigationDestination(
       //   label: 'photos'.tr(),
       //   icon: Icon(context.platformIcons.photoLibrary),
@@ -163,7 +172,15 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
     }
 
     return AutoTabsRouter(
-      routes: const [MainTimelineRoute(), DriftBackupRoute(), DriftAlbumsRoute(), SettingsTabRoute()],
+      // pizcloud
+      // const [MainTimelineRoute(), DriftBackupRoute(), DriftAlbumsRoute(), SettingsTabRoute()]
+      routes: const [
+        MainTimelineRoute(),
+        DriftBackupRoute(),
+        DriftAlbumsRoute(),
+        SettingsTabRoute(),
+        NewLibraryRoute(),
+      ],
       // routes: const [MainTimelineRoute(), DriftSearchRoute(), DriftAlbumsRoute(), DriftLibraryRoute()],
       duration: const Duration(milliseconds: 600),
       transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
@@ -299,7 +316,13 @@ void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
     ref.invalidate(driftGetAllPeopleProvider);
   }
 
+  // pizcloud New library page tapped again => scroll to top
+  if (router.activeIndex == kNewLibraryTabIndex && index == kNewLibraryTabIndex) {
+    ref.read(newLibraryReselectSignalProvider.notifier).state++;
+  }
+
   ref.read(hapticFeedbackProvider.notifier).selectionClick();
   router.setActiveIndex(index);
-  ref.read(tabProvider.notifier).state = TabEnum.values[index];
+  final safeTabIndex = index.clamp(0, TabEnum.values.length - 1); // pizcloud
+  ref.read(tabProvider.notifier).state = TabEnum.values[safeTabIndex]; // pizcloud
 }

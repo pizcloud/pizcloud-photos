@@ -113,6 +113,7 @@ import 'package:immich_mobile/presentation/pages/editing/drift_edit.page.dart';
 import 'package:immich_mobile/presentation/pages/editing/drift_filter.page.dart';
 import 'package:immich_mobile/presentation/pages/local_timeline.page.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/drift_user_email_selection.page.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/new_library.page.dart'; // pizcloud
 import 'package:immich_mobile/presentation/pages/search/drift_search.page.dart';
 import 'package:immich_mobile/presentation/widgets/asset_viewer/asset_viewer.page.dart';
 import 'package:immich_mobile/providers/api.provider.dart';
@@ -201,6 +202,7 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: DriftAlbumsRoute.page, guards: [_authGuard, _duplicateGuard]),
         // AutoRoute(page: DriftLibraryRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
         AutoRoute(page: SettingsTabRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
+        AutoRoute(page: NewLibraryRoute.page, guards: [_authGuard, _duplicateGuard]), // pizcloud
       ],
       transitionsBuilder: TransitionsBuilders.fadeIn,
     ),
