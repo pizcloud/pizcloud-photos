@@ -130,6 +130,7 @@ export class JobService extends BaseService {
                 originalFileName: asset.originalFileName,
                 thumbhash: asset.thumbhash ? hexOrBufferToBase64(asset.thumbhash) : null,
                 checksum: hexOrBufferToBase64(asset.checksum),
+                createdAt: asset.createdAt, // pizcloud
                 fileCreatedAt: asset.fileCreatedAt,
                 fileModifiedAt: asset.fileModifiedAt,
                 localDateTime: asset.localDateTime,

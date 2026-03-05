@@ -24,6 +24,7 @@ typedef $$RemoteAssetEntityTableCreateCompanionBuilder =
       required String checksum,
       i0.Value<bool> isFavorite,
       required String ownerId,
+      i0.Value<DateTime?> uploadedAt,
       i0.Value<DateTime?> localDateTime,
       i0.Value<String?> thumbHash,
       i0.Value<DateTime?> deletedAt,
@@ -45,6 +46,7 @@ typedef $$RemoteAssetEntityTableUpdateCompanionBuilder =
       i0.Value<String> checksum,
       i0.Value<bool> isFavorite,
       i0.Value<String> ownerId,
+      i0.Value<DateTime?> uploadedAt,
       i0.Value<DateTime?> localDateTime,
       i0.Value<String?> thumbHash,
       i0.Value<DateTime?> deletedAt,
@@ -157,6 +159,11 @@ class $$RemoteAssetEntityTableFilterComposer
 
   i0.ColumnFilters<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
+    builder: (column) => i0.ColumnFilters(column),
+  );
+
+  i0.ColumnFilters<DateTime> get uploadedAt => $composableBuilder(
+    column: $table.uploadedAt,
     builder: (column) => i0.ColumnFilters(column),
   );
 
@@ -283,6 +290,11 @@ class $$RemoteAssetEntityTableOrderingComposer
     builder: (column) => i0.ColumnOrderings(column),
   );
 
+  i0.ColumnOrderings<DateTime> get uploadedAt => $composableBuilder(
+    column: $table.uploadedAt,
+    builder: (column) => i0.ColumnOrderings(column),
+  );
+
   i0.ColumnOrderings<DateTime> get localDateTime => $composableBuilder(
     column: $table.localDateTime,
     builder: (column) => i0.ColumnOrderings(column),
@@ -389,6 +401,11 @@ class $$RemoteAssetEntityTableAnnotationComposer
     builder: (column) => column,
   );
 
+  i0.GeneratedColumn<DateTime> get uploadedAt => $composableBuilder(
+    column: $table.uploadedAt,
+    builder: (column) => column,
+  );
+
   i0.GeneratedColumn<DateTime> get localDateTime => $composableBuilder(
     column: $table.localDateTime,
     builder: (column) => column,
@@ -489,6 +506,7 @@ class $$RemoteAssetEntityTableTableManager
                 i0.Value<String> checksum = const i0.Value.absent(),
                 i0.Value<bool> isFavorite = const i0.Value.absent(),
                 i0.Value<String> ownerId = const i0.Value.absent(),
+                i0.Value<DateTime?> uploadedAt = const i0.Value.absent(),
                 i0.Value<DateTime?> localDateTime = const i0.Value.absent(),
                 i0.Value<String?> thumbHash = const i0.Value.absent(),
                 i0.Value<DateTime?> deletedAt = const i0.Value.absent(),
@@ -509,6 +527,7 @@ class $$RemoteAssetEntityTableTableManager
                 checksum: checksum,
                 isFavorite: isFavorite,
                 ownerId: ownerId,
+                uploadedAt: uploadedAt,
                 localDateTime: localDateTime,
                 thumbHash: thumbHash,
                 deletedAt: deletedAt,
@@ -530,6 +549,7 @@ class $$RemoteAssetEntityTableTableManager
                 required String checksum,
                 i0.Value<bool> isFavorite = const i0.Value.absent(),
                 required String ownerId,
+                i0.Value<DateTime?> uploadedAt = const i0.Value.absent(),
                 i0.Value<DateTime?> localDateTime = const i0.Value.absent(),
                 i0.Value<String?> thumbHash = const i0.Value.absent(),
                 i0.Value<DateTime?> deletedAt = const i0.Value.absent(),
@@ -549,6 +569,7 @@ class $$RemoteAssetEntityTableTableManager
                 checksum: checksum,
                 isFavorite: isFavorite,
                 ownerId: ownerId,
+                uploadedAt: uploadedAt,
                 localDateTime: localDateTime,
                 thumbHash: thumbHash,
                 deletedAt: deletedAt,
@@ -765,6 +786,18 @@ class $RemoteAssetEntityTable extends i3.RemoteAssetEntity
       'REFERENCES user_entity (id) ON DELETE CASCADE',
     ),
   );
+  static const i0.VerificationMeta _uploadedAtMeta = const i0.VerificationMeta(
+    'uploadedAt',
+  );
+  @override
+  late final i0.GeneratedColumn<DateTime> uploadedAt =
+      i0.GeneratedColumn<DateTime>(
+        'uploaded_at',
+        aliasedName,
+        true,
+        type: i0.DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const i0.VerificationMeta _localDateTimeMeta =
       const i0.VerificationMeta('localDateTime');
   @override
@@ -857,6 +890,7 @@ class $RemoteAssetEntityTable extends i3.RemoteAssetEntity
     checksum,
     isFavorite,
     ownerId,
+    uploadedAt,
     localDateTime,
     thumbHash,
     deletedAt,
@@ -944,6 +978,12 @@ class $RemoteAssetEntityTable extends i3.RemoteAssetEntity
       );
     } else if (isInserting) {
       context.missing(_ownerIdMeta);
+    }
+    if (data.containsKey('uploaded_at')) {
+      context.handle(
+        _uploadedAtMeta,
+        uploadedAt.isAcceptableOrUnknown(data['uploaded_at']!, _uploadedAtMeta),
+      );
     }
     if (data.containsKey('local_date_time')) {
       context.handle(
@@ -1045,6 +1085,10 @@ class $RemoteAssetEntityTable extends i3.RemoteAssetEntity
         i0.DriftSqlType.string,
         data['${effectivePrefix}owner_id'],
       )!,
+      uploadedAt: attachedDatabase.typeMapping.read(
+        i0.DriftSqlType.dateTime,
+        data['${effectivePrefix}uploaded_at'],
+      ),
       localDateTime: attachedDatabase.typeMapping.read(
         i0.DriftSqlType.dateTime,
         data['${effectivePrefix}local_date_time'],
@@ -1108,6 +1152,7 @@ class RemoteAssetEntityData extends i0.DataClass
   final String checksum;
   final bool isFavorite;
   final String ownerId;
+  final DateTime? uploadedAt;
   final DateTime? localDateTime;
   final String? thumbHash;
   final DateTime? deletedAt;
@@ -1127,6 +1172,7 @@ class RemoteAssetEntityData extends i0.DataClass
     required this.checksum,
     required this.isFavorite,
     required this.ownerId,
+    this.uploadedAt,
     this.localDateTime,
     this.thumbHash,
     this.deletedAt,
@@ -1159,6 +1205,9 @@ class RemoteAssetEntityData extends i0.DataClass
     map['checksum'] = i0.Variable<String>(checksum);
     map['is_favorite'] = i0.Variable<bool>(isFavorite);
     map['owner_id'] = i0.Variable<String>(ownerId);
+    if (!nullToAbsent || uploadedAt != null) {
+      map['uploaded_at'] = i0.Variable<DateTime>(uploadedAt);
+    }
     if (!nullToAbsent || localDateTime != null) {
       map['local_date_time'] = i0.Variable<DateTime>(localDateTime);
     }
@@ -1204,6 +1253,7 @@ class RemoteAssetEntityData extends i0.DataClass
       checksum: serializer.fromJson<String>(json['checksum']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       ownerId: serializer.fromJson<String>(json['ownerId']),
+      uploadedAt: serializer.fromJson<DateTime?>(json['uploadedAt']),
       localDateTime: serializer.fromJson<DateTime?>(json['localDateTime']),
       thumbHash: serializer.fromJson<String?>(json['thumbHash']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -1232,6 +1282,7 @@ class RemoteAssetEntityData extends i0.DataClass
       'checksum': serializer.toJson<String>(checksum),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'ownerId': serializer.toJson<String>(ownerId),
+      'uploadedAt': serializer.toJson<DateTime?>(uploadedAt),
       'localDateTime': serializer.toJson<DateTime?>(localDateTime),
       'thumbHash': serializer.toJson<String?>(thumbHash),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -1256,6 +1307,7 @@ class RemoteAssetEntityData extends i0.DataClass
     String? checksum,
     bool? isFavorite,
     String? ownerId,
+    i0.Value<DateTime?> uploadedAt = const i0.Value.absent(),
     i0.Value<DateTime?> localDateTime = const i0.Value.absent(),
     i0.Value<String?> thumbHash = const i0.Value.absent(),
     i0.Value<DateTime?> deletedAt = const i0.Value.absent(),
@@ -1277,6 +1329,7 @@ class RemoteAssetEntityData extends i0.DataClass
     checksum: checksum ?? this.checksum,
     isFavorite: isFavorite ?? this.isFavorite,
     ownerId: ownerId ?? this.ownerId,
+    uploadedAt: uploadedAt.present ? uploadedAt.value : this.uploadedAt,
     localDateTime: localDateTime.present
         ? localDateTime.value
         : this.localDateTime,
@@ -1306,6 +1359,9 @@ class RemoteAssetEntityData extends i0.DataClass
           ? data.isFavorite.value
           : this.isFavorite,
       ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
+      uploadedAt: data.uploadedAt.present
+          ? data.uploadedAt.value
+          : this.uploadedAt,
       localDateTime: data.localDateTime.present
           ? data.localDateTime.value
           : this.localDateTime,
@@ -1336,6 +1392,7 @@ class RemoteAssetEntityData extends i0.DataClass
           ..write('checksum: $checksum, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('ownerId: $ownerId, ')
+          ..write('uploadedAt: $uploadedAt, ')
           ..write('localDateTime: $localDateTime, ')
           ..write('thumbHash: $thumbHash, ')
           ..write('deletedAt: $deletedAt, ')
@@ -1360,6 +1417,7 @@ class RemoteAssetEntityData extends i0.DataClass
     checksum,
     isFavorite,
     ownerId,
+    uploadedAt,
     localDateTime,
     thumbHash,
     deletedAt,
@@ -1383,6 +1441,7 @@ class RemoteAssetEntityData extends i0.DataClass
           other.checksum == this.checksum &&
           other.isFavorite == this.isFavorite &&
           other.ownerId == this.ownerId &&
+          other.uploadedAt == this.uploadedAt &&
           other.localDateTime == this.localDateTime &&
           other.thumbHash == this.thumbHash &&
           other.deletedAt == this.deletedAt &&
@@ -1405,6 +1464,7 @@ class RemoteAssetEntityCompanion
   final i0.Value<String> checksum;
   final i0.Value<bool> isFavorite;
   final i0.Value<String> ownerId;
+  final i0.Value<DateTime?> uploadedAt;
   final i0.Value<DateTime?> localDateTime;
   final i0.Value<String?> thumbHash;
   final i0.Value<DateTime?> deletedAt;
@@ -1424,6 +1484,7 @@ class RemoteAssetEntityCompanion
     this.checksum = const i0.Value.absent(),
     this.isFavorite = const i0.Value.absent(),
     this.ownerId = const i0.Value.absent(),
+    this.uploadedAt = const i0.Value.absent(),
     this.localDateTime = const i0.Value.absent(),
     this.thumbHash = const i0.Value.absent(),
     this.deletedAt = const i0.Value.absent(),
@@ -1444,6 +1505,7 @@ class RemoteAssetEntityCompanion
     required String checksum,
     this.isFavorite = const i0.Value.absent(),
     required String ownerId,
+    this.uploadedAt = const i0.Value.absent(),
     this.localDateTime = const i0.Value.absent(),
     this.thumbHash = const i0.Value.absent(),
     this.deletedAt = const i0.Value.absent(),
@@ -1469,6 +1531,7 @@ class RemoteAssetEntityCompanion
     i0.Expression<String>? checksum,
     i0.Expression<bool>? isFavorite,
     i0.Expression<String>? ownerId,
+    i0.Expression<DateTime>? uploadedAt,
     i0.Expression<DateTime>? localDateTime,
     i0.Expression<String>? thumbHash,
     i0.Expression<DateTime>? deletedAt,
@@ -1489,6 +1552,7 @@ class RemoteAssetEntityCompanion
       if (checksum != null) 'checksum': checksum,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (ownerId != null) 'owner_id': ownerId,
+      if (uploadedAt != null) 'uploaded_at': uploadedAt,
       if (localDateTime != null) 'local_date_time': localDateTime,
       if (thumbHash != null) 'thumb_hash': thumbHash,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -1511,6 +1575,7 @@ class RemoteAssetEntityCompanion
     i0.Value<String>? checksum,
     i0.Value<bool>? isFavorite,
     i0.Value<String>? ownerId,
+    i0.Value<DateTime?>? uploadedAt,
     i0.Value<DateTime?>? localDateTime,
     i0.Value<String?>? thumbHash,
     i0.Value<DateTime?>? deletedAt,
@@ -1531,6 +1596,7 @@ class RemoteAssetEntityCompanion
       checksum: checksum ?? this.checksum,
       isFavorite: isFavorite ?? this.isFavorite,
       ownerId: ownerId ?? this.ownerId,
+      uploadedAt: uploadedAt ?? this.uploadedAt,
       localDateTime: localDateTime ?? this.localDateTime,
       thumbHash: thumbHash ?? this.thumbHash,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1579,6 +1645,9 @@ class RemoteAssetEntityCompanion
     if (ownerId.present) {
       map['owner_id'] = i0.Variable<String>(ownerId.value);
     }
+    if (uploadedAt.present) {
+      map['uploaded_at'] = i0.Variable<DateTime>(uploadedAt.value);
+    }
     if (localDateTime.present) {
       map['local_date_time'] = i0.Variable<DateTime>(localDateTime.value);
     }
@@ -1619,6 +1688,7 @@ class RemoteAssetEntityCompanion
           ..write('checksum: $checksum, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('ownerId: $ownerId, ')
+          ..write('uploadedAt: $uploadedAt, ')
           ..write('localDateTime: $localDateTime, ')
           ..write('thumbHash: $thumbHash, ')
           ..write('deletedAt: $deletedAt, ')

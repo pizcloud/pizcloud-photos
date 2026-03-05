@@ -62,6 +62,7 @@ class DriftTimelineRepository extends DriftDatabaseRepository {
                   checksum: row.checksum,
                   type: row.type,
                   createdAt: row.createdAt,
+                  uploadedAt: row.uploadedAt, // pizcloud
                   updatedAt: row.updatedAt,
                   thumbHash: row.thumbHash,
                   width: row.width,

@@ -108,10 +108,14 @@ import 'package:immich_mobile/presentation/pages/drift_remote_album.page.dart';
 import 'package:immich_mobile/presentation/pages/drift_trash.page.dart';
 import 'package:immich_mobile/presentation/pages/drift_user_selection.page.dart';
 import 'package:immich_mobile/presentation/pages/drift_video.page.dart';
+import 'package:immich_mobile/presentation/pages/editing/drift_adjust.page.dart'; // pizcloud
 import 'package:immich_mobile/presentation/pages/editing/drift_crop.page.dart';
 import 'package:immich_mobile/presentation/pages/editing/drift_edit.page.dart';
 import 'package:immich_mobile/presentation/pages/editing/drift_filter.page.dart';
 import 'package:immich_mobile/presentation/pages/local_timeline.page.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/drift_album_transfer_inbox.page.dart'; // pizcloud
+import 'package:immich_mobile/presentation/pages/pizcloud/drift_album_transfer_ownership.page.dart'; // pizcloud
+import 'package:immich_mobile/presentation/pages/pizcloud/drift_partner_email_selection.page.dart'; // pizcloud
 import 'package:immich_mobile/presentation/pages/pizcloud/drift_user_email_selection.page.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library.page.dart'; // pizcloud
 import 'package:immich_mobile/presentation/pages/search/drift_search.page.dart';

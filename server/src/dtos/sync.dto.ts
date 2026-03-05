@@ -104,6 +104,7 @@ export class SyncAssetV1 {
   originalFileName!: string;
   thumbhash!: string | null;
   checksum!: string;
+  createdAt!: Date | null; // pizcloud
   fileCreatedAt!: Date | null;
   fileModifiedAt!: Date | null;
   localDateTime!: Date | null;

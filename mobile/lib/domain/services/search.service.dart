@@ -60,6 +60,7 @@ extension on AssetResponseDto {
       name: originalFileName,
       checksum: checksum,
       createdAt: fileCreatedAt,
+      uploadedAt: createdAt, // pizcloud
       updatedAt: updatedAt,
       ownerId: ownerId,
       visibility: switch (visibility) {

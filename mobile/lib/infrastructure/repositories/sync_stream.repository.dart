@@ -182,6 +182,8 @@ class SyncStreamRepository extends DriftDatabaseRepository {
             name: Value(asset.originalFileName),
             type: Value(asset.type.toAssetType()),
             createdAt: Value.absentIfNull(asset.fileCreatedAt),
+            // Preserve server-side upload timestamp independently for UI/use-cases needing "added time".
+            uploadedAt: Value.absentIfNull(asset.createdAt), // pizcloud
             updatedAt: Value.absentIfNull(asset.fileModifiedAt),
             durationInSeconds: Value(asset.duration?.toDuration()?.inSeconds ?? 0),
             checksum: Value(asset.checksum),

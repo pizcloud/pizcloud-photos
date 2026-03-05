@@ -19,6 +19,7 @@ SELECT
 	rae.thumb_hash,
 	rae.checksum,
 	rae.owner_id,
+	rae.uploaded_at,
 	rae.live_photo_video_id,
 	0 as orientation,
 	rae.stack_id
@@ -51,6 +52,7 @@ SELECT
 	NULL as thumb_hash,
 	lae.checksum,
 	NULL as owner_id,
+	NULL as uploaded_at,
 	NULL as live_photo_video_id,
 	lae.orientation,
 	NULL as stack_id

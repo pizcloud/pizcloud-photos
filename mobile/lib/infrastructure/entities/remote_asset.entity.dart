@@ -30,6 +30,8 @@ class RemoteAssetEntity extends Table with DriftDefaultsMixin, AssetEntityMixin 
 
   TextColumn get ownerId => text().references(UserEntity, #id, onDelete: KeyAction.cascade)();
 
+  DateTimeColumn get uploadedAt => dateTime().nullable()(); // pizcloud
+
   DateTimeColumn get localDateTime => dateTime().nullable()();
 
   TextColumn get thumbHash => text().nullable()();
@@ -56,6 +58,7 @@ extension RemoteAssetEntityDataDomainEx on RemoteAssetEntityData {
     checksum: checksum,
     type: type,
     createdAt: createdAt,
+    uploadedAt: uploadedAt, // pizcloud
     updatedAt: updatedAt,
     durationInSeconds: durationInSeconds,
     isFavorite: isFavorite,

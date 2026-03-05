@@ -388,6 +388,7 @@ export const columns = {
     'asset.originalFileName',
     'asset.thumbhash',
     'asset.checksum',
+    'asset.createdAt',
     'asset.fileCreatedAt',
     'asset.fileModifiedAt',
     'asset.localDateTime',

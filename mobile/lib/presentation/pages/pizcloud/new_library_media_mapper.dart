@@ -40,6 +40,7 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
   if (remoteId == null || remoteId.isEmpty) {
     return null;
   }
+  final addedAt = asset is RemoteAsset ? (asset.uploadedAt ?? asset.createdAt) : asset.createdAt; // pizcloud
 
   final thumb100 = getThumbnailUrlForRemoteId(remoteId, type: api.AssetMediaSize.thumbnail);
   final thumb300 = getThumbnailUrlForRemoteId(remoteId, type: api.AssetMediaSize.preview);
@@ -60,7 +61,7 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
     localPath: null,
     duration: duration,
     createdAt: asset.createdAt,
-    addedAt: asset.createdAt,
+    addedAt: addedAt, // pizcloud
   );
 }
 

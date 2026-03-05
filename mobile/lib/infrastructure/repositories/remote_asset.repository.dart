@@ -147,7 +147,10 @@ class RemoteAssetRepository extends DriftDatabaseRepository {
         final companion = RemoteAssetEntityCompanion(
           name: Value(asset.originalFileName),
           type: Value(asset.type.toAssetType()),
+          // Keep existing behavior: timeline `createdAt` continues to track media capture time.
           createdAt: Value(asset.fileCreatedAt),
+          // Store upload time separately so UI can show both capture vs upload timestamps.
+          uploadedAt: Value(asset.createdAt), // pizcloud
           updatedAt: Value(asset.fileModifiedAt),
           durationInSeconds: Value(asset.duration.toDuration()?.inSeconds ?? 0),
           checksum: Value(asset.checksum),

@@ -7,6 +7,7 @@ class RemoteAsset extends BaseAsset {
   final String id;
   final String? localAssetId;
   final String? thumbHash;
+  final DateTime? uploadedAt; // pizcloud
   final AssetVisibility visibility;
   final String ownerId;
   final String? stackId;
@@ -25,6 +26,7 @@ class RemoteAsset extends BaseAsset {
     super.durationInSeconds,
     super.isFavorite = false,
     this.thumbHash,
+    this.uploadedAt, // pizcloud
     this.visibility = AssetVisibility.timeline,
     super.livePhotoVideoId,
     this.stackId,
@@ -61,6 +63,7 @@ class RemoteAsset extends BaseAsset {
     stackId: ${stackId ?? "<NA>"},
     checksum: $checksum,
     livePhotoVideoId: ${livePhotoVideoId ?? "<NA>"},
+    uploadedAt: ${uploadedAt ?? "<NA>"},
  }''';
   }
 
@@ -73,6 +76,7 @@ class RemoteAsset extends BaseAsset {
         id == other.id &&
         ownerId == other.ownerId &&
         thumbHash == other.thumbHash &&
+        uploadedAt == other.uploadedAt &&
         visibility == other.visibility &&
         stackId == other.stackId;
   }
@@ -84,6 +88,7 @@ class RemoteAsset extends BaseAsset {
       ownerId.hashCode ^
       localId.hashCode ^
       thumbHash.hashCode ^
+      uploadedAt.hashCode ^
       visibility.hashCode ^
       stackId.hashCode;
 
@@ -101,6 +106,7 @@ class RemoteAsset extends BaseAsset {
     int? durationInSeconds,
     bool? isFavorite,
     String? thumbHash,
+    DateTime? uploadedAt, // pizcloud
     AssetVisibility? visibility,
     String? livePhotoVideoId,
     String? stackId,
@@ -119,6 +125,7 @@ class RemoteAsset extends BaseAsset {
       durationInSeconds: durationInSeconds ?? this.durationInSeconds,
       isFavorite: isFavorite ?? this.isFavorite,
       thumbHash: thumbHash ?? this.thumbHash,
+      uploadedAt: uploadedAt ?? this.uploadedAt, // pizcloud
       visibility: visibility ?? this.visibility,
       livePhotoVideoId: livePhotoVideoId ?? this.livePhotoVideoId,
       stackId: stackId ?? this.stackId,

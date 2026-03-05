@@ -803,6 +803,54 @@ class DriftActivitiesRouteArgs {
 }
 
 /// generated route for
+/// [DriftAdjustImagePage]
+class DriftAdjustImageRoute extends PageRouteInfo<DriftAdjustImageRouteArgs> {
+  DriftAdjustImageRoute({
+    Key? key,
+    required Image image,
+    required BaseAsset asset,
+    List<PageRouteInfo>? children,
+  }) : super(
+         DriftAdjustImageRoute.name,
+         args: DriftAdjustImageRouteArgs(key: key, image: image, asset: asset),
+         initialChildren: children,
+       );
+
+  static const String name = 'DriftAdjustImageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<DriftAdjustImageRouteArgs>();
+      return DriftAdjustImagePage(
+        key: args.key,
+        image: args.image,
+        asset: args.asset,
+      );
+    },
+  );
+}
+
+class DriftAdjustImageRouteArgs {
+  const DriftAdjustImageRouteArgs({
+    this.key,
+    required this.image,
+    required this.asset,
+  });
+
+  final Key? key;
+
+  final Image image;
+
+  final BaseAsset asset;
+
+  @override
+  String toString() {
+    return 'DriftAdjustImageRouteArgs{key: $key, image: $image, asset: $asset}';
+  }
+}
+
+/// generated route for
 /// [DriftAlbumOptionsPage]
 class DriftAlbumOptionsRoute extends PageRouteInfo<DriftAlbumOptionsRouteArgs> {
   DriftAlbumOptionsRoute({
@@ -836,6 +884,60 @@ class DriftAlbumOptionsRouteArgs {
   @override
   String toString() {
     return 'DriftAlbumOptionsRouteArgs{key: $key, album: $album}';
+  }
+}
+
+/// generated route for
+/// [DriftAlbumTransferInboxPage]
+class DriftAlbumTransferInboxRoute extends PageRouteInfo<void> {
+  const DriftAlbumTransferInboxRoute({List<PageRouteInfo>? children})
+    : super(DriftAlbumTransferInboxRoute.name, initialChildren: children);
+
+  static const String name = 'DriftAlbumTransferInboxRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const DriftAlbumTransferInboxPage();
+    },
+  );
+}
+
+/// generated route for
+/// [DriftAlbumTransferOwnershipPage]
+class DriftAlbumTransferOwnershipRoute
+    extends PageRouteInfo<DriftAlbumTransferOwnershipRouteArgs> {
+  DriftAlbumTransferOwnershipRoute({
+    Key? key,
+    required RemoteAlbum album,
+    List<PageRouteInfo>? children,
+  }) : super(
+         DriftAlbumTransferOwnershipRoute.name,
+         args: DriftAlbumTransferOwnershipRouteArgs(key: key, album: album),
+         initialChildren: children,
+       );
+
+  static const String name = 'DriftAlbumTransferOwnershipRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<DriftAlbumTransferOwnershipRouteArgs>();
+      return DriftAlbumTransferOwnershipPage(key: args.key, album: args.album);
+    },
+  );
+}
+
+class DriftAlbumTransferOwnershipRouteArgs {
+  const DriftAlbumTransferOwnershipRouteArgs({this.key, required this.album});
+
+  final Key? key;
+
+  final RemoteAlbum album;
+
+  @override
+  String toString() {
+    return 'DriftAlbumTransferOwnershipRouteArgs{key: $key, album: $album}';
   }
 }
 
@@ -1345,6 +1447,22 @@ class DriftPartnerDetailRouteArgs {
   String toString() {
     return 'DriftPartnerDetailRouteArgs{key: $key, partner: $partner}';
   }
+}
+
+/// generated route for
+/// [DriftPartnerEmailSelectionPage]
+class DriftPartnerEmailSelectionRoute extends PageRouteInfo<void> {
+  const DriftPartnerEmailSelectionRoute({List<PageRouteInfo>? children})
+    : super(DriftPartnerEmailSelectionRoute.name, initialChildren: children);
+
+  static const String name = 'DriftPartnerEmailSelectionRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const DriftPartnerEmailSelectionPage();
+    },
+  );
 }
 
 /// generated route for
@@ -2257,7 +2375,7 @@ class NativeVideoViewerRouteArgs {
   }
 }
 
-/// generated route for // pizcloud
+/// generated route for
 /// [NewLibraryPage]
 class NewLibraryRoute extends PageRouteInfo<void> {
   const NewLibraryRoute({List<PageRouteInfo>? children})
@@ -2272,7 +2390,6 @@ class NewLibraryRoute extends PageRouteInfo<void> {
     },
   );
 }
-// #pizcloud
 
 /// generated route for
 /// [PartnerDetailPage]
@@ -2763,22 +2880,6 @@ class SettingsRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [SettingsTabPage]
-class SettingsTabRoute extends PageRouteInfo<void> {
-  const SettingsTabRoute({List<PageRouteInfo>? children})
-    : super(SettingsTabRoute.name, initialChildren: children);
-
-  static const String name = 'SettingsTabRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const SettingsTabPage();
-    },
-  );
-}
-
-/// generated route for
 /// [SettingsSubPage]
 class SettingsSubRoute extends PageRouteInfo<SettingsSubRouteArgs> {
   SettingsSubRoute({
@@ -2813,6 +2914,22 @@ class SettingsSubRouteArgs {
   String toString() {
     return 'SettingsSubRouteArgs{section: $section, key: $key}';
   }
+}
+
+/// generated route for
+/// [SettingsTabPage]
+class SettingsTabRoute extends PageRouteInfo<void> {
+  const SettingsTabRoute({List<PageRouteInfo>? children})
+    : super(SettingsTabRoute.name, initialChildren: children);
+
+  static const String name = 'SettingsTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SettingsTabPage();
+    },
+  );
 }
 
 /// generated route for
