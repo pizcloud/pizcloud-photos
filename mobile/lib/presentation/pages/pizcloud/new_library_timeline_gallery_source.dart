@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:immich_mobile/domain/services/timeline.service.dart';
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
@@ -15,8 +16,13 @@ class TimelineGallerySource extends PizGallerySource {
   final TimelineAssetSource _assetSource;
   final TimelineBucketSource _bucketSource;
   final int batchSize;
+  final Map<String, BaseAsset> _assetsByMediaItemId = <String, BaseAsset>{};
 
   bool _disposed = false;
+
+  BaseAsset? findAssetByMediaItemId(String mediaItemId) {
+    return _assetsByMediaItemId[mediaItemId];
+  }
 
   @override
   Future<List<MediaItem>> loadInitial() async {
@@ -41,6 +47,7 @@ class TimelineGallerySource extends PizGallerySource {
 
     final items = <MediaItem>[];
     final seenIds = <String>{};
+    final nextAssetsByMediaItemId = <String, BaseAsset>{};
     var offset = 0;
     final safeBatchSize = batchSize <= 0 ? 600 : batchSize;
 
@@ -55,17 +62,22 @@ class TimelineGallerySource extends PizGallerySource {
         final item = mapTimelineAssetToMediaItem(asset);
         if (item != null && seenIds.add(item.id)) {
           items.add(item);
+          nextAssetsByMediaItemId[item.id] = asset;
         }
       }
 
       offset += assets.length;
     }
 
+    _assetsByMediaItemId
+      ..clear()
+      ..addAll(nextAssetsByMediaItemId);
     return List<MediaItem>.unmodifiable(items);
   }
 
   @override
   Future<void> dispose() async {
     _disposed = true;
+    _assetsByMediaItemId.clear();
   }
 }

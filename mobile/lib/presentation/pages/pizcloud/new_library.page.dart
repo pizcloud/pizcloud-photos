@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_action_runner.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_actions.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
@@ -13,11 +15,15 @@ class NewLibraryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final source = ref.watch(newLibraryGallerySourceProvider);
     final reselectSignal = ref.watch(newLibraryReselectSignalProvider);
+    final runner = NewLibraryViewerActionRunner(ref: ref, source: source);
     final gallery = PizGallery(
       source: source,
       scrollToTopSignal: reselectSignal,
-      onViewerShareRequested: _onViewerShareRequested,
-      onViewerDeleteRequested: _onViewerDeleteRequested,
+      onViewerShareRequested: (item) => runner.onShareRequested(item, context),
+      onViewerDeleteRequested: (item) => runner.onDeleteRequested(item, context),
+      viewerActions: buildNewLibraryViewerActions(runner: runner),
+      includeDefaultViewerActions: false,
+      canDeleteItem: runner.canDeleteItemSync,
     );
 
     return CustomScrollView(
@@ -31,11 +37,7 @@ class NewLibraryPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _onViewerShareRequested(MediaItem item) async {
-    // Intentionally no-op for the first integration.
-  }
-
-  Future<void> _onViewerDeleteRequested(MediaItem item) async {
-    // Intentionally no-op for the first integration.
-  }
+  // Old integration hooks were intentionally no-op:
+  // Future<void> _onViewerShareRequested(MediaItem item) async {}
+  // Future<void> _onViewerDeleteRequested(MediaItem item) async {}
 }

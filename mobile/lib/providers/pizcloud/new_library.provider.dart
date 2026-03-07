@@ -16,7 +16,7 @@ final newLibraryTimelineQueryProvider = Provider.autoDispose<TimelineQuery>((ref
   return repository.main(users, groupBy);
 });
 
-final newLibraryGallerySourceProvider = Provider.autoDispose<PizGallerySource>((ref) {
+final newLibraryGallerySourceProvider = Provider.autoDispose<TimelineGallerySource>((ref) {
   // Configure auth headers for all pizcloud_gallery network loaders.
   PizGalleryAuthContext.configure(headersResolver: ApiService.getRequestHeaders);
 
