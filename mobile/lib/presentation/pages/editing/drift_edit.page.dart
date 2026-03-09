@@ -18,6 +18,7 @@ import 'package:immich_mobile/services/upload.service.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
+import 'package:pizcloud_gallery/pizcloud_gallery.dart'; // pizcloud
 
 /// A stateless widget that provides functionality for editing an image.
 ///
@@ -53,8 +54,14 @@ class DriftEditImagePage extends ConsumerWidget {
   }
 
   void _exitEditing(BuildContext context) {
-    // this assumes that the only way to get to this page is from the AssetViewerRoute
-    context.navigator.popUntil((route) => route.data?.name == AssetViewerRoute.name);
+    // pizcloud
+    // context.navigator.popUntil((route) => route.data?.name == AssetViewerRoute.name);
+    // Also support edit flow opened from the PizGallery viewer route.
+    context.navigator.popUntil((route) {
+      final String? routeName = route.settings.name ?? route.data?.name;
+      return routeName == AssetViewerRoute.name || routeName == kPizGalleryViewerRouteName;
+    });
+    // #pizcloud
   }
 
   Future<void> _saveEditedImage(BuildContext context, BaseAsset asset, Image image, WidgetRef ref) async {

@@ -13,6 +13,13 @@ List<ViewerAction> buildNewLibraryViewerActions({required NewLibraryViewerAction
       onExecute: (actionContext, item) => runner.viewInTimeline(item, actionContext.context),
     ),
     _RunnerViewerAction(
+      id: 'new_library_edit_image',
+      label: 'Edit',
+      icon: Icons.tune_rounded,
+      isVisible: runner.canEditImageSync,
+      onExecute: (actionContext, item) => runner.editImage(item, actionContext.context),
+    ),
+    _RunnerViewerAction(
       id: 'new_library_add_to_album',
       label: 'Add to album',
       icon: Icons.photo_album_outlined,

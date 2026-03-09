@@ -12,6 +12,7 @@ import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/presentation/widgets/album/album_selector.widget.dart';
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/base_bottom_sheet.widget.dart';
+import 'package:immich_mobile/presentation/widgets/images/image_provider.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/action.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/asset_viewer/current_asset.provider.dart';
@@ -53,6 +54,7 @@ class NewLibraryViewerActionRunner {
       isOwner: false,
       hasRemote: item.sourceType == MediaSourceType.remote,
       hasLocal: item.sourceType == MediaSourceType.local,
+      isImage: item.type == MediaType.photo,
       isFavorite: false,
       isArchived: false,
       isLocked: false,
@@ -61,6 +63,10 @@ class NewLibraryViewerActionRunner {
 
   bool canDeleteItemSync(MediaItem item) {
     return capabilityForItemSync(item).canDeleteRemoteAndLocal;
+  }
+
+  bool canEditImageSync(MediaItem item) {
+    return capabilityForItemSync(item).canEditImage;
   }
 
   Future<void> onShareRequested(MediaItem item, BuildContext context) async {
@@ -202,6 +208,21 @@ class NewLibraryViewerActionRunner {
       action: () => _ref.read(actionProvider.notifier).upload(ActionSource.viewer),
       successMessage: 'Upload started',
     );
+  }
+
+  Future<void> editImage(MediaItem item, BuildContext context) async {
+    final _ResolvedAsset? resolved = await _resolveOrNotify(
+      item,
+      context: context,
+      guard: (capability) => capability.canEditImage,
+      guardMessage: 'Edit is available for images only.',
+    );
+    if (resolved == null) {
+      return;
+    }
+
+    final Image image = Image(image: getFullImageProvider(resolved.asset));
+    await context.pushRoute(DriftEditImageRoute(asset: resolved.asset, image: image, isEdited: false));
   }
 
   Future<void> deleteLocal(MediaItem item, BuildContext context) async {

@@ -6,6 +6,7 @@ class NewLibraryViewerCapability {
     required this.isOwner,
     required this.hasRemote,
     required this.hasLocal,
+    required this.isImage,
     required this.isFavorite,
     required this.isArchived,
     required this.isLocked,
@@ -15,6 +16,7 @@ class NewLibraryViewerCapability {
   final bool isOwner;
   final bool hasRemote;
   final bool hasLocal;
+  final bool isImage;
   final bool isFavorite;
   final bool isArchived;
   final bool isLocked;
@@ -31,6 +33,7 @@ class NewLibraryViewerCapability {
   bool get canRemoveFromLockFolder => !isReadonlyMode && hasRemote && isOwner && isLocked;
   bool get canDeleteRemoteAndLocal => !isReadonlyMode && hasRemote && isOwner;
   bool get canDeleteLocal => !isReadonlyMode && hasLocal;
+  bool get canEditImage => !isReadonlyMode && isImage;
   bool get canAddToAlbum => !isReadonlyMode && hasRemote;
   bool get canViewInTimeline => hasRemote && isOwner;
 
@@ -48,6 +51,7 @@ class NewLibraryViewerCapability {
       isOwner: isOwner,
       hasRemote: asset.hasRemote,
       hasLocal: asset.hasLocal,
+      isImage: asset.isImage,
       isFavorite: asset.isFavorite,
       isArchived: visibility == AssetVisibility.archive,
       isLocked: visibility == AssetVisibility.locked,
