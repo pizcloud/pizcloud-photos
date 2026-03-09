@@ -69,6 +69,14 @@ class NewLibraryViewerActionRunner {
     return capabilityForItemSync(item).canEditImage;
   }
 
+  bool canUploadItemSync(MediaItem item) {
+    return capabilityForItemSync(item).canUpload;
+  }
+
+  bool canAddToAlbumSync(MediaItem item) {
+    return capabilityForItemSync(item).canAddToAlbum;
+  }
+
   Future<void> onShareRequested(MediaItem item, BuildContext context) async {
     final _ResolvedAsset resolved = await _resolveOrThrow(
       item,

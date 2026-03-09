@@ -21,9 +21,15 @@ class NewLibraryPage extends ConsumerWidget {
       scrollToTopSignal: reselectSignal,
       onViewerShareRequested: (item) => runner.onShareRequested(item, context),
       onViewerDeleteRequested: (item) => runner.onDeleteRequested(item, context),
+      onViewerEditRequested: (item) => runner.editImage(item, context),
+      onViewerUploadRequested: (item) => runner.upload(item, context),
+      onViewerAddToAlbumRequested: (item) => runner.addToAlbum(item, context),
       viewerActions: buildNewLibraryViewerActions(runner: runner),
       includeDefaultViewerActions: false,
       canDeleteItem: runner.canDeleteItemSync,
+      canEditItem: runner.canEditImageSync,
+      canUploadItem: runner.canUploadItemSync,
+      canAddToAlbumItem: runner.canAddToAlbumSync,
     );
 
     return CustomScrollView(
