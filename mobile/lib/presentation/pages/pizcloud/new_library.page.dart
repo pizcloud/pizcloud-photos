@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -7,7 +8,7 @@ import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_act
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
 
 @RoutePage()
@@ -37,6 +38,21 @@ class NewLibraryPage extends ConsumerWidget {
       return DateFormat.yMMMEd(localeTag).format(date);
     }
 
+    final GallerySortFilterMenuTexts sortFilterMenuTexts = GallerySortFilterMenuTexts(
+      tooltipSortFilter: 'new_library_sort_filter_tooltip'.tr(),
+      sectionSort: 'new_library_sort_section'.tr(),
+      optionCreatedTime: 'new_library_sort_created_time'.tr(),
+      optionAddedTime: 'new_library_sort_added_time'.tr(),
+      sectionFilter: 'filter'.tr(),
+      optionShowAll: 'new_library_show_all'.tr(),
+      sectionMediaType: 'media_type'.tr(),
+      optionPhotos: 'photos'.tr(),
+      optionVideos: 'videos'.tr(),
+      sectionStorage: 'new_library_storage_section'.tr(),
+      optionOnDevice: 'on_this_device'.tr(),
+      optionCloud: 'new_library_cloud'.tr(),
+    );
+
     final gallery = PizGallery(
       source: source,
       scrollToTopSignal: reselectSignal,
@@ -53,6 +69,7 @@ class NewLibraryPage extends ConsumerWidget {
       canAddToAlbumItem: runner.canAddToAlbumSync,
       showDateOverlay: true,
       dateOverlayTextBuilder: buildDateOverlayLabel,
+      sortFilterMenuTexts: sortFilterMenuTexts,
     );
 
     return CustomScrollView(
