@@ -1,10 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/widgets.dart';
+import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_action_runner.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_actions.dart';
+import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
+import 'package:intl/intl.dart';
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
 
 @RoutePage()
@@ -15,7 +18,25 @@ class NewLibraryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final source = ref.watch(newLibraryGallerySourceProvider);
     final reselectSignal = ref.watch(newLibraryReselectSignalProvider);
+    final groupBy = ref.watch(timelineFactoryProvider).groupBy;
     final runner = NewLibraryViewerActionRunner(ref: ref, source: source);
+    final String localeTag = Localizations.localeOf(context).toLanguageTag();
+
+    String? buildDateOverlayLabel(MediaItem item) {
+      final DateTime? sourceDate = item.createdAt ?? item.addedAt;
+      if (sourceDate == null) {
+        return null;
+      }
+      final DateTime date = sourceDate.toLocal();
+      if (groupBy == GroupAssetsBy.month) {
+        final DateFormat monthFormatter = date.year == DateTime.now().year
+            ? DateFormat.MMMM(localeTag)
+            : DateFormat.yMMMM(localeTag);
+        return monthFormatter.format(date);
+      }
+      return DateFormat.yMMMEd(localeTag).format(date);
+    }
+
     final gallery = PizGallery(
       source: source,
       scrollToTopSignal: reselectSignal,
@@ -30,6 +51,8 @@ class NewLibraryPage extends ConsumerWidget {
       canEditItem: runner.canEditImageSync,
       canUploadItem: runner.canUploadItemSync,
       canAddToAlbumItem: runner.canAddToAlbumSync,
+      showDateOverlay: true,
+      dateOverlayTextBuilder: buildDateOverlayLabel,
     );
 
     return CustomScrollView(
