@@ -7,14 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
-import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/presentation/pages/search/paginated_search.provider.dart';
 import 'package:immich_mobile/providers/auth.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/haptic_feedback.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
-import 'package:immich_mobile/providers/infrastructure/memory.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/people.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
 import 'package:immich_mobile/providers/search/search_input_focus.provider.dart';
@@ -73,9 +71,17 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
     final navigationDestinations = [
       NavigationDestination(
         label: 'library'.tr(),
-        icon: Icon(context.platformIcons.photoLibrary),
-        selectedIcon: Icon(context.platformIcons.photoLibrarySolid, color: context.primaryColor),
+        icon: Icon(context.platformIcon(material: Icons.grid_view_rounded, cupertino: CupertinoIcons.square_grid_2x2)),
+        selectedIcon: Icon(
+          context.platformIcon(material: Icons.grid_view_rounded, cupertino: CupertinoIcons.square_grid_2x2_fill),
+          color: context.primaryColor,
+        ),
       ),
+      // NavigationDestination(
+      //   label: 'library'.tr(),
+      //   icon: Icon(context.platformIcons.photoLibrary),
+      //   selectedIcon: Icon(context.platformIcons.photoLibrarySolid, color: context.primaryColor),
+      // ),
       NavigationDestination(
         label: 'backup'.tr(),
         icon: Icon(context.platformIcons.cloudUploadSolid),
@@ -108,14 +114,6 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
           color: context.primaryColor,
         ),
         enabled: !isReadonlyModeEnabled,
-      ),
-      NavigationDestination(
-        label: 'new_library'.tr(),
-        icon: Icon(context.platformIcon(material: Icons.grid_view_rounded, cupertino: CupertinoIcons.square_grid_2x2)),
-        selectedIcon: Icon(
-          context.platformIcon(material: Icons.grid_view_rounded, cupertino: CupertinoIcons.square_grid_2x2_fill),
-          color: context.primaryColor,
-        ),
       ),
       // NavigationDestination(
       //   label: 'photos'.tr(),
@@ -175,11 +173,10 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
       // pizcloud
       // const [MainTimelineRoute(), DriftBackupRoute(), DriftAlbumsRoute(), SettingsTabRoute()]
       routes: const [
-        MainTimelineRoute(),
+        NewLibraryRoute(),
         DriftBackupRoute(),
         DriftAlbumsRoute(),
         SettingsTabRoute(),
-        NewLibraryRoute(),
       ],
       // routes: const [MainTimelineRoute(), DriftSearchRoute(), DriftAlbumsRoute(), DriftLibraryRoute()],
       duration: const Duration(milliseconds: 600),
@@ -268,13 +265,13 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
 
 void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
   // On Photos page menu tapped
-  if (router.activeIndex == kPhotoTabIndex && index == kPhotoTabIndex) {
-    EventStream.shared.emit(const ScrollToTopEvent());
-  }
+  // if (router.activeIndex == kPhotoTabIndex && index == kPhotoTabIndex) {
+  //   EventStream.shared.emit(const ScrollToTopEvent());
+  // }
 
-  if (index == kPhotoTabIndex) {
-    ref.invalidate(driftMemoryFutureProvider);
-  }
+  // if (index == kPhotoTabIndex) {
+  //   ref.invalidate(driftMemoryFutureProvider);
+  // }
 
   if (router.activeIndex != kSearchTabIndex && index == kSearchTabIndex) {
     ref.read(searchPreFilterProvider.notifier).clear();
