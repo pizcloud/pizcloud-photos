@@ -30,43 +30,43 @@ class LoginPage extends HookConsumerWidget {
 
     return PlatformScaffold(
       body: LoginForm(),
-      material: (_, __) => MaterialScaffoldData(
-        bottomNavBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: SizedBox(
-              height: 50,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'v${appVersion.value}',
-                    style: TextStyle(
-                      color: context.colorScheme.onSurfaceSecondary,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "Inconsolata",
-                    ),
-                  ),
-                  const Text(' '),
-                  GestureDetector(
-                    child: Text(
-                      'Logs',
-                      style: TextStyle(
-                        color: context.primaryColor,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "Inconsolata",
-                      ),
-                    ),
-                    onTap: () {
-                      context.pushRoute(const AppLogRoute());
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      // material: (_, __) => MaterialScaffoldData(
+      //   bottomNavBar: SafeArea(
+      //     child: Padding(
+      //       padding: const EdgeInsets.only(bottom: 16.0),
+      //       child: SizedBox(
+      //         height: 50,
+      //         child: Row(
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           children: [
+      //             Text(
+      //               'v${appVersion.value}',
+      //               style: TextStyle(
+      //                 color: context.colorScheme.onSurfaceSecondary,
+      //                 fontWeight: FontWeight.bold,
+      //                 fontFamily: "Inconsolata",
+      //               ),
+      //             ),
+      //             const Text(' '),
+      //             GestureDetector(
+      //               child: Text(
+      //                 'Logs',
+      //                 style: TextStyle(
+      //                   color: context.primaryColor,
+      //                   fontWeight: FontWeight.bold,
+      //                   fontFamily: "Inconsolata",
+      //                 ),
+      //               ),
+      //               onTap: () {
+      //                 context.pushRoute(const AppLogRoute());
+      //               },
+      //             ),
+      //           ],
+      //         ),
+      //       ),
+      //     ),
+      //   ),
+      // ),
     );
   }
 }

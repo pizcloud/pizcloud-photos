@@ -618,10 +618,11 @@ class LoginForm extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        child: RotationTransition(
-                          turns: logoAnimationController,
-                          child: const PizCloudLogo(heroTag: 'logo'),
-                        ),
+                        child: const PizCloudLogo(heroTag: 'logo'),
+                        // child: RotationTransition(
+                        //   turns: logoAnimationController,
+                        //   child: const PizCloudLogo(heroTag: 'logo'),
+                        // ),
                       ),
                       const Padding(padding: EdgeInsets.only(top: 8.0, bottom: 16), child: ImmichTitleText()),
                     ],

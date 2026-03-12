@@ -1,18 +1,18 @@
-import 'package:auto_route/auto_route.dart';
+// import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:immich_mobile/domain/models/setting.model.dart';
+// import 'package:immich_mobile/domain/models/setting.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
-import 'package:immich_mobile/models/server_info/server_info.model.dart';
-import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
+// import 'package:immich_mobile/models/server_info/server_info.model.dart';
+// import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/cast.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
-import 'package:immich_mobile/providers/infrastructure/setting.provider.dart';
+// import 'package:immich_mobile/providers/infrastructure/setting.provider.dart';
 import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/sync_status.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
@@ -75,7 +75,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
       //   const Padding(padding: EdgeInsets.only(right: 20), child: _BackupIndicator()),
       if (showUploadButton && !isReadonlyModeEnabled)
         Padding(
-          padding: const EdgeInsets.only(right: 5),
+          padding: const EdgeInsets.only(right: 5, top: 8),
           child: IconButton(
             style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric()),
             // padding: const EdgeInsetsGeometry.all(2),
@@ -85,7 +85,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
         ),
       if (showUploadButton && !isReadonlyModeEnabled)
         Padding(
-          padding: const EdgeInsets.only(right: 15),
+          padding: const EdgeInsets.only(right: 15, top: 8),
           child: IconButton(
             onPressed: () => ref.read(appRouterProvider).push(const DriftLibraryRoute()),
             icon: Icon(
@@ -166,7 +166,7 @@ class _ProfileIndicator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final bool versionWarningPresent = ref.watch(versionWarningPresentProvider(user));
-    final serverInfoState = ref.watch(serverInfoProvider);
+    // final serverInfoState = ref.watch(serverInfoProvider);
 
     const widgetSize = 30.0;
 
@@ -228,121 +228,121 @@ class _ProfileIndicator extends ConsumerWidget {
   }
 }
 
-const double _kBadgeWidgetSize = 30.0;
+// const double _kBadgeWidgetSize = 30.0;
 
-class _BackupIndicator extends ConsumerWidget {
-  const _BackupIndicator();
+// class _BackupIndicator extends ConsumerWidget {
+//   const _BackupIndicator();
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final indicatorIcon = _getBackupBadgeIcon(context, ref);
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final indicatorIcon = _getBackupBadgeIcon(context, ref);
 
-    return InkWell(
-      onTap: () => context.pushRoute(const DriftBackupRoute()),
-      borderRadius: const BorderRadius.all(Radius.circular(12)),
-      child: Badge(
-        label: indicatorIcon,
-        backgroundColor: Colors.transparent,
-        alignment: Alignment.bottomRight,
-        isLabelVisible: indicatorIcon != null,
-        offset: const Offset(-2, -12),
-        child: Icon(
-          context.platformIcon(material: Icons.backup_rounded, cupertino: CupertinoIcons.cloud_upload),
-          size: _kBadgeWidgetSize,
-          color: context.primaryColor,
-        ),
-      ),
-    );
-  }
+//     return InkWell(
+//       onTap: () => context.pushRoute(const DriftBackupRoute()),
+//       borderRadius: const BorderRadius.all(Radius.circular(12)),
+//       child: Badge(
+//         label: indicatorIcon,
+//         backgroundColor: Colors.transparent,
+//         alignment: Alignment.bottomRight,
+//         isLabelVisible: indicatorIcon != null,
+//         offset: const Offset(-2, -12),
+//         child: Icon(
+//           context.platformIcon(material: Icons.backup_rounded, cupertino: CupertinoIcons.cloud_upload),
+//           size: _kBadgeWidgetSize,
+//           color: context.primaryColor,
+//         ),
+//       ),
+//     );
+//   }
 
-  Widget? _getBackupBadgeIcon(BuildContext context, WidgetRef ref) {
-    final backupStateStream = ref.watch(settingsProvider).watch(Setting.enableBackup);
-    final hasError = ref.watch(driftBackupProvider.select((state) => state.error != BackupError.none));
-    final isDarkTheme = context.isDarkTheme;
-    final iconColor = isDarkTheme ? Colors.white : Colors.black;
-    final isUploading = ref.watch(driftBackupProvider.select((state) => state.uploadItems.isNotEmpty));
+//   Widget? _getBackupBadgeIcon(BuildContext context, WidgetRef ref) {
+//     final backupStateStream = ref.watch(settingsProvider).watch(Setting.enableBackup);
+//     final hasError = ref.watch(driftBackupProvider.select((state) => state.error != BackupError.none));
+//     final isDarkTheme = context.isDarkTheme;
+//     final iconColor = isDarkTheme ? Colors.white : Colors.black;
+//     final isUploading = ref.watch(driftBackupProvider.select((state) => state.uploadItems.isNotEmpty));
 
-    return StreamBuilder(
-      stream: backupStateStream,
-      initialData: false,
-      builder: (ctx, snapshot) {
-        final backupEnabled = snapshot.data ?? false;
+//     return StreamBuilder(
+//       stream: backupStateStream,
+//       initialData: false,
+//       builder: (ctx, snapshot) {
+//         final backupEnabled = snapshot.data ?? false;
 
-        if (!backupEnabled) {
-          return _BadgeLabel(
-            Icon(
-              context.platformIcon(material: Icons.cloud_off_rounded, cupertino: CupertinoIcons.cloud),
-              size: 9,
-              color: iconColor,
-              semanticLabel: 'backup_controller_page_backup'.tr(),
-            ),
-          );
-        }
+//         if (!backupEnabled) {
+//           return _BadgeLabel(
+//             Icon(
+//               context.platformIcon(material: Icons.cloud_off_rounded, cupertino: CupertinoIcons.cloud),
+//               size: 9,
+//               color: iconColor,
+//               semanticLabel: 'backup_controller_page_backup'.tr(),
+//             ),
+//           );
+//         }
 
-        if (hasError) {
-          return _BadgeLabel(
-            Icon(
-              context.platformIcon(material: Icons.warning_rounded, cupertino: CupertinoIcons.exclamationmark_triangle),
-              size: 12,
-              color: context.colorScheme.error,
-              semanticLabel: 'backup_controller_page_backup'.tr(),
-            ),
-            backgroundColor: context.colorScheme.errorContainer,
-          );
-        }
+//         if (hasError) {
+//           return _BadgeLabel(
+//             Icon(
+//               context.platformIcon(material: Icons.warning_rounded, cupertino: CupertinoIcons.exclamationmark_triangle),
+//               size: 12,
+//               color: context.colorScheme.error,
+//               semanticLabel: 'backup_controller_page_backup'.tr(),
+//             ),
+//             backgroundColor: context.colorScheme.errorContainer,
+//           );
+//         }
 
-        if (isUploading) {
-          return _BadgeLabel(
-            Container(
-              padding: const EdgeInsets.all(3.5),
-              child: Theme(
-                data: context.themeData.copyWith(
-                  progressIndicatorTheme: context.themeData.progressIndicatorTheme.copyWith(year2023: true),
-                ),
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  strokeCap: StrokeCap.round,
-                  valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                  semanticsLabel: 'backup_controller_page_backup'.tr(),
-                ),
-              ),
-            ),
-          );
-        }
+//         if (isUploading) {
+//           return _BadgeLabel(
+//             Container(
+//               padding: const EdgeInsets.all(3.5),
+//               child: Theme(
+//                 data: context.themeData.copyWith(
+//                   progressIndicatorTheme: context.themeData.progressIndicatorTheme.copyWith(year2023: true),
+//                 ),
+//                 child: CircularProgressIndicator(
+//                   strokeWidth: 2,
+//                   strokeCap: StrokeCap.round,
+//                   valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+//                   semanticsLabel: 'backup_controller_page_backup'.tr(),
+//                 ),
+//               ),
+//             ),
+//           );
+//         }
 
-        return _BadgeLabel(
-          Icon(
-            context.platformIcons.checkMark,
-            size: 9,
-            color: iconColor,
-            semanticLabel: 'backup_controller_page_backup'.tr(),
-          ),
-        );
-      },
-    );
-  }
-}
+//         return _BadgeLabel(
+//           Icon(
+//             context.platformIcons.checkMark,
+//             size: 9,
+//             color: iconColor,
+//             semanticLabel: 'backup_controller_page_backup'.tr(),
+//           ),
+//         );
+//       },
+//     );
+//   }
+// }
 
-class _BadgeLabel extends StatelessWidget {
-  final Widget indicator;
-  final Color? backgroundColor;
+// class _BadgeLabel extends StatelessWidget {
+//   final Widget indicator;
+//   final Color? backgroundColor;
 
-  const _BadgeLabel(this.indicator, {this.backgroundColor});
+//   const _BadgeLabel(this.indicator, {this.backgroundColor});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _kBadgeWidgetSize / 2,
-      height: _kBadgeWidgetSize / 2,
-      decoration: BoxDecoration(
-        color: backgroundColor ?? context.colorScheme.surfaceContainer,
-        border: Border.all(color: context.colorScheme.outline.withValues(alpha: .3)),
-        borderRadius: BorderRadius.circular(_kBadgeWidgetSize / 2),
-      ),
-      child: indicator,
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: _kBadgeWidgetSize / 2,
+//       height: _kBadgeWidgetSize / 2,
+//       decoration: BoxDecoration(
+//         color: backgroundColor ?? context.colorScheme.surfaceContainer,
+//         border: Border.all(color: context.colorScheme.outline.withValues(alpha: .3)),
+//         borderRadius: BorderRadius.circular(_kBadgeWidgetSize / 2),
+//       ),
+//       child: indicator,
+//     );
+//   }
+// }
 
 class _SyncStatusIndicator extends ConsumerStatefulWidget {
   const _SyncStatusIndicator();

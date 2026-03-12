@@ -54,11 +54,11 @@ const String kImmichAppStoreLink = "https://apps.apple.com/app/pizcloud/67580252
 const String kImmichPlayStoreLink = "https://play.google.com/store/apps/details?id=com.pizcloud.photos"; // pizcloud
 const String kImmichLatestRelease = "https://github.com/#"; // pizcloud - not use
 
-const int kPhotoTabIndex = 0;
+const int kNewLibraryTabIndex = 0; // pizcloud
+// const int kPhotoTabIndex = 0;
 const int kSearchTabIndex = 1;
 const int kAlbumTabIndex = 2;
 const int kLibraryTabIndex = 3;
-const int kNewLibraryTabIndex = 4; // pizcloud
 
 // Workaround for SQLite's variable limit (SQLITE_MAX_VARIABLE_NUMBER = 32766)
 const int kDriftMaxChunk = 32000;
