@@ -48,7 +48,7 @@ class LoginForm extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = useState<bool>(false);
     final isLoadingServer = useState<bool>(false);
-    final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
+    // final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
     final warningMessage = useState<String?>(null);
     final loginFormKey = GlobalKey<FormState>();
     final savedAccounts = useState<List<SavedLoginAccount>>([]);
@@ -428,7 +428,7 @@ class LoginForm extends HookConsumerWidget {
                       showEmailInput.value = true;
                       Future.microtask(() => emailFocusNode.requestFocus());
                     },
-              child: Text('use_another_account').tr(),
+              child: const Text('use_another_account').tr(),
             ),
           ),
         ],

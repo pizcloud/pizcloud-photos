@@ -93,7 +93,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
             ),
           ),
         ),
-      const Padding(padding: EdgeInsets.only(right: 20), child: _ProfileIndicator()),
+      const Padding(padding: EdgeInsets.only(right: 20, top: 8), child: _ProfileIndicator()),
     ];
 
     return SliverAnimatedOpacity(

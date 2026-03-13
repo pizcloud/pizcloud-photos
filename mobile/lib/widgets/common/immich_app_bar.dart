@@ -151,7 +151,7 @@ class ImmichAppBar extends ConsumerWidget implements PreferredSizeWidget {
               ),
               Tooltip(
                 triggerMode: TooltipTriggerMode.tap,
-                showDuration: Duration(seconds: 4),
+                showDuration: const Duration(seconds: 4),
                 message:
                     "The old timeline is deprecated and will be removed in a future release. Kindly switch to the new timeline under Advanced Settings.",
                 child: Padding(

@@ -433,11 +433,11 @@ class SearchPage extends HookConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: MenuAnchor(
-              style: MenuStyle(
-                shape: const WidgetStatePropertyAll(
+              style: const MenuStyle(
+                shape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
                 ),
-                padding: const WidgetStatePropertyAll(EdgeInsets.all(4)),
+                padding: WidgetStatePropertyAll(EdgeInsets.all(4)),
               ),
               builder: (BuildContext context, MenuController controller, Widget? child) {
                 return IconButton(

@@ -53,7 +53,7 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
         isOwner;
 
     final isShowingSheet = ref.watch(assetViewerProvider.select((state) => state.showingBottomSheet));
-    final barColor = Colors.transparent;
+    // final barColor = Colors.transparent;
     int opacity = ref.watch(assetViewerProvider.select((state) => state.backgroundOpacity));
     final showControls = ref.watch(assetViewerProvider.select((s) => s.showingControls));
 

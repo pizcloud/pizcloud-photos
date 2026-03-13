@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -444,7 +443,7 @@ class BillingPage extends HookConsumerWidget {
     final theme = Theme.of(context);
 
     final state = ref.watch(billingControllerProvider) as dynamic;
-    final ctl = ref.read(billingControllerProvider.notifier);
+    // final ctl = ref.read(billingControllerProvider.notifier);
 
     final usage = state.usage as Map<String, dynamic>?;
     final referral = state.referral as Map<String, dynamic>?;

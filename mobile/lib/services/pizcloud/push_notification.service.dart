@@ -18,7 +18,7 @@ class PushNotificationService {
   static final FlutterLocalNotificationsPlugin _local = FlutterLocalNotificationsPlugin();
 
   static bool _firebaseReady = false;
-  static bool _initialized = false;
+  // static bool _initialized = false;
 
   static String? _baseUrl;
   static String? _authToken;

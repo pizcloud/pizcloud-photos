@@ -40,7 +40,7 @@ class LanguageSettings extends HookConsumerWidget {
     final isButtonDisabled = selectedLocale.value == currentLocale || isLoading.value;
 
     final searchController = useTextEditingController();
-    final searchFocusNode = useFocusNode();
+    // final searchFocusNode = useFocusNode();
     final debounceTimer = useRef<Timer?>(null);
 
     void onSearch(String searchTerm) {
@@ -56,10 +56,10 @@ class LanguageSettings extends HookConsumerWidget {
       });
     }
 
-    void clearSearch() {
-      searchController.clear();
-      onSearch('');
-    }
+    // void clearSearch() {
+    //   searchController.clear();
+    //   onSearch('');
+    // }
 
     useEffect(() {
       void searchListener() => onSearch(searchController.text);
