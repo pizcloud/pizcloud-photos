@@ -52,7 +52,7 @@ void main() {
 
     when(() => mockApiService.apiClient).thenReturn(mockApiClient);
     when(() => mockApiService.syncApi).thenReturn(mockSyncApi);
-    when(() => mockApiClient.basePath).thenReturn('http://demo.immich.app/api');
+    when(() => mockApiClient.basePath).thenReturn('http://demo.app/api');
     when(() => mockApiService.applyToParams(any(), any())).thenAnswer((_) async => {});
 
     // Mock HTTP client behavior

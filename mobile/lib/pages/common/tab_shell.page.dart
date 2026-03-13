@@ -77,11 +77,6 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
           color: context.primaryColor,
         ),
       ),
-      // NavigationDestination(
-      //   label: 'library'.tr(),
-      //   icon: Icon(context.platformIcons.photoLibrary),
-      //   selectedIcon: Icon(context.platformIcons.photoLibrarySolid, color: context.primaryColor),
-      // ),
       NavigationDestination(
         label: 'backup'.tr(),
         icon: Icon(context.platformIcons.cloudUploadSolid),
@@ -97,15 +92,6 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
         ),
         enabled: !isReadonlyModeEnabled,
       ),
-      // NavigationDestination(
-      //   label: 'activity'.tr(),
-      //   icon: Icon(context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid)),
-      //   selectedIcon: Icon(
-      //     context.platformIcon(material: Icons.watch_later, cupertino: CupertinoIcons.clock_solid),
-      //     color: context.primaryColor,
-      //   ),
-      //   enabled: !isReadonlyModeEnabled,
-      // ),
       NavigationDestination(
         label: 'settings'.tr(),
         icon: Icon(context.platformIcon(material: Icons.settings, cupertino: CupertinoIcons.gear_solid)),
@@ -115,39 +101,6 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
         ),
         enabled: !isReadonlyModeEnabled,
       ),
-      // NavigationDestination(
-      //   label: 'photos'.tr(),
-      //   icon: Icon(context.platformIcons.photoLibrary),
-      //   selectedIcon: Icon(context.platformIcons.photoLibrarySolid, color: context.primaryColor),
-      // ),
-      // NavigationDestination(
-      //   label: 'search'.tr(),
-      //   icon: Icon(context.platformIcons.search),
-      //   selectedIcon: Icon(context.platformIcons.search, color: context.primaryColor),
-      //   enabled: !isReadonlyModeEnabled,
-      // ),
-      // NavigationDestination(
-      //   label: 'albums'.tr(),
-      //   icon: Icon(
-      //     context.platformIcon(material: Icons.photo_album_outlined, cupertino: CupertinoIcons.rectangle_stack),
-      //   ),
-      //   selectedIcon: Icon(
-      //     context.platformIcon(material: Icons.photo_album_rounded, cupertino: CupertinoIcons.rectangle_stack_fill),
-      //     color: context.primaryColor,
-      //   ),
-      //   enabled: !isReadonlyModeEnabled,
-      // ),
-      // NavigationDestination(
-      //   label: 'library'.tr(),
-      //   icon: Icon(
-      //     context.platformIcon(material: Icons.space_dashboard_outlined, cupertino: CupertinoIcons.square_grid_2x2),
-      //   ),
-      //   selectedIcon: Icon(
-      //     context.platformIcon(material: Icons.space_dashboard_rounded, cupertino: CupertinoIcons.square_grid_2x2_fill),
-      //     color: context.primaryColor,
-      //   ),
-      //   enabled: !isReadonlyModeEnabled,
-      // ),
     ];
 
     Widget navigationRail(TabsRouter tabsRouter) {
@@ -171,14 +124,12 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
 
     return AutoTabsRouter(
       // pizcloud
-      // const [MainTimelineRoute(), DriftBackupRoute(), DriftAlbumsRoute(), SettingsTabRoute()]
       routes: const [
         NewLibraryRoute(),
         DriftBackupRoute(),
         DriftAlbumsRoute(),
         SettingsTabRoute(),
       ],
-      // routes: const [MainTimelineRoute(), DriftSearchRoute(), DriftAlbumsRoute(), DriftLibraryRoute()],
       duration: const Duration(milliseconds: 600),
       transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
       builder: (context, child) {
@@ -265,13 +216,6 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
 
 void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
   // On Photos page menu tapped
-  // if (router.activeIndex == kPhotoTabIndex && index == kPhotoTabIndex) {
-  //   EventStream.shared.emit(const ScrollToTopEvent());
-  // }
-
-  // if (index == kPhotoTabIndex) {
-  //   ref.invalidate(driftMemoryFutureProvider);
-  // }
 
   if (router.activeIndex != kSearchTabIndex && index == kSearchTabIndex) {
     ref.read(searchPreFilterProvider.notifier).clear();

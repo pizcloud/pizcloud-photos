@@ -99,7 +99,7 @@ class _BlurredBackdrop extends HookWidget {
       );
     } else {
       // Fall back to using a more expensive image filtered
-      // Since the ImmichImage is already precached, we can
+      // Since the Image is already precached, we can
       // safely use that as the image provider
       return ImageFiltered(
         imageFilter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),

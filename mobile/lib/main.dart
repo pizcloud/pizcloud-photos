@@ -85,7 +85,7 @@ Future<void> initApp() async {
 
   await DynamicTheme.fetchSystemPalette();
 
-  final log = Logger("ImmichErrorLogger");
+  final log = Logger("PizCloudErrorLogger");
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);

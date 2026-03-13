@@ -3,7 +3,7 @@ import 'package:immich_mobile/services/api.service.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
 
-// Redirect URL = app.immich:///oauth-callback
+// Redirect URL = app.pizcloud:///oauth-callback
 
 class OAuthService {
   final ApiService _apiService;

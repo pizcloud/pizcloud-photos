@@ -64,7 +64,7 @@ class PermissionOnboardingPage extends HookConsumerWidget {
 
     // iOS 14+ has limited permission options, which let someone just share
     // a few photos with the app. If someone only has limited permissions, we
-    // inform that Immich works best when given full permission
+    // inform that PizCloud works best when given full permission
     buildPermissionLimited() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,

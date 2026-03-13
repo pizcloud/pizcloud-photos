@@ -21,15 +21,15 @@ class ServerUpdateNotification extends HookConsumerWidget {
     void openUpdateLink() {
       String url;
       if (serverInfoState.versionStatus == VersionStatus.serverOutOfDate) {
-        url = kImmichLatestRelease;
+        url = keyPizCloudLatestRelease;
       } else {
         if (Platform.isIOS) {
-          url = kImmichAppStoreLink;
+          url = keyPizCloudAppStoreLink;
         } else if (Platform.isAndroid) {
-          url = kImmichPlayStoreLink;
+          url = keyPizCloudPlayStoreLink;
         } else {
           // Fallback to latest release for other/unknown platforms
-          url = kImmichLatestRelease;
+          url = keyPizCloudLatestRelease;
         }
       }
 

@@ -22,7 +22,7 @@ class BackgroundSyncWorker {
     // Flutter engine which shows the UI.
     // It needs to be started up, registered, and torn down here
     let engine: FlutterEngine? = FlutterEngine(
-        name: "BackgroundImmich"
+        name: "BackgroundPizCloud"
     )
     
     let notificationId = "com.alextran.immich/backgroundNotifications"

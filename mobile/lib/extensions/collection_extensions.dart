@@ -41,7 +41,7 @@ extension IntListExtension on Iterable<int> {
 }
 
 extension AssetListExtension on Iterable<Asset> {
-  /// Returns the assets that are already available in the Immich server
+  /// Returns the assets that are already available in the server
   Iterable<Asset> remoteOnly({void Function()? errorCallback}) {
     final bool onlyRemote = every((e) => e.isRemote);
     if (!onlyRemote) {

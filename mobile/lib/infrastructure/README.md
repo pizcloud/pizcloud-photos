@@ -1,12 +1,12 @@
 # Infrastructure Layer
 
-This directory contains the infrastructure layer of Immich. The infrastructure layer is responsible for the implementation details of the app. It includes data sources, APIs, and other external dependencies.
+This folder contains the infrastructure layer for Pizcloud. It handles implementation-level concerns such as data sources, API clients, persistence adapters, and other external integrations.
 
 ## Structure
 
-- **[Entities](./entities/)**: These are the classes that define the database schema for the domain models.
-- **[Repositories](./repositories/)**: These are the actual implementation of the domain interfaces. A single interface might have multiple implementations.
-- **[Utils](./utils/)**: These are utility classes and functions specific to infrastructure implementations.
+- **[Entities](./entities/)**: Classes that map domain models to storage schemas.
+- **[Repositories](./repositories/)**: Concrete implementations of domain repository contracts. One contract can have multiple implementations.
+- **[Utils](./utils/)**: Utility helpers dedicated to infrastructure concerns.
 
 ```
 infrastructure/
@@ -20,7 +20,7 @@ infrastructure/
 
 ## Usage
 
-The infrastructure layer provides concrete implementations of repository interfaces defined in the domain layer. These implementations are exposed through Riverpod providers in the root `providers` directory.
+The infrastructure layer provides concrete classes for repository interfaces declared in the domain layer. Those implementations are exposed via Riverpod providers in the root `providers` directory.
 
 ```dart
 // In domain/services/user.service.dart
@@ -28,4 +28,4 @@ final userRepository = ref.watch(userRepositoryProvider);
 final user = await userRepository.getUser(userId);
 ```
 
-The domain layer should never directly instantiate repository implementations, but instead receive them through dependency injection.
+The domain layer should avoid instantiating repository implementations directly and instead receive them through dependency injection.

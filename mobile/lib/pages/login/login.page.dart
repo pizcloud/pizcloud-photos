@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:immich_mobile/extensions/build_context_extensions.dart';
-import 'package:immich_mobile/extensions/theme_extensions.dart';
+// import 'package:immich_mobile/extensions/build_context_extensions.dart'; // pizcloud
+// import 'package:immich_mobile/extensions/theme_extensions.dart'; // pizcloud
 // import 'package:immich_mobile/widgets/forms/login/login_form.dart';
 import 'package:immich_mobile/widgets/forms/login/pizcloud/login_form.dart';
-import 'package:immich_mobile/routing/router.dart';
+// import 'package:immich_mobile/routing/router.dart'; // pizcloud
 import 'package:package_info_plus/package_info_plus.dart';
 
 @RoutePage()

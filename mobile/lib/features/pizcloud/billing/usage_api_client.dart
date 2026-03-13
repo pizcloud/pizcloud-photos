@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class UsageApiClient {
-  UsageApiClient({required this.immichBaseUrl, required this.authToken});
+  UsageApiClient({required this.photosBaseUrl, required this.authToken});
 
-  final String immichBaseUrl;
+  final String photosBaseUrl;
   final String authToken;
 
   Future<Map<String, dynamic>> getUsage() async {
     final res = await http.get(
-      Uri.parse('$immichBaseUrl/billing/usage'),
+      Uri.parse('$photosBaseUrl/billing/usage'),
       headers: {'Authorization': 'Bearer $authToken'},
     );
     if (res.statusCode != 200) {

@@ -38,9 +38,9 @@ final class CustomImageCache implements ImageCache {
     _large.clearLiveImages();
   }
 
-  /// Gets the cache for the given key
-  /// [_large] is used for [ImmichLocalImageProvider] and [ImmichRemoteImageProvider]
-  /// [_small] is used for [ImmichLocalThumbnailProvider] and [ImmichRemoteThumbnailProvider]
+  // Gets the cache for the given key
+  // [_large] is used for [LocalImageProvider] and [RemoteImageProvider]
+  // [_small] is used for [LocalThumbnailProvider] and [RemoteThumbnailProvider]
   ImageCache _cacheForKey(Object key) {
     return switch (key) {
       ImmichLocalImageProvider() ||
@@ -54,7 +54,7 @@ final class CustomImageCache implements ImageCache {
 
   @override
   bool containsKey(Object key) {
-    // [ImmichLocalImageProvider] and [ImmichRemoteImageProvider] are both
+    // [LocalImageProvider] and [RemoteImageProvider] are both
     // large size images while the other thumbnail providers are small
     return _cacheForKey(key).containsKey(key);
   }

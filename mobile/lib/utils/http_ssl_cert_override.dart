@@ -49,7 +49,7 @@ class HttpSSLCertOverride extends HttpOverrides {
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
         if (_allowSelfSignedSSLCert) {
           // Conduct server host checks if user is logged in to avoid making
-          // insecure SSL connections to services that are not the immich server.
+          // insecure SSL connections to services that are not the server.
           if (_serverHost == null || _serverHost.contains(host)) {
             return true;
           }

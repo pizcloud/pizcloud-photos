@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "app.alextran" "\0"
-            VALUE "FileDescription", "immich_mobile" "\0"
+            VALUE "CompanyName", "PizCloud" "\0"
+            VALUE "FileDescription", "pizcloud_mobile" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "immich_mobile" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 app.alextran. All rights reserved." "\0"
-            VALUE "OriginalFilename", "immich_mobile.exe" "\0"
-            VALUE "ProductName", "immich_mobile" "\0"
+            VALUE "InternalName", "pizcloud_mobile" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 PizCloud. All rights reserved." "\0"
+            VALUE "OriginalFilename", "pizcloud_mobile.exe" "\0"
+            VALUE "ProductName", "pizcloud_mobile" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

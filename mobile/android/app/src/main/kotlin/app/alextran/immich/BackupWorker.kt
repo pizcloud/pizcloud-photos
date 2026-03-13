@@ -73,7 +73,7 @@ class BackupWorker(ctx: Context, params: WorkerParameters) : ListenableWorker(ct
       // normal background services can only up to 10 minutes
       // foreground services are allowed to run indefinitely
       // requires battery optimizations to be disabled (either manually by the user
-      // or by the system learning that immich is important to the user)
+      // or by the system learning that pizcloud is important to the user)
       val title = ctx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE)
         .getString(SHARED_PREF_NOTIFICATION_TITLE, NOTIFICATION_DEFAULT_TITLE)!!
       showInfo(getInfoBuilder(title, indeterminate = true).build())

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/services/remote_album.service.dart';
+import 'package:immich_mobile/infrastructure/repositories/remote_asset.repository.dart'; // pizcloud
 import 'package:immich_mobile/infrastructure/repositories/remote_album.repository.dart';
 import 'package:immich_mobile/repositories/drift_album_api_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -11,11 +12,13 @@ void main() {
   late RemoteAlbumService sut;
   late DriftRemoteAlbumRepository mockRemoteAlbumRepo;
   late DriftAlbumApiRepository mockAlbumApiRepo;
+  late RemoteAssetRepository remoteAssetRepository; // pizcloud
 
   setUp(() {
     mockRemoteAlbumRepo = MockRemoteAlbumRepository();
     mockAlbumApiRepo = MockDriftAlbumApiRepository();
-    sut = RemoteAlbumService(mockRemoteAlbumRepo, mockAlbumApiRepo);
+    remoteAssetRepository = MockRemoteAssetRepository();
+    sut = RemoteAlbumService(mockRemoteAlbumRepo, mockAlbumApiRepo, remoteAssetRepository);
 
     when(() => mockRemoteAlbumRepo.getNewestAssetTimestamp(any())).thenAnswer((invocation) {
       // Simulate a timestamp for the newest asset in the album

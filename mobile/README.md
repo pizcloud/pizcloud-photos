@@ -1,17 +1,17 @@
-# Immich Mobile Application - Flutter
+# Pizcloud Mobile App - Flutter
 
-The Immich mobile app is a Flutter-based solution leveraging the Isar Database for local storage and Riverpod for state management. This structure optimizes functionality and maintainability, allowing for efficient development and robust performance.
+Pizcloud Mobile is built with Flutter, using Isar Database for local persistence and Riverpod for state management. This combination keeps the codebase maintainable while supporting stable app performance during feature growth.
 
 ## Setup
 
-1. Setup Flutter toolchain using FVM.
-2. Run `flutter pub get` to install the dependencies.
-3. Run `make translation` to generate the translation file.
-4. Run `fvm flutter run` to start the app.
+1. Prepare the Flutter toolchain with FVM.
+2. Install dependencies with `flutter pub get`.
+3. Generate translation artifacts by running `make translation`.
+4. Launch the app using `fvm flutter run`.
 
 ## Translation
 
-To add a new translation text, enter the key-value pair in the `i18n/en.json` in the root of the immich project. Then, from the `mobile/` directory, run
+When adding a new translation entry, place the key-value pair in `i18n/en.json` at the root of the Pizcloud project. Then, from the `mobile/` directory, run:
 
 ```bash
 make translation
@@ -19,7 +19,7 @@ make translation
 
 ## Static Analysis
 
-The following checks of static analysis must pass for a contribution to the mobile app to be valid:
+All of the following static checks should pass before mobile contributions are considered valid:
 
 ```bash
 dart format lib
@@ -28,60 +28,49 @@ dart run custom_lint
 dcm analyze lib
 ```
 
-[DCM](https://dcm.dev/) is a vendor tool that needs to be downloaded manually to run locally.
-Immich was provided an open source license. 
-To use it, it is important that you do not have an active free tier license (can be verified with `dcm license`).
-If you have write-access to the Immich repository directly, running dcm in your clone should just work.
-If you are working on a clone of a fork, you need to connect to the main Immich repository as remote first:
+[DCM](https://dcm.dev/) is a third-party tool and must be installed manually for local usage.
+Pizcloud received an open source license.
+To use it correctly, ensure you do not currently have an active free-tier license (you can verify with `dcm license`).
+If you have direct write access to the Pizcloud repository, DCM should run without extra setup.
+If you are working from a fork clone, connect the main Pizcloud repository as a remote first:
 
 ```bash
-git remote add immich git@github.com:immich-app/immich.git
+git remote add pizcloud git@github.com:pizcloud-app/pizcloud.git
 ```
 
-## Immich-Flutter Directory Structure
+## Pizcloud-Flutter Directory Structure
 
-Below are the directory inside the `lib` directory:
+Inside `lib`, the main directories are organized as follows:
 
-- `constants`: Store essential constants utilized across the application, like colors and locale.
+- `constants`: Shared constant values used across the app, such as locale and color definitions.
+- `extensions`: Extension helpers for existing functionality, for example asset and string extensions.
+- `module_template`: Starter structure for building new modules with subfolders for models, providers, services, UI, and views.
+- `models`: Reserved for module-specific data models.
+- `providers`: Where module-level Riverpod providers are defined.
+- `services`: Contains business/service logic specific to that module.
+- `ui`: Reusable widgets and visual components for the module.
+- `views`: Module-specific screens and page-level presentation.
+- `modules`: Feature modules grouped with their own models, providers, services, UI, and views to support scalability.
+- `routing`: Navigation and guard logic, including files like `auth_guard.dart`, `backup_permission_guard.dart`, `router.dart`, and `router.gr.dart`.
+- `shared`: Cross-module code including cache, models, providers, services, UI components, and views.
+- `utils`: Utility helpers for multiple concerns such as async mutexes, byte units, debounce handling, migrations, and more.
 
-- `extensions`: Extensions enhancing various existing functionalities within the app, such as asset_extensions.dart, string_extensions.dart, and more.
+## Pizcloud Architecture Pattern
 
-- `module_template`: Provides a template structure for different modules within the app, including subdivisions like models, providers, services, UI, and views.
+The Pizcloud Flutter app follows a clear module-oriented architecture inspired by MVVM. Each module separates models, providers, services, UI, and views to keep responsibilities isolated and development manageable.
 
-  - `models`: Placeholder for storing module-specific models.
-  - `providers`: Section to define module-specific Riverpod providers.
-  - `services`: Houses services tailored to the module's functionality.
-  - `ui`: Contains UI components and widgets for the module.
-  - `views`: Placeholder for module-specific views.
-
-- `modules`: Organizes different functional modules of the app, each containing subdivisions for models, providers, services, UI, and views. This structure promotes modular development and scalability.
-
-- `routing`: Includes guards like auth_guard.dart, backup_permission_guard.dart, and routers like router.dart and router.gr.dart for streamlined navigation and permission management.
-
-- `shared`: cache, models, providers, services, ui, views: Encapsulates shared functionalities, such as caching mechanisms, common models, providers, services, UI components, and views accessible across the application.
-
-- `utils`: A collection of utility classes and functions catering to different app functionalities, including async_mutex.dart, bytes_units.dart, debounce.dart, migration.dart, and more.
-
-## Immich Architectural Pattern
-
-The Immich Flutter app embraces a well-defined architectural pattern inspired by the Model-View-ViewModel (MVVM) approach. This layout organizes modules for models, providers, services, UI, and views, creating a modular development approach that strongly emphasizes a clean separation of concerns.
-
-Please use the `module_template` provided to create a new module.
+Use `module_template` whenever creating a new module.
 
 ### Architecture Breakdown
 
-Below is how your code needs to be structured:
+Code should follow this structure:
 
-- Models: In Immich, Models are like the app's blueprint—they're essential for organizing and using information. Imagine them as containers that hold data the app needs to function. They also handle basic rules and logic for managing and interacting with this data across the app.
-
-- Providers (Riverpod): Providers in Immich are a bit like traffic managers. They help different parts of the app communicate and share information effectively. They ensure that the right data gets to the right places at the right time. These providers use Riverpod, a tool that helps with managing and organizing how the app's information flows. Everything related to the state goes here.
-
-- Services: Services are the helpful behind-the-scenes workers in Immich. They handle important tasks like handling network requests or managing other essential functions. These services work independently and focus on supporting the app's main functionalities.
-
-- UI: In Immich, the UI focuses solely on how things appear and feel without worrying about the app's complex inner workings. You can slot in your reusable widget here.
-
-- Views: Views use Providers to get the needed information and handle actions without dealing with the technical complexities behind the scenes. Normally Flutter's screen & pages goes here.
+- Models: Define and structure data used throughout the app, including basic validation or data-related rules.
+- Providers (Riverpod): Manage application state and coordinate data flow between screens and logic layers.
+- Services: Handle operations behind the scenes, such as networking and other core app capabilities.
+- UI: Focus exclusively on visual components and reusable widgets, without embedding complex business logic.
+- Views: Compose screens/pages by consuming Providers and handling user actions at the presentation level.
 
 ## Contributing
 
-Please refer to the [architecture](https://docs.immich.app/developer/architecture/) for contributing to the mobile app!
+For mobile contribution guidelines, refer to the [architecture](https://docs.pizcloud.app/developer/architecture/).

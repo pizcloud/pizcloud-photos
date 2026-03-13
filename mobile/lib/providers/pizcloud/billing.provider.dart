@@ -26,11 +26,11 @@ final billingConfigProvider = Provider<BillingConfig>((ref) {
 final iapServiceProvider = Provider<IapService>((ref) => IapService());
 
 final entitlementApiClientProvider = Provider<EntitlementApiClient>((ref) {
-  final immichBaseUrl = Store.get(StoreKey.serverEndpoint);
+  final photosBaseUrl = Store.get(StoreKey.serverEndpoint);
   final user = ref.watch(currentUserProvider);
   // final cfg = ref.watch(billingConfigProvider);
 
-  return EntitlementApiClient(immichBaseUrl: immichBaseUrl, userEntity: user!);
+  return EntitlementApiClient(photosBaseUrl: photosBaseUrl, userEntity: user!);
 });
 
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {

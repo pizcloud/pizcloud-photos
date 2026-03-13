@@ -51,7 +51,7 @@ class SyncStatusAndActions extends HookConsumerWidget {
         final size = MediaQuery.of(context).size;
         await Share.shareXFiles(
           [XFile(exportFile.path)],
-          text: 'Immich Database Export',
+          text: 'PizCloud Database Export',
           sharePositionOrigin: Rect.fromPoints(Offset.zero, Offset(size.width / 3, size.height)),
         );
 

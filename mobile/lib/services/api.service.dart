@@ -123,7 +123,7 @@ class ApiService implements Authentication {
   Future<String> resolveEndpoint(String serverUrl) async {
     String url = sanitizeUrl(serverUrl);
 
-    // Check for /.well-known/immich
+    // Check for /.well-known/pizcloud
     final wellKnownEndpoint = await _getWellKnownEndpoint(url);
     if (wellKnownEndpoint.isNotEmpty) {
       url = sanitizeUrl(wellKnownEndpoint);

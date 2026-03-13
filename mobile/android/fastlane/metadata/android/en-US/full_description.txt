@@ -1,21 +1,21 @@
-This is a client app for the self-hostable Immich Server (which can be found with the app's source repo). You will need to run/manage the server on your own in order to use the app.
+Pizcloud is a mobile client for a self-hosted server setup. To use the app fully, you need to deploy and manage your own server instance.
 
-Once set up, this app can be used as photo and video backup solution directly from your mobile phone.
+After setup, the app works as a direct photo and video backup solution from your phone.
 
 <b>Features:</b>
 
-* Upload and view assets(videos/images).
-* Multi-user supported.
-* Quick navigation with drag scroll bar.
-* Auto Backup.
-* Support HEIC/HEIF Backup.
-* Extract and display EXIF info.
-* Real-time render from multi-device upload event.
-* Image Tagging/Classification based on ImageNet dataset
-* Object detection based on COCO SSD.
-* Search assets based on tags and exif data (lens, make, model, orientation)
-* Upload assets from your local computer/server using <a href='https://www.npmjs.com/package/immich' target='_blank' rel='nofollow'>immich cli tools</a>
-* Reverse geocoding from image exif data
-* Show asset's location information on map (OpenStreetMap).
-* Show curated places on the search page
-* Show curated objects on the search page
+* Upload and browse photos/videos.
+* Multi-user support.
+* Fast timeline navigation with drag scrollbar.
+* Automatic backup.
+* HEIC/HEIF backup support.
+* EXIF extraction and display.
+* Real-time updates from uploads across multiple devices.
+* Image tagging/classification using the ImageNet dataset.
+* Object detection powered by COCO SSD.
+* Search by tags and EXIF fields (lens, make, model, orientation).
+* Upload from local computer/server using CLI tools.
+* Reverse geocoding from image EXIF metadata.
+* Display asset locations on map (OpenStreetMap).
+* Curated places on the search page.
+* Curated objects on the search page.

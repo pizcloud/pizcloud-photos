@@ -1,13 +1,13 @@
 # Domain Layer
 
-This directory contains the domain layer of Immich. The domain layer is responsible for the business logic of the app. It includes interfaces for repositories, models, services and utilities. This layer should never depend on anything from the presentation layer or from the infrastructure layer.
+This folder contains the domain layer for Pizcloud. It owns the core business rules of the application, including repository contracts, models, services, and shared utilities. Code in this layer should stay independent from presentation and infrastructure implementation details.
 
 ## Structure
 
-- **[Interfaces](./interfaces/)**: These are the interfaces that define the contract for data operations.
-- **[Models](./models/)**: These are the core data classes that represent the business models.
-- **[Services](./services/)**: These are the classes that contain the business logic and interact with the repositories.
-- **[Utils](./utils/)**: These are utility classes and functions that provide common functionalities used across the domain layer.
+- **[Interfaces](./interfaces/)**: Contracts that describe how data operations are accessed.
+- **[Models](./models/)**: Core business data structures used by the app.
+- **[Services](./services/)**: Business use-cases that coordinate with repositories.
+- **[Utils](./utils/)**: Helper functions and utilities shared inside the domain layer.
 
 ```
 domain/
@@ -23,7 +23,7 @@ domain/
 
 ## Usage
 
-The domain layer provides services that implement the business logic by consuming repositories through dependency injection. Services are exposed through Riverpod providers in the root `providers` directory.
+The domain layer exposes business services that consume repositories through dependency injection. These services are made available by Riverpod providers under the root `providers` directory.
 
 ```dart
 // In presentation layer
@@ -31,4 +31,4 @@ final userService = ref.watch(userServiceProvider);
 final user = await userService.getUser(userId);
 ```
 
-The presentation layer should never directly use repositories, but instead interact with the domain layer through services.
+The presentation layer should not call repositories directly. It should go through domain services.

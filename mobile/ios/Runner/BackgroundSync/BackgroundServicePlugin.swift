@@ -26,7 +26,6 @@ class BackgroundServicePlugin: NSObject, FlutterPlugin {
   // Then resume the application see the background code run
   // Tested on a physical device, not a simulator
   // This will submit either the Fetch or Processing command to the BGTaskScheduler for immediate processing.
-  // In my tests, I can only get app.alextran.immich.backgroundProcessing simulated by running the above command
 
   // This is the task ID in Info.plist to register as our background task ID
   public static let backgroundFetchTaskID = "com.pizcloud.photos.backgroundFetch"
@@ -275,7 +274,7 @@ class BackgroundServicePlugin: NSObject, FlutterPlugin {
   }
 
   // Checks the status of the Background App Refresh from the system
-  // Returns true if the service is enabled for Immich, and false otherwise
+  // Returns true if the service is enabled for Pizcloud, and false otherwise
   func handleBackgroundRefreshStatus(call: FlutterMethodCall, result: FlutterResult) {
     switch UIApplication.shared.backgroundRefreshStatus {
     case .available:

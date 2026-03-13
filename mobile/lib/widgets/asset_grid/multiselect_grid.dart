@@ -433,7 +433,7 @@ class MultiselectGrid extends HookConsumerWidget {
               onDownload: downloadEnabled ? onDownload : null,
 
               /// local file deletion is allowed irrespective of [deleteEnabled] since it has
-              /// nothing to do with the state of the asset in the Immich server
+              /// nothing to do with the state of the asset in the server
               onDeleteLocal: onDeleteLocal,
               onAddToAlbum: onAddToAlbum,
               onCreateNewAlbum: onCreateNewAlbum,

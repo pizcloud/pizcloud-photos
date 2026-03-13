@@ -5,7 +5,6 @@ class DelayedLoadingIndicator extends StatelessWidget {
   /// The delay to avoid showing the loading indicator
   final Duration delay;
 
-  /// Defaults to using the [ImmichLoadingIndicator]
   final Widget? child;
 
   /// An optional fade in duration to animate the loading

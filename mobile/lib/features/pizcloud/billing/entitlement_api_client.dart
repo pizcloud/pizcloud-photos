@@ -10,9 +10,9 @@ import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 // final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // deprecated
 
 class EntitlementApiClient {
-  EntitlementApiClient({required this.immichBaseUrl, required this.userEntity});
+  EntitlementApiClient({required this.photosBaseUrl, required this.userEntity});
 
-  final String immichBaseUrl;
+  final String photosBaseUrl;
   final UserDto userEntity;
   final authHeaders = const AuthHeaderService();
   final PizcloudBaseUrlService _baseUrlService = PizcloudBaseUrlService();
@@ -31,7 +31,7 @@ class EntitlementApiClient {
   }
 
   Future<Map<String, dynamic>?> getEntitlements() async {
-    final url = _join(immichBaseUrl, 'billing/entitlements');
+    final url = _join(photosBaseUrl, 'billing/entitlements');
     final oHeaders = authHeaders.authOnly();
     final res = await http.get(Uri.parse(url), headers: oHeaders);
     if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -47,7 +47,7 @@ class EntitlementApiClient {
   }
 
   Future<Map<String, dynamic>> getUsage() async {
-    final url = _join(immichBaseUrl, 'billing/usage');
+    final url = _join(photosBaseUrl, 'billing/usage');
     final oHeaders = authHeaders.authOnly();
 
     final res = await http.get(Uri.parse(url), headers: oHeaders);

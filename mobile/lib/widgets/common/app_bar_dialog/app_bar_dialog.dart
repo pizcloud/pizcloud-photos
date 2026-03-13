@@ -23,10 +23,7 @@ import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_profile_info.dart';
-// import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_server_info.dart';
 import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
-// import 'package:immich_mobile/widgets/common/immich_logo.dart';
-// import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/services/pizcloud/account_api.service.dart'; // pizcloud
@@ -93,13 +90,13 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    buildSettingButton() {
-      return buildActionButton(
-        context.platformIcon(material: Icons.settings_outlined, cupertino: CupertinoIcons.settings),
-        "settings",
-        () => context.pushRoute(const SettingsRoute()),
-      );
-    }
+    // buildSettingButton() {
+    //   return buildActionButton(
+    //     context.platformIcon(material: Icons.settings_outlined, cupertino: CupertinoIcons.settings),
+    //     "settings",
+    //     () => context.pushRoute(const SettingsRoute()),
+    //   );
+    // }
 
     // pizcloud
     buildManageAccountButton() {
@@ -159,21 +156,21 @@ class ImmichAppBarDialog extends HookConsumerWidget {
       );
     }
 
-    buildReferralProgramButton() {
-      return buildActionButton(
-        context.platformIcon(material: Icons.wallet_giftcard, cupertino: CupertinoIcons.gift),
-        "referral_program",
-        () => context.pushRoute(ReferralRoute(userEmail: user?.email)),
-      );
-    }
+    // buildReferralProgramButton() {
+    //   return buildActionButton(
+    //     context.platformIcon(material: Icons.wallet_giftcard, cupertino: CupertinoIcons.gift),
+    //     "referral_program",
+    //     () => context.pushRoute(ReferralRoute(userEmail: user?.email)),
+    //   );
+    // }
 
-    buildDiscountCodeButton() {
-      return buildActionButton(
-        context.platformIcon(material: Icons.price_check, cupertino: CupertinoIcons.tag),
-        "referral.discount_code",
-        () => context.pushRoute(DiscountCodeRoute(userEmail: user?.email)),
-      );
-    }
+    // buildDiscountCodeButton() {
+    //   return buildActionButton(
+    //     context.platformIcon(material: Icons.price_check, cupertino: CupertinoIcons.tag),
+    //     "referral.discount_code",
+    //     () => context.pushRoute(DiscountCodeRoute(userEmail: user?.email)),
+    //   );
+    // }
 
     removeServerCookies() async {
       await accountApiService.logout();
@@ -316,7 +313,7 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                 launchUrl(
                   Uri.parse('https://pizcloud.com/en/terms/'),
                   mode: LaunchMode.externalApplication,
-                ); // pizcloud
+                );
               },
               child: Text("terms", style: context.textTheme.bodySmall).tr(),
             ),
@@ -327,43 +324,10 @@ class ImmichAppBarDialog extends HookConsumerWidget {
                 launchUrl(
                   Uri.parse('https://pizcloud.com/en/privacy/'),
                   mode: LaunchMode.externalApplication,
-                ); // pizcloud
+                );
               },
               child: Text("policy", style: context.textTheme.bodySmall).tr(),
             ),
-
-            // InkWell(
-            //   onTap: () {
-            //     context.pop();
-            //     launchUrl(Uri.parse('https://immich.app'), mode: LaunchMode.externalApplication);
-            //   },
-            //   child: Text("documentation", style: context.textTheme.bodySmall).tr(),
-            // ),
-            // const SizedBox(width: 20, child: Text("•", textAlign: TextAlign.center)),
-            // InkWell(
-            //   onTap: () {
-            //     context.pop();
-            //     launchUrl(Uri.parse('https://github.com/immich-app/immich'), mode: LaunchMode.externalApplication);
-            //   },
-            //   child: Text("profile_drawer_github", style: context.textTheme.bodySmall).tr(),
-            // ),
-            // const SizedBox(width: 20, child: Text("•", textAlign: TextAlign.center)),
-            // InkWell(
-            //   onTap: () async {
-            //     context.pop();
-            //     final packageInfo = await PackageInfo.fromPlatform();
-            //     showLicensePage(
-            //       context: context,
-            //       applicationIcon: const Padding(
-            //         padding: EdgeInsetsGeometry.symmetric(vertical: 10),
-            //         child: ImmichLogo(size: 40),
-            //       ),
-            //       applicationVersion: packageInfo.version,
-            //     );
-            //   },
-            //   child: Text("licenses", style: context.textTheme.bodySmall).tr(),
-            // ),
-
             // #pizcloud
           ],
         ),

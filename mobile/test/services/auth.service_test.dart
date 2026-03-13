@@ -76,8 +76,8 @@ void main() {
     });
 
     test('Should resolve HTTPS endpoint', () async {
-      const testUrl = 'https://immich.domain.com';
-      const resolvedUrl = 'https://immich.domain.com/api';
+      const testUrl = 'https://domain.com';
+      const resolvedUrl = 'https://domain.com/api';
 
       when(() => apiService.resolveAndSetEndpoint(testUrl)).thenAnswer((_) async => resolvedUrl);
       when(() => apiService.setDeviceInfoHeader()).thenAnswer((_) async => {});

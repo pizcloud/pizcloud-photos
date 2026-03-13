@@ -147,7 +147,7 @@ CupertinoThemeData getCupertinoThemeData({required ColorScheme colorScheme, requ
   );
 }
 
-// This method replaces all surface shades in ImmichTheme to a static ones
+// This method replaces all surface shades in theme to a static ones
 // as we are creating the colorscheme through seedColor the default surfaces are
 // tinted with primary color
 ImmichTheme decolorizeSurfaces({required ImmichTheme theme}) {

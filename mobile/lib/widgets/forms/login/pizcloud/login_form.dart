@@ -260,8 +260,6 @@ class LoginForm extends HookConsumerWidget {
         unawaited(context.replaceRoute(const TabControllerRoute()));
       } on PlatformException catch (e) {
         if (!context.mounted) return;
-        // final msg = (e.message?.isNotEmpty ?? false) ? e.message! : 'login_form_failed_login'.tr();
-        // ImmichToast.show(context: context, msg: msg, toastType: ToastType.error, gravity: ToastGravity.TOP);
       } catch (e) {
         if (!context.mounted) return;
         ImmichToast.show(
