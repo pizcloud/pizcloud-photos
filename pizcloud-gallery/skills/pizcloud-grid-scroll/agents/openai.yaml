@@ -1,0 +1,4 @@
+interface:
+  display_name: "PizCloud Grid Scroll"
+  short_description: "Maintain grid scroll, scrollbar drag, and viewport mapping"
+  default_prompt: "Use $pizcloud-grid-scroll to implement or debug PizGallery scroll behavior, fast-scroll mode, viewport windowing, and scrollbar interactions."

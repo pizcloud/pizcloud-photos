@@ -1633,7 +1633,7 @@ packages:
   pizcloud_gallery:
     dependency: "direct main"
     description:
-      path: "../../pizcloud-gallery"
+      path: "../pizcloud-gallery"
       relative: true
     source: path
     version: "1.0.0+1"

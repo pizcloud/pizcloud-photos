@@ -1,0 +1,4 @@
+interface:
+  display_name: "PizCloud Grid Runtime"
+  short_description: "Maintain grid cells, thumbnail cache, and prefetch queue"
+  default_prompt: "Use $pizcloud-grid-runtime to implement or debug PizGallery grid rendering, thumbnail loading, cache behavior, and download queue flow."

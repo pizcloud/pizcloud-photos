@@ -1,0 +1,4 @@
+interface:
+  display_name: "PizCloud Grid Runtime Opt"
+  short_description: "Tune grid runtime perf, memory, and prefetch"
+  default_prompt: "Use $pizcloud-grid-runtime-opt to optimize PizGallery runtime performance, including reuse strategy, cache budgets, and prefetch throughput."
