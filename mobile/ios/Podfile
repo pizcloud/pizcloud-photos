@@ -137,6 +137,29 @@ post_install do |installer|
     # End of the permission_handler configuration
   end
 
+  # Ensure the app target can resolve Flutter headers during Swift bridging-header precompilation.
+  flutter_ios_device_framework_dir = '$(FLUTTER_ROOT)/bin/cache/artifacts/engine/ios/Flutter.xcframework/ios-arm64'
+  flutter_ios_simulator_framework_dir = '$(FLUTTER_ROOT)/bin/cache/artifacts/engine/ios/Flutter.xcframework/ios-arm64_x86_64-simulator'
+  installer.aggregate_targets.each do |aggregate_target|
+    user_project = aggregate_target.user_project
+    next unless user_project
+
+    runner_target = user_project.targets.find { |target| target.name == 'Runner' }
+    next unless runner_target
+
+    runner_target.build_configurations.each do |config|
+      config.build_settings['FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]'] = "\"#{flutter_ios_device_framework_dir}\" $(inherited)"
+      config.build_settings['FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]'] = "\"#{flutter_ios_simulator_framework_dir}\" $(inherited)"
+
+      other_ldflags = config.build_settings['OTHER_LDFLAGS']
+      other_ldflags = other_ldflags.join(' ') if other_ldflags.is_a?(Array)
+      other_ldflags = '$(inherited)' if other_ldflags.nil? || other_ldflags.strip.empty?
+      config.build_settings['OTHER_LDFLAGS'] = "#{other_ldflags} -framework Flutter" unless other_ldflags.include?('-framework Flutter')
+    end
+
+    user_project.save
+  end
+
   # Ensure the prebuilt MapLibre XCFramework ships with a dSYM during archive exports.
   maplibre_binary = File.join(installer.sandbox.root, 'MapLibre', 'MapLibre.xcframework', 'ios-arm64', 'MapLibre.framework', 'MapLibre')
   maplibre_dsym = File.join(installer.sandbox.root, 'MapLibre', 'MapLibre.framework.dSYM')
