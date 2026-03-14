@@ -1,0 +1,4 @@
+interface:
+  display_name: "PizCloud Local Source"
+  short_description: "Optimize local gallery scan, indexing, and reconcile flow"
+  default_prompt: "Use $pizcloud-local-source to implement or debug local media scanning, indexed-source updates, and DB reconcile behavior for PizGallery."

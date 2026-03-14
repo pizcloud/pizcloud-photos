@@ -1,0 +1,4 @@
+interface:
+  display_name: "PizCloud Viewer Grid"
+  short_description: "Maintain PizCloud viewer-grid behavior and performance"
+  default_prompt: "Use $pizcloud-viewer-grid to update viewer, image pipeline, or grid-sync behavior safely."
