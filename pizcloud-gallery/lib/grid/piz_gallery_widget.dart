@@ -7,8 +7,11 @@ import 'package:flutter/material.dart';
 
 import 'package:pizcloud_gallery/grid/download_queue.dart';
 import 'package:pizcloud_gallery/grid/fps_overlay.dart';
+import 'package:pizcloud_gallery/grid/gallery_date_browse_overlay.dart'; // new
 import 'package:pizcloud_gallery/grid/grid_date_overlay.dart'; // new
 import 'package:pizcloud_gallery/grid/gallery_sort_filter_menu.dart';
+import 'package:pizcloud_gallery/grid/cell_data.dart'; // new
+import 'package:pizcloud_gallery/grid/grid_cell.dart'; // new
 import 'package:pizcloud_gallery/grid/grid_gesture_controller.dart';
 import 'package:pizcloud_gallery/grid/grid_cell_pool.dart';
 import 'package:pizcloud_gallery/grid/grid_prefetch_controller.dart';
@@ -54,6 +57,8 @@ class PizGallery extends StatefulWidget {
   final bool showDateOverlay;
   final GridDateOverlayTextBuilder? dateOverlayTextBuilder;
   final GallerySortFilterMenuTexts sortFilterMenuTexts;
+  final bool showDateBrowseOverlay;
+  final GalleryDateBrowseTexts dateBrowseTexts;
   // #new
 
   const PizGallery({
@@ -76,6 +81,8 @@ class PizGallery extends StatefulWidget {
     this.showDateOverlay = false,
     this.dateOverlayTextBuilder,
     this.sortFilterMenuTexts = const GallerySortFilterMenuTexts.defaults(),
+    this.showDateBrowseOverlay = false,
+    this.dateBrowseTexts = const GalleryDateBrowseTexts.defaults(),
     // #new
   });
 
@@ -89,6 +96,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const bool _showFpsOverlay = true;
   static const int _prefetchRowsAhead = 10;
   static const int _prefetchRowsBehind = 5;
+  static const double _dateBrowseRowHeight = 96; // new
+  static const double _dateBrowseRowSpacing = 10; // new
   static const int _fastScrollPrefetchRowsAhead = 1;
   static const int _fastScrollPrefetchRowsBehind = 0;
   static const int _prefetchThrottleMs = 60;
@@ -145,6 +154,16 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       LinkedHashMap<String, bool>();
   GallerySortMode _sortMode = GallerySortMode.addedAtDesc;
   GalleryFilterSelection _filterSelection = const GalleryFilterSelection.all();
+  // new
+  GalleryDateBrowseMode _dateBrowseMode = GalleryDateBrowseMode.all;
+  List<_DateBrowseYearEntry> _yearBrowseEntries =
+      const <_DateBrowseYearEntry>[];
+  List<_DateBrowseMonthEntry> _monthBrowseEntries =
+      const <_DateBrowseMonthEntry>[];
+  final ScrollController _yearBrowseController = ScrollController();
+  final ScrollController _monthBrowseController = ScrollController();
+  int? _pendingMonthBrowseScrollIndex;
+  // #new
 
   // =======================================================
   // Pool storage
@@ -254,6 +273,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _cellPool.clear();
 
     scalingLock.dispose();
+    _yearBrowseController.dispose(); // new
+    _monthBrowseController.dispose(); // new
     unawaited(widget.source.dispose());
     super.dispose();
   }
@@ -359,6 +380,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
   void _applySortAndFilter({bool notify = true}) {
     final List<MediaItem> viewItems = _buildViewItems();
+    // Keep original data pipeline intact; date-browse lists are derived only.
+    _rebuildDateBrowseEntries(viewItems); // new
     _initRuntimeWith(MediaDataSource(viewItems));
     if (notify && mounted) {
       setState(() {});
@@ -371,20 +394,95 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     );
     final List<MediaItem> values = filtered.toList(growable: false);
     values.sort((a, b) {
-      final DateTime? left = switch (_sortMode) {
-        GallerySortMode.createdAtDesc => a.createdAt,
-        GallerySortMode.addedAtDesc => a.addedAt,
-      };
-      final DateTime? right = switch (_sortMode) {
-        GallerySortMode.createdAtDesc => b.createdAt,
-        GallerySortMode.addedAtDesc => b.addedAt,
-      };
+      final DateTime? left = _resolveSortDate(a); // new
+      final DateTime? right = _resolveSortDate(b); // new
       final int byDate = _compareDateDesc(left, right);
       if (byDate != 0) return byDate;
       return a.id.compareTo(b.id);
     });
     return values;
   }
+
+  // new
+  DateTime? _resolveSortDate(MediaItem item) {
+    return switch (_sortMode) {
+      GallerySortMode.createdAtDesc => item.createdAt ?? item.addedAt,
+      GallerySortMode.addedAtDesc => item.addedAt ?? item.createdAt,
+    };
+  }
+
+  void _rebuildDateBrowseEntries(List<MediaItem> items) {
+    final Map<int, _DateBrowseYearBuilder> yearsByKey =
+        <int, _DateBrowseYearBuilder>{};
+    final Map<int, _DateBrowseMonthBuilder> monthsByKey =
+        <int, _DateBrowseMonthBuilder>{};
+
+    for (int index = 0; index < items.length; index++) {
+      final MediaItem item = items[index];
+      final DateTime? sourceDate = _resolveSortDate(item);
+      if (sourceDate == null) {
+        // Undated assets stay available in "All" mode only.
+        continue;
+      }
+      final DateTime date = sourceDate.toLocal();
+      final int year = date.year;
+      final int month = date.month;
+      final int monthKey = year * 100 + month;
+
+      final _DateBrowseYearBuilder yearBuilder = yearsByKey.putIfAbsent(
+        year,
+        () => _DateBrowseYearBuilder(firstDataIndex: index, year: year),
+      );
+      yearBuilder.totalItemCount += 1;
+      if (yearBuilder.previewItems.length < 5) {
+        yearBuilder.previewItems.add(item);
+      }
+
+      _DateBrowseMonthBuilder? monthBuilder = monthsByKey[monthKey];
+      if (monthBuilder == null) {
+        monthBuilder = _DateBrowseMonthBuilder(
+          firstDataIndex: index,
+          year: year,
+          month: month,
+        );
+        monthsByKey[monthKey] = monthBuilder;
+        yearBuilder.monthCount += 1;
+        if (yearBuilder.firstMonthListIndex < 0) {
+          yearBuilder.firstMonthListIndex = monthsByKey.length - 1;
+        }
+      }
+      monthBuilder.totalItemCount += 1;
+      if (monthBuilder.previewItems.length < 5) {
+        monthBuilder.previewItems.add(item);
+      }
+    }
+
+    _yearBrowseEntries = yearsByKey.values
+        .map(
+          (entry) => _DateBrowseYearEntry(
+            year: entry.year,
+            firstDataIndex: entry.firstDataIndex,
+            firstMonthListIndex: entry.firstMonthListIndex,
+            monthCount: entry.monthCount,
+            totalItemCount: entry.totalItemCount,
+            previewItems: List<MediaItem>.unmodifiable(entry.previewItems),
+          ),
+        )
+        .toList(growable: false);
+
+    _monthBrowseEntries = monthsByKey.values
+        .map(
+          (entry) => _DateBrowseMonthEntry(
+            year: entry.year,
+            month: entry.month,
+            firstDataIndex: entry.firstDataIndex,
+            totalItemCount: entry.totalItemCount,
+            previewItems: List<MediaItem>.unmodifiable(entry.previewItems),
+          ),
+        )
+        .toList(growable: false);
+  }
+  // #new
 
   bool _matchesCurrentFilters(MediaItem item) {
     final bool matchType = item.isPhoto
@@ -468,6 +566,108 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _filterSelection = nextFilterSelection;
     _applySortAndFilter();
   }
+
+  // new
+  void _setDateBrowseMode(GalleryDateBrowseMode mode) {
+    if (!widget.showDateBrowseOverlay || _dateBrowseMode == mode) {
+      return;
+    }
+    setState(() {
+      _dateBrowseMode = mode;
+      if (mode != GalleryDateBrowseMode.month) {
+        _pendingMonthBrowseScrollIndex = null;
+      }
+    });
+    if (mode == GalleryDateBrowseMode.month) {
+      _scheduleMonthBrowseScroll();
+    }
+  }
+
+  void _handleYearBrowseRowTap(_DateBrowseYearEntry entry) {
+    if (!widget.showDateBrowseOverlay) {
+      return;
+    }
+    setState(() {
+      _dateBrowseMode = GalleryDateBrowseMode.month;
+      _pendingMonthBrowseScrollIndex = entry.firstMonthListIndex < 0
+          ? null
+          : entry.firstMonthListIndex;
+    });
+    _scheduleMonthBrowseScroll();
+  }
+
+  void _handleMonthBrowseRowTap(_DateBrowseMonthEntry entry) {
+    if (!widget.showDateBrowseOverlay) {
+      return;
+    }
+    setState(() {
+      _dateBrowseMode = GalleryDateBrowseMode.all;
+    });
+    _jumpToDataIndex(entry.firstDataIndex);
+  }
+
+  void _scheduleMonthBrowseScroll() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _applyPendingMonthBrowseScroll();
+    });
+  }
+
+  void _applyPendingMonthBrowseScroll() {
+    final int? index = _pendingMonthBrowseScrollIndex;
+    if (index == null || index < 0) {
+      return;
+    }
+    if (!_monthBrowseController.hasClients) {
+      _scheduleMonthBrowseScroll();
+      return;
+    }
+    _pendingMonthBrowseScrollIndex = null;
+    const double rowExtent = _dateBrowseRowHeight + _dateBrowseRowSpacing;
+    final ScrollPosition position = _monthBrowseController.position;
+    final double targetOffset = (index * rowExtent).clamp(
+      0.0,
+      position.maxScrollExtent,
+    );
+    if ((position.pixels - targetOffset).abs() < 0.5) {
+      return;
+    }
+    unawaited(
+      _monthBrowseController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
+
+  void _jumpToDataIndex(int dataIndex) {
+    if (!_isInitialized ||
+        dataIndex < 0 ||
+        dataIndex >= mediaDataSource.length) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_isInitialized) {
+        return;
+      }
+      final int cols = grid.currentColCount <= 0 ? 1 : grid.currentColCount;
+      grid.updateViewportFirstCol();
+      final int maxFirstCol = math.max(0, grid.defaultColCount - cols);
+      final int leftCol = grid.viewportFirstCol.clamp(0, maxFirstCol);
+      final int firstCol = grid.firstCellCol.clamp(0, grid.defaultColCount);
+      final int leadingSlots = (firstCol - leftCol).clamp(0, cols - 1).toInt();
+      final int targetRealRow = (leadingSlots + dataIndex) ~/ cols;
+      grid.jumpToRealTopRow(
+        targetRealRow.toDouble(),
+        colCount: cols,
+        leftCol: leftCol,
+      );
+    });
+  }
+  // #new
 
   Future<void> _openViewerAtDataIndex(
     int dataIndex, {
@@ -636,12 +836,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   }
 
   Widget _buildSortFilterMenuButton() {
+    final double bottomOffset = widget.showDateBrowseOverlay ? 72 : 14; // new
     return Positioned(
       // new
       // top: 8,
       // right: 8,
       right: 20,
-      bottom: 14,
+      bottom: bottomOffset, // new
       child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
@@ -664,6 +865,425 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       ),
     );
   }
+
+  // new
+  Widget _buildDateBrowseModeButton() {
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: 14,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: GalleryDateBrowseOverlay(
+          mode: _dateBrowseMode,
+          texts: widget.dateBrowseTexts,
+          onModeChanged: _setDateBrowseMode,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateBrowsePanel(GridAppearancePalette palette) {
+    if (_dateBrowseMode == GalleryDateBrowseMode.all) {
+      return const SizedBox.shrink();
+    }
+
+    final bool showYearList = _dateBrowseMode == GalleryDateBrowseMode.year;
+    final List<_DateBrowseRowData> rows = showYearList
+        ? _yearBrowseEntries
+              .map(
+                (entry) => _DateBrowseRowData(
+                  kind: _DateBrowseRowKind.year,
+                  key: 'year_${entry.year}',
+                  label: entry.year.toString(),
+                  primaryStat: entry.monthCount,
+                  secondaryStat: entry.totalItemCount,
+                  previewItems: entry.previewItems,
+                  onTap: () => _handleYearBrowseRowTap(entry),
+                ),
+              )
+              .toList(growable: false)
+        : _monthBrowseEntries
+              .map(
+                (entry) => _DateBrowseRowData(
+                  kind: _DateBrowseRowKind.month,
+                  key: 'month_${entry.year}_${entry.month}',
+                  label: _formatMonthBrowseLabel(context, entry),
+                  primaryStat: entry.totalItemCount,
+                  previewItems: entry.previewItems,
+                  onTap: () => _handleMonthBrowseRowTap(entry),
+                ),
+              )
+              .toList(growable: false);
+
+    final ScrollController controller = showYearList
+        ? _yearBrowseController
+        : _monthBrowseController;
+
+    return Positioned.fill(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[
+              palette.gridBackground.withValues(alpha: 0.98),
+              palette.gridBackground.withValues(alpha: 0.95),
+            ],
+          ),
+        ),
+        child: Column(
+          children: <Widget>[
+            _buildDateBrowsePanelHeader(
+              palette: palette,
+              rowCount: rows.length,
+              showYearList: showYearList,
+            ),
+            Expanded(
+              child: rows.isEmpty
+                  ? const Center(child: Text('No data for the current filter'))
+                  : ListView.separated(
+                      controller: controller,
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 110),
+                      itemCount: rows.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: _dateBrowseRowSpacing),
+                      itemBuilder: (context, index) {
+                        final _DateBrowseRowData row = rows[index];
+                        return _buildDateBrowseRow(row: row, palette: palette);
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateBrowsePanelHeader({
+    required GridAppearancePalette palette,
+    required int rowCount,
+    required bool showYearList,
+  }) {
+    final String title = showYearList
+        ? widget.dateBrowseTexts.optionYear
+        : widget.dateBrowseTexts.optionMonth;
+    final String hint = showYearList
+        ? '${widget.dateBrowseTexts.optionYear} -> ${widget.dateBrowseTexts.optionMonth}'
+        : '${widget.dateBrowseTexts.optionMonth} -> ${widget.dateBrowseTexts.optionAll}';
+    final IconData icon = showYearList
+        ? Icons.calendar_today_rounded
+        : Icons.calendar_month_rounded;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: palette.cellBackground.withValues(alpha: 0.56),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: palette.fpsBadgeText.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: <Widget>[
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: palette.fpsBadgeBackground.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(icon, size: 16, color: palette.fpsBadgeText),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      '$title ($rowCount)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: palette.fpsBadgeText,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: palette.fpsBadgeText.withValues(alpha: 0.72),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatMonthBrowseLabel(
+    BuildContext context,
+    _DateBrowseMonthEntry entry,
+  ) {
+    final Locale locale = Localizations.localeOf(context);
+    final String language = locale.languageCode.toLowerCase();
+    if (language == 'vi') {
+      return 'Tháng ${entry.month} ${entry.year}';
+    }
+    if (language == 'en') {
+      const List<String> monthNames = <String>[
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+      final int monthIndex = (entry.month - 1).clamp(0, monthNames.length - 1);
+      return '${monthNames[monthIndex]} ${entry.year}';
+    }
+    final MaterialLocalizations localizations = MaterialLocalizations.of(
+      context,
+    );
+    return localizations.formatMonthYear(DateTime(entry.year, entry.month));
+  }
+
+  Widget _buildDateBrowseRow({
+    required _DateBrowseRowData row,
+    required GridAppearancePalette palette,
+  }) {
+    final bool isYearRow = row.kind == _DateBrowseRowKind.year;
+    final Color accentColor = isYearRow
+        ? const Color(0xFF3B82F6)
+        : const Color(0xFF14B8A6);
+    final String kindLabel = isYearRow
+        ? widget.dateBrowseTexts.optionYear
+        : widget.dateBrowseTexts.optionMonth;
+
+    return SizedBox(
+      height: _dateBrowseRowHeight,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: row.onTap,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: palette.cellBackground.withValues(alpha: 0.52),
+              border: Border.all(color: accentColor.withValues(alpha: 0.24)),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: palette.fpsBadgeBackground.withValues(alpha: 0.12),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              child: Row(
+                children: <Widget>[
+                  SizedBox(
+                    width: 148,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Icon(
+                              isYearRow
+                                  ? Icons.calendar_today_rounded
+                                  : Icons.calendar_month_rounded,
+                              size: 13,
+                              color: accentColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                kindLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: accentColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          row.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: palette.fpsBadgeText,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: <Widget>[
+                            _buildDateBrowseStatChip(
+                              icon: isYearRow
+                                  ? Icons.view_module_rounded
+                                  : Icons.photo_library_outlined,
+                              value: row.primaryStat,
+                              palette: palette,
+                            ),
+                            if (row.secondaryStat != null) ...<Widget>[
+                              const SizedBox(width: 6),
+                              _buildDateBrowseStatChip(
+                                icon: Icons.photo_rounded,
+                                value: row.secondaryStat!,
+                                palette: palette,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Row(
+                      children: List<Widget>.generate(5, (previewIndex) {
+                        final MediaItem? item =
+                            previewIndex < row.previewItems.length
+                            ? row.previewItems[previewIndex]
+                            : null;
+                        return Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              right: previewIndex == 4 ? 0 : 4,
+                            ),
+                            child: _buildDateBrowsePreviewTile(
+                              rowKey: row.key,
+                              previewIndex: previewIndex,
+                              item: item,
+                              palette: palette,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: palette.fpsBadgeText.withValues(alpha: 0.7),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateBrowseStatChip({
+    required IconData icon,
+    required int value,
+    required GridAppearancePalette palette,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: palette.fpsBadgeBackground.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 11,
+              color: palette.fpsBadgeText.withValues(alpha: 0.9),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$value',
+              style: TextStyle(
+                color: palette.fpsBadgeText,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                height: 1.0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateBrowsePreviewTile({
+    required String rowKey,
+    required int previewIndex,
+    required MediaItem? item,
+    required GridAppearancePalette palette,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: ColoredBox(
+        color: palette.cellErrorBackground.withValues(alpha: 0.72),
+        child: item == null
+            ? const SizedBox.expand()
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final double side = constraints.biggest.shortestSide;
+                  if (side <= 0 || !side.isFinite) {
+                    return const SizedBox.shrink();
+                  }
+                  final CellData data = CellData(
+                    id: 'browse_${rowKey}_$previewIndex',
+                    text: '',
+                    mediaItem: item,
+                    thumbEdge: 100,
+                    thumbUrl: item.pickGridThumbForEdge(100),
+                    renderScale: 1.0,
+                    currentColCount: 5,
+                    targetColCount: 5,
+                    preferTargetColCount: false,
+                  );
+                  return GridCell(
+                    data: data,
+                    size: side,
+                    bytesCache: _bytesCache,
+                  );
+                },
+              ),
+      ),
+    );
+  }
+  // #new
 
   @override
   void didUpdateWidget(covariant PizGallery oldWidget) {
@@ -1422,7 +2042,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                       child: FpsBadge(monitor: _fpsMonitor),
                     ),
                   // new
-                  if (widget.showDateOverlay)
+                  if (widget.showDateOverlay &&
+                      _dateBrowseMode == GalleryDateBrowseMode.all) // new
                     Positioned(
                       top: 8,
                       left: _showFpsOverlay ? 96 : 8,
@@ -1433,7 +2054,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                         preferAddedAt: _sortMode == GallerySortMode.addedAtDesc,
                       ),
                     ),
-                  // #new
+                  if (widget.showDateBrowseOverlay)
+                    _buildDateBrowsePanel(palette), // new
+                  if (widget.showDateBrowseOverlay)
+                    _buildDateBrowseModeButton(), // new
                   _buildSortFilterMenuButton(),
                 ],
               ),
@@ -1444,3 +2068,89 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     );
   }
 }
+
+// new
+@immutable
+class _DateBrowseYearEntry {
+  const _DateBrowseYearEntry({
+    required this.year,
+    required this.firstDataIndex,
+    required this.firstMonthListIndex,
+    required this.monthCount,
+    required this.totalItemCount,
+    required this.previewItems,
+  });
+
+  final int year;
+  final int firstDataIndex;
+  final int firstMonthListIndex;
+  final int monthCount;
+  final int totalItemCount;
+  final List<MediaItem> previewItems;
+}
+
+@immutable
+class _DateBrowseMonthEntry {
+  const _DateBrowseMonthEntry({
+    required this.year,
+    required this.month,
+    required this.firstDataIndex,
+    required this.totalItemCount,
+    required this.previewItems,
+  });
+
+  final int year;
+  final int month;
+  final int firstDataIndex;
+  final int totalItemCount;
+  final List<MediaItem> previewItems;
+}
+
+class _DateBrowseYearBuilder {
+  _DateBrowseYearBuilder({required this.year, required this.firstDataIndex});
+
+  final int year;
+  final int firstDataIndex;
+  int firstMonthListIndex = -1;
+  int monthCount = 0;
+  int totalItemCount = 0;
+  final List<MediaItem> previewItems = <MediaItem>[];
+}
+
+class _DateBrowseMonthBuilder {
+  _DateBrowseMonthBuilder({
+    required this.year,
+    required this.month,
+    required this.firstDataIndex,
+  });
+
+  final int year;
+  final int month;
+  final int firstDataIndex;
+  int totalItemCount = 0;
+  final List<MediaItem> previewItems = <MediaItem>[];
+}
+
+enum _DateBrowseRowKind { year, month }
+
+class _DateBrowseRowData {
+  const _DateBrowseRowData({
+    required this.kind,
+    required this.key,
+    required this.label,
+    required this.primaryStat,
+    this.secondaryStat,
+    required this.previewItems,
+    required this.onTap,
+  });
+
+  final _DateBrowseRowKind kind;
+  final String key;
+  final String label;
+  final int primaryStat;
+  final int? secondaryStat;
+  final List<MediaItem> previewItems;
+  final VoidCallback onTap;
+}
+
+// #new

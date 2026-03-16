@@ -319,7 +319,7 @@ class DriftRemoteAlbumRepository extends DriftDatabaseRepository {
           name: Value(user.name),
           email: Value(user.email),
           hasProfileImage: Value(user.hasProfileImage),
-          profileChangedAt: Value(user.profileChangedAt ?? DateTime.now()),
+          profileChangedAt: Value(user.profileChangedAt),
           avatarColor: Value(user.avatarColor),
         );
 

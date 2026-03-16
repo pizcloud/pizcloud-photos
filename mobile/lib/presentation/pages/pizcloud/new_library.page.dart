@@ -52,6 +52,11 @@ class NewLibraryPage extends ConsumerWidget {
       optionOnDevice: 'on_this_device'.tr(),
       optionCloud: 'new_library_cloud'.tr(),
     );
+    final GalleryDateBrowseTexts dateBrowseTexts = GalleryDateBrowseTexts(
+      optionAll: 'new_library_browse_all'.tr(),
+      optionYear: 'new_library_browse_year'.tr(),
+      optionMonth: 'new_library_browse_month'.tr(),
+    );
 
     final gallery = PizGallery(
       source: source,
@@ -70,6 +75,8 @@ class NewLibraryPage extends ConsumerWidget {
       showDateOverlay: true,
       dateOverlayTextBuilder: buildDateOverlayLabel,
       sortFilterMenuTexts: sortFilterMenuTexts,
+      showDateBrowseOverlay: true,
+      dateBrowseTexts: dateBrowseTexts,
     );
 
     return CustomScrollView(
