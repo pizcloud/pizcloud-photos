@@ -887,6 +887,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (_dateBrowseMode == GalleryDateBrowseMode.all) {
       return const SizedBox.shrink();
     }
+    final _DateBrowseColorScheme colors = _DateBrowseColorScheme.fromPalette(
+      palette,
+    );
 
     final bool showYearList = _dateBrowseMode == GalleryDateBrowseMode.year;
     final List<_DateBrowseRowData> rows = showYearList
@@ -926,16 +929,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: <Color>[
-              palette.gridBackground.withValues(alpha: 0.98),
-              palette.gridBackground.withValues(alpha: 0.95),
-            ],
+            colors: <Color>[colors.panelGradientStart, colors.panelGradientEnd],
           ),
         ),
         child: Column(
           children: <Widget>[
             _buildDateBrowsePanelHeader(
-              palette: palette,
+              colors: colors,
               rowCount: rows.length,
               showYearList: showYearList,
             ),
@@ -950,7 +950,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                           const SizedBox(height: _dateBrowseRowSpacing),
                       itemBuilder: (context, index) {
                         final _DateBrowseRowData row = rows[index];
-                        return _buildDateBrowseRow(row: row, palette: palette);
+                        return _buildDateBrowseRow(row: row, colors: colors);
                       },
                     ),
             ),
@@ -961,7 +961,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   }
 
   Widget _buildDateBrowsePanelHeader({
-    required GridAppearancePalette palette,
+    required _DateBrowseColorScheme colors,
     required int rowCount,
     required bool showYearList,
   }) {
@@ -979,11 +979,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: palette.cellBackground.withValues(alpha: 0.56),
+          color: colors.headerBackground,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: palette.fpsBadgeText.withValues(alpha: 0.12),
-          ),
+          border: Border.all(color: colors.headerBorder),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -991,12 +989,16 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
             children: <Widget>[
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: palette.fpsBadgeBackground.withValues(alpha: 0.92),
+                  color: colors.headerIconBackground,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: Icon(icon, size: 16, color: palette.fpsBadgeText),
+                  child: Icon(
+                    icon,
+                    size: 16,
+                    color: colors.headerIconForeground,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1009,7 +1011,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: palette.fpsBadgeText,
+                        color: colors.headerTitle,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1020,7 +1022,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: palette.fpsBadgeText.withValues(alpha: 0.72),
+                        color: colors.headerSubtitle,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1070,12 +1072,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
   Widget _buildDateBrowseRow({
     required _DateBrowseRowData row,
-    required GridAppearancePalette palette,
+    required _DateBrowseColorScheme colors,
   }) {
     final bool isYearRow = row.kind == _DateBrowseRowKind.year;
     final Color accentColor = isYearRow
-        ? const Color(0xFF3B82F6)
-        : const Color(0xFF14B8A6);
+        ? colors.yearAccent
+        : colors.monthAccent;
     final String kindLabel = isYearRow
         ? widget.dateBrowseTexts.optionYear
         : widget.dateBrowseTexts.optionMonth;
@@ -1091,11 +1093,11 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: palette.cellBackground.withValues(alpha: 0.52),
+              color: colors.cardBackground,
               border: Border.all(color: accentColor.withValues(alpha: 0.24)),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: palette.fpsBadgeBackground.withValues(alpha: 0.12),
+                  color: colors.cardShadow,
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
@@ -1142,7 +1144,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: palette.fpsBadgeText,
+                            color: colors.primaryText,
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1155,14 +1157,14 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                   ? Icons.view_module_rounded
                                   : Icons.photo_library_outlined,
                               value: row.primaryStat,
-                              palette: palette,
+                              colors: colors,
                             ),
                             if (row.secondaryStat != null) ...<Widget>[
                               const SizedBox(width: 6),
                               _buildDateBrowseStatChip(
                                 icon: Icons.photo_rounded,
                                 value: row.secondaryStat!,
-                                palette: palette,
+                                colors: colors,
                               ),
                             ],
                           ],
@@ -1187,7 +1189,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                               rowKey: row.key,
                               previewIndex: previewIndex,
                               item: item,
-                              palette: palette,
+                              colors: colors,
                             ),
                           ),
                         );
@@ -1195,10 +1197,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: palette.fpsBadgeText.withValues(alpha: 0.7),
-                  ),
+                  Icon(Icons.chevron_right_rounded, color: colors.chevron),
                 ],
               ),
             ),
@@ -1211,11 +1210,11 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   Widget _buildDateBrowseStatChip({
     required IconData icon,
     required int value,
-    required GridAppearancePalette palette,
+    required _DateBrowseColorScheme colors,
   }) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: palette.fpsBadgeBackground.withValues(alpha: 0.85),
+        color: colors.chipBackground,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Padding(
@@ -1226,13 +1225,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
             Icon(
               icon,
               size: 11,
-              color: palette.fpsBadgeText.withValues(alpha: 0.9),
+              color: colors.chipForeground.withValues(alpha: 0.92),
             ),
             const SizedBox(width: 4),
             Text(
               '$value',
               style: TextStyle(
-                color: palette.fpsBadgeText,
+                color: colors.chipForeground,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 height: 1.0,
@@ -1248,12 +1247,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     required String rowKey,
     required int previewIndex,
     required MediaItem? item,
-    required GridAppearancePalette palette,
+    required _DateBrowseColorScheme colors,
   }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: ColoredBox(
-        color: palette.cellErrorBackground.withValues(alpha: 0.72),
+        color: colors.previewPlaceholder,
         child: item == null
             ? const SizedBox.expand()
             : LayoutBuilder(
@@ -2065,6 +2064,95 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           },
         );
       },
+    );
+  }
+}
+
+@immutable
+class _DateBrowseColorScheme {
+  const _DateBrowseColorScheme({
+    required this.panelGradientStart,
+    required this.panelGradientEnd,
+    required this.headerBackground,
+    required this.headerBorder,
+    required this.headerIconBackground,
+    required this.headerIconForeground,
+    required this.headerTitle,
+    required this.headerSubtitle,
+    required this.cardBackground,
+    required this.cardShadow,
+    required this.primaryText,
+    required this.secondaryText,
+    required this.yearAccent,
+    required this.monthAccent,
+    required this.chipBackground,
+    required this.chipForeground,
+    required this.chevron,
+    required this.previewPlaceholder,
+  });
+
+  final Color panelGradientStart;
+  final Color panelGradientEnd;
+  final Color headerBackground;
+  final Color headerBorder;
+  final Color headerIconBackground;
+  final Color headerIconForeground;
+  final Color headerTitle;
+  final Color headerSubtitle;
+  final Color cardBackground;
+  final Color cardShadow;
+  final Color primaryText;
+  final Color secondaryText;
+  final Color yearAccent;
+  final Color monthAccent;
+  final Color chipBackground;
+  final Color chipForeground;
+  final Color chevron;
+  final Color previewPlaceholder;
+
+  factory _DateBrowseColorScheme.fromPalette(GridAppearancePalette palette) {
+    final bool isDark = palette.brightness == Brightness.dark;
+    if (isDark) {
+      return const _DateBrowseColorScheme(
+        panelGradientStart: Color(0xF0141923),
+        panelGradientEnd: Color(0xF00F141C),
+        headerBackground: Color(0xCC1A2230),
+        headerBorder: Color(0x4D5C708A),
+        headerIconBackground: Color(0xF0263346),
+        headerIconForeground: Color(0xFFF3F4F6),
+        headerTitle: Color(0xFFF3F4F6),
+        headerSubtitle: Color(0xFF9CA3AF),
+        cardBackground: Color(0xCC192331),
+        cardShadow: Color(0x73000000),
+        primaryText: Color(0xFFF3F4F6),
+        secondaryText: Color(0xFF9CA3AF),
+        yearAccent: Color(0xFF60A5FA),
+        monthAccent: Color(0xFF2DD4BF),
+        chipBackground: Color(0xF01E293B),
+        chipForeground: Color(0xFFF9FAFB),
+        chevron: Color(0xFF94A3B8),
+        previewPlaceholder: Color(0xFF2A3342),
+      );
+    }
+    return const _DateBrowseColorScheme(
+      panelGradientStart: Color(0xF7F2F5FA),
+      panelGradientEnd: Color(0xF2ECEFF5),
+      headerBackground: Color(0xEBFFFFFF),
+      headerBorder: Color(0x1F111827),
+      headerIconBackground: Color(0xF01F2937),
+      headerIconForeground: Color(0xFFFFFFFF),
+      headerTitle: Color(0xFF111827),
+      headerSubtitle: Color(0xFF6B7280),
+      cardBackground: Color(0xEAFFFFFF),
+      cardShadow: Color(0x22111827),
+      primaryText: Color(0xFF111827),
+      secondaryText: Color(0xFF6B7280),
+      yearAccent: Color(0xFF2563EB),
+      monthAccent: Color(0xFF0D9488),
+      chipBackground: Color(0xF01F2937),
+      chipForeground: Color(0xFFFFFFFF),
+      chevron: Color(0xFF9CA3AF),
+      previewPlaceholder: Color(0xFFE5E7EB),
     );
   }
 }
