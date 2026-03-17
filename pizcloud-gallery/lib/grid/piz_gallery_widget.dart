@@ -117,6 +117,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const int _memoryCacheMaxBytes = _memoryCacheMaxMb * _bytesPerMb;
   static const int _memoryCacheSize50MaxBytes =
       _memoryCacheSize50MaxMb * _bytesPerMb;
+  static const Duration _jumpTargetIndicatorDuration = Duration(
+    milliseconds: 2800,
+  ); // new
   static const bool _skipIfWindowUnchanged = true;
   static const bool _enableCompactPending = true;
   static const int _compactFactor = 3;
@@ -163,6 +166,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   final ScrollController _yearBrowseController = ScrollController();
   final ScrollController _monthBrowseController = ScrollController();
   int? _pendingMonthBrowseScrollIndex;
+  int? _jumpTargetDataIndex;
+  String? _jumpTargetMonthLabel;
+  int _jumpTargetMarkerSeed = 0;
+  Timer? _jumpTargetHideTimer;
   // #new
 
   // =======================================================
@@ -260,6 +267,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _jumpTargetHideTimer?.cancel(); // new
+    _jumpTargetHideTimer = null; // new
     _sourceUpdatesSubscription?.cancel();
     _sourceUpdatesSubscription = null;
     if (_isInitialized) {
@@ -382,6 +391,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     final List<MediaItem> viewItems = _buildViewItems();
     // Keep original data pipeline intact; date-browse lists are derived only.
     _rebuildDateBrowseEntries(viewItems); // new
+    _clearJumpTargetIndicator(notify: false); // new
     _initRuntimeWith(MediaDataSource(viewItems));
     if (notify && mounted) {
       setState(() {});
@@ -572,6 +582,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (!widget.showDateBrowseOverlay || _dateBrowseMode == mode) {
       return;
     }
+    if (mode != GalleryDateBrowseMode.all) {
+      _clearJumpTargetIndicator(notify: false);
+    } // new
     setState(() {
       _dateBrowseMode = mode;
       if (mode != GalleryDateBrowseMode.month) {
@@ -587,6 +600,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (!widget.showDateBrowseOverlay) {
       return;
     }
+    _clearJumpTargetIndicator(notify: false); // new
     setState(() {
       _dateBrowseMode = GalleryDateBrowseMode.month;
       _pendingMonthBrowseScrollIndex = entry.firstMonthListIndex < 0
@@ -600,10 +614,44 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (!widget.showDateBrowseOverlay) {
       return;
     }
+    final String monthLabel = _formatMonthBrowseLabel(context, entry);
+    _jumpTargetHideTimer?.cancel();
     setState(() {
       _dateBrowseMode = GalleryDateBrowseMode.all;
+      _jumpTargetDataIndex = entry.firstDataIndex;
+      _jumpTargetMonthLabel = monthLabel;
+      _jumpTargetMarkerSeed += 1;
     });
+    _scheduleJumpTargetIndicatorHide();
     _jumpToDataIndex(entry.firstDataIndex);
+  }
+
+  void _scheduleJumpTargetIndicatorHide() {
+    _jumpTargetHideTimer = Timer(_jumpTargetIndicatorDuration, () {
+      if (!mounted) {
+        return;
+      }
+      _clearJumpTargetIndicator();
+    });
+  }
+
+  void _clearJumpTargetIndicator({bool notify = true}) {
+    _jumpTargetHideTimer?.cancel();
+    _jumpTargetHideTimer = null;
+    final bool hasIndicator =
+        _jumpTargetDataIndex != null || _jumpTargetMonthLabel != null;
+    if (!hasIndicator) {
+      return;
+    }
+    if (notify && mounted) {
+      setState(() {
+        _jumpTargetDataIndex = null;
+        _jumpTargetMonthLabel = null;
+      });
+    } else {
+      _jumpTargetDataIndex = null;
+      _jumpTargetMonthLabel = null;
+    }
   }
 
   void _scheduleMonthBrowseScroll() {
@@ -666,6 +714,116 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
         leftCol: leftCol,
       );
     });
+  }
+
+  ({int row, int col})? _resolveCellPositionForDataIndex(int dataIndex) {
+    final int cols = grid.targetColCount <= 0 ? 1 : grid.targetColCount;
+    if (cols <= 0 || cols >= grid.baseCells.length) {
+      return null;
+    }
+    final int baseCell = grid.baseCells[cols];
+    final int adjusted = dataIndex + baseCell;
+    final int logicalRow = (adjusted / cols).floor();
+    int col = adjusted % cols;
+    if (col < 0) {
+      col += cols;
+    }
+    final int row = logicalRow - grid.baseRow;
+    if (row < 0 || col < 0 || col >= grid.defaultColCount) {
+      return null;
+    }
+    return (row: row, col: col);
+  }
+
+  Widget _withJumpTargetMarker({
+    required Widget child,
+    required GridAppearancePalette palette,
+  }) {
+    final int? dataIndex = _jumpTargetDataIndex;
+    if (dataIndex == null || _dateBrowseMode != GalleryDateBrowseMode.all) {
+      return child;
+    }
+    if (!grid.isDataIndexInViewport(dataIndex, rowEpsilon: 0.6)) {
+      return child;
+    }
+    final ({int row, int col})? markerPosition =
+        _resolveCellPositionForDataIndex(dataIndex);
+    if (markerPosition == null) {
+      return child;
+    }
+    final bool isDark = palette.brightness == Brightness.dark;
+    final Color accent = isDark
+        ? const Color(0xFF60A5FA)
+        : const Color(0xFF2563EB);
+    return Stack(
+      children: <Widget>[
+        child,
+        Positioned(
+          left: markerPosition.col * grid.cellSize,
+          top: markerPosition.row * grid.cellSize,
+          child: IgnorePointer(
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey<int>(_jumpTargetMarkerSeed),
+              duration: const Duration(milliseconds: 420),
+              curve: Curves.easeOutCubic,
+              tween: Tween<double>(begin: 1.14, end: 1.0),
+              builder: (context, scale, _) {
+                return Transform.scale(
+                  scale: scale,
+                  child: SizedBox(
+                    width: grid.cellSize,
+                    height: grid.cellSize,
+                    child: Padding(
+                      padding: const EdgeInsets.all(1),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.92),
+                            width: 2.2,
+                          ),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: accent.withValues(alpha: 0.34),
+                              blurRadius: 12,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: palette.popupMenuBackground.withValues(
+                                  alpha: isDark ? 0.9 : 0.96,
+                                ),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: accent.withValues(alpha: 0.7),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(3),
+                                child: Icon(
+                                  Icons.my_location_rounded,
+                                  size: 10,
+                                  color: accent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
   // #new
 
@@ -959,6 +1117,69 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       ),
     );
   }
+
+  // new
+  Widget _buildJumpTargetHintChip(GridAppearancePalette palette) {
+    final int? dataIndex = _jumpTargetDataIndex;
+    final String? monthLabel = _jumpTargetMonthLabel;
+    if (dataIndex == null ||
+        monthLabel == null ||
+        _dateBrowseMode != GalleryDateBrowseMode.all) {
+      return const SizedBox.shrink();
+    }
+    final bool isDark = palette.brightness == Brightness.dark;
+    final Color accent = isDark
+        ? const Color(0xFF60A5FA)
+        : const Color(0xFF2563EB);
+    final double topOffset = widget.showDateOverlay ? 40 : 10;
+    return Positioned(
+      top: topOffset,
+      left: 12,
+      right: 12,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: palette.popupMenuBackground.withValues(
+                alpha: isDark ? 0.9 : 0.95,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: accent.withValues(alpha: 0.42)),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.38 : 0.14),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(Icons.my_location_rounded, size: 14, color: accent),
+                  const SizedBox(width: 6),
+                  Text(
+                    monthLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: palette.popupMenuItemText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  // #new
 
   Widget _buildDateBrowsePanelHeader({
     required _DateBrowseColorScheme colors,
@@ -1810,7 +2031,16 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final GridAppearancePalette palette = GridAppearancePalette.of(context);
+    // new
+    // final GridAppearancePalette palette = GridAppearancePalette.of(context);
+    final Brightness currentAppBrightness = Theme.of(context).brightness;
+    final GridAppearancePalette palette = GridAppearancePalette.of(
+      context,
+      mode: currentAppBrightness == Brightness.dark
+          ? GridAppearanceMode.dark
+          : GridAppearanceMode.light,
+    );
+    // #new
     if (_isBootstrapping) {
       return _buildLoadingState();
     }
@@ -1938,7 +2168,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                             );
                                           }
                                           if (!isFastScrolling) {
-                                            return _visibleCellsBuilder
+                                            // new
+                                            // return _visibleCellsBuilder.buildVisibleCells(...);
+                                            final Widget
+                                            visibleCells = _visibleCellsBuilder
                                                 .buildVisibleCells(
                                                   window: liveWindow,
                                                   enableReuseCell:
@@ -1957,8 +2190,14 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                                                 heroTag,
                                                           ),
                                                 );
+                                            return _withJumpTargetMarker(
+                                              child: visibleCells,
+                                              palette: palette,
+                                            );
+                                            // #new
                                           }
-                                          return Stack(
+                                          // new
+                                          final Widget fastCells = Stack(
                                             children: [
                                               _visibleCellsBuilder
                                                   .buildVisibleCells(
@@ -2001,6 +2240,11 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                                   ),
                                             ],
                                           );
+                                          return _withJumpTargetMarker(
+                                            child: fastCells,
+                                            palette: palette,
+                                          );
+                                          // #new
                                         },
                                       ),
                                       Colors.red,
@@ -2053,6 +2297,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                         preferAddedAt: _sortMode == GallerySortMode.addedAtDesc,
                       ),
                     ),
+                  _buildJumpTargetHintChip(palette), // new
                   if (widget.showDateBrowseOverlay)
                     _buildDateBrowsePanel(palette), // new
                   if (widget.showDateBrowseOverlay)
@@ -2114,8 +2359,8 @@ class _DateBrowseColorScheme {
     final bool isDark = palette.brightness == Brightness.dark;
     if (isDark) {
       return const _DateBrowseColorScheme(
-        panelGradientStart: Color(0xF0141923),
-        panelGradientEnd: Color(0xF00F141C),
+        panelGradientStart: Color.fromARGB(255, 20, 25, 35),
+        panelGradientEnd: Color.fromARGB(253, 15, 20, 28),
         headerBackground: Color(0xCC1A2230),
         headerBorder: Color(0x4D5C708A),
         headerIconBackground: Color(0xF0263346),
@@ -2135,8 +2380,8 @@ class _DateBrowseColorScheme {
       );
     }
     return const _DateBrowseColorScheme(
-      panelGradientStart: Color(0xF7F2F5FA),
-      panelGradientEnd: Color(0xF2ECEFF5),
+      panelGradientStart: Color(0xFFF9FBFF),
+      panelGradientEnd: Color(0xFFF3F6FB),
       headerBackground: Color(0xEBFFFFFF),
       headerBorder: Color(0x1F111827),
       headerIconBackground: Color(0xF01F2937),

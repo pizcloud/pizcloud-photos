@@ -52,7 +52,7 @@ extension _GridCellStateResolver on _GridCellState {
         GridThumbnailCacheManager.buildImageProvider(
           request.thumbUrl,
           decodeWidth: request.decodeSide,
-          decodeHeight: request.decodeSide,
+          decodeHeight: null,
         );
 
     if (_shownProvider == null || _shownRequest == null) {
