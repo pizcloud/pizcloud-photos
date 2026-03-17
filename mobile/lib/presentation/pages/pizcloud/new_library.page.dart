@@ -1,10 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/widgets.dart';
+import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
+import 'package:immich_mobile/domain/models/setting.model.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_action_runner.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_actions.dart';
+import 'package:immich_mobile/providers/infrastructure/setting.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
@@ -21,6 +24,7 @@ class NewLibraryPage extends ConsumerWidget {
     final reselectSignal = ref.watch(newLibraryReselectSignalProvider);
     final groupBy = ref.watch(timelineFactoryProvider).groupBy;
     final runner = NewLibraryViewerActionRunner(ref: ref, source: source);
+    final showStorageIndicator = ref.watch(settingsProvider.select((s) => s.get(Setting.showStorageIndicator)));
     final String localeTag = Localizations.localeOf(context).toLanguageTag();
 
     String? buildDateOverlayLabel(MediaItem item) {
@@ -77,6 +81,23 @@ class NewLibraryPage extends ConsumerWidget {
       sortFilterMenuTexts: sortFilterMenuTexts,
       showDateBrowseOverlay: true,
       dateBrowseTexts: dateBrowseTexts,
+      showStorageIndicator: showStorageIndicator,
+      storageIndicatorResolver: (item) {
+        final BaseAsset? asset = source.findAssetByMediaItemId(item.id);
+        if (asset != null) {
+          return switch (asset.storage) {
+            AssetState.local => GridStorageIndicatorState.local,
+            AssetState.remote => GridStorageIndicatorState.remote,
+            AssetState.merged => GridStorageIndicatorState.merged,
+          };
+        }
+
+        // inferred from sourceType only.
+        return switch (item.sourceType) {
+          MediaSourceType.local => GridStorageIndicatorState.local,
+          MediaSourceType.remote => GridStorageIndicatorState.remote,
+        };
+      },
     );
 
     return CustomScrollView(

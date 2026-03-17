@@ -9,6 +9,7 @@ import 'lru_bytes_cache.dart';
 import 'media_data_source.dart';
 import 'media_hero_tag.dart';
 import 'media_item.dart';
+import 'storage_indicator.dart'; // new
 import 'sources/local_device_media_uri.dart';
 import 'reuse_grid_cell.dart';
 
@@ -18,6 +19,8 @@ class GridVisibleCellsBuilder {
   final GridCellPool cellPool;
   final bool showDebugOutOfRangeCells;
   final LruBytesCache bytesCache;
+  final bool showStorageIndicator; // new
+  final GridStorageIndicatorResolver? storageIndicatorResolver; // new
 
   GridVisibleCellsBuilder({
     required this.grid,
@@ -25,6 +28,8 @@ class GridVisibleCellsBuilder {
     required this.cellPool,
     required this.showDebugOutOfRangeCells,
     required this.bytesCache,
+    this.showStorageIndicator = false, // new
+    this.storageIndicatorResolver, // new
   });
 
   Widget buildVisibleCells({
@@ -229,6 +234,10 @@ class GridVisibleCellsBuilder {
     }
 
     final mediaItem = mediaDataSource.itemAtDataIndex(index);
+    final GridStorageIndicatorState? storageIndicatorState =
+        showStorageIndicator && mediaItem != null
+        ? storageIndicatorResolver?.call(mediaItem)
+        : null; // new
     final int? thumbEdge = mediaItem == null
         ? null
         : ((thumbEdgeOverride != null && thumbEdgeOverride > 0)
@@ -254,6 +263,7 @@ class GridVisibleCellsBuilder {
       currentColCount: currentColCount,
       targetColCount: targetColCount,
       preferTargetColCount: preferTargetColCount,
+      storageIndicatorState: storageIndicatorState, // new
     );
   }
 

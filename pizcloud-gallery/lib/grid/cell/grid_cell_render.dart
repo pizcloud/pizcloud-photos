@@ -216,10 +216,21 @@ extension _GridCellStateRender on _GridCellState {
     required GridAppearancePalette palette,
     required Widget image,
   }) {
+    final GridStorageIndicatorState? storageIndicatorState =
+        widget.data.storageIndicatorState; // new
     return Stack(
       fit: StackFit.expand,
       children: [
         image,
+        // new
+        if (storageIndicatorState != null)
+          Positioned(
+            right: 4,
+            // Keep distance when the video duration chip is present.
+            bottom: media.isVideo ? 24 : 4,
+            child: _buildStorageIndicatorIcon(storageIndicatorState, palette),
+          ),
+        // #new
         if (media.isVideo)
           Positioned(
             right: 4,
@@ -235,6 +246,31 @@ extension _GridCellStateRender on _GridCellState {
       ],
     );
   }
+
+  // new
+  Widget _buildStorageIndicatorIcon(
+    GridStorageIndicatorState state,
+    GridAppearancePalette palette,
+  ) {
+    final IconData icon = switch (state) {
+      GridStorageIndicatorState.local => Icons.cloud_off_outlined,
+      GridStorageIndicatorState.remote => Icons.cloud_outlined,
+      GridStorageIndicatorState.merged => Icons.cloud_done_outlined,
+    };
+    return Icon(
+      icon,
+      size: 16,
+      color: palette.mediaOverlayIcon.withValues(alpha: 0.88),
+      shadows: const <Shadow>[
+        Shadow(
+          blurRadius: 5.0,
+          color: Color.fromRGBO(0, 0, 0, 0.6),
+          offset: Offset(0.0, 0.0),
+        ),
+      ],
+    );
+  }
+  // #new
 
   Widget _buildVideoAwareFallback(
     MediaItem media,

@@ -23,6 +23,7 @@ import 'package:pizcloud_gallery/grid/local_thumb_request_queue.dart';
 import 'package:pizcloud_gallery/grid/media_data_source.dart';
 import 'package:pizcloud_gallery/grid/media_item.dart';
 import 'package:pizcloud_gallery/grid/piz_gallery_source.dart';
+import 'package:pizcloud_gallery/grid/storage_indicator.dart'; // new
 import 'package:pizcloud_gallery/grid/grid_state.dart';
 import 'package:pizcloud_gallery/grid/grid_state_helper.dart';
 import 'package:pizcloud_gallery/grid/lru_bytes_cache.dart';
@@ -59,6 +60,8 @@ class PizGallery extends StatefulWidget {
   final GallerySortFilterMenuTexts sortFilterMenuTexts;
   final bool showDateBrowseOverlay;
   final GalleryDateBrowseTexts dateBrowseTexts;
+  final bool showStorageIndicator; // new
+  final GridStorageIndicatorResolver? storageIndicatorResolver; // new
   // #new
 
   const PizGallery({
@@ -83,6 +86,8 @@ class PizGallery extends StatefulWidget {
     this.sortFilterMenuTexts = const GallerySortFilterMenuTexts.defaults(),
     this.showDateBrowseOverlay = false,
     this.dateBrowseTexts = const GalleryDateBrowseTexts.defaults(),
+    this.showStorageIndicator = false,
+    this.storageIndicatorResolver,
     // #new
   });
 
@@ -364,6 +369,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       cellPool: _cellPool,
       showDebugOutOfRangeCells: _showDebugOutOfRangeCells,
       bytesCache: _bytesCache,
+      showStorageIndicator: widget.showStorageIndicator, // new
+      storageIndicatorResolver: widget.storageIndicatorResolver, // new
     );
     _gestureController = GridGestureController(
       grid: grid,
@@ -1511,6 +1518,25 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (oldWidget.enableReuseCell && !widget.enableReuseCell) {
       _cellPool.clear();
     }
+    // new
+    if (_isInitialized &&
+        (oldWidget.showStorageIndicator != widget.showStorageIndicator ||
+            oldWidget.storageIndicatorResolver !=
+                widget.storageIndicatorResolver)) {
+      _visibleCellsBuilder = GridVisibleCellsBuilder(
+        grid: grid,
+        mediaDataSource: mediaDataSource,
+        cellPool: _cellPool,
+        showDebugOutOfRangeCells: _showDebugOutOfRangeCells,
+        bytesCache: _bytesCache,
+        showStorageIndicator: widget.showStorageIndicator,
+        storageIndicatorResolver: widget.storageIndicatorResolver,
+      );
+      _cellPool.clear();
+      // storage indicator wasn't wired into the new grid.
+      setState(() {});
+    }
+    // #new
     if (oldWidget.source != widget.source) {
       unawaited(oldWidget.source.dispose());
       setState(() {

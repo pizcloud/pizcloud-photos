@@ -1,6 +1,7 @@
 export 'media_item.dart';
 export 'piz_gallery_widget.dart';
 export 'piz_gallery_source.dart';
+export 'storage_indicator.dart';
 export 'sources/callback_gallery_source.dart';
 export 'sources/hybrid_gallery_source.dart';
 export 'sources/local_database_gallery_source.dart';

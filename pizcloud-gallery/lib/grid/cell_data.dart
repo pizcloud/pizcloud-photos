@@ -1,4 +1,5 @@
 import 'media_item.dart';
+import 'storage_indicator.dart'; // new
 
 class CellData {
   final String id;
@@ -11,6 +12,7 @@ class CellData {
   final int? currentColCount;
   final int? targetColCount;
   final bool preferTargetColCount;
+  final GridStorageIndicatorState? storageIndicatorState; // new
 
   CellData({
     required this.id,
@@ -23,6 +25,7 @@ class CellData {
     this.currentColCount,
     this.targetColCount,
     this.preferTargetColCount = true,
+    this.storageIndicatorState, // new
   });
 
   bool sameVisual(CellData other) {
@@ -35,6 +38,7 @@ class CellData {
         thumbUrl == other.thumbUrl &&
         currentColCount == other.currentColCount &&
         targetColCount == other.targetColCount &&
-        preferTargetColCount == other.preferTargetColCount;
+        preferTargetColCount == other.preferTargetColCount &&
+        storageIndicatorState == other.storageIndicatorState; // new
   }
 }

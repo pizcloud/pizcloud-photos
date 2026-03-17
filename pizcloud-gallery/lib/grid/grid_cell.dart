@@ -15,6 +15,7 @@ import './lru_bytes_cache.dart';
 import './media_hero_flight.dart';
 import './media_hero_tag.dart';
 import './media_item.dart';
+import './storage_indicator.dart'; // new
 import 'sources/local_device_media_uri.dart';
 
 part 'cell/grid_cell_models.dart';
