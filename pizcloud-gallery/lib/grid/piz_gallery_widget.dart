@@ -171,6 +171,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   final ScrollController _yearBrowseController = ScrollController();
   final ScrollController _monthBrowseController = ScrollController();
   int? _pendingMonthBrowseScrollIndex;
+  int? _pendingMonthBrowseYear;
   int? _jumpTargetDataIndex;
   String? _jumpTargetMonthLabel;
   int _jumpTargetMarkerSeed = 0;
@@ -474,25 +475,34 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       }
     }
 
-    _yearBrowseEntries = yearsByKey.values
-        .map(
-          (entry) => _DateBrowseYearEntry(
-            year: entry.year,
-            firstDataIndex: entry.firstDataIndex,
-            firstMonthListIndex: entry.firstMonthListIndex,
-            monthCount: entry.monthCount,
-            totalItemCount: entry.totalItemCount,
-            previewItems: List<MediaItem>.unmodifiable(entry.previewItems),
-          ),
-        )
-        .toList(growable: false);
-
     _monthBrowseEntries = monthsByKey.values
         .map(
           (entry) => _DateBrowseMonthEntry(
             year: entry.year,
             month: entry.month,
             firstDataIndex: entry.firstDataIndex,
+            totalItemCount: entry.totalItemCount,
+            previewItems: List<MediaItem>.unmodifiable(entry.previewItems),
+          ),
+        )
+        .toList(growable: false);
+
+    final Map<int, int> firstMonthIndexByYear = <int, int>{};
+    for (int index = 0; index < _monthBrowseEntries.length; index++) {
+      firstMonthIndexByYear.putIfAbsent(
+        _monthBrowseEntries[index].year,
+        () => index,
+      );
+    }
+
+    _yearBrowseEntries = yearsByKey.values
+        .map(
+          (entry) => _DateBrowseYearEntry(
+            year: entry.year,
+            firstDataIndex: entry.firstDataIndex,
+            firstMonthListIndex:
+                firstMonthIndexByYear[entry.year] ?? entry.firstMonthListIndex,
+            monthCount: entry.monthCount,
             totalItemCount: entry.totalItemCount,
             previewItems: List<MediaItem>.unmodifiable(entry.previewItems),
           ),
@@ -596,6 +606,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _dateBrowseMode = mode;
       if (mode != GalleryDateBrowseMode.month) {
         _pendingMonthBrowseScrollIndex = null;
+        _pendingMonthBrowseYear = null;
       }
     });
     if (mode == GalleryDateBrowseMode.month) {
@@ -610,6 +621,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _clearJumpTargetIndicator(notify: false); // new
     setState(() {
       _dateBrowseMode = GalleryDateBrowseMode.month;
+      _pendingMonthBrowseYear = entry.year;
       _pendingMonthBrowseScrollIndex = entry.firstMonthListIndex < 0
           ? null
           : entry.firstMonthListIndex;
@@ -671,8 +683,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   }
 
   void _applyPendingMonthBrowseScroll() {
-    final int? index = _pendingMonthBrowseScrollIndex;
-    if (index == null || index < 0) {
+    final int? resolvedIndex = _resolvePendingMonthBrowseScrollIndex();
+    if (resolvedIndex == null || resolvedIndex < 0) {
+      _pendingMonthBrowseScrollIndex = null;
+      _pendingMonthBrowseYear = null;
       return;
     }
     if (!_monthBrowseController.hasClients) {
@@ -680,22 +694,39 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       return;
     }
     _pendingMonthBrowseScrollIndex = null;
+    _pendingMonthBrowseYear = null;
     const double rowExtent = _dateBrowseRowHeight + _dateBrowseRowSpacing;
     final ScrollPosition position = _monthBrowseController.position;
-    final double targetOffset = (index * rowExtent).clamp(
+    final double targetOffset = (resolvedIndex * rowExtent).clamp(
       0.0,
       position.maxScrollExtent,
     );
     if ((position.pixels - targetOffset).abs() < 0.5) {
       return;
     }
-    unawaited(
-      _monthBrowseController.animateTo(
-        targetOffset,
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    // smooth behavior:
+    // unawaited(
+    //   _monthBrowseController.animateTo(
+    //     targetOffset,
+    //     duration: const Duration(milliseconds: 260),
+    //     curve: Curves.easeOutCubic,
+    //   ),
+    // );
+    _monthBrowseController.jumpTo(targetOffset);
+  }
+
+  int? _resolvePendingMonthBrowseScrollIndex() {
+    final int? pendingYear = _pendingMonthBrowseYear;
+    if (pendingYear != null) {
+      final int resolvedByYear = _monthBrowseEntries.indexWhere(
+        (entry) => entry.year == pendingYear,
+      );
+      if (resolvedByYear >= 0) {
+        return resolvedByYear;
+      }
+      return null;
+    }
+    return _pendingMonthBrowseScrollIndex;
   }
 
   void _jumpToDataIndex(int dataIndex) {
