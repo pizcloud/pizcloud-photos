@@ -127,7 +127,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     milliseconds: 2800,
   ); // new
   static const Duration _selectedYearAnchorPulseDuration = Duration(
-    milliseconds: 1100,
+    milliseconds: 2000,
   ); // new
   static const int _maxPendingMonthBrowseScrollRetries = 8; // new
   static const bool _skipIfWindowUnchanged = true;
@@ -713,11 +713,16 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   void _scheduleSelectedYearAnchorPulseHide() {
     _selectedYearAnchorPulseTimer?.cancel();
     _selectedYearAnchorPulseTimer = Timer(_selectedYearAnchorPulseDuration, () {
-      if (!mounted || !_selectedYearAnchorPulseActive) {
+      if (!mounted) {
+        return;
+      }
+      if (!_selectedYearAnchorPulseActive &&
+          _selectedYearBrowseAnchor == null) {
         return;
       }
       setState(() {
         _selectedYearAnchorPulseActive = false;
+        _selectedYearBrowseAnchor = null;
       });
     });
   }
@@ -1375,44 +1380,44 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-              if (selectedYearAnchor != null) ...<Widget>[
-                const SizedBox(width: 8),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.yearAccent.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: colors.yearAccent.withValues(alpha: 0.42),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 5,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Icon(
-                          Icons.my_location_rounded,
-                          size: 11,
-                          color: colors.yearAccent,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${widget.dateBrowseTexts.optionYear}: $selectedYearAnchor',
-                          style: TextStyle(
-                            color: colors.primaryText,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            height: 1.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              // if (selectedYearAnchor != null) ...<Widget>[
+              //   const SizedBox(width: 8),
+              //   DecoratedBox(
+              //     decoration: BoxDecoration(
+              //       color: colors.yearAccent.withValues(alpha: 0.16),
+              //       borderRadius: BorderRadius.circular(999),
+              //       border: Border.all(
+              //         color: colors.yearAccent.withValues(alpha: 0.42),
+              //       ),
+              //     ),
+              //     child: Padding(
+              //       padding: const EdgeInsets.symmetric(
+              //         horizontal: 8,
+              //         vertical: 5,
+              //       ),
+              //       child: Row(
+              //         mainAxisSize: MainAxisSize.min,
+              //         children: <Widget>[
+              //           Icon(
+              //             Icons.my_location_rounded,
+              //             size: 11,
+              //             color: colors.yearAccent,
+              //           ),
+              //           const SizedBox(width: 4),
+              //           Text(
+              //             '${widget.dateBrowseTexts.optionYear}: $selectedYearAnchor',
+              //             style: TextStyle(
+              //               color: colors.primaryText,
+              //               fontSize: 11,
+              //               fontWeight: FontWeight.w700,
+              //               height: 1.0,
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ],
             ],
           ),
         ),
@@ -1482,23 +1487,23 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              color: isSelectedYearAnchorRow
-                  ? accentColor.withValues(
-                      alpha: showSelectedYearAnchorPulse ? 0.18 : 0.1,
-                    )
-                  : Colors.transparent,
-              border: Border(
-                left: BorderSide(
-                  color: isSelectedYearAnchorRow
-                      ? accentColor.withValues(
-                          alpha: showSelectedYearAnchorPulse ? 0.98 : 0.74,
-                        )
-                      : Colors.transparent,
-                  width: isSelectedYearAnchorRow ? 3 : 0,
-                ),
-              ),
-            ),
+            // decoration: BoxDecoration(
+            //   color: isSelectedYearAnchorRow
+            //       ? accentColor.withValues(
+            //           alpha: showSelectedYearAnchorPulse ? 0.18 : 0.1,
+            //         )
+            //       : Colors.transparent,
+            //   // border: Border(
+            //   //   left: BorderSide(
+            //   //     color: isSelectedYearAnchorRow
+            //   //         ? accentColor.withValues(
+            //   //             alpha: showSelectedYearAnchorPulse ? 0.98 : 0.74,
+            //   //           )
+            //   //         : Colors.transparent,
+            //   //     width: isSelectedYearAnchorRow ? 3 : 0,
+            //   //   ),
+            //   // ),
+            // ),
             child: Padding(
               // padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1515,16 +1520,6 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                           size: 14,
                           color: accentColor,
                         ),
-                        if (isSelectedYearAnchorRow) ...<Widget>[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.my_location_rounded,
-                            size: 12,
-                            color: accentColor.withValues(
-                              alpha: showSelectedYearAnchorPulse ? 1 : 0.9,
-                            ),
-                          ),
-                        ],
                         const SizedBox(width: 6),
                         Flexible(
                           child: Row(
@@ -1564,6 +1559,16 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                             ],
                           ),
                         ),
+                        if (isSelectedYearAnchorRow) ...<Widget>[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.my_location_rounded,
+                            size: 12,
+                            color: accentColor.withValues(
+                              alpha: showSelectedYearAnchorPulse ? 1 : 0.9,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
