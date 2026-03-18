@@ -129,7 +129,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const Duration _selectedYearAnchorPulseDuration = Duration(
     milliseconds: 2000,
   ); // new
-  static const int _maxPendingMonthBrowseScrollRetries = 8; // new
+  static const Duration _pendingMonthBrowseScrollTimeout = Duration(
+    milliseconds: 1800,
+  ); // new
+  static const double _pendingMonthBrowseTopTolerance = 0.5; // new
+  static const double _dateBrowseListBaseBottomPadding = 110; // new
+  static const double _dateBrowseTopAlignPaddingSlack = 8; // new
   static const bool _skipIfWindowUnchanged = true;
   static const bool _enableCompactPending = true;
   static const int _compactFactor = 3;
@@ -177,7 +182,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   final ScrollController _monthBrowseController = ScrollController();
   int? _pendingMonthBrowseScrollIndex;
   int? _pendingMonthBrowseYear;
-  int _pendingMonthBrowseScrollRetryCount = 0;
+  DateTime? _pendingMonthBrowseScrollStartedAt;
   int? _selectedYearBrowseAnchor;
   bool _selectedYearAnchorPulseActive = false;
   int? _jumpTargetDataIndex;
@@ -627,9 +632,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     setState(() {
       _dateBrowseMode = mode;
       if (mode != GalleryDateBrowseMode.month) {
-        _pendingMonthBrowseScrollIndex = null;
-        _pendingMonthBrowseYear = null;
-        _pendingMonthBrowseScrollRetryCount = 0;
+        _clearPendingMonthBrowseScroll();
       }
       if (mode == GalleryDateBrowseMode.all) {
         _selectedYearBrowseAnchor = null;
@@ -640,6 +643,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     });
     if (mode == GalleryDateBrowseMode.month) {
       _scheduleMonthBrowseScroll();
+    } else if (mode == GalleryDateBrowseMode.year) {
+      _scheduleYearBrowseScrollToTop();
     }
   }
 
@@ -654,7 +659,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _pendingMonthBrowseScrollIndex = entry.firstMonthListIndex < 0
           ? null
           : entry.firstMonthListIndex;
-      _pendingMonthBrowseScrollRetryCount = 0;
+      _pendingMonthBrowseScrollStartedAt = DateTime.now();
       _selectedYearBrowseAnchor = entry.year;
       _selectedYearAnchorPulseActive = true;
     });
@@ -666,6 +671,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (!widget.showDateBrowseOverlay) {
       return;
     }
+    _clearPendingMonthBrowseScroll();
     final String monthLabel = _formatMonthBrowseLabel(context, entry);
     _jumpTargetHideTimer?.cancel();
     setState(() {
@@ -727,6 +733,26 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     });
   }
 
+  void _scheduleYearBrowseScrollToTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _dateBrowseMode != GalleryDateBrowseMode.year) {
+        return;
+      }
+      if (_yearBrowseEntries.isEmpty) {
+        return;
+      }
+      if (!_yearBrowseController.hasClients) {
+        _scheduleYearBrowseScrollToTop();
+        return;
+      }
+      final ScrollPosition position = _yearBrowseController.position;
+      if (position.pixels.abs() <= _pendingMonthBrowseTopTolerance) {
+        return;
+      }
+      _yearBrowseController.jumpTo(0);
+    });
+  }
+
   void _scheduleMonthBrowseScroll() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -736,15 +762,44 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     });
   }
 
+  void _clearPendingMonthBrowseScroll() {
+    _pendingMonthBrowseScrollIndex = null;
+    _pendingMonthBrowseYear = null;
+    _pendingMonthBrowseScrollStartedAt = null;
+  }
+
+  bool _isPendingMonthBrowseScrollExpired() {
+    final DateTime? startedAt = _pendingMonthBrowseScrollStartedAt;
+    if (startedAt == null) {
+      return false;
+    }
+    return DateTime.now().difference(startedAt) >=
+        _pendingMonthBrowseScrollTimeout;
+  }
+
   void _applyPendingMonthBrowseScroll() {
+    if (_dateBrowseMode != GalleryDateBrowseMode.month) {
+      _clearPendingMonthBrowseScroll();
+      return;
+    }
+    if (_pendingMonthBrowseYear == null &&
+        _pendingMonthBrowseScrollIndex == null) {
+      return;
+    }
     final int? resolvedIndex = _resolvePendingMonthBrowseScrollIndex();
     if (resolvedIndex == null || resolvedIndex < 0) {
-      _pendingMonthBrowseScrollIndex = null;
-      _pendingMonthBrowseYear = null;
-      _pendingMonthBrowseScrollRetryCount = 0;
+      if (_isPendingMonthBrowseScrollExpired()) {
+        _clearPendingMonthBrowseScroll();
+        return;
+      }
+      _scheduleMonthBrowseScroll();
       return;
     }
     if (!_monthBrowseController.hasClients) {
+      if (_isPendingMonthBrowseScrollExpired()) {
+        _clearPendingMonthBrowseScroll();
+        return;
+      }
       _scheduleMonthBrowseScroll();
       return;
     }
@@ -755,14 +810,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     const double rowExtent = _dateBrowseRowHeight + _dateBrowseRowSpacing;
     final ScrollPosition position = _monthBrowseController.position;
     final double rowStartOffset = resolvedIndex * rowExtent;
-    final double rowEndOffset = rowStartOffset + _dateBrowseRowHeight;
     final double targetOffset = rowStartOffset.clamp(
       0.0,
       position.maxScrollExtent,
     );
-    if ((position.pixels - targetOffset).abs() < 0.5) {
-      // Continue below to verify actual row visibility and retry if needed.
-    } else {
+    if ((position.pixels - targetOffset).abs() >
+        _pendingMonthBrowseTopTolerance) {
       // smooth behavior:
       // unawaited(
       //   _monthBrowseController.animateTo(
@@ -774,26 +827,20 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _monthBrowseController.jumpTo(targetOffset);
     }
 
-    final double viewportStart = position.pixels;
-    final double viewportEnd = viewportStart + position.viewportDimension;
-    final bool targetRowVisible =
-        rowStartOffset <= viewportEnd + 0.5 &&
-        rowEndOffset >= viewportStart - 0.5;
-    if (targetRowVisible) {
-      _pendingMonthBrowseScrollIndex = null;
-      _pendingMonthBrowseYear = null;
-      _pendingMonthBrowseScrollRetryCount = 0;
+    final double currentPixels = _monthBrowseController.position.pixels;
+    final bool alignedAtTop =
+        (currentPixels - rowStartOffset).abs() <=
+        _pendingMonthBrowseTopTolerance;
+    if (alignedAtTop) {
+      _clearPendingMonthBrowseScroll();
       return;
     }
 
-    final int nextRetry = _pendingMonthBrowseScrollRetryCount + 1;
-    if (nextRetry >= _maxPendingMonthBrowseScrollRetries) {
-      _pendingMonthBrowseScrollIndex = null;
-      _pendingMonthBrowseYear = null;
-      _pendingMonthBrowseScrollRetryCount = 0;
+    if (_isPendingMonthBrowseScrollExpired()) {
+      _clearPendingMonthBrowseScroll();
       return;
     }
-    _pendingMonthBrowseScrollRetryCount = nextRetry;
+
     _scheduleMonthBrowseScroll();
   }
 
@@ -806,7 +853,6 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       if (resolvedByYear >= 0) {
         return resolvedByYear;
       }
-      _pendingMonthBrowseScrollRetryCount = 0;
       return null;
     }
     return _pendingMonthBrowseScrollIndex;
@@ -1238,15 +1284,42 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
             Expanded(
               child: rows.isEmpty
                   ? const Center(child: Text('No data for the current filter'))
-                  : ListView.separated(
-                      controller: controller,
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 110),
-                      itemCount: rows.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: _dateBrowseRowSpacing),
-                      itemBuilder: (context, index) {
-                        final _DateBrowseRowData row = rows[index];
-                        return _buildDateBrowseRow(row: row, colors: colors);
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double viewportHeight = constraints.maxHeight;
+                        final double topAlignBottomPadding = showYearList
+                            ? _dateBrowseListBaseBottomPadding
+                            : math.max(
+                                _dateBrowseListBaseBottomPadding,
+                                math.max(
+                                  0,
+                                  viewportHeight.isFinite
+                                      ? viewportHeight -
+                                            _dateBrowseRowHeight +
+                                            _dateBrowseTopAlignPaddingSlack
+                                      : 0,
+                                ),
+                              );
+                        return ListView.separated(
+                          controller: controller,
+                          // padding: const EdgeInsets.fromLTRB(0, 0, 0, 110),
+                          padding: EdgeInsets.fromLTRB(
+                            0,
+                            0,
+                            0,
+                            topAlignBottomPadding,
+                          ),
+                          itemCount: rows.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: _dateBrowseRowSpacing),
+                          itemBuilder: (context, index) {
+                            final _DateBrowseRowData row = rows[index];
+                            return _buildDateBrowseRow(
+                              row: row,
+                              colors: colors,
+                            );
+                          },
+                        );
                       },
                     ),
             ),
