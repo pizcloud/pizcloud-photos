@@ -126,6 +126,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const Duration _jumpTargetIndicatorDuration = Duration(
     milliseconds: 2800,
   ); // new
+  static const Duration _selectedYearAnchorPulseDuration = Duration(
+    milliseconds: 1100,
+  ); // new
+  static const int _maxPendingMonthBrowseScrollRetries = 8; // new
   static const bool _skipIfWindowUnchanged = true;
   static const bool _enableCompactPending = true;
   static const int _compactFactor = 3;
@@ -173,10 +177,14 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   final ScrollController _monthBrowseController = ScrollController();
   int? _pendingMonthBrowseScrollIndex;
   int? _pendingMonthBrowseYear;
+  int _pendingMonthBrowseScrollRetryCount = 0;
+  int? _selectedYearBrowseAnchor;
+  bool _selectedYearAnchorPulseActive = false;
   int? _jumpTargetDataIndex;
   String? _jumpTargetMonthLabel;
   int _jumpTargetMarkerSeed = 0;
   Timer? _jumpTargetHideTimer;
+  Timer? _selectedYearAnchorPulseTimer;
   // #new
 
   // =======================================================
@@ -276,6 +284,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   void dispose() {
     _jumpTargetHideTimer?.cancel(); // new
     _jumpTargetHideTimer = null; // new
+    _selectedYearAnchorPulseTimer?.cancel(); // new
+    _selectedYearAnchorPulseTimer = null; // new
     _sourceUpdatesSubscription?.cancel();
     _sourceUpdatesSubscription = null;
     if (_isInitialized) {
@@ -509,6 +519,17 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           ),
         )
         .toList(growable: false);
+
+    // Keep selected-year anchor stable by year key; clear only when missing.
+    if (_selectedYearBrowseAnchor != null &&
+        !_yearBrowseEntries.any(
+          (entry) => entry.year == _selectedYearBrowseAnchor,
+        )) {
+      _selectedYearAnchorPulseTimer?.cancel();
+      _selectedYearAnchorPulseTimer = null;
+      _selectedYearBrowseAnchor = null;
+      _selectedYearAnchorPulseActive = false;
+    }
   }
   // #new
 
@@ -608,6 +629,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       if (mode != GalleryDateBrowseMode.month) {
         _pendingMonthBrowseScrollIndex = null;
         _pendingMonthBrowseYear = null;
+        _pendingMonthBrowseScrollRetryCount = 0;
+      }
+      if (mode == GalleryDateBrowseMode.all) {
+        _selectedYearBrowseAnchor = null;
+        _selectedYearAnchorPulseActive = false;
+        _selectedYearAnchorPulseTimer?.cancel();
+        _selectedYearAnchorPulseTimer = null;
       }
     });
     if (mode == GalleryDateBrowseMode.month) {
@@ -626,8 +654,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _pendingMonthBrowseScrollIndex = entry.firstMonthListIndex < 0
           ? null
           : entry.firstMonthListIndex;
+      _pendingMonthBrowseScrollRetryCount = 0;
+      _selectedYearBrowseAnchor = entry.year;
+      _selectedYearAnchorPulseActive = true;
     });
     _scheduleMonthBrowseScroll();
+    _scheduleSelectedYearAnchorPulseHide();
   }
 
   void _handleMonthBrowseRowTap(_DateBrowseMonthEntry entry) {
@@ -641,7 +673,11 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _jumpTargetDataIndex = entry.firstDataIndex;
       _jumpTargetMonthLabel = monthLabel;
       _jumpTargetMarkerSeed += 1;
+      _selectedYearBrowseAnchor = null;
+      _selectedYearAnchorPulseActive = false;
     });
+    _selectedYearAnchorPulseTimer?.cancel();
+    _selectedYearAnchorPulseTimer = null;
     _scheduleJumpTargetIndicatorHide();
     _jumpToDataIndex(entry.firstDataIndex);
   }
@@ -674,6 +710,18 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     }
   }
 
+  void _scheduleSelectedYearAnchorPulseHide() {
+    _selectedYearAnchorPulseTimer?.cancel();
+    _selectedYearAnchorPulseTimer = Timer(_selectedYearAnchorPulseDuration, () {
+      if (!mounted || !_selectedYearAnchorPulseActive) {
+        return;
+      }
+      setState(() {
+        _selectedYearAnchorPulseActive = false;
+      });
+    });
+  }
+
   void _scheduleMonthBrowseScroll() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -688,32 +736,60 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (resolvedIndex == null || resolvedIndex < 0) {
       _pendingMonthBrowseScrollIndex = null;
       _pendingMonthBrowseYear = null;
+      _pendingMonthBrowseScrollRetryCount = 0;
       return;
     }
     if (!_monthBrowseController.hasClients) {
       _scheduleMonthBrowseScroll();
       return;
     }
-    _pendingMonthBrowseScrollIndex = null;
-    _pendingMonthBrowseYear = null;
+    // Old behavior:
+    // _pendingMonthBrowseScrollIndex = null;
+    // _pendingMonthBrowseYear = null;
+    // Keep pending target until the row is actually visible in viewport.
     const double rowExtent = _dateBrowseRowHeight + _dateBrowseRowSpacing;
     final ScrollPosition position = _monthBrowseController.position;
-    final double targetOffset = (resolvedIndex * rowExtent).clamp(
+    final double rowStartOffset = resolvedIndex * rowExtent;
+    final double rowEndOffset = rowStartOffset + _dateBrowseRowHeight;
+    final double targetOffset = rowStartOffset.clamp(
       0.0,
       position.maxScrollExtent,
     );
     if ((position.pixels - targetOffset).abs() < 0.5) {
+      // Continue below to verify actual row visibility and retry if needed.
+    } else {
+      // smooth behavior:
+      // unawaited(
+      //   _monthBrowseController.animateTo(
+      //     targetOffset,
+      //     duration: const Duration(milliseconds: 260),
+      //     curve: Curves.easeOutCubic,
+      //   ),
+      // );
+      _monthBrowseController.jumpTo(targetOffset);
+    }
+
+    final double viewportStart = position.pixels;
+    final double viewportEnd = viewportStart + position.viewportDimension;
+    final bool targetRowVisible =
+        rowStartOffset <= viewportEnd + 0.5 &&
+        rowEndOffset >= viewportStart - 0.5;
+    if (targetRowVisible) {
+      _pendingMonthBrowseScrollIndex = null;
+      _pendingMonthBrowseYear = null;
+      _pendingMonthBrowseScrollRetryCount = 0;
       return;
     }
-    // smooth behavior:
-    // unawaited(
-    //   _monthBrowseController.animateTo(
-    //     targetOffset,
-    //     duration: const Duration(milliseconds: 260),
-    //     curve: Curves.easeOutCubic,
-    //   ),
-    // );
-    _monthBrowseController.jumpTo(targetOffset);
+
+    final int nextRetry = _pendingMonthBrowseScrollRetryCount + 1;
+    if (nextRetry >= _maxPendingMonthBrowseScrollRetries) {
+      _pendingMonthBrowseScrollIndex = null;
+      _pendingMonthBrowseYear = null;
+      _pendingMonthBrowseScrollRetryCount = 0;
+      return;
+    }
+    _pendingMonthBrowseScrollRetryCount = nextRetry;
+    _scheduleMonthBrowseScroll();
   }
 
   int? _resolvePendingMonthBrowseScrollIndex() {
@@ -725,6 +801,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       if (resolvedByYear >= 0) {
         return resolvedByYear;
       }
+      _pendingMonthBrowseScrollRetryCount = 0;
       return null;
     }
     return _pendingMonthBrowseScrollIndex;
@@ -1089,6 +1166,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     );
 
     final bool showYearList = _dateBrowseMode == GalleryDateBrowseMode.year;
+    final int? selectedYearAnchor = _selectedYearBrowseAnchor;
+    final int? selectedYearFirstMonthListIndex = selectedYearAnchor == null
+        ? null
+        : _monthBrowseEntries.indexWhere(
+            (entry) => entry.year == selectedYearAnchor,
+          );
     final List<_DateBrowseRowData> rows = showYearList
         ? _yearBrowseEntries
               .map(
@@ -1096,6 +1179,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                   kind: _DateBrowseRowKind.year,
                   key: 'year_${entry.year}',
                   label: entry.year.toString(),
+                  year: entry.year,
                   primaryStat: entry.monthCount,
                   secondaryStat: entry.totalItemCount,
                   previewItems: entry.previewItems,
@@ -1104,16 +1188,26 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
               )
               .toList(growable: false)
         : _monthBrowseEntries
-              .map(
-                (entry) => _DateBrowseRowData(
+              .asMap()
+              .entries
+              .map((entryWithIndex) {
+                final int listIndex = entryWithIndex.key;
+                final _DateBrowseMonthEntry entry = entryWithIndex.value;
+                return _DateBrowseRowData(
                   kind: _DateBrowseRowKind.month,
                   key: 'month_${entry.year}_${entry.month}',
                   label: _formatMonthBrowseLabel(context, entry),
+                  year: entry.year,
+                  month: entry.month,
+                  isSelectedYearAnchor:
+                      selectedYearFirstMonthListIndex != null &&
+                      selectedYearFirstMonthListIndex >= 0 &&
+                      listIndex == selectedYearFirstMonthListIndex,
                   primaryStat: entry.totalItemCount,
                   previewItems: entry.previewItems,
                   onTap: () => _handleMonthBrowseRowTap(entry),
-                ),
-              )
+                );
+              })
               .toList(growable: false);
 
     final ScrollController controller = showYearList
@@ -1228,12 +1322,16 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     final String title = showYearList
         ? widget.dateBrowseTexts.optionYear
         : widget.dateBrowseTexts.optionMonth;
-    final String hint = showYearList
-        ? '${widget.dateBrowseTexts.optionYear} -> ${widget.dateBrowseTexts.optionMonth}'
-        : '${widget.dateBrowseTexts.optionMonth} -> ${widget.dateBrowseTexts.optionAll}';
+    // Old hint text (not rendered):
+    // final String hint = showYearList
+    //     ? '${widget.dateBrowseTexts.optionYear} -> ${widget.dateBrowseTexts.optionMonth}'
+    //     : '${widget.dateBrowseTexts.optionMonth} -> ${widget.dateBrowseTexts.optionAll}';
     final IconData icon = showYearList
         ? Icons.calendar_today_rounded
         : Icons.calendar_month_rounded;
+    final int? selectedYearAnchor = showYearList
+        ? null
+        : _selectedYearBrowseAnchor;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
@@ -1277,6 +1375,44 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+              if (selectedYearAnchor != null) ...<Widget>[
+                const SizedBox(width: 8),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.yearAccent.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: colors.yearAccent.withValues(alpha: 0.42),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(
+                          Icons.my_location_rounded,
+                          size: 11,
+                          color: colors.yearAccent,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${widget.dateBrowseTexts.optionYear}: $selectedYearAnchor',
+                          style: TextStyle(
+                            color: colors.primaryText,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1322,6 +1458,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     required _DateBrowseColorScheme colors,
   }) {
     final bool isYearRow = row.kind == _DateBrowseRowKind.year;
+    final bool isSelectedYearAnchorRow =
+        !isYearRow &&
+        row.isSelectedYearAnchor &&
+        _selectedYearBrowseAnchor != null;
+    final bool showSelectedYearAnchorPulse =
+        isSelectedYearAnchorRow && _selectedYearAnchorPulseActive;
     final Color accentColor = isYearRow
         ? colors.yearAccent
         : colors.monthAccent;
@@ -1337,129 +1479,163 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
         child: InkWell(
           // borderRadius: BorderRadius.circular(14),
           onTap: row.onTap,
-          child: Padding(
-            // padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    children: <Widget>[
-                      Icon(
-                        isYearRow
-                            ? Icons.calendar_today_rounded
-                            : Icons.calendar_month_rounded,
-                        size: 14,
-                        color: accentColor,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 3),
-                                child: Text(
-                                  row.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: colors.primaryText,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              color: isSelectedYearAnchorRow
+                  ? accentColor.withValues(
+                      alpha: showSelectedYearAnchorPulse ? 0.18 : 0.1,
+                    )
+                  : Colors.transparent,
+              border: Border(
+                left: BorderSide(
+                  color: isSelectedYearAnchorRow
+                      ? accentColor.withValues(
+                          alpha: showSelectedYearAnchorPulse ? 0.98 : 0.74,
+                        )
+                      : Colors.transparent,
+                  width: isSelectedYearAnchorRow ? 3 : 0,
+                ),
+              ),
+            ),
+            child: Padding(
+              // padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          isYearRow
+                              ? Icons.calendar_today_rounded
+                              : Icons.calendar_month_rounded,
+                          size: 14,
+                          color: accentColor,
+                        ),
+                        if (isSelectedYearAnchorRow) ...<Widget>[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.my_location_rounded,
+                            size: 12,
+                            color: accentColor.withValues(
+                              alpha: showSelectedYearAnchorPulse ? 1 : 0.9,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 3),
+                                  child: Text(
+                                    row.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: colors.primaryText,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                            _buildDateBrowseStatChip(
-                              icon: isYearRow
-                                  ? Icons.view_module_rounded
-                                  : Icons.photo_library_outlined,
-                              value: row.primaryStat,
-                              colors: colors,
-                            ),
-                            if (row.secondaryStat != null) ...<Widget>[
                               const SizedBox(width: 6),
                               _buildDateBrowseStatChip(
-                                icon: Icons.photo_rounded,
-                                value: row.secondaryStat!,
+                                icon: isYearRow
+                                    ? Icons.view_module_rounded
+                                    : Icons.photo_library_outlined,
+                                value: row.primaryStat,
                                 colors: colors,
                               ),
+                              if (row.secondaryStat != null) ...<Widget>[
+                                const SizedBox(width: 6),
+                                _buildDateBrowseStatChip(
+                                  icon: Icons.photo_rounded,
+                                  value: row.secondaryStat!,
+                                  colors: colors,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Builder(
-                          builder: (context) {
-                            final int previewCount = row.previewItems.length
-                                .clamp(0, 5)
-                                .toInt();
-                            // child: Row(
-                            //   children: List<Widget>.generate(5, (previewIndex) {
-                            //     final MediaItem? item =
-                            //         previewIndex < row.previewItems.length
-                            //         ? row.previewItems[previewIndex]
-                            //         : null;
-                            //     return Expanded(
-                            //       child: _buildDateBrowsePreviewTile(
-                            //         rowKey: row.key,
-                            //         previewIndex: previewIndex,
-                            //         item: item,
-                            //         colors: colors,
-                            //       ),
-                            //     );
-                            //   }),
-                            // ),
-                            if (previewCount <= 0) {
-                              return const SizedBox.shrink();
-                            }
-                            return LayoutBuilder(
-                              builder: (context, constraints) {
-                                final double maxWidth = constraints.maxWidth;
-                                if (maxWidth <= 0 || !maxWidth.isFinite) {
-                                  return const SizedBox.shrink();
-                                }
-                                final double tileWidth = maxWidth / 5;
-                                return Row(
-                                  children: List<Widget>.generate(
-                                    previewCount,
-                                    (previewIndex) {
-                                      final MediaItem item =
-                                          row.previewItems[previewIndex];
-                                      return SizedBox(
-                                        width: tileWidth,
-                                        child: _buildDateBrowsePreviewTile(
-                                          rowKey: row.key,
-                                          previewIndex: previewIndex,
-                                          item: item,
-                                          colors: colors,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Builder(
+                            builder: (context) {
+                              final int previewCount = row.previewItems.length
+                                  .clamp(0, 5)
+                                  .toInt();
+                              // child: Row(
+                              //   children: List<Widget>.generate(5, (previewIndex) {
+                              //     final MediaItem? item =
+                              //         previewIndex < row.previewItems.length
+                              //         ? row.previewItems[previewIndex]
+                              //         : null;
+                              //     return Expanded(
+                              //       child: _buildDateBrowsePreviewTile(
+                              //         rowKey: row.key,
+                              //         previewIndex: previewIndex,
+                              //         item: item,
+                              //         colors: colors,
+                              //       ),
+                              //     );
+                              //   }),
+                              // ),
+                              if (previewCount <= 0) {
+                                return const SizedBox.shrink();
+                              }
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final double maxWidth = constraints.maxWidth;
+                                  if (maxWidth <= 0 || !maxWidth.isFinite) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final double tileWidth = maxWidth / 5;
+                                  return Row(
+                                    children: List<Widget>.generate(
+                                      previewCount,
+                                      (previewIndex) {
+                                        final MediaItem item =
+                                            row.previewItems[previewIndex];
+                                        return SizedBox(
+                                          width: tileWidth,
+                                          child: _buildDateBrowsePreviewTile(
+                                            rowKey: row.key,
+                                            previewIndex: previewIndex,
+                                            item: item,
+                                            colors: colors,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(Icons.chevron_right_rounded, color: colors.chevron),
-                    ],
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: colors.chevron,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -2529,6 +2705,9 @@ class _DateBrowseRowData {
     required this.kind,
     required this.key,
     required this.label,
+    this.year,
+    this.month,
+    this.isSelectedYearAnchor = false,
     required this.primaryStat,
     this.secondaryStat,
     required this.previewItems,
@@ -2538,6 +2717,9 @@ class _DateBrowseRowData {
   final _DateBrowseRowKind kind;
   final String key;
   final String label;
+  final int? year;
+  final int? month;
+  final bool isSelectedYearAnchor;
   final int primaryStat;
   final int? secondaryStat;
   final List<MediaItem> previewItems;
