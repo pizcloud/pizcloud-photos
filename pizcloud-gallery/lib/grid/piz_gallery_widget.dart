@@ -101,7 +101,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const bool _showFpsOverlay = true;
   static const int _prefetchRowsAhead = 10;
   static const int _prefetchRowsBehind = 5;
-  static const double _dateBrowseRowHeight = 96; // new
+  // static const double _dateBrowseRowHeight = 96;
+  static const double _dateBrowseRowHeight = 124; // new
   static const double _dateBrowseRowSpacing = 10; // new
   static const int _fastScrollPrefetchRowsAhead = 1;
   static const int _fastScrollPrefetchRowsBehind = 0;
@@ -1140,7 +1141,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                   ? const Center(child: Text('No data for the current filter'))
                   : ListView.separated(
                       controller: controller,
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 110),
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 110),
                       itemCount: rows.length,
                       separatorBuilder: (_, _) =>
                           const SizedBox(height: _dateBrowseRowSpacing),
@@ -1262,31 +1263,18 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      '$title ($rowCount)',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.headerTitle,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    '$title ($rowCount)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.headerTitle,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      hint,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.headerSubtitle,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -1337,80 +1325,55 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     final Color accentColor = isYearRow
         ? colors.yearAccent
         : colors.monthAccent;
-    final String kindLabel = isYearRow
-        ? widget.dateBrowseTexts.optionYear
-        : widget.dateBrowseTexts.optionMonth;
+    // final String kindLabel = isYearRow
+    //     ? widget.dateBrowseTexts.optionYear
+    //     : widget.dateBrowseTexts.optionMonth;
 
     return SizedBox(
       height: _dateBrowseRowHeight,
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        // borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          // borderRadius: BorderRadius.circular(14),
           onTap: row.onTap,
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: colors.cardBackground,
-              border: Border.all(color: accentColor.withValues(alpha: 0.24)),
-              boxShadow: <BoxShadow>[
-                BoxShadow(
-                  color: colors.cardShadow,
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-              child: Row(
-                children: <Widget>[
-                  SizedBox(
-                    width: 148,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Row(
+          child: Padding(
+            // padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        isYearRow
+                            ? Icons.calendar_today_rounded
+                            : Icons.calendar_month_rounded,
+                        size: 14,
+                        color: accentColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
-                            Icon(
-                              isYearRow
-                                  ? Icons.calendar_today_rounded
-                                  : Icons.calendar_month_rounded,
-                              size: 13,
-                              color: accentColor,
-                            ),
-                            const SizedBox(width: 4),
                             Flexible(
-                              child: Text(
-                                kindLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: accentColor,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Text(
+                                  row.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colors.primaryText,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          row.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: colors.primaryText,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: <Widget>[
+                            const SizedBox(width: 6),
                             _buildDateBrowseStatChip(
                               icon: isYearRow
                                   ? Icons.view_module_rounded
@@ -1428,37 +1391,75 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                             ],
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Row(
-                      children: List<Widget>.generate(5, (previewIndex) {
-                        final MediaItem? item =
-                            previewIndex < row.previewItems.length
-                            ? row.previewItems[previewIndex]
-                            : null;
-                        return Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              right: previewIndex == 4 ? 0 : 4,
-                            ),
-                            child: _buildDateBrowsePreviewTile(
-                              rowKey: row.key,
-                              previewIndex: previewIndex,
-                              item: item,
-                              colors: colors,
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Builder(
+                          builder: (context) {
+                            final int previewCount = row.previewItems.length
+                                .clamp(0, 5)
+                                .toInt();
+                            // child: Row(
+                            //   children: List<Widget>.generate(5, (previewIndex) {
+                            //     final MediaItem? item =
+                            //         previewIndex < row.previewItems.length
+                            //         ? row.previewItems[previewIndex]
+                            //         : null;
+                            //     return Expanded(
+                            //       child: _buildDateBrowsePreviewTile(
+                            //         rowKey: row.key,
+                            //         previewIndex: previewIndex,
+                            //         item: item,
+                            //         colors: colors,
+                            //       ),
+                            //     );
+                            //   }),
+                            // ),
+                            if (previewCount <= 0) {
+                              return const SizedBox.shrink();
+                            }
+                            return LayoutBuilder(
+                              builder: (context, constraints) {
+                                final double maxWidth = constraints.maxWidth;
+                                if (maxWidth <= 0 || !maxWidth.isFinite) {
+                                  return const SizedBox.shrink();
+                                }
+                                final double tileWidth = maxWidth / 5;
+                                return Row(
+                                  children: List<Widget>.generate(
+                                    previewCount,
+                                    (previewIndex) {
+                                      final MediaItem item =
+                                          row.previewItems[previewIndex];
+                                      return SizedBox(
+                                        width: tileWidth,
+                                        child: _buildDateBrowsePreviewTile(
+                                          rowKey: row.key,
+                                          previewIndex: previewIndex,
+                                          item: item,
+                                          colors: colors,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(Icons.chevron_right_rounded, color: colors.chevron),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.chevron_right_rounded, color: colors.chevron),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1509,7 +1510,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     required _DateBrowseColorScheme colors,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(0),
       child: ColoredBox(
         color: colors.previewPlaceholder,
         child: item == null
