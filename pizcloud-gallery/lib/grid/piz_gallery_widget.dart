@@ -130,7 +130,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     milliseconds: 2000,
   ); // new
   static const Duration _pendingMonthBrowseScrollTimeout = Duration(
-    milliseconds: 1800,
+    milliseconds: 2000,
   ); // new
   static const double _pendingMonthBrowseTopTolerance = 0.5; // new
   static const double _dateBrowseListBaseBottomPadding = 110; // new
