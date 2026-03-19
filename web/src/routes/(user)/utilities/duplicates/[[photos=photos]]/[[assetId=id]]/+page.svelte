@@ -12,7 +12,7 @@
   import { locale } from '$lib/stores/preferences.store';
   import { stackAssets } from '$lib/utils/asset-utils';
   import { suggestDuplicate } from '$lib/utils/duplicate-utils';
-  import { handleError } from '$lib/utils/handle-error';
+  import { getDeleteErrorMessage, handleError } from '$lib/utils/handle-error';
   import type { AssetResponseDto } from '@immich/sdk';
   import { deleteAssets, deleteDuplicates, updateAssets } from '@immich/sdk';
   import { Button, HStack, IconButton, modalManager, Text, toastManager } from '@immich/ui';
@@ -83,7 +83,16 @@
     try {
       return await callback();
     } catch (error) {
-      handleError(error, $t('errors.unable_to_resolve_duplicate'));
+      // pizcloud
+      const deleteError = getDeleteErrorMessage(error, {
+        fallback: $t('errors.unable_to_resolve_duplicate'),
+        demoAccountReadOnly: $t('errors.delete_error_demo_account_read_only'),
+        forbidden: $t('errors.delete_error_forbidden'),
+      });
+
+      // handleError(error, $t('errors.unable_to_resolve_duplicate'));
+      handleError(error, deleteError.message, { preferServerMessage: deleteError.preferServerMessage });
+      // #pizcloud
     }
   };
 

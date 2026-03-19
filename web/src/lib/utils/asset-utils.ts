@@ -43,7 +43,7 @@ import { toastManager } from '@immich/ui';
 import { DateTime } from 'luxon';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
-import { handleError } from './handle-error';
+import { getDeleteErrorMessage, handleError } from './handle-error';
 
 export const addAssetsToAlbum = async (albumId: string, assetIds: string[], showNotification = true) => {
   const result = await addAssets({
@@ -478,7 +478,16 @@ export const keepThisDeleteOthers = async (keepAsset: AssetResponseDto, stack: S
     keepAsset.stack = null;
     return keepAsset;
   } catch (error) {
-    handleError(error, $t('errors.failed_to_keep_this_delete_others'));
+    // pizcloud
+    const deleteError = getDeleteErrorMessage(error, {
+      fallback: $t('errors.failed_to_keep_this_delete_others'),
+      demoAccountReadOnly: $t('errors.delete_error_demo_account_read_only'),
+      forbidden: $t('errors.delete_error_forbidden'),
+    });
+
+    // handleError(error, $t('errors.failed_to_keep_this_delete_others'));
+    handleError(error, deleteError.message, { preferServerMessage: deleteError.preferServerMessage });
+    // #pizcloud
   }
 };
 

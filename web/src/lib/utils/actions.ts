@@ -6,7 +6,7 @@ import { AssetVisibility, deleteAssets as deleteBulk, restoreAssets } from '@imm
 import { toastManager } from '@immich/ui';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
-import { handleError } from './handle-error';
+import { getDeleteErrorMessage, handleError } from './handle-error'; // pizcloud
 
 export type OnDelete = (assetIds: string[]) => void;
 export type OnUndoDelete = (assets: TimelineAsset[]) => void;
@@ -44,17 +44,26 @@ export const deleteAssets = async (
           button:
             onUndoDelete && !force
               ? {
-                  color: 'secondary',
-                  text: $t('undo'),
-                  onClick: () => undoDeleteAssets(onUndoDelete, assets),
-                }
+                color: 'secondary',
+                text: $t('undo'),
+                onClick: () => undoDeleteAssets(onUndoDelete, assets),
+              }
               : undefined,
         },
       },
       { timeout: 5000 },
     );
   } catch (error) {
-    handleError(error, $t('errors.unable_to_delete_assets'));
+    // pizcloud
+    const deleteError = getDeleteErrorMessage(error, {
+      fallback: $t('errors.unable_to_delete_assets'),
+      demoAccountReadOnly: $t('errors.delete_error_demo_account_read_only'),
+      forbidden: $t('errors.delete_error_forbidden'),
+    });
+
+    // handleError(error, $t('errors.unable_to_delete_assets'));
+    handleError(error, deleteError.message, { preferServerMessage: deleteError.preferServerMessage });
+    // #pizcloud
   }
 };
 

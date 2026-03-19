@@ -20,7 +20,7 @@ import {
 import { tick } from 'svelte';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
-import { handleError } from './handle-error';
+import { getUploadErrorMessage, handleError } from './handle-error'; // pizcloud
 
 export const addDummyItems = () => {
   uploadAssetsStore.addItem({ id: 'asset-0', file: { name: 'asset0.jpg', size: 123_456 } as File });
@@ -222,7 +222,18 @@ async function fileUploader({
       return;
     }
 
-    const errorMessage = handleError(error, $t('errors.unable_to_upload_file'));
+    // pizcloud
+    const uploadError = getUploadErrorMessage(error, {
+      fallback: $t('errors.unable_to_upload_file'),
+      demoAccountReadOnly: $t('errors.upload_error_demo_account_read_only'),
+      forbidden: $t('errors.upload_error_forbidden'),
+    });
+
+    // const errorMessage = handleError(error, $t('errors.unable_to_upload_file'));
+    const errorMessage = handleError(error, uploadError.message, {
+      preferServerMessage: uploadError.preferServerMessage,
+    });
+    // #pizcloud
     uploadAssetsStore.track('error');
     uploadAssetsStore.updateItem(deviceAssetId, { state: UploadState.ERROR, error: errorMessage });
     return;

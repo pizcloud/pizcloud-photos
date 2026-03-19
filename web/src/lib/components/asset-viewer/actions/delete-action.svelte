@@ -5,7 +5,7 @@
   import Portal from '$lib/elements/Portal.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { showDeleteModal } from '$lib/stores/preferences.store';
-  import { handleError } from '$lib/utils/handle-error';
+  import { getDeleteErrorMessage, handleError } from '$lib/utils/handle-error';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import { deleteAssets, type AssetResponseDto } from '@immich/sdk';
   import { IconButton, toastManager } from '@immich/ui';
@@ -44,7 +44,16 @@
       onAction({ type: AssetAction.TRASH, asset: toTimelineAsset(asset) });
       toastManager.success($t('moved_to_trash'));
     } catch (error) {
-      handleError(error, $t('errors.unable_to_trash_asset'));
+      // pizcloud
+      const deleteError = getDeleteErrorMessage(error, {
+        fallback: $t('errors.unable_to_trash_asset'),
+        demoAccountReadOnly: $t('errors.delete_error_demo_account_read_only'),
+        forbidden: $t('errors.delete_error_forbidden'),
+      });
+
+      // handleError(error, $t('errors.unable_to_trash_asset'));
+      handleError(error, deleteError.message, { preferServerMessage: deleteError.preferServerMessage });
+      // #pizcloud
     }
   };
 
@@ -55,7 +64,16 @@
       onAction({ type: AssetAction.DELETE, asset: toTimelineAsset(asset) });
       toastManager.success($t('permanently_deleted_asset'));
     } catch (error) {
-      handleError(error, $t('errors.unable_to_delete_asset'));
+      // pizcloud
+      const deleteError = getDeleteErrorMessage(error, {
+        fallback: $t('errors.unable_to_delete_asset'),
+        demoAccountReadOnly: $t('errors.delete_error_demo_account_read_only'),
+        forbidden: $t('errors.delete_error_forbidden'),
+      });
+
+      // handleError(error, $t('errors.unable_to_delete_asset'));
+      handleError(error, deleteError.message, { preferServerMessage: deleteError.preferServerMessage });
+      // pizcloud
     } finally {
       showConfirmModal = false;
     }
