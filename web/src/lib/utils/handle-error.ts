@@ -26,12 +26,30 @@ type UploadErrorMessages = {
 // #pizcloud
 
 function getServerErrorData(error: unknown): ServerErrorData | undefined { // pizcloud
-  if (!isHttpError(error)) {
-    return;
+  // pizcloud
+  // if (!isHttpError(error)) {
+  //   return;
+  // }
+
+  let data: unknown;
+  let statusFromError: unknown;
+
+  if (isHttpError(error)) {
+    data = error.data;
+    statusFromError = (error as { status?: unknown }).status;
+  } else {
+    // Support custom upload error from uploadRequest() -> ApiError(statusCode, details)
+    const maybeApiError = error as { statusCode?: unknown; details?: unknown };
+    if (typeof maybeApiError.statusCode !== 'number') {
+      return;
+    }
+
+    data = maybeApiError.details;
+    statusFromError = maybeApiError.statusCode;
+    // #pizcloud
   }
 
   // errors for endpoints without return types aren't parsed as json
-  let data = error.data;
   if (typeof data === 'string') {
     try {
       data = JSON.parse(data);
@@ -41,7 +59,6 @@ function getServerErrorData(error: unknown): ServerErrorData | undefined { // pi
   }
 
   // pizcloud
-  const statusFromError = (error as { status?: unknown }).status;
   const statusFromData = (data as { statusCode?: unknown } | undefined)?.statusCode;
   const statusCode =
     typeof statusFromData === 'number'
@@ -50,10 +67,14 @@ function getServerErrorData(error: unknown): ServerErrorData | undefined { // pi
         ? statusFromError
         : undefined;
 
+  const dataMessage = (data as { message?: unknown } | undefined)?.message;
+  const dataError = (data as { error?: unknown } | undefined)?.error;
+  const errorMessage = (error as { message?: unknown } | undefined)?.message;
+
   return {
     statusCode,
-    message: typeof (data as { message?: unknown } | undefined)?.message === 'string' ? data.message : error.message,
-    error: typeof (data as { error?: unknown } | undefined)?.error === 'string' ? data.error : undefined,
+    message: typeof dataMessage === 'string' ? dataMessage : typeof errorMessage === 'string' ? errorMessage : undefined,
+    error: typeof dataError === 'string' ? dataError : undefined,
   };
   // #pizcloud
 }
