@@ -46,6 +46,33 @@ interface ClaimOptions<T> {
   isValid: (value: unknown) => boolean;
 }
 
+// pizcloud
+const DEMO_RESTRICTED_PERMISSIONS = new Set<Permission>([
+  Permission.AssetUpload,
+  Permission.AssetReplace,
+  Permission.AssetDelete,
+]);
+
+const DEMO_RESTRICTED_ACTIONS_MESSAGE = 'Demo account is read-only';
+
+let cachedDemoRestrictedEmailsRaw = '';
+let cachedDemoRestrictedEmails = new Set<string>();
+
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+const getDemoRestrictedEmails = () => {
+  const raw = process.env.DEMO_RESTRICTED_EMAILS ?? '';
+  if (raw === cachedDemoRestrictedEmailsRaw) {
+    return cachedDemoRestrictedEmails;
+  }
+
+  cachedDemoRestrictedEmailsRaw = raw;
+  cachedDemoRestrictedEmails = new Set(raw.split(',').map((value) => normalizeEmail(value)).filter(Boolean));
+
+  return cachedDemoRestrictedEmails;
+};
+// #pizcloud
+
 export type ValidateRequest = {
   headers: IncomingHttpHeaders;
   queryParams: Record<string, string>;
@@ -197,6 +224,18 @@ export class AuthService extends BaseService {
       this.logger.warn(`Denied access to non-shared route: ${uri}`);
       throw new ForbiddenException('Forbidden');
     }
+
+    // pizcloud
+    if (
+      requestedPermission !== false &&
+      DEMO_RESTRICTED_PERMISSIONS.has(requestedPermission) &&
+      getDemoRestrictedEmails().has(normalizeEmail(authDto.user.email))
+    ) {
+      this.logger.warn(`Denied restricted demo action: ${requestedPermission} for user ${authDto.user.email} on ${uri}`);
+      // 'Demo account is read-only for upload/delete actions'
+      throw new ForbiddenException(DEMO_RESTRICTED_ACTIONS_MESSAGE);
+    }
+    // #pizcloud
 
     if (
       authDto.apiKey &&

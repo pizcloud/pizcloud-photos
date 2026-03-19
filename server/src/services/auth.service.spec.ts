@@ -51,6 +51,23 @@ const fixtures = {
   },
 };
 
+// pizcloud
+const demoRestrictedActionsMessage = 'Demo account is read-only';
+
+const mockValidatedAuthForDemoPolicy = (sut: AuthService, email: string, withApiKey = false) => {
+  const authUser = factory.authUser({ email });
+
+  if (withApiKey) {
+    const authApiKey = factory.authApiKey({ permissions: [Permission.All] });
+    (sut as any).validate = () => Promise.resolve({ user: authUser, apiKey: authApiKey });
+    return { authApiKey, authUser };
+  }
+
+  (sut as any).validate = () => Promise.resolve({ user: authUser });
+  return { authUser };
+};
+// #pizcloud
+
 describe(AuthService.name, () => {
   let sut: AuthService;
   let mocks: ServiceMocks;
@@ -577,6 +594,132 @@ describe(AuthService.name, () => {
       expect(mocks.apiKey.getKey).toHaveBeenCalledWith('auth_token (hashed)');
     });
   });
+
+  // pizcloud
+  describe('authenticate - demo restricted emails policy', () => {
+    const originalDemoRestrictedEmails = process.env.DEMO_RESTRICTED_EMAILS;
+
+    afterEach(() => {
+      if (originalDemoRestrictedEmails === undefined) {
+        delete process.env.DEMO_RESTRICTED_EMAILS;
+      } else {
+        process.env.DEMO_RESTRICTED_EMAILS = originalDemoRestrictedEmails;
+      }
+    });
+
+    it('should block restricted users from asset upload permissions', async () => {
+      process.env.DEMO_RESTRICTED_EMAILS = ' demo1@example.com ';
+      mockValidatedAuthForDemoPolicy(sut, 'demo1@example.com');
+
+      const result = sut.authenticate({
+        headers: {},
+        queryParams: {},
+        metadata: {
+          adminRoute: false,
+          sharedLinkRoute: false,
+          uri: '/api/assets',
+          permission: Permission.AssetUpload,
+        },
+      });
+
+      await expect(result).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(result).rejects.toThrow(demoRestrictedActionsMessage);
+    });
+
+    it('should block restricted users from asset replace permissions', async () => {
+      process.env.DEMO_RESTRICTED_EMAILS = 'demo1@example.com';
+      mockValidatedAuthForDemoPolicy(sut, 'demo1@example.com');
+
+      const result = sut.authenticate({
+        headers: {},
+        queryParams: {},
+        metadata: {
+          adminRoute: false,
+          sharedLinkRoute: false,
+          uri: '/api/assets/id/original',
+          permission: Permission.AssetReplace,
+        },
+      });
+
+      await expect(result).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(result).rejects.toThrow(demoRestrictedActionsMessage);
+    });
+
+    it('should block restricted users from asset delete permissions', async () => {
+      process.env.DEMO_RESTRICTED_EMAILS = 'demo1@example.com';
+      mockValidatedAuthForDemoPolicy(sut, 'demo1@example.com');
+
+      const result = sut.authenticate({
+        headers: {},
+        queryParams: {},
+        metadata: {
+          adminRoute: false,
+          sharedLinkRoute: false,
+          uri: '/api/trash/restore',
+          permission: Permission.AssetDelete,
+        },
+      });
+
+      await expect(result).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(result).rejects.toThrow(demoRestrictedActionsMessage);
+    });
+
+    it('should not block non-write permissions for restricted users', async () => {
+      process.env.DEMO_RESTRICTED_EMAILS = 'demo1@example.com';
+      const { authUser } = mockValidatedAuthForDemoPolicy(sut, 'demo1@example.com');
+
+      await expect(
+        sut.authenticate({
+          headers: {},
+          queryParams: {},
+          metadata: {
+            adminRoute: false,
+            sharedLinkRoute: false,
+            uri: '/api/assets/id',
+            permission: Permission.AssetRead,
+          },
+        }),
+      ).resolves.toEqual({ user: authUser });
+    });
+
+    it('should not block when restricted email env is empty', async () => {
+      process.env.DEMO_RESTRICTED_EMAILS = '';
+      const { authUser } = mockValidatedAuthForDemoPolicy(sut, 'demo1@example.com');
+
+      await expect(
+        sut.authenticate({
+          headers: {},
+          queryParams: {},
+          metadata: {
+            adminRoute: false,
+            sharedLinkRoute: false,
+            uri: '/api/assets',
+            permission: Permission.AssetUpload,
+          },
+        }),
+      ).resolves.toEqual({ user: authUser });
+    });
+
+    it('should block api key requests for restricted users', async () => {
+      process.env.DEMO_RESTRICTED_EMAILS = 'demo1@example.com';
+      mockValidatedAuthForDemoPolicy(sut, 'demo1@example.com', true);
+
+      const result = sut.authenticate({
+        headers: {},
+        queryParams: {},
+        metadata: {
+          adminRoute: false,
+          sharedLinkRoute: false,
+          uri: '/api/assets',
+          permission: Permission.AssetUpload,
+        },
+      });
+
+      await expect(result).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(result).rejects.toThrow(demoRestrictedActionsMessage);
+    });
+  });
+  // #pizcloud
 
   describe('getMobileRedirect', () => {
     it('should pass along the query params', () => {
