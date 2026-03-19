@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
+import 'package:immich_mobile/constants/constants.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
@@ -10,6 +12,8 @@ import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
+import 'package:immich_mobile/extensions/string_extensions.dart';
+import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/presentation/widgets/album/album_selector.widget.dart';
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/base_bottom_sheet.widget.dart';
 import 'package:immich_mobile/presentation/widgets/images/image_provider.dart';
@@ -20,6 +24,7 @@ import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.da
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
+import 'package:immich_mobile/services/upload.service.dart';
 import 'package:immich_mobile/utils/platform_sheet.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
@@ -109,7 +114,9 @@ class NewLibraryViewerActionRunner {
     );
 
     if (!result.success) {
-      throw StateError(result.error ?? 'Delete failed');
+      final errorMessage = _resolveDeleteErrorMessage(context, result.error);
+      // throw StateError(result.error ?? 'Delete failed');
+      throw _UserVisibleActionError(errorMessage);
     }
   }
 
@@ -208,14 +215,32 @@ class NewLibraryViewerActionRunner {
   }
 
   Future<void> upload(MediaItem item, BuildContext context) async {
-    await _runAction(
+    final _ResolvedAsset? resolved = await _resolveOrNotify(
       item,
       context: context,
       guard: (capability) => capability.canUpload,
       guardMessage: 'Upload is only available for local-only items.',
-      action: () => _ref.read(actionProvider.notifier).upload(ActionSource.viewer),
-      successMessage: 'Upload started',
     );
+    if (resolved == null) {
+      return;
+    }
+
+    final ActionResult result = await _runWithCurrentAsset(
+      resolved.asset,
+      () => _ref.read(actionProvider.notifier).upload(ActionSource.viewer),
+    );
+    if (!result.success) {
+      _showError(context, _resolveUploadActionErrorMessage(context, result.error));
+      return;
+    }
+
+    _showSuccess(context, 'Upload started');
+
+    // return;
+    final BaseAsset asset = resolved.asset;
+    if (asset is LocalAsset) {
+      unawaited(_watchManualUploadForbiddenError(context: context, localAssetId: asset.id));
+    }
   }
 
   Future<void> editImage(MediaItem item, BuildContext context) async {
@@ -393,6 +418,160 @@ class NewLibraryViewerActionRunner {
     );
   }
 
+  String _resolveDeleteErrorMessage(BuildContext context, String? error) {
+    const prefix = 'i18n:';
+    if (error != null && error.startsWith(prefix)) {
+      final key = error.substring(prefix.length);
+      if (key.isNotEmpty) {
+        return key.t(context: context);
+      }
+    }
+
+    if (error != null && error.trim().isNotEmpty) {
+      return error;
+    }
+
+    return 'errors.unable_to_delete_assets'.t(context: context);
+  }
+
+  String _resolveUploadActionErrorMessage(BuildContext context, String? error) {
+    const prefix = 'i18n:';
+    if (error != null && error.startsWith(prefix)) {
+      final key = error.substring(prefix.length);
+      if (key.isNotEmpty) {
+        return key.t(context: context);
+      }
+    }
+
+    if (error != null && error.trim().isNotEmpty) {
+      return error;
+    }
+
+    return 'errors.unable_to_upload_file'.t(context: context);
+  }
+
+  Future<void> _watchManualUploadForbiddenError({required BuildContext context, required String localAssetId}) async {
+    final uploadService = _ref.read(uploadServiceProvider);
+    TaskStatusUpdate terminalUpdate;
+    try {
+      terminalUpdate = await uploadService.taskStatusStream
+          .where(
+            (update) =>
+                update.task.group == kManualUploadGroup &&
+                update.task.taskId == localAssetId &&
+                (update.status == TaskStatus.complete ||
+                    update.status == TaskStatus.failed ||
+                    update.status == TaskStatus.canceled),
+          )
+          .first
+          .timeout(const Duration(minutes: 10));
+    } on TimeoutException {
+      return;
+    } catch (_) {
+      return;
+    }
+
+    if (terminalUpdate.status != TaskStatus.failed) {
+      return;
+    }
+
+    final String? errorKey = _resolveUploadForbiddenErrorKey(terminalUpdate);
+    if (errorKey == null) {
+      return;
+    }
+
+    await _showActionErrorDialog(
+      context,
+      title: 'errors.unable_to_upload_file'.t(context: context),
+      message: errorKey.t(context: context),
+    );
+  }
+
+  String? _resolveUploadForbiddenErrorKey(TaskStatusUpdate update) {
+    final int? statusCode = _extractUploadErrorStatusCode(update);
+    if (statusCode != 403) {
+      return null;
+    }
+
+    final String normalizedMessage = _extractUploadServerMessage(update).toLowerCase();
+    if (normalizedMessage.contains('read-only')) {
+      return 'errors.upload_error_demo_account_read_only';
+    }
+
+    return 'errors.upload_error_forbidden';
+  }
+
+  int? _extractUploadErrorStatusCode(TaskStatusUpdate update) {
+    final int? responseStatusCode = update.responseStatusCode;
+    if (responseStatusCode != null && responseStatusCode > 0) {
+      return responseStatusCode;
+    }
+
+    final exception = update.exception;
+    if (exception is TaskHttpException) {
+      final int httpResponseCode = exception.httpResponseCode;
+      if (httpResponseCode > 0) {
+        return httpResponseCode;
+      }
+    }
+
+    final dynamic statusCode = _extractUploadErrorBody(update)?['statusCode'];
+    if (statusCode is int) {
+      return statusCode;
+    }
+    if (statusCode is String) {
+      return int.tryParse(statusCode);
+    }
+
+    return null;
+  }
+
+  String _extractUploadServerMessage(TaskStatusUpdate update) {
+    final dynamic message = _extractUploadErrorBody(update)?['message'];
+    if (message is String && message.trim().isNotEmpty) {
+      return message;
+    }
+
+    final exception = update.exception;
+    if (exception is TaskHttpException && exception.description.trim().isNotEmpty) {
+      return exception.description;
+    }
+
+    return update.exception?.description ?? '';
+  }
+
+  Map<String, dynamic>? _extractUploadErrorBody(TaskStatusUpdate update) {
+    final String? responseBody = update.responseBody;
+    if (responseBody != null && responseBody.trim().isNotEmpty) {
+      final decoded = _tryJsonDecodeWithEmbeddedObject(responseBody);
+      if (decoded != null) {
+        return decoded;
+      }
+    }
+
+    final String? exceptionDescription = update.exception?.description;
+    if (exceptionDescription != null && exceptionDescription.trim().isNotEmpty) {
+      return _tryJsonDecodeWithEmbeddedObject(exceptionDescription);
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic>? _tryJsonDecodeWithEmbeddedObject(String raw) {
+    final decoded = tryJsonDecode(raw);
+    if (decoded != null) {
+      return decoded;
+    }
+
+    final int jsonStart = raw.indexOf('{');
+    final int jsonEnd = raw.lastIndexOf('}');
+    if (jsonStart == -1 || jsonEnd <= jsonStart) {
+      return null;
+    }
+
+    return tryJsonDecode(raw.substring(jsonStart, jsonEnd + 1));
+  }
+
   Future<void> _runAction(
     MediaItem item, {
     required BuildContext context,
@@ -457,6 +636,30 @@ class NewLibraryViewerActionRunner {
     }
     ImmichToast.show(context: context, msg: message, toastType: ToastType.error);
   }
+
+  Future<void> _showActionErrorDialog(BuildContext context, {required String title, required String message}) async {
+    if (!context.mounted) {
+      return;
+    }
+
+    final normalizedMessage = message.trim().isNotEmpty ? message : title;
+
+    await showPlatformDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(normalizedMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(MaterialLocalizations.of(dialogContext).okButtonLabel),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _ResolvedAsset {
@@ -464,4 +667,13 @@ class _ResolvedAsset {
 
   final BaseAsset asset;
   final NewLibraryViewerCapability capability;
+}
+
+class _UserVisibleActionError implements Exception {
+  const _UserVisibleActionError(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

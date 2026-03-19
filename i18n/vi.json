@@ -900,6 +900,8 @@
     "cant_get_number_of_comments": "Không thể tải số lượng bình luận",
     "cant_search_people": "Không thể tìm kiếm người",
     "cant_search_places": "Không thể tìm kiếm địa điểm",
+    "delete_error_demo_account_read_only": "Tài khoản demo đang ở chế độ chỉ đọc. Bạn không thể xóa ảnh.",
+    "delete_error_forbidden": "Bạn không có quyền xóa ảnh này.",
     "email_not_verified": "Địa chỉ email của bạn chưa được xác minh. Vui lòng kiểm tra email của bạn.",
     "email_required_for_resend": "Vui lòng nhập địa chỉ email của bạn để gửi lại email xác minh.",
     "error_adding_assets_to_album": "Lỗi khi thêm ảnh vào album",
@@ -1007,7 +1009,9 @@
     "unable_to_update_settings": "Không thể cập nhật cài đặt",
     "unable_to_update_timeline_display_status": "Không thể cập nhật trạng thái hiển thị dòng thời gian",
     "unable_to_update_user": "Không thể cập nhật người dùng",
-    "unable_to_upload_file": "Không thể tải tập tin lên"
+    "unable_to_upload_file": "Không thể tải tập tin lên",
+    "upload_error_demo_account_read_only": "Tài khoản demo đang ở chế độ chỉ đọc. Bạn không thể tải ảnh lên.",
+    "upload_error_forbidden": "Bạn không có quyền tải ảnh này lên."
   },
   "exif": "Exif",
   "exif_bottom_sheet_description": "Thêm mô tả...",

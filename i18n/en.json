@@ -987,6 +987,8 @@
     "cant_get_number_of_comments": "Can't get number of comments",
     "cant_search_people": "Can't search people",
     "cant_search_places": "Can't search places",
+    "delete_error_demo_account_read_only": "Demo account is read-only. You cannot delete assets.",
+    "delete_error_forbidden": "You don't have permission to delete this asset.",
     "email_not_verified": "Your email address is not verified yet. Please check your email.",
     "email_required_for_resend": "Please enter your email address to resend the verification email.",
     "error_adding_assets_to_album": "Error adding assets to album",
@@ -1097,7 +1099,9 @@
     "unable_to_update_settings": "Unable to update settings",
     "unable_to_update_timeline_display_status": "Unable to update timeline display status",
     "unable_to_update_user": "Unable to update user",
-    "unable_to_upload_file": "Unable to upload file"
+    "unable_to_upload_file": "Unable to upload file",
+    "upload_error_demo_account_read_only": "Demo account is read-only. You cannot upload assets.",
+    "upload_error_forbidden": "You don't have permission to upload this asset."
   },
   "exclusion_pattern": "Exclusion pattern",
   "exif": "Exif",

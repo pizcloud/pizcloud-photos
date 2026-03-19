@@ -18,8 +18,10 @@ import 'package:immich_mobile/services/action.service.dart';
 import 'package:immich_mobile/services/download.service.dart';
 import 'package:immich_mobile/services/timeline.service.dart';
 import 'package:immich_mobile/services/upload.service.dart';
+import 'package:immich_mobile/extensions/string_extensions.dart'; // pizcloud
 import 'package:immich_mobile/widgets/asset_grid/delete_dialog.dart';
 import 'package:logging/logging.dart';
+import 'package:openapi/api.dart'; // pizcloud
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 final actionProvider = NotifierProvider<ActionNotifier, void>(
@@ -40,6 +42,7 @@ class ActionResult {
 
 class ActionNotifier extends Notifier<void> {
   final Logger _logger = Logger('ActionNotifier');
+  static const String _i18nErrorPrefix = 'i18n:'; // pizcloud
   late ActionService _service;
   late UploadService _uploadService;
   late DownloadService _downloadService;
@@ -246,6 +249,41 @@ class ActionNotifier extends Notifier<void> {
     try {
       await _service.trashRemoteAndDeleteLocal(ids, localIds);
       return ActionResult(count: ids.length, success: true);
+    } on ApiException catch (error, stack) {
+      // pizcloud
+      _logger.severe('Failed to delete assets', error, stack);
+
+      final String? parsedMessage = tryJsonDecode(error.message)?['message'] as String?;
+      final String? serverMessage = parsedMessage ?? error.message;
+      final String normalized = (serverMessage ?? '').toLowerCase();
+
+      if (error.code == 403) {
+        // return ActionResult(count: ids.length, success: false, error: error.toString());
+        if (normalized.contains('read-only')) {
+          return ActionResult(
+            count: ids.length,
+            success: false,
+            error:
+                '$_i18nErrorPrefix'
+                'errors.delete_error_demo_account_read_only',
+          );
+        }
+
+        return ActionResult(
+          count: ids.length,
+          success: false,
+          error:
+              '$_i18nErrorPrefix'
+              'errors.delete_error_forbidden',
+        );
+      }
+
+      return ActionResult(
+        count: ids.length,
+        success: false,
+        error: (serverMessage != null && serverMessage.trim().isNotEmpty) ? serverMessage : error.toString(),
+      );
+      // #pizcloud
     } catch (error, stack) {
       _logger.severe('Failed to delete assets', error, stack);
       return ActionResult(count: ids.length, success: false, error: error.toString());

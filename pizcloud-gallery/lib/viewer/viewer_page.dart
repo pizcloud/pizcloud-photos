@@ -799,9 +799,17 @@ class _ViewerPageState extends State<ViewerPage> {
       }
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Delete failed: $error')));
+      // new
+      final String errorMessage = _extractDeleteErrorMessage(error);
+
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Delete failed: $error')),
+      // );
+      await _showViewerActionErrorDialog(
+        title: 'Delete failed',
+        message: errorMessage,
+      );
+      // #new
     } finally {
       if (mounted) {
         setState(() {
@@ -812,6 +820,50 @@ class _ViewerPageState extends State<ViewerPage> {
   }
 
   // new
+  String _extractDeleteErrorMessage(Object error) {
+    final String raw = error.toString().trim();
+    if (raw.isEmpty) {
+      return 'Delete failed';
+    }
+
+    const prefixes = <String>['Exception: ', 'Bad state: ', 'StateError: '];
+    for (final prefix in prefixes) {
+      if (raw.startsWith(prefix)) {
+        final normalized = raw.substring(prefix.length).trim();
+        if (normalized.isNotEmpty) {
+          return normalized;
+        }
+      }
+    }
+
+    return raw;
+  }
+
+  Future<void> _showViewerActionErrorDialog({
+    required String title,
+    required String message,
+  }) async {
+    if (!mounted) return;
+    final normalizedMessage = message.trim().isEmpty ? title : message;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(normalizedMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                MaterialLocalizations.of(dialogContext).okButtonLabel,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _onEditPressed() async {
     final MediaItem? item = _controller.currentItem;
     final ViewerEditCallback? onEditRequested = widget.session.onEditRequested;
