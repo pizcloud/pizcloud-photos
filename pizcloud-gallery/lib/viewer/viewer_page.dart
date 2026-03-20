@@ -1129,6 +1129,14 @@ class _ViewerPageState extends State<ViewerPage> {
                             final bool startWithHighQuality =
                                 index == widget.session.clampedInitialIndex &&
                                 widget.session.initialOriginalReady;
+                            final String? initialThumbUrl =
+                                index == widget.session.clampedInitialIndex
+                                ? widget.session.initialThumbUrl
+                                : null; // new
+                            final initialThumbBytes =
+                                index == widget.session.clampedInitialIndex
+                                ? widget.session.initialThumbBytes
+                                : null; // new
                             final bool isCurrentPage =
                                 index == _controller.currentIndex;
                             final String heroTag = mediaViewerHeroTag(
@@ -1142,6 +1150,8 @@ class _ViewerPageState extends State<ViewerPage> {
                               isActive: isCurrentPage,
                               onSurfaceTap: _toggleFullscreen,
                               startWithHighQuality: startWithHighQuality,
+                              initialThumbUrl: initialThumbUrl, // new
+                              initialThumbBytes: initialThumbBytes, // new
                               useTransparentBackground:
                                   isCurrentPage && revealUnderlay,
                               useBlackBackground: _isFullscreen,

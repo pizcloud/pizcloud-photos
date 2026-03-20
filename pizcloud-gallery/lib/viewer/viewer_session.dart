@@ -23,6 +23,8 @@ class ViewerSession {
     required this.initialIndex,
     this.initialOriginalReady = false,
     this.initialHeroTag,
+    this.initialThumbUrl, // new
+    this.initialThumbBytes, // new
     this.onVisibleIndexChanged,
     this.onShareRequested,
     this.onDeleteRequested,
@@ -43,6 +45,8 @@ class ViewerSession {
   final int initialIndex;
   final bool initialOriginalReady;
   final String? initialHeroTag;
+  final String? initialThumbUrl; // new
+  final Uint8List? initialThumbBytes; // new
   final ValueChanged<int>? onVisibleIndexChanged;
   final ViewerShareCallback? onShareRequested;
   final ViewerDeleteCallback? onDeleteRequested;

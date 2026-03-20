@@ -23,6 +23,8 @@ class ViewerImageLoader extends StatefulWidget {
     required this.isActive,
     this.onSurfaceTap,
     this.startWithHighQuality = false,
+    this.initialThumbUrl, // new
+    this.initialThumbBytes, // new
     this.useTransparentBackground = false,
     this.useBlackBackground = false,
     this.videoControlsBottomInset = 12,
@@ -35,6 +37,8 @@ class ViewerImageLoader extends StatefulWidget {
   final bool isActive;
   final VoidCallback? onSurfaceTap;
   final bool startWithHighQuality;
+  final String? initialThumbUrl; // new
+  final Uint8List? initialThumbBytes; // new
   final bool useTransparentBackground;
   final bool useBlackBackground;
   final double videoControlsBottomInset;
@@ -48,6 +52,9 @@ class ViewerImageLoader extends StatefulWidget {
 class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   bool _originalCached = false;
   bool _previewCached = false;
+  bool _thumb300Cached = false; // new
+  bool _thumb100Cached = false; // new
+  String? _cachedLowQualityUrl; // new
   int _cacheStatusToken = 0;
   bool _allowHighQualityRequest = false;
 
@@ -245,7 +252,20 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
 
   Future<void> _refreshCacheStatus() async {
     final String highQualityUrl = widget.item.originalUrl;
-    final String? previewUrl = _normalizedPreviewUrl();
+    // new
+    // final String? previewUrl = _normalizedPreviewUrl();
+    final String? previewUrl = _normalizedPreviewUrl(
+      highQualityUrl: highQualityUrl,
+    );
+    final String? thumb300Url = _normalizedThumbnailUrl(
+      widget.item.thumbnails.size300,
+      highQualityUrl: highQualityUrl,
+    );
+    final String? thumb100Url = _normalizedThumbnailUrl(
+      widget.item.thumbnails.size100,
+      highQualityUrl: highQualityUrl,
+    );
+    // #new
     final int token = ++_cacheStatusToken;
     final int decodeWidth = _decodeWidth();
     final int? decodeHeight = _decodeHeightForWidth(decodeWidth);
@@ -273,18 +293,59 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
             url: previewUrl,
           )
         : Future<bool>.value(false);
+    // new
+    final Future<bool> thumb300CachedFuture =
+        _isNetworkUrl(thumb300Url) && thumb300Url != highQualityUrl
+        ? _isCached(
+            provider: ViewerCacheManager.providerFor(
+              thumb300Url!,
+              debugIndex: widget.viewerIndex,
+            ),
+            url: thumb300Url,
+          )
+        : Future<bool>.value(false);
+    final Future<bool> thumb100CachedFuture =
+        _isNetworkUrl(thumb100Url) && thumb100Url != highQualityUrl
+        ? _isCached(
+            provider: ViewerCacheManager.providerFor(
+              thumb100Url!,
+              debugIndex: widget.viewerIndex,
+            ),
+            url: thumb100Url,
+          )
+        : Future<bool>.value(false);
+    // #new
 
     final List<bool> cacheResults = await Future.wait<bool>([
       originalCachedFuture,
       previewCachedFuture,
+      thumb300CachedFuture, // new
+      thumb100CachedFuture, // new
     ]);
     if (!mounted || token != _cacheStatusToken) return;
 
     final bool nextCached = cacheResults[0];
     final bool nextPreviewCached = cacheResults[1];
+    // new
+    final bool nextThumb300Cached = cacheResults[2];
+    final bool nextThumb100Cached = cacheResults[3];
+    String? nextCachedLowQualityUrl;
+    // Prioritize smaller cached thumbs for faster first-frame display.
+    if (nextThumb300Cached && _isNetworkUrl(thumb300Url)) {
+      nextCachedLowQualityUrl = thumb300Url;
+    } else if (nextThumb100Cached && _isNetworkUrl(thumb100Url)) {
+      nextCachedLowQualityUrl = thumb100Url;
+    } else if (nextPreviewCached && _isNetworkUrl(previewUrl)) {
+      nextCachedLowQualityUrl = previewUrl;
+    }
+    // #new
+
     final bool nextHighQualityReady = _highQualityReady || nextCached;
     if (nextCached == _originalCached &&
         nextPreviewCached == _previewCached &&
+        nextThumb300Cached == _thumb300Cached &&
+        nextThumb100Cached == _thumb100Cached &&
+        nextCachedLowQualityUrl == _cachedLowQualityUrl && // new
         nextHighQualityReady == _highQualityReady) {
       return;
     }
@@ -295,6 +356,9 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
     setState(() {
       _originalCached = nextCached;
       _previewCached = nextPreviewCached;
+      _thumb300Cached = nextThumb300Cached; // new
+      _thumb100Cached = nextThumb100Cached; // new
+      _cachedLowQualityUrl = nextCached ? null : nextCachedLowQualityUrl; // new
       _highQualityReady = nextHighQualityReady;
       if (_originalCached) {
         _lowQualityReady = false;
@@ -328,6 +392,9 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   void _resetState() {
     _originalCached = false;
     _previewCached = false;
+    _thumb300Cached = false; // new
+    _thumb100Cached = false; // new
+    _cachedLowQualityUrl = null; // new
     _lowQualityReady = false;
     _lowQualityError = null;
     _requestedLowQualityUrl = null;
@@ -341,6 +408,9 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   void _markOriginalReady() {
     _originalCached = true;
     _previewCached = false;
+    _thumb300Cached = false; // new
+    _thumb100Cached = false; // new
+    _cachedLowQualityUrl = null; // new
     _highQualityReady = true;
     _highQualityError = null;
     _lowQualityReady = false;
@@ -395,6 +465,10 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   }
 
   bool _shouldShowLoadingOverlay(String highQualityUrl, String? lowQualityUrl) {
+    if (_hasImmediateInitialHandoffFrame()) {
+      // new
+      return false;
+    }
     final bool loadingPreview =
         _isNetworkUrl(lowQualityUrl) &&
         _requestedLowQualityUrl == lowQualityUrl &&
@@ -421,9 +495,19 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
     required String? lowQualityUrl,
   }) {
     final ViewerAppearancePalette palette = ViewerAppearancePalette.of(context);
+    final Widget? handoff = _buildInitialHandoffImageOrNull(); // new
     if (_highQualityReady) {
       return _buildHighQualityImage(highQualityUrl);
     }
+    // new
+    if (_isNetworkUrl(lowQualityUrl) &&
+        _lowQualityReady &&
+        _shouldKeepInitialHandoffBeforeHighQuality(lowQualityUrl!)) {
+      if (handoff != null) {
+        return handoff;
+      }
+    }
+    // #new
     if (_isNetworkUrl(lowQualityUrl) && _lowQualityReady) {
       return _buildLowQualityImage(lowQualityUrl!);
     }
@@ -433,12 +517,97 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
     if (_highQualityError != null) {
       return _buildErrorPlaceholder(palette);
     }
+    if (handoff != null) {
+      return handoff;
+    } // new
     return const SizedBox(key: ValueKey<String>('loading'));
   }
 
+  // new
+  bool _shouldKeepInitialHandoffBeforeHighQuality(String lowQualityUrl) {
+    if (_highQualityReady || _highQualityError != null) {
+      return false;
+    }
+    final Uint8List? bytes = widget.initialThumbBytes;
+    if (bytes == null || bytes.isEmpty) {
+      return false;
+    }
+    final String initialSource = widget.initialThumbUrl?.trim() ?? '';
+    if (initialSource.isEmpty) {
+      return false;
+    }
+    return initialSource == lowQualityUrl;
+  }
+
+  bool _shouldUseInitialHandoffFrame() {
+    if (_highQualityReady || _lowQualityReady) {
+      return false;
+    }
+    if (_lowQualityError != null || _highQualityError != null) {
+      return false;
+    }
+    if (_hasImmediateInitialHandoffFrame()) {
+      return true;
+    }
+    return false;
+  }
+
+  bool _hasImmediateInitialHandoffFrame() {
+    final Uint8List? bytes = widget.initialThumbBytes;
+    if (bytes != null && bytes.isNotEmpty) {
+      return true;
+    }
+    final String source = widget.initialThumbUrl?.trim() ?? '';
+    if (source.isEmpty) {
+      return false;
+    }
+    if (_isFilePathOrUri(source)) {
+      return _fileFromPathOrUri(source) != null;
+    }
+    return false;
+  }
+
+  Widget? _buildInitialHandoffImageOrNull() {
+    if (!_shouldUseInitialHandoffFrame()) {
+      return null;
+    }
+    final Uint8List? bytes = widget.initialThumbBytes;
+    if (bytes != null && bytes.isNotEmpty) {
+      return Image.memory(
+        bytes,
+        key: const ValueKey<String>('viewer_image_content'),
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.center,
+        width: double.infinity,
+        filterQuality: FilterQuality.low,
+        gaplessPlayback: true,
+      );
+    }
+    final String source = widget.initialThumbUrl!.trim();
+
+    final File? file = _fileFromPathOrUri(source);
+    if (file == null) {
+      return null;
+    }
+    return Image.file(
+      file,
+      key: const ValueKey<String>('viewer_image_content'),
+      fit: BoxFit.fitWidth,
+      alignment: Alignment.center,
+      width: double.infinity,
+      filterQuality: FilterQuality.low,
+      gaplessPlayback: true,
+      errorBuilder: (context, error, stackTrace) {
+        return const SizedBox.shrink();
+      },
+    );
+  }
+  // #new
+
   Widget _buildLowQualityImage(String url) {
     return Image(
-      key: const ValueKey<String>('low_quality'),
+      key: const ValueKey<String>('viewer_image_content'), // new
+      // key: const ValueKey<String>('low_quality'), // new
       image: ViewerCacheManager.providerFor(
         url,
         debugIndex: widget.viewerIndex,
@@ -482,7 +651,8 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
     final int decodeWidth = _requestedHighQualityWidth ?? _decodeWidth();
     final int? decodeHeight = _decodeHeightForWidth(decodeWidth);
     return Image(
-      key: const ValueKey<String>('high_quality'),
+      key: const ValueKey<String>('viewer_image_content'), // new
+      // key: const ValueKey<String>('high_quality'),
       image: ViewerCacheManager.providerFor(
         url,
         maxWidth: decodeWidth,
@@ -508,19 +678,59 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
       return null;
     }
 
-    final String? fromPreview = _normalizedPreviewUrl();
-    if (_previewCached && _isNetworkUrl(fromPreview)) {
-      return fromPreview;
+    // new
+    // Prefer cached small thumbs first (300/100), then cached preview.
+    final String? cachedCandidate = _cachedLowQualityUrl;
+    if (_isNetworkUrl(cachedCandidate)) {
+      return cachedCandidate;
     }
 
+    // final String? fromPreview = _normalizedPreviewUrl();
+    // if (_previewCached && _isNetworkUrl(fromPreview)) {
+    //   return fromPreview;
+    // }
+    // if (_isNetworkUrl(fromPreview)) {
+    //   return fromPreview;
+    // }
+    // final String fallback = widget.item.thumbnails.size600;
+    // if (_isNetworkUrl(fallback) && fallback != widget.item.originalUrl) {
+    //   return fallback;
+    // }
+
+    final String highQualityUrl = widget.item.originalUrl;
+    final String? fromPreview = _normalizedPreviewUrl(
+      highQualityUrl: highQualityUrl,
+    );
+    // #new
     if (_isNetworkUrl(fromPreview)) {
       return fromPreview;
     }
 
-    final String fallback = widget.item.thumbnails.size600;
-    if (_isNetworkUrl(fallback) && fallback != widget.item.originalUrl) {
+    final String? fromThumb300 = _normalizedThumbnailUrl(
+      widget.item.thumbnails.size300,
+      highQualityUrl: highQualityUrl,
+    ); // new
+    if (_isNetworkUrl(fromThumb300)) {
+      return fromThumb300;
+    } // new
+
+    // new
+    final String? fromThumb100 = _normalizedThumbnailUrl(
+      widget.item.thumbnails.size100,
+      highQualityUrl: highQualityUrl,
+    );
+    if (_isNetworkUrl(fromThumb100)) {
+      return fromThumb100;
+    }
+
+    final String? fallback = _normalizedThumbnailUrl(
+      widget.item.thumbnails.size600,
+      highQualityUrl: highQualityUrl,
+    );
+    if (_isNetworkUrl(fallback)) {
       return fallback;
     }
+    // #new
     return null;
   }
 
@@ -547,19 +757,44 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
     return File(value);
   }
 
-  String? _normalizedPreviewUrl() {
+  String? _normalizedPreviewUrl({String? highQualityUrl}) {
+    // new
     final String? value = widget.item.previewUrl;
+    final String comparedHighQualityUrl =
+        highQualityUrl ?? widget.item.originalUrl; // new
     if (!_isNetworkUrl(value)) {
       return null;
     }
-    if (value == widget.item.originalUrl) {
+    if (value == comparedHighQualityUrl) {
+      return null;
+    } // new
+    return value;
+  }
+
+  // new
+  String? _normalizedThumbnailUrl(String? value, {String? highQualityUrl}) {
+    final String comparedHighQualityUrl =
+        highQualityUrl ?? widget.item.originalUrl;
+    if (!_isNetworkUrl(value)) {
+      return null;
+    }
+    if (value == comparedHighQualityUrl) {
       return null;
     }
     return value;
   }
+  // #new
 
   void _startLoadPipeline() {
+    // Reverted behavior (requested):
+    // - Keep low-quality gate first to avoid competing with high-quality fetch
+    //   on weak/limited networks.
+    // - High-quality request is unlocked in `_onLowQualityGateOpened`.
     _allowHighQualityRequest = false;
+    // "HQ sooner" version kept for reference:
+    // _allowHighQualityRequest = true;
+    // _ensureLowQualityRequested();
+    // _ensureHighQualityRequested();
     _refreshCacheStatus().then((_) {
       if (!mounted) return;
       if (_originalCached) {

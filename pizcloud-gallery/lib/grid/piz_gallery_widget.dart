@@ -997,40 +997,51 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   Future<void> _openViewerAtDataIndex(
     int dataIndex, {
     required String initialHeroTag,
+    String? initialThumbUrl, // new
   }) async {
     if (!_isInitialized) return;
     if (dataIndex < 0 || dataIndex >= mediaDataSource.length) return;
-    bool initialOriginalReady = false;
     final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
-    if (item != null && !item.isVideo && _isNetworkUrl(item.originalUrl)) {
-      final int decodeWidth = _viewerDecodeWidthForItem(item);
-      final int? decodeHeight = _viewerDecodeHeightForItem(item, decodeWidth);
-      final ImageProvider<Object> provider = ViewerCacheManager.providerFor(
-        item.originalUrl,
-        maxWidth: decodeWidth,
-        maxHeight: decodeHeight,
-        debugIndex: dataIndex,
-      );
-      final ImageCacheStatus? cacheStatus = await provider.obtainCacheStatus(
-        configuration: createLocalImageConfiguration(context),
-      );
-      final bool inMemoryCache = cacheStatus?.tracked ?? false;
-      final bool inDiskCache = await ViewerCacheManager.instance.isCachedOnDisk(
-        item.originalUrl,
-        maxWidth: decodeWidth,
-        maxHeight: decodeHeight,
-      );
-      if (!mounted) return;
-      if (inMemoryCache || inDiskCache) {
-        try {
-          await precacheImage(provider, context);
-          initialOriginalReady = true;
-        } catch (_) {
-          initialOriginalReady = inMemoryCache;
-        }
-        if (!mounted) return;
-      }
-    }
+    // new
+    final Uint8List? initialThumbBytes = _resolveInitialHandoffThumbBytes(
+      item: item,
+      initialThumbUrl: initialThumbUrl,
+    );
+    bool initialOriginalReady = false;
+    _warmupOriginalForViewerOpen(dataIndex: dataIndex);
+
+    // final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
+    // if (item != null && !item.isVideo && _isNetworkUrl(item.originalUrl)) {
+    //   final int decodeWidth = _viewerDecodeWidthForItem(item);
+    //   final int? decodeHeight = _viewerDecodeHeightForItem(item, decodeWidth);
+    //   final ImageProvider<Object> provider = ViewerCacheManager.providerFor(
+    //     item.originalUrl,
+    //     maxWidth: decodeWidth,
+    //     maxHeight: decodeHeight,
+    //     debugIndex: dataIndex,
+    //   );
+    //   final ImageCacheStatus? cacheStatus = await provider.obtainCacheStatus(
+    //     configuration: createLocalImageConfiguration(context),
+    //   );
+    //   final bool inMemoryCache = cacheStatus?.tracked ?? false;
+    //   final bool inDiskCache =
+    //       await ViewerCacheManager.instance.isCachedOnDisk(
+    //         item.originalUrl,
+    //         maxWidth: decodeWidth,
+    //         maxHeight: decodeHeight,
+    //       );
+    //   if (!mounted) return;
+    //   if (inMemoryCache || inDiskCache) {
+    //     try {
+    //       await precacheImage(provider, context);
+    //       initialOriginalReady = true;
+    //     } catch (_) {
+    //       initialOriginalReady = inMemoryCache;
+    //     }
+    //     if (!mounted) return;
+    //   }
+    // }
+    // #new
     if (mounted && !_isViewerOpen) {
       setState(() {
         _isViewerOpen = true;
@@ -1046,6 +1057,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           initialIndex: dataIndex,
           initialOriginalReady: initialOriginalReady,
           initialHeroTag: initialHeroTag,
+          initialThumbUrl: initialThumbUrl, // new
+          initialThumbBytes: initialThumbBytes, // new
           onVisibleIndexChanged: _onViewerVisibleIndexChanged,
           onShareRequested: _handleViewerShareRequested,
           onDeleteRequested: widget.onViewerDeleteRequested == null
@@ -1128,6 +1141,74 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
   Future<void> _handleViewerAddToAlbumRequested(MediaItem item) async {
     await widget.onViewerAddToAlbumRequested?.call(item);
+  }
+
+  Uint8List? _resolveInitialHandoffThumbBytes({
+    required MediaItem? item,
+    required String? initialThumbUrl,
+  }) {
+    final String source = initialThumbUrl?.trim() ?? '';
+    if (item == null || source.isEmpty) {
+      return null;
+    }
+
+    // Remote grid cache keys use thumb URL directly.
+    if (!item.isLocal) {
+      final Uint8List? remoteBytes = _bytesCache.peek(source);
+      if (remoteBytes != null && remoteBytes.isNotEmpty) {
+        return remoteBytes;
+      }
+      return null;
+    }
+
+    // Local grid cache keys are typed to avoid image/video key collisions.
+    final String typedKey = LocalDeviceMediaUri.buildTypedThumbCacheKey(
+      source,
+      isVideo: item.isVideo,
+    );
+    final Uint8List? localBytes = _bytesCache.peek(typedKey);
+    if (localBytes != null && localBytes.isNotEmpty) {
+      return localBytes;
+    }
+    return null;
+  }
+
+  void _warmupOriginalForViewerOpen({required int dataIndex}) {
+    final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
+    if (item == null || item.isVideo || !_isNetworkUrl(item.originalUrl)) {
+      return;
+    }
+    final int decodeWidth = _viewerDecodeWidthForItem(item);
+    final int? decodeHeight = _viewerDecodeHeightForItem(item, decodeWidth);
+    final ImageProvider<Object> provider = ViewerCacheManager.providerFor(
+      item.originalUrl,
+      maxWidth: decodeWidth,
+      maxHeight: decodeHeight,
+      debugIndex: dataIndex,
+    );
+    // Non-blocking warmup to keep tap-to-open instant.
+    unawaited(
+      (() async {
+        final ImageCacheStatus? cacheStatus = await provider.obtainCacheStatus(
+          configuration: createLocalImageConfiguration(context),
+        );
+        final bool inMemoryCache = cacheStatus?.tracked ?? false;
+        final bool inDiskCache = await ViewerCacheManager.instance
+            .isCachedOnDisk(
+              item.originalUrl,
+              maxWidth: decodeWidth,
+              maxHeight: decodeHeight,
+            );
+        if (!mounted || (!inMemoryCache && !inDiskCache)) {
+          return;
+        }
+        try {
+          await precacheImage(provider, context);
+        } catch (_) {
+          // Best-effort warmup only.
+        }
+      })(),
+    );
   }
   // #new
 
@@ -1407,9 +1488,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     final IconData icon = showYearList
         ? Icons.calendar_today_rounded
         : Icons.calendar_month_rounded;
-    final int? selectedYearAnchor = showYearList
-        ? null
-        : _selectedYearBrowseAnchor;
+    // final int? selectedYearAnchor = showYearList
+    //     ? null
+    //     : _selectedYearBrowseAnchor; // new
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
@@ -2500,6 +2581,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                                             dataIndex,
                                                             initialHeroTag:
                                                                 heroTag,
+                                                            initialThumbUrl:
+                                                                thumbUrl, // new
                                                           ),
                                                 );
                                             return _withJumpTargetMarker(
@@ -2523,12 +2606,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                                           dataIndex,
                                                           thumbUrl,
                                                           heroTag,
-                                                        ) =>
-                                                            _openViewerAtDataIndex(
-                                                              dataIndex,
-                                                              initialHeroTag:
-                                                                  heroTag,
-                                                            ),
+                                                        ) => _openViewerAtDataIndex(
+                                                          dataIndex,
+                                                          initialHeroTag:
+                                                              heroTag,
+                                                          initialThumbUrl:
+                                                              thumbUrl, // new
+                                                        ),
                                                   ),
                                               _visibleCellsBuilder
                                                   .buildVisibleCells(
@@ -2543,12 +2627,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                                           dataIndex,
                                                           thumbUrl,
                                                           heroTag,
-                                                        ) =>
-                                                            _openViewerAtDataIndex(
-                                                              dataIndex,
-                                                              initialHeroTag:
-                                                                  heroTag,
-                                                            ),
+                                                        ) => _openViewerAtDataIndex(
+                                                          dataIndex,
+                                                          initialHeroTag:
+                                                              heroTag,
+                                                          initialThumbUrl:
+                                                              thumbUrl, // new
+                                                        ),
                                                   ),
                                             ],
                                           );
