@@ -82,6 +82,7 @@ class NewLibraryPage extends ConsumerWidget {
       showDateBrowseOverlay: true,
       dateBrowseTexts: dateBrowseTexts,
       showStorageIndicator: showStorageIndicator,
+      showScrollbarDateHint: true,
       storageIndicatorResolver: (item) {
         final BaseAsset? asset = source.findAssetByMediaItemId(item.id);
         if (asset != null) {

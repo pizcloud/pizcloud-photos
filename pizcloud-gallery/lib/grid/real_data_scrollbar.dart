@@ -4,6 +4,33 @@ import 'package:flutter/material.dart';
 
 import 'grid_state.dart';
 
+// new
+typedef RealDataScrollbarOverlayBuilder =
+    Widget? Function(
+      BuildContext context,
+      RealDataScrollbarOverlayMetrics metrics,
+    );
+
+@immutable
+class RealDataScrollbarOverlayMetrics {
+  const RealDataScrollbarOverlayMetrics({
+    required this.width,
+    required this.trackExtent,
+    required this.thumbTop,
+    required this.thumbExtent,
+    required this.canScroll,
+  });
+
+  final double width;
+  final double trackExtent;
+  final double thumbTop;
+  final double thumbExtent;
+  final bool canScroll;
+
+  double get thumbCenterY => thumbTop + (thumbExtent / 2);
+}
+// #new
+
 class RealDataScrollbar extends StatefulWidget {
   const RealDataScrollbar({
     super.key,
@@ -16,6 +43,7 @@ class RealDataScrollbar extends StatefulWidget {
     this.thumbDiameter = 48,
     this.showTrack = false,
     this.margin = const EdgeInsets.symmetric(vertical: 8),
+    this.overlayBuilder, // new
   });
 
   final GridState grid;
@@ -27,6 +55,7 @@ class RealDataScrollbar extends StatefulWidget {
   final double thumbDiameter;
   final bool showTrack;
   final EdgeInsets margin;
+  final RealDataScrollbarOverlayBuilder? overlayBuilder; // new
 
   @override
   State<RealDataScrollbar> createState() => _RealDataScrollbarState();
@@ -95,11 +124,26 @@ class _RealDataScrollbarState extends State<RealDataScrollbar> {
               metrics.thumbExtent,
               _minThumbTouchExtent,
             );
+            // new
+            final RealDataScrollbarOverlayMetrics overlayMetrics =
+                RealDataScrollbarOverlayMetrics(
+                  width: widget.width,
+                  trackExtent: trackExtent,
+                  thumbTop: metrics.thumbTop,
+                  thumbExtent: metrics.thumbExtent,
+                  canScroll: metrics.canScroll,
+                );
+            final Widget? overlay = widget.overlayBuilder?.call(
+              context,
+              overlayMetrics,
+            );
+            // #new
 
             final Widget track = SizedBox(
               width: widget.width,
               height: trackExtent,
               child: Stack(
+                clipBehavior: Clip.none, // new
                 children: <Widget>[
                   if (widget.showTrack)
                     Positioned.fill(
@@ -143,6 +187,7 @@ class _RealDataScrollbarState extends State<RealDataScrollbar> {
                       );
                     },
                   ),
+                  if (overlay != null) ...<Widget>[overlay], // new
                 ],
               ),
             );

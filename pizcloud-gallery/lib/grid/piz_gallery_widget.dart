@@ -62,6 +62,7 @@ class PizGallery extends StatefulWidget {
   final GalleryDateBrowseTexts dateBrowseTexts;
   final bool showStorageIndicator; // new
   final GridStorageIndicatorResolver? storageIndicatorResolver; // new
+  final bool showScrollbarDateHint; // new
   // #new
 
   const PizGallery({
@@ -88,6 +89,7 @@ class PizGallery extends StatefulWidget {
     this.dateBrowseTexts = const GalleryDateBrowseTexts.defaults(),
     this.showStorageIndicator = false,
     this.storageIndicatorResolver,
+    this.showScrollbarDateHint = false,
     // #new
   });
 
@@ -132,9 +134,14 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const Duration _pendingMonthBrowseScrollTimeout = Duration(
     milliseconds: 2000,
   ); // new
+  static const Duration _scrollbarDateHintHideDelay = Duration(
+    milliseconds: 320,
+  ); // new
   static const double _pendingMonthBrowseTopTolerance = 0.5; // new
   static const double _dateBrowseListBaseBottomPadding = 110; // new
   static const double _dateBrowseTopAlignPaddingSlack = 8; // new
+  static const double _scrollbarDateHintBubbleHeight = 30; // new
+  static const double _scrollbarDateHintBubbleGap = 8; // new
   static const bool _skipIfWindowUnchanged = true;
   static const bool _enableCompactPending = true;
   static const int _compactFactor = 3;
@@ -190,6 +197,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   int _jumpTargetMarkerSeed = 0;
   Timer? _jumpTargetHideTimer;
   Timer? _selectedYearAnchorPulseTimer;
+  Timer? _scrollbarDateHintHideTimer; // new
+  bool _showScrollbarDateHintOverlay = false; // new
+  double _lastObservedVerticalScrollOffset = 0; // new
   // #new
 
   // =======================================================
@@ -291,6 +301,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _jumpTargetHideTimer = null; // new
     _selectedYearAnchorPulseTimer?.cancel(); // new
     _selectedYearAnchorPulseTimer = null; // new
+    _scrollbarDateHintHideTimer?.cancel(); // new
+    _scrollbarDateHintHideTimer = null; // new
     _sourceUpdatesSubscription?.cancel();
     _sourceUpdatesSubscription = null;
     if (_isInitialized) {
@@ -312,10 +324,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
   void _disposeRuntime() {
     if (!_isInitialized) return;
+    grid.scrollOffset.removeListener(_handleGridScrollOffsetChanged); // new
     if (_isScrollbarFastScrolling) {
       _isScrollbarFastScrolling = false;
       grid.setFastScrollActive(false);
     }
+    _hideScrollbarDateHint(notify: false); // new
     _clearLocalThumbPrefetchState(disposeScheduler: true);
     _prefetchThrottler.dispose();
     _prefetchController.disposeAll();
@@ -396,6 +410,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       onDebugTripleTouch: grid.debugPrintTable,
     );
     grid.init();
+    _lastObservedVerticalScrollOffset = grid.scrollOffset.value.dy; // new
+    grid.scrollOffset.addListener(_handleGridScrollOffsetChanged); // new
     _snapController =
         AnimationController(
           vsync: this,
@@ -628,6 +644,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     }
     if (mode != GalleryDateBrowseMode.all) {
       _clearJumpTargetIndicator(notify: false);
+      _hideScrollbarDateHint(notify: false); // new
     } // new
     setState(() {
       _dateBrowseMode = mode;
@@ -653,6 +670,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       return;
     }
     _clearJumpTargetIndicator(notify: false); // new
+    _hideScrollbarDateHint(notify: false); // new
     setState(() {
       _dateBrowseMode = GalleryDateBrowseMode.month;
       _pendingMonthBrowseYear = entry.year;
@@ -671,6 +689,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (!widget.showDateBrowseOverlay) {
       return;
     }
+    _hideScrollbarDateHint(notify: false); // new
     _clearPendingMonthBrowseScroll();
     final String monthLabel = _formatMonthBrowseLabel(context, entry);
     _jumpTargetHideTimer?.cancel();
@@ -1471,6 +1490,135 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       ),
     );
   }
+
+  String? _buildScrollbarMonthYearLabel(MediaItem item) {
+    final DateTime? sourceDate = _resolveSortDate(item);
+    if (sourceDate == null) {
+      return null;
+    }
+    final DateTime date = sourceDate.toLocal();
+    final MaterialLocalizations localizations = MaterialLocalizations.of(
+      context,
+    );
+    return localizations.formatMonthYear(DateTime(date.year, date.month));
+  }
+
+  bool _shouldShowScrollbarDateHint({required bool scaling}) {
+    if (!widget.showScrollbarDateHint) {
+      return false;
+    }
+    if (scaling) {
+      return false;
+    }
+    if (_dateBrowseMode != GalleryDateBrowseMode.all) {
+      return false;
+    }
+    return _showScrollbarDateHintOverlay || _isScrollbarFastScrolling;
+  }
+
+  void _handleGridScrollOffsetChanged() {
+    if (!_isInitialized || !widget.showScrollbarDateHint) {
+      return;
+    }
+    final double currentOffset = grid.scrollOffset.value.dy;
+    final double delta = currentOffset - _lastObservedVerticalScrollOffset;
+    _lastObservedVerticalScrollOffset = currentOffset;
+    if (delta.abs() < 0.01) {
+      return;
+    }
+    if (_dateBrowseMode != GalleryDateBrowseMode.all) {
+      _hideScrollbarDateHint();
+      return;
+    }
+    _markScrollbarDateHintInteraction();
+  }
+
+  void _markScrollbarDateHintInteraction() {
+    if (!widget.showScrollbarDateHint) {
+      return;
+    }
+    if (_dateBrowseMode != GalleryDateBrowseMode.all) {
+      return;
+    }
+    if (!_showScrollbarDateHintOverlay) {
+      if (!mounted) {
+        _showScrollbarDateHintOverlay = true;
+      } else {
+        setState(() {
+          _showScrollbarDateHintOverlay = true;
+        });
+      }
+    }
+    _scheduleScrollbarDateHintHide();
+  }
+
+  void _scheduleScrollbarDateHintHide() {
+    _scrollbarDateHintHideTimer?.cancel();
+    _scrollbarDateHintHideTimer = Timer(_scrollbarDateHintHideDelay, () {
+      if (!mounted) {
+        return;
+      }
+      if (_isScrollbarFastScrolling) {
+        return;
+      }
+      if (!_showScrollbarDateHintOverlay) {
+        return;
+      }
+      setState(() {
+        _showScrollbarDateHintOverlay = false;
+      });
+    });
+  }
+
+  void _hideScrollbarDateHint({bool notify = true}) {
+    _scrollbarDateHintHideTimer?.cancel();
+    _scrollbarDateHintHideTimer = null;
+    if (!_showScrollbarDateHintOverlay) {
+      return;
+    }
+    if (notify && mounted) {
+      setState(() {
+        _showScrollbarDateHintOverlay = false;
+      });
+    } else {
+      _showScrollbarDateHintOverlay = false;
+    }
+  }
+
+  Widget? _buildScrollbarDateHintOverlay({
+    required bool scaling,
+    required RealDataScrollbarOverlayMetrics metrics,
+  }) {
+    if (!_shouldShowScrollbarDateHint(scaling: scaling)) {
+      return null;
+    }
+    if (!metrics.canScroll) {
+      return null;
+    }
+    final double maxTop = math.max(
+      0,
+      metrics.trackExtent - _scrollbarDateHintBubbleHeight,
+    );
+    final double overlayTop =
+        (metrics.thumbCenterY - (_scrollbarDateHintBubbleHeight / 2))
+            .clamp(0.0, maxTop)
+            .toDouble();
+    return Positioned(
+      top: overlayTop,
+      right: metrics.width + _scrollbarDateHintBubbleGap,
+      child: IgnorePointer(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 180),
+          child: GridDateOverlay(
+            grid: grid,
+            mediaDataSource: mediaDataSource,
+            textBuilder: _buildScrollbarMonthYearLabel,
+            preferAddedAt: _sortMode == GallerySortMode.addedAtDesc,
+          ),
+        ),
+      ),
+    );
+  }
   // #new
 
   Widget _buildDateBrowsePanelHeader({
@@ -1917,6 +2065,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _lastHandledScrollToTopSignal = widget.scrollToTopSignal;
       _scrollToLockTopOffset();
     }
+    if (oldWidget.showScrollbarDateHint && !widget.showScrollbarDateHint) {
+      _hideScrollbarDateHint();
+    } // new
   }
 
   void _scrollToLockTopOffset() {
@@ -1995,6 +2146,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       return;
     }
     _isScrollbarFastScrolling = isDragging;
+    if (widget.showScrollbarDateHint) {
+      if (isDragging) {
+        _markScrollbarDateHintInteraction();
+      } else {
+        _scheduleScrollbarDateHintHide();
+      }
+    } // new
     if (_isInitialized) {
       grid.setFastScrollActive(isDragging);
       if (!isDragging) {
@@ -2660,9 +2818,6 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                   ),
                   Positioned(
                     // new
-                    // top: 56,
-                    // bottom: 8,
-                    // right: -1,
                     top: 30,
                     bottom: 36,
                     right: -5,
@@ -2673,6 +2828,11 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                       interactive: !scaling,
                       enableTrackGestures: false,
                       onDragStateChanged: _handleScrollbarDragStateChanged,
+                      overlayBuilder: (context, metrics) =>
+                          _buildScrollbarDateHintOverlay(
+                            scaling: scaling,
+                            metrics: metrics,
+                          ), // new
                     ),
                   ),
                   if (_showFpsOverlay)
