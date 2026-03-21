@@ -210,6 +210,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   double _lastObservedVerticalScrollOffset = 0; // new
   bool _isSelectionMode = false; // new
   final Set<String> _selectedMediaItemIds = <String>{}; // new
+  final Map<int, Offset> _activePointerPositions = <int, Offset>{}; // new
+  bool _isDragSelecting = false; // new
+  int? _dragPointerId; // new
+  bool? _dragSelectValue; // new
+  final Set<int> _dragVisitedDataIndices = <int>{}; // new
+  Offset? _lastDragLocalPoint; // new
   int _lastHandledClearSelectionSignal = 0; // new
   // #new
 
@@ -342,6 +348,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       grid.setFastScrollActive(false);
     }
     _hideScrollbarDateHint(notify: false); // new
+    _activePointerPositions.clear(); // new
+    _endDragSelection(); // new
     _clearLocalThumbPrefetchState(disposeScheduler: true);
     _prefetchThrottler.dispose();
     _prefetchController.disposeAll();
@@ -512,11 +520,14 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     final bool hadSelection =
         _isSelectionMode || _selectedMediaItemIds.isNotEmpty;
     if (!hadSelection) {
+      _endDragSelection(); // new
       if (notify) {
         _emitSelectionChanged();
       }
       return;
     }
+
+    _endDragSelection(); // new
 
     if (mounted) {
       setState(() {
@@ -565,6 +576,186 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _emitSelectionChanged();
   }
 
+  // new
+  void _beginDragSelection({
+    required int seedDataIndex,
+    required bool selectValue,
+  }) {
+    if (!widget.enableMultiSelect || !_isInitialized) {
+      return;
+    }
+    int? pointerId;
+    if (_activePointerPositions.length == 1) {
+      pointerId = _activePointerPositions.keys.first;
+    } else if (_activePointerPositions.isNotEmpty) {
+      pointerId = _dragPointerId ?? _activePointerPositions.keys.first;
+    }
+
+    _isDragSelecting = true;
+    _dragPointerId = pointerId;
+    _dragSelectValue = selectValue;
+    _dragVisitedDataIndices
+      ..clear()
+      ..add(seedDataIndex);
+    _lastDragLocalPoint = pointerId == null
+        ? null
+        : _activePointerPositions[pointerId];
+  }
+
+  void _endDragSelection() {
+    _isDragSelecting = false;
+    _dragPointerId = null;
+    _dragSelectValue = null;
+    _dragVisitedDataIndices.clear();
+    _lastDragLocalPoint = null;
+  }
+
+  int? _resolveDataIndexFromPoint(Offset localPoint) {
+    if (!_isInitialized) {
+      return null;
+    }
+    final FocusCell focus = grid.getFocusCell(localPoint);
+    final int dataIndex = focus.index;
+    if (dataIndex < 0 || dataIndex >= mediaDataSource.length) {
+      return null;
+    }
+    return dataIndex;
+  }
+
+  void _applySelectionValueForDataIndices(
+    Set<int> dataIndices,
+    bool selectValue,
+  ) {
+    if (!widget.enableMultiSelect || !_isInitialized || dataIndices.isEmpty) {
+      return;
+    }
+
+    final Set<String> idsToApply = <String>{};
+    for (final int dataIndex in dataIndices) {
+      if (dataIndex < 0 || dataIndex >= mediaDataSource.length) {
+        continue;
+      }
+      final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
+      if (item == null) {
+        continue;
+      }
+      final bool isSelected = _selectedMediaItemIds.contains(item.id);
+      if (isSelected == selectValue) {
+        continue;
+      }
+      idsToApply.add(item.id);
+    }
+
+    if (idsToApply.isEmpty) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSelectionMode = true;
+        if (selectValue) {
+          _selectedMediaItemIds.addAll(idsToApply);
+        } else {
+          for (final String id in idsToApply) {
+            _selectedMediaItemIds.remove(id);
+          }
+        }
+        if (_selectedMediaItemIds.isEmpty) {
+          _isSelectionMode = false;
+        }
+      });
+    } else {
+      _isSelectionMode = true;
+      if (selectValue) {
+        _selectedMediaItemIds.addAll(idsToApply);
+      } else {
+        for (final String id in idsToApply) {
+          _selectedMediaItemIds.remove(id);
+        }
+      }
+      if (_selectedMediaItemIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    }
+
+    _emitSelectionChanged();
+  }
+
+  void _updateDragSelection(Offset localPoint) {
+    final bool? dragSelectValue = _dragSelectValue;
+    if (!_isDragSelecting || dragSelectValue == null) {
+      return;
+    }
+
+    final Set<int> nextDataIndices = <int>{};
+
+    void collectSample(Offset samplePoint) {
+      final int? dataIndex = _resolveDataIndexFromPoint(samplePoint);
+      if (dataIndex == null) {
+        return;
+      }
+      if (_dragVisitedDataIndices.add(dataIndex)) {
+        nextDataIndices.add(dataIndex);
+      }
+    }
+
+    final Offset? previousPoint = _lastDragLocalPoint;
+    if (previousPoint == null) {
+      collectSample(localPoint);
+    } else {
+      final double distance = (localPoint - previousPoint).distance;
+      final double stepLength = math.max(6.0, grid.cellSize * 0.35);
+      final int steps = math.max(1, (distance / stepLength).ceil());
+      for (int i = 1; i <= steps; i++) {
+        final double t = i / steps;
+        final Offset samplePoint = Offset.lerp(previousPoint, localPoint, t)!;
+        collectSample(samplePoint);
+      }
+    }
+
+    _lastDragLocalPoint = localPoint;
+    if (nextDataIndices.isEmpty) {
+      return;
+    }
+
+    _applySelectionValueForDataIndices(nextDataIndices, dragSelectValue);
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    _gestureController.onPointerDown(event);
+    _activePointerPositions[event.pointer] = event.localPosition;
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    _gestureController.onPointerMove(event);
+    _activePointerPositions[event.pointer] = event.localPosition;
+
+    if (!_isDragSelecting) {
+      return;
+    }
+    if (_dragPointerId != null && _dragPointerId != event.pointer) {
+      return;
+    }
+
+    _dragPointerId ??= event.pointer;
+    _updateDragSelection(event.localPosition);
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    unawaited(_gestureController.onPointerUp(event));
+    _activePointerPositions.remove(event.pointer);
+    if (_dragPointerId == null || _dragPointerId == event.pointer) {
+      _endDragSelection();
+    }
+  }
+
+  void _handlePointerCancel(PointerCancelEvent _) {
+    _gestureController.onPointerCancel();
+    _activePointerPositions.clear();
+    _endDragSelection();
+  }
+  // #new
+
   bool _isDataIndexSelected(int dataIndex) {
     if (!_isInitialized ||
         dataIndex < 0 ||
@@ -586,7 +777,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (item == null) {
       return;
     }
+    final bool wasSelected = _selectedMediaItemIds.contains(item.id); // new
+    // _toggleSelectionForItem(item); // old
     _toggleSelectionForItem(item);
+    _beginDragSelection(
+      seedDataIndex: dataIndex,
+      selectValue: !wasSelected,
+    ); // new
   }
 
   void _handleDataIndexTap(int dataIndex, String? thumbUrl, String heroTag) {
@@ -1428,7 +1625,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: palette.menuButtonBackground,
+        color: Color(0x8A000000),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: const Color(0x66FFFFFF), width: 1),
       ),
@@ -2850,10 +3047,14 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
               // =======================================================
               // Pointer tracking (lock scroll when pinch zoom)
               // =======================================================
-              onPointerDown: _gestureController.onPointerDown,
-              onPointerMove: _gestureController.onPointerMove,
-              onPointerUp: _gestureController.onPointerUp,
-              onPointerCancel: (_) => _gestureController.onPointerCancel(),
+              // onPointerDown: _gestureController.onPointerDown, // old
+              // onPointerMove: _gestureController.onPointerMove, // old
+              // onPointerUp: _gestureController.onPointerUp, // old
+              // onPointerCancel: (_) => _gestureController.onPointerCancel(), // old
+              onPointerDown: _handlePointerDown, // new
+              onPointerMove: _handlePointerMove, // new
+              onPointerUp: _handlePointerUp, // new
+              onPointerCancel: _handlePointerCancel, // new
 
               child: Stack(
                 children: [
@@ -3031,7 +3232,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                   ),
                   if (_showFpsOverlay)
                     Positioned(
-                      top: 8,
+                      top: 11,
                       left: 8,
                       child: FpsBadge(monitor: _fpsMonitor),
                     ),
@@ -3042,7 +3243,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                           widget.showSelectModeButton)) // new
                     Positioned(
                       top: 8,
-                      left: _showFpsOverlay ? 96 : 8,
+                      left: _showFpsOverlay ? 86 : 8,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
