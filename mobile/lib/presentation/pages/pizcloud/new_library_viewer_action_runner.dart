@@ -20,6 +20,7 @@ import 'package:immich_mobile/presentation/widgets/images/image_provider.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/action.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/asset_viewer/current_asset.provider.dart';
+import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
@@ -80,6 +81,235 @@ class NewLibraryViewerActionRunner {
 
   bool canAddToAlbumSync(MediaItem item) {
     return capabilityForItemSync(item).canAddToAlbum;
+  }
+
+  Future<bool> shareMany(List<MediaItem> items, BuildContext context) async {
+    final List<_ResolvedAsset> resolved = await _resolveMany(
+      items,
+      context: context,
+      guard: (capability) => capability.canShare,
+    );
+    if (resolved.isEmpty) {
+      _showInfo(context, 'No selected item can be shared.');
+      return false;
+    }
+
+    final ActionResult result = await _runWithTimelineSelection(
+      resolved.map((entry) => entry.asset),
+      () => _ref.read(actionProvider.notifier).shareAssets(ActionSource.timeline, context),
+    );
+    if (!result.success) {
+      _showError(context, result.error ?? 'Share failed');
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> addToAlbumMany(List<MediaItem> items, BuildContext context) async {
+    final List<_ResolvedAsset> resolved = await _resolveMany(
+      items,
+      context: context,
+      guard: (capability) => capability.canAddToAlbum,
+    );
+    if (resolved.isEmpty) {
+      _showInfo(context, 'No selected item can be added to album.');
+      return false;
+    }
+
+    final List<String> remoteIds = resolved
+        .map((entry) => entry.asset.remoteId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (remoteIds.isEmpty) {
+      _showInfo(context, 'Unable to resolve remote ids for selected items.');
+      return false;
+    }
+
+    bool completed = false;
+    await showPlatformModalSheet(
+      context: context,
+      material: MaterialModalSheetData(isScrollControlled: true, backgroundColor: Colors.transparent),
+      builder: (_) {
+        return platformSheetWrapper(
+          context,
+          BaseBottomSheet(
+            actions: const <Widget>[],
+            slivers: <Widget>[
+              AlbumSelector(
+                onAlbumSelected: (RemoteAlbum album) async {
+                  final int addedCount = await _ref.read(remoteAlbumProvider.notifier).addAssets(album.id, remoteIds);
+                  if (!context.mounted) {
+                    return;
+                  }
+
+                  if (addedCount == 0) {
+                    _showInfo(context, 'Selected items already exist in this album.');
+                  } else if (addedCount < remoteIds.length) {
+                    _showInfo(context, 'Added $addedCount/${remoteIds.length} item(s) to album.');
+                  } else {
+                    _showSuccess(context, 'Added to album');
+                  }
+                  completed = true;
+                  await Navigator.of(context).maybePop();
+                },
+              ),
+            ],
+            initialChildSize: 0.6,
+            minChildSize: 0.3,
+            maxChildSize: 0.95,
+            expand: false,
+            backgroundColor: context.isDarkTheme ? Colors.black : Colors.white,
+          ),
+        );
+      },
+    );
+
+    return completed;
+  }
+
+  Future<bool> uploadMany(List<MediaItem> items, BuildContext context) async {
+    final List<_ResolvedAsset> resolved = await _resolveMany(
+      items,
+      context: context,
+      guard: (capability) => capability.canUpload,
+    );
+    if (resolved.isEmpty) {
+      _showInfo(context, 'Upload is only available for local-only items.');
+      return false;
+    }
+
+    final ActionResult result = await _runWithTimelineSelection(
+      resolved.map((entry) => entry.asset),
+      () => _ref.read(actionProvider.notifier).upload(ActionSource.timeline),
+    );
+    if (!result.success) {
+      _showError(context, _resolveUploadActionErrorMessage(context, result.error));
+      return false;
+    }
+
+    _showSuccess(context, 'Upload started');
+
+    for (final BaseAsset asset in resolved.map((entry) => entry.asset)) {
+      if (asset is LocalAsset) {
+        unawaited(_watchManualUploadForbiddenError(context: context, localAssetId: asset.id));
+      }
+    }
+
+    return true;
+  }
+
+  Future<bool> downloadMany(List<MediaItem> items, BuildContext context) async {
+    final List<_ResolvedAsset> resolved = await _resolveMany(
+      items,
+      context: context,
+      guard: (capability) => capability.canDownload,
+    );
+    if (resolved.isEmpty) {
+      _showInfo(context, 'Download is only available for remote-only items.');
+      return false;
+    }
+
+    final ActionResult result = await _runWithTimelineSelection(
+      resolved.map((entry) => entry.asset),
+      () => _ref.read(actionProvider.notifier).downloadAll(ActionSource.timeline),
+    );
+    if (!result.success) {
+      _showError(context, result.error ?? 'Download failed');
+      return false;
+    }
+
+    Future<void>.delayed(const Duration(seconds: 1), () async {
+      final backgroundManager = _ref.read(backgroundSyncProvider);
+      await backgroundManager.syncLocal();
+      await backgroundManager.hashAssets();
+    });
+    _showSuccess(context, 'Download started');
+    return true;
+  }
+
+  Future<bool> deleteMany(List<MediaItem> items, BuildContext context) async {
+    final List<_ResolvedAsset> resolved = await _resolveMany(
+      items,
+      context: context,
+      guard: (capability) => capability.canDeleteRemoteAndLocal,
+    );
+    if (resolved.isEmpty) {
+      _showInfo(context, 'Delete is not available for selected items.');
+      return false;
+    }
+
+    final bool? confirm = await showPlatformDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('delete'.t(context: dialogContext)),
+        content: Text('delete_action_confirmation_message'.t(context: dialogContext)),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('cancel'.t(context: dialogContext)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              'confirm'.t(context: dialogContext),
+              style: TextStyle(color: dialogContext.colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) {
+      return false;
+    }
+
+    final ActionResult result = await _runWithTimelineSelection(
+      resolved.map((entry) => entry.asset),
+      () => _ref.read(actionProvider.notifier).trashRemoteAndDeleteLocal(ActionSource.timeline),
+    );
+    if (!result.success) {
+      _showError(context, _resolveDeleteErrorMessage(context, result.error));
+      return false;
+    }
+
+    final String successMessage = 'delete_action_prompt'.t(context: context, args: {'count': result.count.toString()});
+    _showSuccess(context, successMessage);
+    return true;
+  }
+
+  Future<bool> deleteLocalMany(List<MediaItem> items, BuildContext context) async {
+    final List<_ResolvedAsset> resolved = await _resolveMany(
+      items,
+      context: context,
+      guard: (capability) => capability.canDeleteLocal,
+    );
+    if (resolved.isEmpty) {
+      _showInfo(context, 'Delete local is not available for selected items.');
+      return false;
+    }
+
+    final ActionResult? result = await _runWithTimelineSelection(
+      resolved.map((entry) => entry.asset),
+      () => _ref.read(actionProvider.notifier).deleteLocal(ActionSource.timeline, context),
+    );
+    if (result == null) {
+      return false;
+    }
+    if (!result.success) {
+      _showError(context, result.error ?? 'Delete local failed');
+      return false;
+    }
+    if (result.count <= 0) {
+      return false;
+    }
+
+    final String successMessage = 'delete_local_action_prompt'.t(
+      context: context,
+      args: {'count': result.count.toString()},
+    );
+    _showSuccess(context, successMessage);
+    return true;
   }
 
   Future<void> onShareRequested(MediaItem item, BuildContext context) async {
@@ -370,6 +600,74 @@ class NewLibraryViewerActionRunner {
     await context.maybePop();
     await context.navigateTo(const TabShellRoute(children: <PageRouteInfo>[MainTimelineRoute()]));
     EventStream.shared.emit(ScrollToDateEvent(resolved.asset.createdAt));
+  }
+
+  Future<List<_ResolvedAsset>> _resolveMany(
+    List<MediaItem> items, {
+    required BuildContext context,
+    bool Function(NewLibraryViewerCapability capability)? guard,
+  }) async {
+    if (items.isEmpty) {
+      return const <_ResolvedAsset>[];
+    }
+
+    final NewLibraryAssetResolver resolver = _ref.read(newLibraryAssetResolverProvider);
+    final List<_ResolvedAsset> output = <_ResolvedAsset>[];
+    final Set<String> seenAssetKeys = <String>{};
+    int unresolvedCount = 0;
+
+    for (final MediaItem item in items) {
+      final BaseAsset? asset = await resolver.resolve(item, source: _source);
+      if (asset == null) {
+        unresolvedCount += 1;
+        continue;
+      }
+
+      final NewLibraryViewerCapability capability = _capabilityFromAsset(asset);
+      if (guard != null && !guard(capability)) {
+        continue;
+      }
+
+      final String key = _assetIdentityKey(asset);
+      if (!seenAssetKeys.add(key)) {
+        continue;
+      }
+
+      output.add(_ResolvedAsset(asset: asset, capability: capability));
+    }
+
+    if (unresolvedCount > 0 && output.isNotEmpty) {
+      _showInfo(context, '$unresolvedCount selected item(s) were skipped.');
+    }
+
+    return output;
+  }
+
+  String _assetIdentityKey(BaseAsset asset) {
+    final String remoteId = asset.remoteId ?? '';
+    if (remoteId.isNotEmpty) {
+      return 'remote:$remoteId';
+    }
+    final String localId = asset.localId ?? '';
+    if (localId.isNotEmpty) {
+      return 'local:$localId';
+    }
+    return 'hash:${asset.hashCode}';
+  }
+
+  Future<T> _runWithTimelineSelection<T>(Iterable<BaseAsset> assets, Future<T> Function() action) async {
+    final Set<BaseAsset> selection = assets.toSet();
+    final MultiSelectNotifier multiSelect = _ref.read(multiSelectProvider.notifier);
+    final MultiSelectState previousState = _ref.read(multiSelectProvider);
+
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    multiSelect.state = previousState.copyWith(selectedAssets: selection, forceEnable: selection.isNotEmpty);
+    try {
+      return await action();
+    } finally {
+      // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+      multiSelect.state = previousState;
+    }
   }
 
   Future<_ResolvedAsset> _resolveOrThrow(

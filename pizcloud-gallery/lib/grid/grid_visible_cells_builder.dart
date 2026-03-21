@@ -39,6 +39,8 @@ class GridVisibleCellsBuilder {
     int? thumbEdgeOverride,
     void Function(int dataIndex, String? thumbUrl, String heroTag)?
     onDataIndexTap,
+    void Function(int dataIndex)? onDataIndexLongPress, // new
+    bool Function(int dataIndex)? isDataIndexSelected, // new
   }) {
     final List<Widget> children = <Widget>[];
     final double renderScale = grid.getCurrentScale();
@@ -100,6 +102,7 @@ class GridVisibleCellsBuilder {
             targetColCount: targetColCount,
             preferTargetColCount: preferTargetColCount,
             thumbEdgeOverride: thumbEdgeOverride,
+            isDataIndexSelected: isDataIndexSelected, // new
           );
           if (cell == null) continue;
           children.add(
@@ -124,6 +127,10 @@ class GridVisibleCellsBuilder {
                           cellId: cell.id,
                         ),
                       ),
+                onLongPress:
+                    cell.dataIndex == null || onDataIndexLongPress == null
+                    ? null
+                    : () => onDataIndexLongPress(cell.dataIndex!), // new
               ),
             ),
           );
@@ -147,6 +154,7 @@ class GridVisibleCellsBuilder {
           targetColCount: targetColCount,
           preferTargetColCount: preferTargetColCount,
           thumbEdgeOverride: thumbEdgeOverride,
+          isDataIndexSelected: isDataIndexSelected, // new
         );
         if (cell == null) continue;
 
@@ -168,6 +176,7 @@ class GridVisibleCellsBuilder {
               size: grid.cellSize,
               bytesCache: bytesCache,
               onDataIndexTap: onDataIndexTap,
+              onDataIndexLongPress: onDataIndexLongPress, // new
             ),
           ),
         );
@@ -215,6 +224,7 @@ class GridVisibleCellsBuilder {
     required int targetColCount,
     required bool preferTargetColCount,
     required int? thumbEdgeOverride,
+    required bool Function(int dataIndex)? isDataIndexSelected, // new
   }) {
     final int index =
         logicalRow * targetColCount + col - grid.baseCells[targetColCount];
@@ -252,11 +262,13 @@ class GridVisibleCellsBuilder {
     final String? thumbUrl = (mediaItem != null && thumbEdge != null)
         ? _resolveThumbUrlForEdge(mediaItem, thumbEdge)
         : null;
+    final bool isSelected = isDataIndexSelected?.call(index) ?? false; // new
     return CellData(
       id: '$logicalIndex',
       text: '$index',
       dataIndex: index,
       mediaItem: mediaItem,
+      isSelected: isSelected, // new
       thumbEdge: thumbEdge,
       thumbUrl: thumbUrl,
       renderScale: renderScale,

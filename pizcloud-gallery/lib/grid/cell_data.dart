@@ -6,6 +6,7 @@ class CellData {
   final String text;
   final int? dataIndex;
   final MediaItem? mediaItem;
+  final bool isSelected; // new
   final int? thumbEdge;
   final String? thumbUrl;
   final double renderScale;
@@ -19,6 +20,7 @@ class CellData {
     required this.text,
     this.dataIndex,
     this.mediaItem,
+    this.isSelected = false, // new
     this.thumbEdge,
     this.thumbUrl,
     this.renderScale = 1.0,
@@ -34,6 +36,7 @@ class CellData {
         text == other.text &&
         dataIndex == other.dataIndex &&
         mediaItem?.id == other.mediaItem?.id &&
+        isSelected == other.isSelected && // new
         thumbEdge == other.thumbEdge &&
         thumbUrl == other.thumbUrl &&
         currentColCount == other.currentColCount &&

@@ -1,21 +1,24 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/setting.model.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_action_runner.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_actions.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_capability.dart';
 import 'package:immich_mobile/providers/infrastructure/setting.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
+import 'package:immich_mobile/widgets/common/drag_sheet.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
 // import 'package:intl/intl.dart';
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
 
 @RoutePage()
-class NewLibraryPage extends ConsumerWidget {
+class NewLibraryPage extends HookConsumerWidget {
   const NewLibraryPage({super.key});
 
   @override
@@ -26,6 +29,37 @@ class NewLibraryPage extends ConsumerWidget {
     final runner = NewLibraryViewerActionRunner(ref: ref, source: source);
     final showStorageIndicator = ref.watch(settingsProvider.select((s) => s.get(Setting.showStorageIndicator)));
     final String localeTag = Localizations.localeOf(context).toLanguageTag();
+
+    final ValueNotifier<List<MediaItem>> selectedItemsState = useState<List<MediaItem>>(const <MediaItem>[]);
+    final ValueNotifier<int> clearSelectionSignal = useState<int>(0);
+    final ValueNotifier<bool> isActionProcessing = useState<bool>(false);
+
+    final List<MediaItem> selectedItems = selectedItemsState.value;
+    final _SelectionActionVisibility selectionVisibility = _SelectionActionVisibility.fromSelection(
+      selectedItems,
+      runner: runner,
+    );
+
+    Future<void> runSelectionAction(Future<bool> Function() action) async {
+      if (isActionProcessing.value) {
+        return;
+      }
+      isActionProcessing.value = true;
+      try {
+        final bool shouldClearSelection = await action();
+        if (!context.mounted) {
+          return;
+        }
+        if (shouldClearSelection) {
+          clearSelectionSignal.value += 1;
+          selectedItemsState.value = const <MediaItem>[];
+        }
+      } finally {
+        if (context.mounted) {
+          isActionProcessing.value = false;
+        }
+      }
+    }
 
     String? buildDateOverlayLabel(MediaItem item) {
       final DateTime? sourceDate = item.createdAt ?? item.addedAt;
@@ -83,6 +117,12 @@ class NewLibraryPage extends ConsumerWidget {
       dateBrowseTexts: dateBrowseTexts,
       showStorageIndicator: showStorageIndicator,
       showScrollbarDateHint: true,
+      enableMultiSelect: true,
+      showSelectModeButton: true,
+      clearSelectionSignal: clearSelectionSignal.value,
+      onSelectionChanged: (items) {
+        selectedItemsState.value = List<MediaItem>.unmodifiable(items);
+      },
       storageIndicatorResolver: (item) {
         final BaseAsset? asset = source.findAssetByMediaItemId(item.id);
         if (asset != null) {
@@ -107,7 +147,25 @@ class NewLibraryPage extends ConsumerWidget {
       slivers: [
         const ImmichSliverAppBar(floating: false, pinned: true, snap: false),
         const SliverToBoxAdapter(child: SizedBox(height: 8)),
-        SliverFillRemaining(hasScrollBody: true, child: gallery),
+        SliverFillRemaining(
+          hasScrollBody: true,
+          child: Stack(
+            children: <Widget>[
+              Positioned.fill(child: gallery),
+              if (selectedItems.isNotEmpty)
+                _NewLibraryActionBar(
+                  isProcessing: isActionProcessing.value,
+                  visibility: selectionVisibility,
+                  onShare: () => runSelectionAction(() => runner.shareMany(selectedItems, context)),
+                  onAddToAlbum: () => runSelectionAction(() => runner.addToAlbumMany(selectedItems, context)),
+                  onUpload: () => runSelectionAction(() => runner.uploadMany(selectedItems, context)),
+                  onDownload: () => runSelectionAction(() => runner.downloadMany(selectedItems, context)),
+                  onDelete: () => runSelectionAction(() => runner.deleteMany(selectedItems, context)),
+                  onDeleteLocal: () => runSelectionAction(() => runner.deleteLocalMany(selectedItems, context)),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -115,4 +173,131 @@ class NewLibraryPage extends ConsumerWidget {
   // Old integration hooks were intentionally no-op:
   // Future<void> _onViewerShareRequested(MediaItem item) async {}
   // Future<void> _onViewerDeleteRequested(MediaItem item) async {}
+}
+
+class _SelectionActionVisibility {
+  const _SelectionActionVisibility({
+    required this.showAddToAlbum,
+    required this.showUpload,
+    required this.showDownload,
+    required this.showDelete,
+    required this.showDeleteLocal,
+  });
+
+  final bool showAddToAlbum;
+  final bool showUpload;
+  final bool showDownload;
+  final bool showDelete;
+  final bool showDeleteLocal;
+
+  factory _SelectionActionVisibility.fromSelection(
+    List<MediaItem> items, {
+    required NewLibraryViewerActionRunner runner,
+  }) {
+    bool showAddToAlbum = false;
+    bool showUpload = false;
+    bool showDownload = false;
+    bool showDelete = false;
+    bool showDeleteLocal = false;
+
+    for (final MediaItem item in items) {
+      final NewLibraryViewerCapability capability = runner.capabilityForItemSync(item);
+      showAddToAlbum = showAddToAlbum || capability.canAddToAlbum;
+      showUpload = showUpload || capability.canUpload;
+      showDownload = showDownload || capability.canDownload;
+      showDelete = showDelete || capability.canDeleteRemoteAndLocal;
+      showDeleteLocal = showDeleteLocal || capability.canDeleteLocal;
+    }
+
+    return _SelectionActionVisibility(
+      showAddToAlbum: showAddToAlbum,
+      showUpload: showUpload,
+      showDownload: showDownload,
+      showDelete: showDelete,
+      showDeleteLocal: showDeleteLocal,
+    );
+  }
+}
+
+class _NewLibraryActionBar extends StatelessWidget {
+  const _NewLibraryActionBar({
+    required this.isProcessing,
+    required this.visibility,
+    required this.onShare,
+    required this.onAddToAlbum,
+    required this.onUpload,
+    required this.onDownload,
+    required this.onDelete,
+    required this.onDeleteLocal,
+  });
+
+  final bool isProcessing;
+  final _SelectionActionVisibility visibility;
+  final VoidCallback onShare;
+  final VoidCallback onAddToAlbum;
+  final VoidCallback onUpload;
+  final VoidCallback onDownload;
+  final VoidCallback onDelete;
+  final VoidCallback onDeleteLocal;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> buttons = <Widget>[
+      ControlBoxButton(iconData: Icons.share_rounded, label: 'share'.tr(), onPressed: isProcessing ? null : onShare),
+      if (visibility.showAddToAlbum)
+        ControlBoxButton(
+          iconData: Icons.photo_album_outlined,
+          label: 'add_to_album'.tr(),
+          onPressed: isProcessing ? null : onAddToAlbum,
+        ),
+      if (visibility.showUpload)
+        ControlBoxButton(
+          iconData: Icons.backup_outlined,
+          label: 'upload'.tr(),
+          onPressed: isProcessing ? null : onUpload,
+        ),
+      if (visibility.showDownload)
+        ControlBoxButton(
+          iconData: Icons.download_rounded,
+          label: 'download'.tr(),
+          onPressed: isProcessing ? null : onDownload,
+        ),
+      if (visibility.showDelete)
+        ControlBoxButton(
+          iconData: Icons.delete_sweep_outlined,
+          label: 'delete'.tr(),
+          onPressed: isProcessing ? null : onDelete,
+        ),
+      if (visibility.showDeleteLocal)
+        ControlBoxButton(
+          iconData: Icons.no_cell_outlined,
+          label: 'control_bottom_app_bar_delete_from_local'.tr(),
+          onPressed: isProcessing ? null : onDeleteLocal,
+        ),
+    ];
+
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: SafeArea(
+        top: false,
+        child: Card(
+          margin: EdgeInsets.zero,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(14), topRight: Radius.circular(14)),
+          ),
+          elevation: 6,
+          child: SizedBox(
+            height: 110,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              children: buttons,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

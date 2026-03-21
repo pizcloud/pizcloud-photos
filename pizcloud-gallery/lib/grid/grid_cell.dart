@@ -27,6 +27,7 @@ class GridCell extends StatefulWidget {
   final double size;
   final LruBytesCache bytesCache;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress; // new
   static const double _cellGap = 1.0;
   static const bool _showIndexBadge = false;
 
@@ -36,6 +37,7 @@ class GridCell extends StatefulWidget {
     required this.size,
     required this.bytesCache,
     this.onTap,
+    this.onLongPress, // new
   });
 
   @override
@@ -223,6 +225,7 @@ class _GridCellState extends State<GridCell> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
+        onLongPress: widget.onLongPress, // new
         child: SizedBox(
           width: widget.size,
           height: widget.size,
