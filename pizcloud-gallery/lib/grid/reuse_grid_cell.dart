@@ -10,6 +10,7 @@ class ReuseGridCell extends StatelessWidget {
   final LruBytesCache bytesCache;
   final void Function(int dataIndex, String? thumbUrl, String heroTag)?
   onDataIndexTap;
+  final void Function(int dataIndex)? onDataIndexLongPress; // new
 
   const ReuseGridCell({
     super.key,
@@ -17,6 +18,7 @@ class ReuseGridCell extends StatelessWidget {
     required this.size,
     required this.bytesCache,
     this.onDataIndexTap,
+    this.onDataIndexLongPress, // new
   });
 
   @override
@@ -41,6 +43,9 @@ class ReuseGridCell extends StatelessWidget {
                     cellId: data.id,
                   ),
                 ),
+          onLongPress: data.dataIndex == null || onDataIndexLongPress == null
+              ? null
+              : () => onDataIndexLongPress!(data.dataIndex!), // new
         );
       },
     );

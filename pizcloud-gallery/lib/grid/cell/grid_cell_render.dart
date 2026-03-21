@@ -218,11 +218,41 @@ extension _GridCellStateRender on _GridCellState {
   }) {
     final GridStorageIndicatorState? storageIndicatorState =
         widget.data.storageIndicatorState; // new
+    final bool isSelected = widget.data.isSelected; // new
     return Stack(
       fit: StackFit.expand,
       children: [
         image,
         // new
+        if (isSelected)
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.28),
+                border: Border.all(
+                  color: palette.menuButtonIcon.withValues(alpha: 0.9),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+        if (isSelected)
+          Positioned(
+            left: 6,
+            top: 6,
+            child: Icon(
+              Icons.check_circle_rounded,
+              size: 18,
+              color: palette.menuButtonIcon,
+              shadows: const <Shadow>[
+                Shadow(
+                  blurRadius: 5.0,
+                  color: Color.fromRGBO(0, 0, 0, 0.6),
+                  offset: Offset(0.0, 0.0),
+                ),
+              ],
+            ),
+          ),
         if (storageIndicatorState != null)
           Positioned(
             right: 4,

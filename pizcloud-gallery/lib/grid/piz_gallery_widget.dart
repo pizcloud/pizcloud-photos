@@ -63,6 +63,10 @@ class PizGallery extends StatefulWidget {
   final bool showStorageIndicator; // new
   final GridStorageIndicatorResolver? storageIndicatorResolver; // new
   final bool showScrollbarDateHint; // new
+  final bool enableMultiSelect; // new
+  final bool showSelectModeButton; // new
+  final int clearSelectionSignal; // new
+  final ValueChanged<List<MediaItem>>? onSelectionChanged; // new
   // #new
 
   const PizGallery({
@@ -90,6 +94,10 @@ class PizGallery extends StatefulWidget {
     this.showStorageIndicator = false,
     this.storageIndicatorResolver,
     this.showScrollbarDateHint = false,
+    this.enableMultiSelect = false,
+    this.showSelectModeButton = false,
+    this.clearSelectionSignal = 0,
+    this.onSelectionChanged,
     // #new
   });
 
@@ -200,6 +208,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   Timer? _scrollbarDateHintHideTimer; // new
   bool _showScrollbarDateHintOverlay = false; // new
   double _lastObservedVerticalScrollOffset = 0; // new
+  bool _isSelectionMode = false; // new
+  final Set<String> _selectedMediaItemIds = <String>{}; // new
+  int _lastHandledClearSelectionSignal = 0; // new
   // #new
 
   // =======================================================
@@ -218,6 +229,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _lastHandledScrollToTopSignal = widget.scrollToTopSignal;
+    _lastHandledClearSelectionSignal = widget.clearSelectionSignal;
     _bootstrap();
   }
 
@@ -433,6 +445,11 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _rebuildDateBrowseEntries(viewItems); // new
     _clearJumpTargetIndicator(notify: false); // new
     _initRuntimeWith(MediaDataSource(viewItems));
+    _pruneSelectionAgainstCurrentItems(notify: false); // new
+    if (notify) {
+      _emitSelectionChanged();
+    }
+    // #new
     if (notify && mounted) {
       setState(() {});
     }
@@ -454,6 +471,147 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   }
 
   // new
+  List<MediaItem> get _selectedItemsInViewOrder {
+    if (!_isInitialized || _selectedMediaItemIds.isEmpty) {
+      return const <MediaItem>[];
+    }
+    return mediaDataSource.items
+        .where((item) => _selectedMediaItemIds.contains(item.id))
+        .toList(growable: false);
+  }
+
+  void _emitSelectionChanged() {
+    final ValueChanged<List<MediaItem>>? callback = widget.onSelectionChanged;
+    if (callback == null) {
+      return;
+    }
+    callback(_selectedItemsInViewOrder);
+  }
+
+  void _pruneSelectionAgainstCurrentItems({bool notify = true}) {
+    if (!_isInitialized || _selectedMediaItemIds.isEmpty) {
+      if (notify) {
+        _emitSelectionChanged();
+      }
+      return;
+    }
+
+    final Set<String> validIds = mediaDataSource.items
+        .map((item) => item.id)
+        .toSet();
+    _selectedMediaItemIds.removeWhere((id) => !validIds.contains(id));
+    if (_selectedMediaItemIds.isEmpty) {
+      _isSelectionMode = false;
+    }
+    if (notify) {
+      _emitSelectionChanged();
+    }
+  }
+
+  void _clearSelection({bool notify = true}) {
+    final bool hadSelection =
+        _isSelectionMode || _selectedMediaItemIds.isNotEmpty;
+    if (!hadSelection) {
+      if (notify) {
+        _emitSelectionChanged();
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _selectedMediaItemIds.clear();
+        _isSelectionMode = false;
+      });
+    } else {
+      _selectedMediaItemIds.clear();
+      _isSelectionMode = false;
+    }
+
+    if (notify) {
+      _emitSelectionChanged();
+    }
+  }
+
+  void _toggleSelectionModeFromOverlay() {
+    if (!widget.enableMultiSelect) {
+      return;
+    }
+    if (_isSelectionMode || _selectedMediaItemIds.isNotEmpty) {
+      _clearSelection();
+      return;
+    }
+    setState(() {
+      _isSelectionMode = true;
+    });
+    _emitSelectionChanged();
+  }
+
+  void _toggleSelectionForItem(MediaItem item) {
+    if (!widget.enableMultiSelect) {
+      return;
+    }
+    setState(() {
+      _isSelectionMode = true;
+      if (_selectedMediaItemIds.contains(item.id)) {
+        _selectedMediaItemIds.remove(item.id);
+      } else {
+        _selectedMediaItemIds.add(item.id);
+      }
+      if (_selectedMediaItemIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+    _emitSelectionChanged();
+  }
+
+  bool _isDataIndexSelected(int dataIndex) {
+    if (!_isInitialized ||
+        dataIndex < 0 ||
+        dataIndex >= mediaDataSource.length) {
+      return false;
+    }
+    final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
+    return item != null && _selectedMediaItemIds.contains(item.id);
+  }
+
+  void _handleDataIndexLongPress(int dataIndex) {
+    if (!widget.enableMultiSelect ||
+        !_isInitialized ||
+        dataIndex < 0 ||
+        dataIndex >= mediaDataSource.length) {
+      return;
+    }
+    final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
+    if (item == null) {
+      return;
+    }
+    _toggleSelectionForItem(item);
+  }
+
+  void _handleDataIndexTap(int dataIndex, String? thumbUrl, String heroTag) {
+    if (!_isInitialized ||
+        dataIndex < 0 ||
+        dataIndex >= mediaDataSource.length) {
+      return;
+    }
+    final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
+    if (item == null) {
+      return;
+    }
+
+    if (widget.enableMultiSelect && _isSelectionMode) {
+      _toggleSelectionForItem(item);
+      return;
+    }
+
+    _openViewerAtDataIndex(
+      dataIndex,
+      initialHeroTag: heroTag,
+      initialThumbUrl: thumbUrl,
+    );
+  }
+
   DateTime? _resolveSortDate(MediaItem item) {
     return switch (_sortMode) {
       GallerySortMode.createdAtDesc => item.createdAt ?? item.addedAt,
@@ -1260,6 +1418,54 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
         .toInt();
   }
 
+  // new
+  Widget _buildSelectModeButton(GridAppearancePalette palette) {
+    final bool isActive = _isSelectionMode || _selectedMediaItemIds.isNotEmpty;
+    final int selectedCount = _selectedMediaItemIds.length;
+    final String label = isActive
+        ? (selectedCount > 0 ? 'Selected $selectedCount' : 'Cancel')
+        : 'Select';
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: palette.menuButtonBackground,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0x66FFFFFF), width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: _toggleSelectionModeFromOverlay,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  isActive ? Icons.close_rounded : Icons.checklist_rounded,
+                  size: 16,
+                  color: palette.menuButtonIcon,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: palette.menuButtonIcon,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  // #new
+
   Widget _buildSortFilterMenuButton() {
     final double bottomOffset = widget.showDateBrowseOverlay ? 72 : 14; // new
     return Positioned(
@@ -2034,6 +2240,15 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _cellPool.clear();
     }
     // new
+    if (oldWidget.enableMultiSelect && !widget.enableMultiSelect) {
+      _clearSelection(notify: true);
+    }
+    if (oldWidget.clearSelectionSignal != widget.clearSelectionSignal &&
+        _lastHandledClearSelectionSignal != widget.clearSelectionSignal) {
+      _lastHandledClearSelectionSignal = widget.clearSelectionSignal;
+      _clearSelection(notify: true);
+    }
+
     if (_isInitialized &&
         (oldWidget.showStorageIndicator != widget.showStorageIndicator ||
             oldWidget.storageIndicatorResolver !=
@@ -2730,18 +2945,11 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                                   lightweightMode: false,
                                                   thumbEdgeOverride: null,
                                                   onDataIndexTap:
-                                                      (
-                                                        dataIndex,
-                                                        thumbUrl,
-                                                        heroTag,
-                                                      ) =>
-                                                          _openViewerAtDataIndex(
-                                                            dataIndex,
-                                                            initialHeroTag:
-                                                                heroTag,
-                                                            initialThumbUrl:
-                                                                thumbUrl, // new
-                                                          ),
+                                                      _handleDataIndexTap, // new
+                                                  onDataIndexLongPress:
+                                                      _handleDataIndexLongPress, // new
+                                                  isDataIndexSelected:
+                                                      _isDataIndexSelected, // new
                                                 );
                                             return _withJumpTargetMarker(
                                               child: visibleCells,
@@ -2752,47 +2960,33 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                                           // new
                                           final Widget fastCells = Stack(
                                             children: [
-                                              _visibleCellsBuilder
-                                                  .buildVisibleCells(
-                                                    window: liveWindow,
-                                                    enableReuseCell:
-                                                        widget.enableReuseCell,
-                                                    lightweightMode: true,
-                                                    thumbEdgeOverride: null,
-                                                    onDataIndexTap:
-                                                        (
-                                                          dataIndex,
-                                                          thumbUrl,
-                                                          heroTag,
-                                                        ) => _openViewerAtDataIndex(
-                                                          dataIndex,
-                                                          initialHeroTag:
-                                                              heroTag,
-                                                          initialThumbUrl:
-                                                              thumbUrl, // new
-                                                        ),
-                                                  ),
-                                              _visibleCellsBuilder
-                                                  .buildVisibleCells(
-                                                    window: renderWindow,
-                                                    enableReuseCell:
-                                                        widget.enableReuseCell,
-                                                    lightweightMode: false,
-                                                    thumbEdgeOverride:
-                                                        _fastScrollThumbEdge,
-                                                    onDataIndexTap:
-                                                        (
-                                                          dataIndex,
-                                                          thumbUrl,
-                                                          heroTag,
-                                                        ) => _openViewerAtDataIndex(
-                                                          dataIndex,
-                                                          initialHeroTag:
-                                                              heroTag,
-                                                          initialThumbUrl:
-                                                              thumbUrl, // new
-                                                        ),
-                                                  ),
+                                              _visibleCellsBuilder.buildVisibleCells(
+                                                window: liveWindow,
+                                                enableReuseCell:
+                                                    widget.enableReuseCell,
+                                                lightweightMode: true,
+                                                thumbEdgeOverride: null,
+                                                onDataIndexTap:
+                                                    _handleDataIndexTap, // new
+                                                onDataIndexLongPress:
+                                                    _handleDataIndexLongPress, // new
+                                                isDataIndexSelected:
+                                                    _isDataIndexSelected, // new
+                                              ),
+                                              _visibleCellsBuilder.buildVisibleCells(
+                                                window: renderWindow,
+                                                enableReuseCell:
+                                                    widget.enableReuseCell,
+                                                lightweightMode: false,
+                                                thumbEdgeOverride:
+                                                    _fastScrollThumbEdge,
+                                                onDataIndexTap:
+                                                    _handleDataIndexTap, // new
+                                                onDataIndexLongPress:
+                                                    _handleDataIndexLongPress, // new
+                                                isDataIndexSelected:
+                                                    _isDataIndexSelected, // new
+                                              ),
                                             ],
                                           );
                                           return _withJumpTargetMarker(
@@ -2842,16 +3036,34 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                       child: FpsBadge(monitor: _fpsMonitor),
                     ),
                   // new
-                  if (widget.showDateOverlay &&
-                      _dateBrowseMode == GalleryDateBrowseMode.all) // new
+                  if ((widget.showDateOverlay &&
+                          _dateBrowseMode == GalleryDateBrowseMode.all) ||
+                      (widget.enableMultiSelect &&
+                          widget.showSelectModeButton)) // new
                     Positioned(
                       top: 8,
                       left: _showFpsOverlay ? 96 : 8,
-                      child: GridDateOverlay(
-                        grid: grid,
-                        mediaDataSource: mediaDataSource,
-                        textBuilder: widget.dateOverlayTextBuilder,
-                        preferAddedAt: _sortMode == GallerySortMode.addedAtDesc,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          if (widget.showDateOverlay &&
+                              _dateBrowseMode == GalleryDateBrowseMode.all)
+                            GridDateOverlay(
+                              grid: grid,
+                              mediaDataSource: mediaDataSource,
+                              textBuilder: widget.dateOverlayTextBuilder,
+                              preferAddedAt:
+                                  _sortMode == GallerySortMode.addedAtDesc,
+                            ),
+                          if (widget.showDateOverlay &&
+                              _dateBrowseMode == GalleryDateBrowseMode.all &&
+                              widget.enableMultiSelect &&
+                              widget.showSelectModeButton)
+                            const SizedBox(width: 8),
+                          if (widget.enableMultiSelect &&
+                              widget.showSelectModeButton)
+                            _buildSelectModeButton(palette),
+                        ], // #new
                       ),
                     ),
                   _buildJumpTargetHintChip(palette), // new
