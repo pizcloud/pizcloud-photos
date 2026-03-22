@@ -150,6 +150,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const double _dateBrowseTopAlignPaddingSlack = 8; // new
   static const double _scrollbarDateHintBubbleHeight = 30; // new
   static const double _scrollbarDateHintBubbleGap = 8; // new
+  static const Duration _dragAutoScrollTick = Duration(milliseconds: 16); // new
+  static const double _dragAutoScrollEdgeExtent = 84; // new
+  static const double _dragAutoScrollMinPixelsPerSecond = 180; // new
+  static const double _dragAutoScrollMaxPixelsPerSecond = 1280; // new
   static const bool _skipIfWindowUnchanged = true;
   static const bool _enableCompactPending = true;
   static const int _compactFactor = 3;
@@ -216,6 +220,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   bool? _dragSelectValue; // new
   final Set<int> _dragVisitedDataIndices = <int>{}; // new
   Offset? _lastDragLocalPoint; // new
+  Timer? _dragAutoScrollTimer; // new
+  DateTime? _dragAutoScrollLastTickAt; // new
+  double _dragAutoScrollDirection = 0; // new
   int _lastHandledClearSelectionSignal = 0; // new
   // #new
 
@@ -299,7 +306,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _sourceUpdatesSubscription = updates.listen(
       _handleSourceItemsUpdate,
       onError: (Object error, StackTrace stackTrace) {
-        debugPrint('⚠️ Gallery source update error: $error');
+        debugPrint('Gallery source update error: $error');
         debugPrint('$stackTrace');
       },
     );
@@ -316,6 +323,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   @override
   void dispose() {
     _jumpTargetHideTimer?.cancel(); // new
+    _stopDragAutoScroll(); // new
     _jumpTargetHideTimer = null; // new
     _selectedYearAnchorPulseTimer?.cancel(); // new
     _selectedYearAnchorPulseTimer = null; // new
@@ -324,7 +332,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _sourceUpdatesSubscription?.cancel();
     _sourceUpdatesSubscription = null;
     if (_isInitialized) {
-      debugPrint('🧹 Dispose grid + pool');
+      debugPrint('Dispose grid + pool');
       _disposeRuntime();
     }
     if (_isCoreInitialized) {
@@ -600,9 +608,14 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _lastDragLocalPoint = pointerId == null
         ? null
         : _activePointerPositions[pointerId];
+    final Offset? startPoint = _lastDragLocalPoint; // new
+    if (startPoint != null) {
+      _updateDragAutoScrollForPoint(startPoint);
+    }
   }
 
   void _endDragSelection() {
+    _stopDragAutoScroll(); // new
     _isDragSelecting = false;
     _dragPointerId = null;
     _dragSelectValue = null;
@@ -721,6 +734,125 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _applySelectionValueForDataIndices(nextDataIndices, dragSelectValue);
   }
 
+  double? _resolveDragViewportHeight() {
+    if (!_isInitialized) {
+      return null;
+    }
+    final BuildContext? viewportContext = grid.containerKey.currentContext;
+    final RenderObject? renderObject = viewportContext?.findRenderObject();
+    final RenderBox? renderBox = renderObject is RenderBox
+        ? renderObject
+        : null;
+    if (renderBox == null || !renderBox.hasSize) {
+      return null;
+    }
+
+    final double viewportHeight = renderBox.size.height;
+    if (viewportHeight <= 0 || !viewportHeight.isFinite) {
+      return null;
+    }
+    return viewportHeight;
+  }
+
+  void _updateDragAutoScrollForPoint(Offset localPoint) {
+    if (!_isDragSelecting) {
+      _stopDragAutoScroll();
+      return;
+    }
+
+    final double? viewportHeight = _resolveDragViewportHeight();
+    if (viewportHeight == null) {
+      _stopDragAutoScroll();
+      return;
+    }
+
+    final double edgeExtent = math.min(
+      _dragAutoScrollEdgeExtent,
+      viewportHeight * 0.4,
+    );
+    if (edgeExtent <= 0) {
+      _stopDragAutoScroll();
+      return;
+    }
+
+    double direction = 0;
+    if (localPoint.dy < edgeExtent) {
+      final double factor = ((edgeExtent - localPoint.dy) / edgeExtent)
+          .clamp(0.0, 1.0)
+          .toDouble();
+      direction = -factor;
+    } else if (localPoint.dy > viewportHeight - edgeExtent) {
+      final double factor =
+          ((localPoint.dy - (viewportHeight - edgeExtent)) / edgeExtent)
+              .clamp(0.0, 1.0)
+              .toDouble();
+      direction = factor;
+    }
+
+    if (direction.abs() < 0.01) {
+      _stopDragAutoScroll();
+      return;
+    }
+
+    _dragAutoScrollDirection = direction;
+    _dragAutoScrollLastTickAt = DateTime.now();
+    _dragAutoScrollTimer ??= Timer.periodic(
+      _dragAutoScrollTick,
+      _handleDragAutoScrollTick,
+    );
+  }
+
+  void _handleDragAutoScrollTick(Timer _) {
+    if (!_isDragSelecting ||
+        _dragAutoScrollDirection == 0 ||
+        !_isInitialized ||
+        !grid.verticalController.hasClients) {
+      _stopDragAutoScroll();
+      return;
+    }
+
+    final DateTime now = DateTime.now();
+    final DateTime previous = _dragAutoScrollLastTickAt ?? now;
+    _dragAutoScrollLastTickAt = now;
+    final int elapsedMicros = now.difference(previous).inMicroseconds;
+    final double dt = math.max(
+      1 / 240,
+      elapsedMicros / Duration.microsecondsPerSecond,
+    );
+
+    final ScrollPosition position = grid.verticalController.position;
+    final double current = position.pixels;
+    final double min = position.minScrollExtent;
+    final double max = position.maxScrollExtent;
+
+    final double intensity = _dragAutoScrollDirection.abs().clamp(0.0, 1.0);
+    final double speed =
+        _dragAutoScrollMinPixelsPerSecond +
+        (_dragAutoScrollMaxPixelsPerSecond -
+                _dragAutoScrollMinPixelsPerSecond) *
+            math.pow(intensity, 1.35).toDouble();
+    final double delta = speed * dt * (_dragAutoScrollDirection < 0 ? -1 : 1);
+    final double next = (current + delta).clamp(min, max).toDouble();
+
+    if ((next - current).abs() < 0.1) {
+      return;
+    }
+
+    grid.verticalController.jumpTo(next);
+
+    final Offset? localPoint = _lastDragLocalPoint;
+    if (localPoint != null) {
+      _updateDragSelection(localPoint);
+    }
+  }
+
+  void _stopDragAutoScroll() {
+    _dragAutoScrollDirection = 0;
+    _dragAutoScrollLastTickAt = null;
+    _dragAutoScrollTimer?.cancel();
+    _dragAutoScrollTimer = null;
+  }
+
   void _handlePointerDown(PointerDownEvent event) {
     _gestureController.onPointerDown(event);
     _activePointerPositions[event.pointer] = event.localPosition;
@@ -739,6 +871,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
     _dragPointerId ??= event.pointer;
     _updateDragSelection(event.localPosition);
+    _updateDragAutoScrollForPoint(event.localPosition); // new
   }
 
   void _handlePointerUp(PointerUpEvent event) {
