@@ -22,7 +22,7 @@
 		B25D377A2E72CA15008B6CA7 /* Connectivity.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25D37782E72CA15008B6CA7 /* Connectivity.g.swift */; };
 		B25D377C2E72CA26008B6CA7 /* ConnectivityApiImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25D377B2E72CA20008B6CA7 /* ConnectivityApiImpl.swift */; };
 		B2BE315F2E5E5229006EEF88 /* BackgroundWorker.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE315E2E5E5229006EEF88 /* BackgroundWorker.g.swift */; };
-		D7E26E742F2369C800CF5EC9 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
+		D7E26E742F2369C800CF5EC9 /* (null) in Resources */ = {isa = PBXBuildFile; };
 		F02538E92DFBCBDD008C3FA3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		F0B57D3A2DF764BD00DC5BCC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0B57D392DF764BD00DC5BCC /* WidgetKit.framework */; };
 		F0B57D3C2DF764BD00DC5BCC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0B57D3B2DF764BD00DC5BCC /* SwiftUI.framework */; };
@@ -139,15 +139,11 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B231F52D2E93A44A00BC45D1 /* Core */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Core;
 			sourceTree = "<group>";
 		};
 		B2CF7F8C2DDE4EBB00744BF6 /* Sync */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Sync;
 			sourceTree = "<group>";
 		};
@@ -161,8 +157,6 @@
 		};
 		FEE084F22EC172080045228E /* Schemas */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Schemas;
 			sourceTree = "<group>";
 		};
@@ -462,7 +456,7 @@
 			files = (
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
-				D7E26E742F2369C800CF5EC9 /* BuildFile in Resources */,
+				D7E26E742F2369C800CF5EC9 /* (null) in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 			);
@@ -533,14 +527,37 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		7C9F7F3B2F0F4B7A00AA1C11 /* Flutter Build */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Flutter Build";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
 		};
 		B29596C42791081AF143BCE5 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -550,16 +567,20 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
-			};
-			C066DEC865DF037C4F3439DF /* [CP] Check Pods Manifest.lock */ = {
+		};
+		C066DEC865DF037C4F3439DF /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -578,29 +599,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-				shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-				showEnvVarsInLog = 0;
-			};
-			7C9F7F3B2F0F4B7A00AA1C11 /* Flutter Build */ = {
-				isa = PBXShellScriptBuildPhase;
-				alwaysOutOfDate = 1;
-				buildActionMask = 2147483647;
-				files = (
-				);
-				inputFileListPaths = (
-				);
-				inputPaths = (
-				);
-				name = "Flutter Build";
-				outputFileListPaths = (
-				);
-				outputPaths = (
-				);
-				runOnlyForDeploymentPostprocessing = 0;
-				shellPath = /bin/sh;
-				shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
-			};
-			D7B07A492F273E40006EC0B8 /* ShellScript */ = {
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D7B07A492F273E40006EC0B8 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 8;
@@ -762,6 +764,7 @@
 			baseConfigurationReference = F0C6DFE02FF9B7A700AE4D0E /* Profile.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerProfile.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -928,6 +931,7 @@
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -973,6 +977,7 @@
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
