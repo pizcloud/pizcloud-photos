@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
@@ -59,6 +60,25 @@ class NewLibraryPage extends HookConsumerWidget {
           isActionProcessing.value = false;
         }
       }
+    }
+
+    void syncSelectedItemsFromGallery(List<MediaItem> items) {
+      final List<MediaItem> nextItems = List<MediaItem>.unmodifiable(items);
+
+      void applySelection() {
+        if (context.mounted == false) {
+          return;
+        }
+        selectedItemsState.value = nextItems;
+      }
+
+      // Avoid Hook setState while a build is in progress.
+      if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+        SchedulerBinding.instance.addPostFrameCallback((_) => applySelection());
+        return;
+      }
+
+      applySelection();
     }
 
     String? buildDateOverlayLabel(MediaItem item) {
@@ -121,7 +141,8 @@ class NewLibraryPage extends HookConsumerWidget {
       showSelectModeButton: true,
       clearSelectionSignal: clearSelectionSignal.value,
       onSelectionChanged: (items) {
-        selectedItemsState.value = List<MediaItem>.unmodifiable(items);
+        // selectedItemsState.value = List<MediaItem>.unmodifiable(items);
+        syncSelectedItemsFromGallery(items);
       },
       storageIndicatorResolver: (item) {
         final BaseAsset? asset = source.findAssetByMediaItemId(item.id);
