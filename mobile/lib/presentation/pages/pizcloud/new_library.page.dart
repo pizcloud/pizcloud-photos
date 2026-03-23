@@ -253,6 +253,11 @@ class _NewLibraryActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final String selectedLabel = 'Selected $selectedCount';
+    const double compactBarHeight = 136;
+    final bool isDarkMode = colorScheme.brightness == Brightness.dark;
+    final Color overlayColor = colorScheme.surface.withValues(alpha: isDarkMode ? 0.95 : 0.96);
+    final Color overlayShadowColor = Colors.black.withValues(alpha: isDarkMode ? 0.34 : 0.20);
+    final Color overlayBorderColor = colorScheme.outlineVariant.withValues(alpha: isDarkMode ? 0.38 : 0.26);
 
     final List<Widget> buttons = <Widget>[
       ControlBoxButton(iconData: Icons.share_rounded, label: 'share'.tr(), onPressed: isProcessing ? null : onShare),
@@ -294,18 +299,23 @@ class _NewLibraryActionBar extends StatelessWidget {
       bottom: 0,
       child: SafeArea(
         top: false,
+        bottom: false,
         child: Card(
           margin: EdgeInsets.zero,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+          color: overlayColor,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: overlayShadowColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+            side: BorderSide(color: overlayBorderColor, width: 0.8),
           ),
-          elevation: 8,
+          elevation: 6,
           child: SizedBox(
-            height: 148,
+            height: compactBarHeight,
             child: Column(
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 6, 4),
+                  padding: const EdgeInsets.fromLTRB(8, 4, 2, 2),
                   child: Row(
                     children: <Widget>[
                       DecoratedBox(
@@ -315,7 +325,7 @@ class _NewLibraryActionBar extends StatelessWidget {
                           border: Border.all(color: colorScheme.primary.withValues(alpha: 0.36), width: 1),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
@@ -338,6 +348,9 @@ class _NewLibraryActionBar extends StatelessWidget {
                       IconButton(
                         tooltip: 'close'.tr(),
                         onPressed: isProcessing ? null : onClose,
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
                         icon: const Icon(Icons.close_rounded),
                       ),
                     ],
@@ -345,10 +358,9 @@ class _NewLibraryActionBar extends StatelessWidget {
                 ),
                 Divider(height: 1, thickness: 0.8, color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
                 Expanded(
-                  // old: only a horizontal button strip with no header/close affordance.
                   child: ListView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     children: buttons,
                   ),
                 ),
