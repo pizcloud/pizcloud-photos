@@ -156,6 +156,11 @@ class NewLibraryPage extends HookConsumerWidget {
                 _NewLibraryActionBar(
                   isProcessing: isActionProcessing.value,
                   visibility: selectionVisibility,
+                  selectedCount: selectedItems.length,
+                  onClose: () {
+                    clearSelectionSignal.value += 1;
+                    selectedItemsState.value = const <MediaItem>[];
+                  },
                   onShare: () => runSelectionAction(() => runner.shareMany(selectedItems, context)),
                   onAddToAlbum: () => runSelectionAction(() => runner.addToAlbumMany(selectedItems, context)),
                   onUpload: () => runSelectionAction(() => runner.uploadMany(selectedItems, context)),
@@ -223,6 +228,8 @@ class _NewLibraryActionBar extends StatelessWidget {
   const _NewLibraryActionBar({
     required this.isProcessing,
     required this.visibility,
+    required this.selectedCount,
+    required this.onClose,
     required this.onShare,
     required this.onAddToAlbum,
     required this.onUpload,
@@ -233,6 +240,8 @@ class _NewLibraryActionBar extends StatelessWidget {
 
   final bool isProcessing;
   final _SelectionActionVisibility visibility;
+  final int selectedCount;
+  final VoidCallback onClose;
   final VoidCallback onShare;
   final VoidCallback onAddToAlbum;
   final VoidCallback onUpload;
@@ -242,6 +251,9 @@ class _NewLibraryActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final String selectedLabel = 'Selected $selectedCount';
+
     final List<Widget> buttons = <Widget>[
       ControlBoxButton(iconData: Icons.share_rounded, label: 'share'.tr(), onPressed: isProcessing ? null : onShare),
       if (visibility.showAddToAlbum)
@@ -285,15 +297,62 @@ class _NewLibraryActionBar extends StatelessWidget {
         child: Card(
           margin: EdgeInsets.zero,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(14), topRight: Radius.circular(14)),
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
           ),
-          elevation: 6,
+          elevation: 8,
           child: SizedBox(
-            height: 110,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              children: buttons,
+            height: 148,
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 6, 4),
+                  child: Row(
+                    children: <Widget>[
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.36), width: 1),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(Icons.check_circle_rounded, size: 16, color: colorScheme.primary),
+                              const SizedBox(width: 6),
+                              Text(
+                                selectedLabel,
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'close'.tr(),
+                        onPressed: isProcessing ? null : onClose,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, thickness: 0.8, color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                Expanded(
+                  // old: only a horizontal button strip with no header/close affordance.
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    children: buttons,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

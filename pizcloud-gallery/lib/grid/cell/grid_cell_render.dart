@@ -219,38 +219,51 @@ extension _GridCellStateRender on _GridCellState {
     final GridStorageIndicatorState? storageIndicatorState =
         widget.data.storageIndicatorState; // new
     final bool isSelected = widget.data.isSelected; // new
+    final Color selectedAccent = palette.brightness == Brightness.dark
+        ? const Color(0xFF8AB4FF)
+        : const Color(0xFF2563EB); // new
     return Stack(
       fit: StackFit.expand,
       children: [
         image,
         // new
+        // if (isSelected) Positioned(left: 6, top: 6, child: Icon(Icons.check_circle_rounded)); // old
         if (isSelected)
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.28),
+                color: Colors.black.withValues(alpha: 0.24),
                 border: Border.all(
-                  color: palette.menuButtonIcon.withValues(alpha: 0.9),
-                  width: 2,
+                  color: selectedAccent.withValues(alpha: 0.92),
+                  width: 2.2,
                 ),
               ),
             ),
           ),
         if (isSelected)
           Positioned(
-            left: 6,
+            right: 6,
             top: 6,
-            child: Icon(
-              Icons.check_circle_rounded,
-              size: 18,
-              color: palette.menuButtonIcon,
-              shadows: const <Shadow>[
-                Shadow(
-                  blurRadius: 5.0,
-                  color: Color.fromRGBO(0, 0, 0, 0.6),
-                  offset: Offset(0.0, 0.0),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selectedAccent,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 1.1,
                 ),
-              ],
+                boxShadow: const <BoxShadow>[
+                  BoxShadow(
+                    blurRadius: 6.0,
+                    color: Color.fromRGBO(0, 0, 0, 0.45),
+                    offset: Offset(0.0, 0.0),
+                  ),
+                ],
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(2.2),
+                child: Icon(Icons.check_rounded, size: 14, color: Colors.white),
+              ),
             ),
           ),
         if (storageIndicatorState != null)

@@ -822,8 +822,16 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
     final ScrollPosition position = grid.verticalController.position;
     final double current = position.pixels;
-    final double min = position.minScrollExtent;
-    final double max = position.maxScrollExtent;
+    final ({double lockTopOffset, double lockBottomOffset}) lockOffsets = grid
+        .getScrollLockOffsets(); // new
+    final double min = lockOffsets.lockTopOffset
+        .clamp(position.minScrollExtent, position.maxScrollExtent)
+        .toDouble(); // new
+    final double max = lockOffsets.lockBottomOffset
+        .clamp(position.minScrollExtent, position.maxScrollExtent)
+        .toDouble(); // new
+    final double lowerBound = math.min(min, max); // new
+    final double upperBound = math.max(min, max); // new
 
     final double intensity = _dragAutoScrollDirection.abs().clamp(0.0, 1.0);
     final double speed =
@@ -832,9 +840,25 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                 _dragAutoScrollMinPixelsPerSecond) *
             math.pow(intensity, 1.35).toDouble();
     final double delta = speed * dt * (_dragAutoScrollDirection < 0 ? -1 : 1);
-    final double next = (current + delta).clamp(min, max).toDouble();
+
+    // new
+    if (_dragAutoScrollDirection < 0 && current <= lowerBound + 0.1) {
+      _stopDragAutoScroll();
+      return;
+    }
+    if (_dragAutoScrollDirection > 0 && current >= upperBound - 0.1) {
+      _stopDragAutoScroll();
+      return;
+    }
+
+    // final double next = (current + delta).clamp(position.minScrollExtent, position.maxScrollExtent).toDouble(); // old
+    final double next = (current + delta)
+        .clamp(lowerBound, upperBound)
+        .toDouble();
+    // #new
 
     if ((next - current).abs() < 0.1) {
+      _stopDragAutoScroll(); // new
       return;
     }
 
