@@ -95,12 +95,16 @@ class GoogleService {
     debugPrint('photosResponse: $photosResponse');
 
     final authTokens = await _loadAuthTokensFromCookies();
-    final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
 
+    // final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
     final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
     if (!ensured) {
       throw StateError('Failed to ensure server endpoint');
     }
+
+    // Ensure saveAuthInfo() binds and validates against the latest endpoint,
+    // not a stale value left in StoreKey.serverEndpoint from a previous login.
+    final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
 
     await Store.put(StoreKey.pizcloudLoginMethod, 'google');
     return LogInWithGoogleResult(

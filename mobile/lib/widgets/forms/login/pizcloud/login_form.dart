@@ -39,18 +39,21 @@ class LoginForm extends HookConsumerWidget {
   LoginForm({super.key});
 
   final log = Logger('LoginForm');
-  final TextEditingController _emailController = TextEditingController();
-  // bootstrap state
-  final isBootstrapping = useState<bool>(false);
-  final lastBootstrapFailed = useState<bool>(false);
+  // final TextEditingController _emailController = TextEditingController();
+  // final isBootstrapping = useState<bool>(false);
+  // final lastBootstrapFailed = useState<bool>(false);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final emailController = useTextEditingController();
+    // final isBootstrapping = useState<bool>(false);
+    // final lastBootstrapFailed = useState<bool>(false);
+    final loginFormKey = useMemoized(GlobalKey<FormState>.new);
+
     final isLoading = useState<bool>(false);
     final isLoadingServer = useState<bool>(false);
     // final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
     final warningMessage = useState<String?>(null);
-    final loginFormKey = GlobalKey<FormState>();
     final savedAccounts = useState<List<SavedLoginAccount>>([]);
     final showEmailInput = useState<bool>(false);
     const savedAccountsService = SavedLoginAccountsService();
@@ -62,7 +65,7 @@ class LoginForm extends HookConsumerWidget {
     final isGoogleBusy = useState<bool>(false);
     final emailSubmitted = useState<bool>(false);
 
-    final bool isAnyBusy = isLoadingServer.value || isBootstrapping.value || isEmailBusy.value || isGoogleBusy.value;
+    final bool isAnyBusy = isLoadingServer.value || isEmailBusy.value || isGoogleBusy.value;
 
     final GoogleService googleService = GoogleService();
     final LoginWithEmailService loginWithEmailService = LoginWithEmailService();
@@ -223,7 +226,7 @@ class LoginForm extends HookConsumerWidget {
         return;
       }
 
-      final email = _emailController.text.trim();
+      final email = emailController.text.trim();
       FocusScope.of(context).unfocus();
 
       isEmailBusy.value = true;
@@ -326,7 +329,7 @@ class LoginForm extends HookConsumerWidget {
         onTap: isAnyBusy
             ? null
             : () {
-                _emailController.text = account.email;
+                emailController.text = account.email;
                 continueWithEmail();
               },
         child: Padding(
@@ -423,8 +426,8 @@ class LoginForm extends HookConsumerWidget {
               onPressed: isAnyBusy
                   ? null
                   : () {
-                      // _emailController.text = _emailController.text;
-                      _emailController.clear();
+                      // emailController.text = emailController.text;
+                      emailController.clear();
                       showEmailInput.value = true;
                       Future.microtask(() => emailFocusNode.requestFocus());
                     },
@@ -506,18 +509,18 @@ class LoginForm extends HookConsumerWidget {
                       buildSavedAccountsSection(),
                       if (showEmailInput.value) ...[
                         TextFormField(
-                          controller: _emailController,
+                          controller: emailController,
                           focusNode: emailFocusNode,
                           decoration: InputDecoration(
                             labelText: 'Email',
                             hintText: 'you@example.com',
-                            suffixIcon: _emailController.text.isEmpty
+                            suffixIcon: emailController.text.isEmpty
                                 ? null
                                 : IconButton(
                                     onPressed: isAnyBusy
                                         ? null
                                         : () {
-                                            _emailController.clear();
+                                            emailController.clear();
                                           },
                                     icon: const Icon(Icons.clear),
                                   ),

@@ -67,12 +67,16 @@ class LoginWithEmailService {
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
 
     final accessToken = await _loadAccessTokenFromCookies();
-    final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
 
+    // final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
     final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
     if (!ensured) {
       throw StateError('Failed to ensure server endpoint');
     }
+
+    // Ensure saveAuthInfo() binds and validates against the latest endpoint,
+    // not a stale value left in StoreKey.serverEndpoint from a previous login.
+    final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
 
     await Store.put(StoreKey.pizcloudLoginMethod, 'email');
     return LoginWithEmailResult(
