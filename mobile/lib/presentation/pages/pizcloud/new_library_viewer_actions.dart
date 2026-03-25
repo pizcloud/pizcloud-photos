@@ -5,13 +5,13 @@ import 'new_library_viewer_action_runner.dart';
 
 List<ViewerAction> buildNewLibraryViewerActions({required NewLibraryViewerActionRunner runner}) {
   return <ViewerAction>[
-    _RunnerViewerAction(
-      id: 'new_library_view_in_timeline',
-      label: 'View in timeline',
-      icon: Icons.image_search_rounded,
-      isVisible: (item) => runner.capabilityForItemSync(item).canViewInTimeline,
-      onExecute: (actionContext, item) => runner.viewInTimeline(item, actionContext.context),
-    ),
+    // _RunnerViewerAction(
+    //   id: 'new_library_view_in_timeline',
+    //   label: 'View in timeline',
+    //   icon: Icons.image_search_rounded,
+    //   isVisible: (item) => runner.capabilityForItemSync(item).canViewInTimeline,
+    //   onExecute: (actionContext, item) => runner.viewInTimeline(item, actionContext.context),
+    // ),
     _RunnerViewerAction(
       id: 'new_library_edit_image',
       label: 'Edit',

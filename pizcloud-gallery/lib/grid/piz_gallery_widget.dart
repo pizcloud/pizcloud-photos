@@ -63,6 +63,8 @@ class PizGallery extends StatefulWidget {
   final bool showStorageIndicator; // new
   final GridStorageIndicatorResolver? storageIndicatorResolver; // new
   final bool showScrollbarDateHint; // new
+  final String? locateItemId; // new
+  final int locateItemSignal; // new
   final bool enableMultiSelect; // new
   final bool showSelectModeButton; // new
   final int clearSelectionSignal; // new
@@ -94,6 +96,8 @@ class PizGallery extends StatefulWidget {
     this.showStorageIndicator = false,
     this.storageIndicatorResolver,
     this.showScrollbarDateHint = false,
+    this.locateItemId,
+    this.locateItemSignal = 0,
     this.enableMultiSelect = false,
     this.showSelectModeButton = false,
     this.clearSelectionSignal = 0,
@@ -224,6 +228,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   DateTime? _dragAutoScrollLastTickAt; // new
   double _dragAutoScrollDirection = 0; // new
   int _lastHandledClearSelectionSignal = 0; // new
+  int _lastHandledLocateItemSignal = 0; // new
   // #new
 
   // =======================================================
@@ -267,6 +272,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       setState(() {
         _isBootstrapping = false;
       });
+      _maybeHandleLocateItemRequest(); // new
       debugPrint('✅ Grid initialized (${mediaDataSource.length} items)');
     } catch (error, stackTrace) {
       debugPrint('❌ Failed to initialize gallery: $error');
@@ -318,6 +324,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     }
     _allItems = List<MediaItem>.unmodifiable(nextItems);
     _applySortAndFilter();
+    _maybeHandleLocateItemRequest();
   }
 
   @override
@@ -1413,6 +1420,123 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       );
     });
   }
+
+  // // new - Host-driven locate requests reuse the gallery's existing jump marker and
+  // scroll primitive, without changing the current browsing pipeline.
+  void _maybeHandleLocateItemRequest() {
+    final int signal = widget.locateItemSignal;
+    if (signal == 0 ||
+        _lastHandledLocateItemSignal == signal ||
+        !_isInitialized) {
+      return;
+    }
+
+    _lastHandledLocateItemSignal = signal;
+    _locateItemById(widget.locateItemId);
+  }
+
+  List<String> _buildLocateCandidateIds(String mediaItemId) {
+    final String normalized = mediaItemId.trim();
+    if (normalized.isEmpty) {
+      return const <String>[];
+    }
+
+    final Set<String> candidateIds = <String>{normalized};
+    if (normalized.startsWith('asset_')) {
+      final String remoteId = normalized.substring('asset_'.length);
+      if (remoteId.isNotEmpty) {
+        candidateIds.add('remote_$remoteId');
+      }
+    } else if (normalized.startsWith('remote_')) {
+      final String remoteId = normalized.substring('remote_'.length);
+      if (remoteId.isNotEmpty) {
+        candidateIds.add('asset_$remoteId');
+      }
+    }
+
+    return candidateIds.toList(growable: false);
+  }
+
+  void _locateItemById(String? mediaItemId) {
+    if (!_isInitialized) {
+      return;
+    }
+
+    final List<String> candidateIds = _buildLocateCandidateIds(
+      mediaItemId?.trim() ?? '',
+    );
+    if (candidateIds.isEmpty) {
+      return;
+    }
+
+    final int dataIndex = mediaDataSource.items.indexWhere(
+      (item) => candidateIds.contains(item.id),
+    );
+    if (dataIndex >= 0) {
+      _locateDataIndexInView(dataIndex);
+      return;
+    }
+
+    final int hiddenIndex = _allItems.indexWhere(
+      (item) => candidateIds.contains(item.id),
+    );
+    if (hiddenIndex < 0 || _filterSelection.isAll) {
+      return;
+    }
+
+    setState(() {
+      _filterSelection = const GalleryFilterSelection.all();
+      _dateBrowseMode = GalleryDateBrowseMode.all;
+      _selectedYearBrowseAnchor = null;
+      _selectedYearAnchorPulseActive = false;
+    });
+    _selectedYearAnchorPulseTimer?.cancel();
+    _selectedYearAnchorPulseTimer = null;
+    _applySortAndFilter(notify: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_isInitialized) {
+        return;
+      }
+      final int resolvedIndex = mediaDataSource.items.indexWhere(
+        (item) => candidateIds.contains(item.id),
+      );
+      if (resolvedIndex >= 0) {
+        _locateDataIndexInView(resolvedIndex);
+      }
+    });
+  }
+
+  void _locateDataIndexInView(int dataIndex) {
+    if (!_isInitialized ||
+        dataIndex < 0 ||
+        dataIndex >= mediaDataSource.length) {
+      return;
+    }
+
+    final MediaItem? item = mediaDataSource.itemAtDataIndex(dataIndex);
+    if (item == null) {
+      return;
+    }
+
+    _hideScrollbarDateHint(notify: false);
+    _clearPendingMonthBrowseScroll();
+    final String? locationLabel = _buildScrollbarMonthYearLabel(item);
+    _jumpTargetHideTimer?.cancel();
+    setState(() {
+      _dateBrowseMode = GalleryDateBrowseMode.all;
+      _jumpTargetDataIndex = dataIndex;
+      _jumpTargetMonthLabel = locationLabel;
+      _jumpTargetMarkerSeed += 1;
+      _selectedYearBrowseAnchor = null;
+      _selectedYearAnchorPulseActive = false;
+    });
+    _selectedYearAnchorPulseTimer?.cancel();
+    _selectedYearAnchorPulseTimer = null;
+    _scheduleJumpTargetIndicatorHide();
+    _jumpToDataIndex(dataIndex);
+  }
+  // #new
 
   ({int row, int col})? _resolveCellPositionForDataIndex(int dataIndex) {
     final int cols = grid.targetColCount <= 0 ? 1 : grid.targetColCount;
@@ -2634,6 +2758,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       _lastHandledScrollToTopSignal = widget.scrollToTopSignal;
       _scrollToLockTopOffset();
     }
+    if (oldWidget.locateItemSignal != widget.locateItemSignal &&
+        _lastHandledLocateItemSignal != widget.locateItemSignal) {
+      _maybeHandleLocateItemRequest();
+    } // new
     if (oldWidget.showScrollbarDateHint && !widget.showScrollbarDateHint) {
       _hideScrollbarDateHint();
     } // new

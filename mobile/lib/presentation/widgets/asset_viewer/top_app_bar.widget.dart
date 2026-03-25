@@ -5,7 +5,6 @@ import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
-import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:immich_mobile/domain/services/timeline.service.dart';
 import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -22,6 +21,7 @@ import 'package:immich_mobile/providers/infrastructure/asset_viewer/current_asse
 import 'package:immich_mobile/providers/infrastructure/current_album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
+import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/routes.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
@@ -80,9 +80,18 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       if (showViewInTimelineButton)
         IconButton(
           onPressed: () async {
+            // pizcloud
+            final bool locateQueued = ref.read(newLibraryLocateRequestProvider.notifier).queueAsset(asset);
+            if (!locateQueued) {
+              return;
+            }
+
             await context.maybePop();
-            await context.navigateTo(const TabShellRoute(children: [MainTimelineRoute()]));
-            EventStream.shared.emit(ScrollToDateEvent(asset.createdAt));
+            // Legacy flow:
+            // await context.navigateTo(const TabShellRoute(children: [MainTimelineRoute()]));
+            // EventStream.shared.emit(ScrollToDateEvent(asset.createdAt));
+            await context.navigateTo(const TabShellRoute(children: [NewLibraryRoute()]));
+            // #pizcloud
           },
           icon: const Icon(Icons.image_search),
           tooltip: 'view_in_timeline'.t(context: context),
