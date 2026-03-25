@@ -200,13 +200,13 @@ class AppRouter extends RootStackRouter {
       page: TabShellRoute.page,
       guards: [_authGuard, _duplicateGuard],
       children: [
-        AutoRoute(page: MainTimelineRoute.page, guards: [_authGuard, _duplicateGuard]),
+        AutoRoute(page: NewLibraryRoute.page, guards: [_authGuard, _duplicateGuard]), // pizcloud
         AutoRoute(page: DriftBackupRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
         // AutoRoute(page: DriftSearchRoute.page, guards: [_authGuard, _duplicateGuard], maintainState: false), //pizcloud
         AutoRoute(page: DriftAlbumsRoute.page, guards: [_authGuard, _duplicateGuard]),
         // AutoRoute(page: DriftLibraryRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
         AutoRoute(page: SettingsTabRoute.page, guards: [_authGuard, _duplicateGuard]), //pizcloud
-        AutoRoute(page: NewLibraryRoute.page, guards: [_authGuard, _duplicateGuard]), // pizcloud
+        // AutoRoute(page: MainTimelineRoute.page, guards: [_authGuard, _duplicateGuard]),
       ],
       transitionsBuilder: TransitionsBuilders.fadeIn,
     ),

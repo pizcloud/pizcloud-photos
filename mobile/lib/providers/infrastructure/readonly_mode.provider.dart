@@ -18,7 +18,8 @@ class ReadOnlyModeNotifier extends Notifier<bool> {
     state = value;
 
     if (value) {
-      ref.read(appRouterProvider).navigate(const MainTimelineRoute());
+      ref.read(appRouterProvider).navigate(const TabShellRoute(children: [NewLibraryRoute()])); // pizcloud
+      // ref.read(appRouterProvider).navigate(const MainTimelineRoute()); // pizcloud
     }
   }
 

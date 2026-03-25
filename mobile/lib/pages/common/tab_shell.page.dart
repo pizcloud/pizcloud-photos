@@ -9,13 +9,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
 import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
-import 'package:immich_mobile/presentation/pages/search/paginated_search.provider.dart';
 import 'package:immich_mobile/providers/auth.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/haptic_feedback.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
-import 'package:immich_mobile/providers/infrastructure/people.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
-import 'package:immich_mobile/providers/search/search_input_focus.provider.dart';
 import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/timeline/multiselect.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
@@ -124,12 +121,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
 
     return AutoTabsRouter(
       // pizcloud
-      routes: const [
-        NewLibraryRoute(),
-        DriftBackupRoute(),
-        DriftAlbumsRoute(),
-        SettingsTabRoute(),
-      ],
+      routes: const [NewLibraryRoute(), DriftBackupRoute(), DriftAlbumsRoute(), SettingsTabRoute()],
       duration: const Duration(milliseconds: 600),
       transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
       builder: (context, child) {
@@ -214,21 +206,11 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
   }
 }
 
+// pizcloud
 void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
-  // On Photos page menu tapped
-
-  if (router.activeIndex != kSearchTabIndex && index == kSearchTabIndex) {
-    ref.read(searchPreFilterProvider.notifier).clear();
-  }
-
-  // On Search page tapped
-  if (router.activeIndex == kSearchTabIndex && index == kSearchTabIndex) {
-    ref.read(searchInputFocusProvider).requestFocus();
-  }
-
-  // Album page
-  if (index == kAlbumTabIndex) {
-    // pizcloud
+  // Active shell behavior:
+  // NewLibrary / Backup / Albums / Settings
+  if (index == kAlbumsTabIndex) {
     unawaited(() async {
       await ref.read(remoteAlbumProvider.notifier).refresh();
       final userId = ref.read(authProvider).userId;
@@ -246,24 +228,25 @@ void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
         reason: TransferRefreshReason.tabEnter,
       );
     }());
-    // #pizcloud
-    // separate incoming invalidate.
-    // ref.invalidate(albumIncomingTransfersProvider); // pizcloud
   }
 
-  // Library page
-  if (index == kLibraryTabIndex) {
-    ref.invalidate(localAlbumProvider);
-    ref.invalidate(driftGetAllPeopleProvider);
-  }
-
-  // pizcloud New library page tapped again => scroll to top
   if (router.activeIndex == kNewLibraryTabIndex && index == kNewLibraryTabIndex) {
     ref.read(newLibraryReselectSignalProvider.notifier).state++;
   }
 
   ref.read(hapticFeedbackProvider.notifier).selectionClick();
   router.setActiveIndex(index);
-  final safeTabIndex = index.clamp(0, TabEnum.values.length - 1); // pizcloud
-  ref.read(tabProvider.notifier).state = TabEnum.values[safeTabIndex]; // pizcloud
+  ref.read(tabProvider.notifier).state = _tabForShellIndex(index);
 }
+
+TabEnum _tabForShellIndex(int index) {
+  return switch (index) {
+    kNewLibraryTabIndex => TabEnum.newLibrary,
+    kBackupTabIndex => TabEnum.backup,
+    kAlbumsTabIndex => TabEnum.albums,
+    kSettingsTabIndex => TabEnum.settings,
+    _ => TabEnum.newLibrary,
+  };
+}
+
+// #pizcloud

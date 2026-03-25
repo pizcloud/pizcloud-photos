@@ -93,6 +93,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
     _wasPaused = false;
 
     final isAuthenticated = _ref.read(authProvider).isAuthenticated;
+    final activeTab = _ref.read(tabProvider); // pizcloud
 
     // Needs to be logged in
     if (isAuthenticated) {
@@ -112,16 +113,17 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
     }
 
     if (!Store.isBetaTimelineEnabled) {
-      switch (_ref.read(tabProvider)) {
-        case TabEnum.home:
+      // Legacy non-beta shell kept compile-safe only.
+      // Its tabs are mapped onto the active new-flow enum in tab_controller.page.dart.
+      switch (activeTab) {
+        case TabEnum.newLibrary:
           await _ref.read(assetProvider.notifier).getAllAsset();
 
         case TabEnum.albums:
           await _ref.read(albumProvider.notifier).refreshRemoteAlbums();
 
-        case TabEnum.library:
-        case TabEnum.search:
-        case TabEnum.newLibrary: // pizcloud
+        case TabEnum.backup:
+        case TabEnum.settings:
           break;
       }
     } else {
@@ -129,7 +131,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
       await _handleBetaTimelineResume();
     }
     // pizcloud
-    if (isAuthenticated && _ref.read(tabProvider) == TabEnum.albums) {
+    if (isAuthenticated && activeTab == TabEnum.albums) {
       if (!_shouldContinueOperation()) {
         return;
       }

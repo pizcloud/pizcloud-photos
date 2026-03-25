@@ -62,8 +62,6 @@ class GoogleService {
   Future<GoogleSignInAccount> signIn() async {
     await _ensureInitialized();
     final account = await _googleSignIn.authenticate(scopeHint: _scopes);
-    debugPrint('account: $account');
-    debugPrint('Email: ${account.email}');
     _currentUser = account;
     return account;
   }
@@ -72,7 +70,6 @@ class GoogleService {
     final account = await signIn();
     final auth = account.authentication;
     final idToken = auth.idToken;
-    debugPrint('Google ID Token: $idToken');
     if (idToken == null || idToken.isEmpty) {
       throw StateError('Google Sign-In did not return an ID token');
     }
@@ -86,13 +83,11 @@ class GoogleService {
     }
 
     final ssoToken = _extractSsoToken(verifyResponse.data);
-    debugPrint('ssoToken: $ssoToken');
     if (ssoToken == null || ssoToken.isEmpty) {
       throw StateError('sso_token is missing in verifyIdToken response');
     }
 
     final photosResponse = await _photosApi.ssoCallback(ssoToken);
-    debugPrint('photosResponse: $photosResponse');
 
     final authTokens = await _loadAuthTokensFromCookies();
 

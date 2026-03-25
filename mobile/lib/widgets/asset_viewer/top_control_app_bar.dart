@@ -185,7 +185,7 @@ class TopControlAppBar extends HookConsumerWidget {
       );
     }
 
-    bool isInHomePage = ref.read(tabProvider.notifier).state == TabEnum.home;
+    bool isInHomePage = ref.read(tabProvider.notifier).state == TabEnum.newLibrary; // pizcloud
     bool? isInTrash = ref.read(currentAssetProvider)?.isTrashed;
 
     return PlatformAppBar(

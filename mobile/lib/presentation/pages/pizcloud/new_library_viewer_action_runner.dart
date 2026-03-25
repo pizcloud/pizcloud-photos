@@ -9,8 +9,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
 import 'package:immich_mobile/domain/models/album/album.model.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
-import 'package:immich_mobile/domain/models/timeline.model.dart';
-import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/string_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
@@ -586,21 +584,23 @@ class NewLibraryViewerActionRunner {
     );
   }
 
-  Future<void> viewInTimeline(MediaItem item, BuildContext context) async {
-    final _ResolvedAsset? resolved = await _resolveOrNotify(
-      item,
-      context: context,
-      guard: (capability) => capability.canViewInTimeline,
-      guardMessage: 'View in timeline is not available for this item.',
-    );
-    if (resolved == null) {
-      return;
-    }
-
-    await context.maybePop();
-    await context.navigateTo(const TabShellRoute(children: <PageRouteInfo>[MainTimelineRoute()]));
-    EventStream.shared.emit(ScrollToDateEvent(resolved.asset.createdAt));
-  }
+  // Legacy NewLibrary "view in timeline" implementation intentionally disabled.
+  //
+  // Future<void> viewInTimeline(MediaItem item, BuildContext context) async {
+  //   final _ResolvedAsset? resolved = await _resolveOrNotify(
+  //     item,
+  //     context: context,
+  //     guard: (capability) => capability.canViewInTimeline,
+  //     guardMessage: 'View in timeline is not available for this item.',
+  //   );
+  //   if (resolved == null) {
+  //     return;
+  //   }
+  //
+  //   await context.maybePop();
+  //   await context.navigateTo(const TabShellRoute(children: <PageRouteInfo>[MainTimelineRoute()]));
+  //   EventStream.shared.emit(ScrollToDateEvent(resolved.asset.createdAt));
+  // }
 
   Future<List<_ResolvedAsset>> _resolveMany(
     List<MediaItem> items, {

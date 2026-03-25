@@ -59,7 +59,12 @@ class TabControllerPage extends HookConsumerWidget {
 
       ref.read(hapticFeedbackProvider.notifier).selectionClick();
       router.setActiveIndex(index);
-      ref.read(tabProvider.notifier).state = TabEnum.values[index];
+      ref.read(tabProvider.notifier).state = switch (index) {
+        0 => TabEnum.newLibrary,
+        1 => TabEnum.backup,
+        2 => TabEnum.albums,
+        _ => TabEnum.settings,
+      }; // pizcloud
     }
 
     final navigationDestinations = [

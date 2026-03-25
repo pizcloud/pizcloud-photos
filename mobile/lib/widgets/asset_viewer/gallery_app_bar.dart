@@ -91,7 +91,8 @@ class GalleryAppBar extends ConsumerWidget {
       // Go back to the gallery
       await context.maybePop();
       await context.navigateTo(const TabControllerRoute(children: [PhotosRoute()]));
-      ref.read(tabProvider.notifier).update((state) => state = TabEnum.home);
+      ref.read(tabProvider.notifier).update((state) => state = TabEnum.newLibrary); // pizcloud
+      // ref.read(tabProvider.notifier).update((state) => state = TabEnum.home); // pizcloud
       // Scroll to the asset's date
       scrollToDateNotifierProvider.scrollToDate(asset.fileCreatedAt);
     }

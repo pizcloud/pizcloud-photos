@@ -54,10 +54,17 @@ const String keyPizCloudAppStoreLink = "https://apps.apple.com/app/pizcloud/6758
 const String keyPizCloudPlayStoreLink = "https://play.google.com/store/apps/details?id=com.pizcloud.photos"; // pizcloud
 const String keyPizCloudLatestRelease = "https://github.com/#"; // pizcloud - not use
 
+// Active TabShell canonical order:
+// 0 = NewLibrary, 1 = Backup, 2 = Albums, 3 = Settings.
 const int kNewLibraryTabIndex = 0; // pizcloud
-const int kSearchTabIndex = 1;
-const int kAlbumTabIndex = 2;
-const int kLibraryTabIndex = 3;
+const int kBackupTabIndex = 1; // pizcloud
+const int kAlbumsTabIndex = 2; // pizcloud
+const int kSettingsTabIndex = 3; // pizcloud
+
+// Legacy tab names kept commented while the old shell is phased out.
+// const int kSearchTabIndex = 1;
+// const int kAlbumTabIndex = 2;
+// const int kLibraryTabIndex = 3;
 
 // Workaround for SQLite's variable limit (SQLITE_MAX_VARIABLE_NUMBER = 32766)
 const int kDriftMaxChunk = 32000;
