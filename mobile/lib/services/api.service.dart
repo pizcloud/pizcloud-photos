@@ -164,7 +164,7 @@ class ApiService implements Authentication {
       headers.addAll(getRequestHeaders());
 
       final res = await client
-          .get(Uri.parse("$baseUrl/.well-known/immich"), headers: headers)
+          .get(Uri.parse("$baseUrl/.well-known/pizcloud"), headers: headers)
           .timeout(const Duration(seconds: 5));
 
       if (res.statusCode == 200) {
@@ -178,7 +178,7 @@ class ApiService implements Authentication {
         return endpoint;
       }
     } catch (e) {
-      dPrint(() => "Could not locate /.well-known/immich at $baseUrl");
+      dPrint(() => "Could not locate /.well-known/pizcloud at $baseUrl");
     } finally {
       client.close(); // pizcloud
     }

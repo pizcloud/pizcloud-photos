@@ -16,7 +16,7 @@ const upstream = {
 
 const proxy: Record<string, string | ProxyOptions> = {
   '/api': upstream,
-  '/.well-known/immich': upstream,
+  '/.well-known/pizcloud': upstream,
   '/custom.css': upstream,
 };
 
@@ -46,9 +46,9 @@ export default defineConfig({
     sveltekit(),
     process.env.BUILD_STATS === 'true'
       ? visualizer({
-          emitFile: true,
-          filename: 'stats.html',
-        })
+        emitFile: true,
+        filename: 'stats.html',
+      })
       : undefined,
     svelteTesting(),
   ],

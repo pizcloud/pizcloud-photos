@@ -3,8 +3,27 @@ import 'package:immich_mobile/utils/image_url_builder.dart';
 import 'package:openapi/api.dart' as api;
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
 
-MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
+String? buildNewLibraryMediaItemId(BaseAsset asset) {
   if (!asset.isImage && !asset.isVideo) {
+    return null;
+  }
+
+  final localId = asset.localId;
+  if (localId != null && localId.isNotEmpty) {
+    return _stableLocalId(asset);
+  }
+
+  final remoteId = asset.remoteId;
+  if (remoteId == null || remoteId.isEmpty) {
+    return null;
+  }
+
+  return 'remote_$remoteId';
+}
+
+MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
+  final mediaItemId = buildNewLibraryMediaItemId(asset);
+  if (mediaItemId == null) {
     return null;
   }
 
@@ -20,7 +39,7 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
     final thumb600 = LocalDeviceMediaUri.buildThumbUri(assetId: localId, edge: 600);
 
     return MediaItem(
-      id: _stableLocalId(asset),
+      id: mediaItemId,
       type: mediaType,
       sourceType: MediaSourceType.local,
       originalUrl: originalUrl,
@@ -50,7 +69,7 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
       : getOriginalUrlForRemoteId(remoteId);
 
   return MediaItem(
-    id: 'remote_$remoteId',
+    id: mediaItemId,
     type: mediaType,
     sourceType: MediaSourceType.remote,
     originalUrl: originalUrl,
