@@ -17,14 +17,14 @@ describe(AppController.name, () => {
     ctx.reset();
   });
 
-  describe('GET /.well-known/immich', () => {
+  describe('GET /.well-known/pizcloud', () => {
     it('should not be an authenticated route', async () => {
-      await request(ctx.getHttpServer()).post('/.well-known/immich');
+      await request(ctx.getHttpServer()).post('/.well-known/pizcloud');
       expect(ctx.authenticate).not.toHaveBeenCalled();
     });
 
     it('should return a 200 status code', async () => {
-      const { status, body } = await request(ctx.getHttpServer()).get('/.well-known/immich');
+      const { status, body } = await request(ctx.getHttpServer()).get('/.well-known/pizcloud');
       expect(status).toBe(200);
       expect(body).toEqual({
         api: {

@@ -2,18 +2,20 @@ import { Controller, Get, Header } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { SystemConfigService } from 'src/services/system-config.service';
 
+const _wellKnownResponse = {
+  api: {
+    endpoint: '/api',
+  },
+};
+
 @Controller()
 export class AppController {
-  constructor(private service: SystemConfigService) {}
+  constructor(private service: SystemConfigService) { }
 
   @ApiExcludeEndpoint()
-  @Get('.well-known/immich')
-  getImmichWellKnown() {
-    return {
-      api: {
-        endpoint: '/api',
-      },
-    };
+  @Get('.well-known/pizcloud')
+  getWellKnown() {
+    return _wellKnownResponse;
   }
 
   @ApiExcludeEndpoint()
