@@ -1,12 +1,10 @@
 // ignore_for_file: require_trailing_commas
 
-import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart'; // pizcloud
 import 'package:immich_mobile/domain/models/memory.model.dart';
-import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart'; // pizcloud
-import 'package:immich_mobile/routing/router.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/new_library_view_in_timeline_helper.dart'; // pizcloud
 
 class DriftMemoryBottomInfo extends ConsumerWidget {
   // pizcloud
@@ -41,20 +39,7 @@ class DriftMemoryBottomInfo extends ConsumerWidget {
             child: MaterialButton(
               minWidth: 0,
               onPressed: () async {
-                // pizcloud
-                final bool locateQueued = ref
-                    .read(newLibraryLocateRequestProvider.notifier)
-                    .queueAsset(memory.assets.first);
-                if (!locateQueued) {
-                  return;
-                }
-
-                await context.maybePop();
-                // Legacy flow:
-                // await context.navigateTo(const TabShellRoute(children: [MainTimelineRoute()]));
-                // EventStream.shared.emit(ScrollToDateEvent(fileCreatedDate));
-                await context.navigateTo(const TabShellRoute(children: [NewLibraryRoute()]));
-                // #pizcloud
+                await focusNewLibraryAndLocateAsset(context: context, ref: ref, asset: memory.assets.first); // pizcloud
               },
               shape: const CircleBorder(),
               color: Colors.white.withValues(alpha: 0.2),

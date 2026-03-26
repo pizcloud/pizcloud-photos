@@ -5,15 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
-import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/pages/common/large_leading_tile.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/new_library_view_in_timeline_helper.dart'; // pizcloud
 import 'package:immich_mobile/presentation/widgets/images/thumbnail.widget.dart';
 import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/repositories/asset_media.repository.dart';
-import 'package:immich_mobile/routing/router.dart';
 
 @RoutePage()
 class DriftBackupAssetDetailPage extends ConsumerWidget {
@@ -88,16 +87,7 @@ class DriftBackupAssetDetailPage extends ConsumerWidget {
                       child: Icon(context.platformIcon(material: Icons.image_search, cupertino: CupertinoIcons.search)),
                     ),
                     onTap: () async {
-                      final bool locateQueued = ref.read(newLibraryLocateRequestProvider.notifier).queueAsset(asset);
-                      if (!locateQueued) {
-                        return;
-                      }
-
-                      await context.maybePop();
-                      // Legacy flow:
-                      // await context.navigateTo(const TabShellRoute(children: [MainTimelineRoute()]));
-                      // EventStream.shared.emit(ScrollToDateEvent(asset.createdAt));
-                      await context.navigateTo(const TabShellRoute(children: [NewLibraryRoute()]));
+                      await focusNewLibraryAndLocateAsset(context: context, ref: ref, asset: asset); // pizcloud
                     },
                   );
                 },

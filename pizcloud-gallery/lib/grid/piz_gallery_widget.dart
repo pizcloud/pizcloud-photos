@@ -65,6 +65,7 @@ class PizGallery extends StatefulWidget {
   final bool showScrollbarDateHint; // new
   final String? locateItemId; // new
   final int locateItemSignal; // new
+  final FutureOr<void> Function(int requestId)? onLocateHandled; // new
   final bool enableMultiSelect; // new
   final bool showSelectModeButton; // new
   final int clearSelectionSignal; // new
@@ -98,6 +99,7 @@ class PizGallery extends StatefulWidget {
     this.showScrollbarDateHint = false,
     this.locateItemId,
     this.locateItemSignal = 0,
+    this.onLocateHandled,
     this.enableMultiSelect = false,
     this.showSelectModeButton = false,
     this.clearSelectionSignal = 0,
@@ -229,6 +231,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   double _dragAutoScrollDirection = 0; // new
   int _lastHandledClearSelectionSignal = 0; // new
   int _lastHandledLocateItemSignal = 0; // new
+  int? _locateRequestAwaitingResolutionSignal; // new
   // #new
 
   // =======================================================
@@ -1427,12 +1430,28 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     final int signal = widget.locateItemSignal;
     if (signal == 0 ||
         _lastHandledLocateItemSignal == signal ||
+        _locateRequestAwaitingResolutionSignal == signal ||
         !_isInitialized) {
       return;
     }
 
+    _locateItemById(signal: signal, mediaItemId: widget.locateItemId);
+  }
+
+  void _ackLocateRequest(int signal) {
+    if (_lastHandledLocateItemSignal == signal) {
+      return;
+    }
+    _locateRequestAwaitingResolutionSignal = null;
     _lastHandledLocateItemSignal = signal;
-    _locateItemById(widget.locateItemId);
+    final onLocateHandled = widget.onLocateHandled;
+    if (onLocateHandled != null) {
+      unawaited(
+        Future<void>(() async {
+          await onLocateHandled(signal);
+        }),
+      );
+    }
   }
 
   List<String> _buildLocateCandidateIds(String mediaItemId) {
@@ -1457,7 +1476,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     return candidateIds.toList(growable: false);
   }
 
-  void _locateItemById(String? mediaItemId) {
+  void _locateItemById({required int signal, required String? mediaItemId}) {
     if (!_isInitialized) {
       return;
     }
@@ -1474,6 +1493,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     );
     if (dataIndex >= 0) {
       _locateDataIndexInView(dataIndex);
+      _ackLocateRequest(signal);
       return;
     }
 
@@ -1484,6 +1504,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       return;
     }
 
+    _locateRequestAwaitingResolutionSignal = signal;
     setState(() {
       _filterSelection = const GalleryFilterSelection.all();
       _dateBrowseMode = GalleryDateBrowseMode.all;
@@ -1496,6 +1517,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_isInitialized) {
+        if (_locateRequestAwaitingResolutionSignal == signal) {
+          _locateRequestAwaitingResolutionSignal = null;
+        }
         return;
       }
       final int resolvedIndex = mediaDataSource.items.indexWhere(
@@ -1503,6 +1527,13 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       );
       if (resolvedIndex >= 0) {
         _locateDataIndexInView(resolvedIndex);
+        _ackLocateRequest(signal);
+        return;
+      }
+      // Keep the request pending when the item still is not resolvable after
+      // switching back to "all". Source/bootstrap updates can retry later.
+      if (_locateRequestAwaitingResolutionSignal == signal) {
+        _locateRequestAwaitingResolutionSignal = null;
       }
     });
   }

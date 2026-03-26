@@ -9,6 +9,7 @@ import 'package:immich_mobile/domain/services/timeline.service.dart';
 import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
+import 'package:immich_mobile/presentation/pages/pizcloud/new_library_view_in_timeline_helper.dart'; // pizcloud
 import 'package:immich_mobile/presentation/widgets/action_buttons/cast_action_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/download_action_button.widget.dart';
 import 'package:immich_mobile/presentation/widgets/action_buttons/favorite_action_button.widget.dart';
@@ -21,10 +22,8 @@ import 'package:immich_mobile/providers/infrastructure/asset_viewer/current_asse
 import 'package:immich_mobile/providers/infrastructure/current_album.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/readonly_mode.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
-import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/routes.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
-import 'package:immich_mobile/routing/router.dart';
 
 class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const ViewerTopAppBar({super.key});
@@ -80,18 +79,7 @@ class ViewerTopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       if (showViewInTimelineButton)
         IconButton(
           onPressed: () async {
-            // pizcloud
-            final bool locateQueued = ref.read(newLibraryLocateRequestProvider.notifier).queueAsset(asset);
-            if (!locateQueued) {
-              return;
-            }
-
-            await context.maybePop();
-            // Legacy flow:
-            // await context.navigateTo(const TabShellRoute(children: [MainTimelineRoute()]));
-            // EventStream.shared.emit(ScrollToDateEvent(asset.createdAt));
-            await context.navigateTo(const TabShellRoute(children: [NewLibraryRoute()]));
-            // #pizcloud
+            await focusNewLibraryAndLocateAsset(context: context, ref: ref, asset: asset); // pizcloud
           },
           icon: const Icon(Icons.image_search),
           tooltip: 'view_in_timeline'.t(context: context),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/services/timeline.service.dart';
@@ -19,8 +21,10 @@ class NewLibraryLocateRequest {
 
 class NewLibraryLocateRequestNotifier extends StateNotifier<NewLibraryLocateRequest?> {
   NewLibraryLocateRequestNotifier() : super(null);
+  static const Duration _requestTtl = Duration(seconds: 30);
 
   int _nextRequestId = 0;
+  Timer? _requestExpiryTimer;
 
   bool queueAsset(BaseAsset asset) {
     final String? mediaItemId = buildNewLibraryMediaItemId(asset);
@@ -37,12 +41,38 @@ class NewLibraryLocateRequestNotifier extends StateNotifier<NewLibraryLocateRequ
       return false;
     }
 
-    state = NewLibraryLocateRequest(mediaItemId: normalized, requestId: ++_nextRequestId);
+    final requestId = ++_nextRequestId;
+    state = NewLibraryLocateRequest(mediaItemId: normalized, requestId: requestId);
+    _armExpiryTimer(requestId);
     return true;
   }
 
   void clear() {
+    _requestExpiryTimer?.cancel();
+    _requestExpiryTimer = null;
     state = null;
+  }
+
+  void clearIfMatches(int requestId) {
+    if (state?.requestId == requestId) {
+      clear();
+    }
+  }
+
+  void _armExpiryTimer(int requestId) {
+    _requestExpiryTimer?.cancel();
+    _requestExpiryTimer = Timer(_requestTtl, () {
+      if (state?.requestId == requestId) {
+        state = null;
+      }
+      _requestExpiryTimer = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    _requestExpiryTimer?.cancel();
+    super.dispose();
   }
 }
 

@@ -34,7 +34,6 @@ class NewLibraryPage extends HookConsumerWidget {
     final ValueNotifier<List<MediaItem>> selectedItemsState = useState<List<MediaItem>>(const <MediaItem>[]);
     final ValueNotifier<int> clearSelectionSignal = useState<int>(0);
     final ValueNotifier<bool> isActionProcessing = useState<bool>(false);
-    final ValueNotifier<NewLibraryLocateRequest?> locateRequestState = useState<NewLibraryLocateRequest?>(null);
     final NewLibraryLocateRequest? pendingLocateRequest = ref.watch(newLibraryLocateRequestProvider);
 
     final List<MediaItem> selectedItems = selectedItemsState.value;
@@ -82,33 +81,6 @@ class NewLibraryPage extends HookConsumerWidget {
 
       applySelection();
     }
-
-    void syncLocateRequestFromProvider(NewLibraryLocateRequest? request) {
-      if (request == null) {
-        return;
-      }
-
-      void applyLocateRequest() {
-        if (context.mounted == false) {
-          return;
-        }
-        locateRequestState.value = request;
-        ref.read(newLibraryLocateRequestProvider.notifier).clear();
-      }
-
-      // Avoid Hook setState while a build is in progress.
-      if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
-        SchedulerBinding.instance.addPostFrameCallback((_) => applyLocateRequest());
-        return;
-      }
-
-      applyLocateRequest();
-    }
-
-    useEffect(() {
-      syncLocateRequestFromProvider(pendingLocateRequest);
-      return null;
-    }, [pendingLocateRequest]);
 
     String? buildDateOverlayLabel(MediaItem item) {
       final DateTime? sourceDate = item.createdAt ?? item.addedAt;
@@ -166,8 +138,11 @@ class NewLibraryPage extends HookConsumerWidget {
       dateBrowseTexts: dateBrowseTexts,
       showStorageIndicator: showStorageIndicator,
       showScrollbarDateHint: true,
-      locateItemId: locateRequestState.value?.mediaItemId,
-      locateItemSignal: locateRequestState.value?.requestId ?? 0,
+      locateItemId: pendingLocateRequest?.mediaItemId,
+      locateItemSignal: pendingLocateRequest?.requestId ?? 0,
+      onLocateHandled: (requestId) {
+        ref.read(newLibraryLocateRequestProvider.notifier).clearIfMatches(requestId);
+      },
       enableMultiSelect: true,
       showSelectModeButton: true,
       clearSelectionSignal: clearSelectionSignal.value,
