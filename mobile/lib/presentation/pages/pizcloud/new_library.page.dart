@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -6,10 +8,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/models/setting.model.dart';
+import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
+import 'package:immich_mobile/entities/store.entity.dart' as app_store;
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_action_runner.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_actions.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_capability.dart';
+import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/setting.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
@@ -35,6 +40,8 @@ class NewLibraryPage extends HookConsumerWidget {
     final ValueNotifier<int> clearSelectionSignal = useState<int>(0);
     final ValueNotifier<bool> isActionProcessing = useState<bool>(false);
     final NewLibraryLocateRequest? pendingLocateRequest = ref.watch(newLibraryLocateRequestProvider);
+    final AsyncValue<bool> needsUploadedAtRepair = ref.watch(newLibraryNeedsUploadedAtRepairProvider);
+    final repairAttemptedRef = useRef(false);
 
     final List<MediaItem> selectedItems = selectedItemsState.value;
     final _SelectionActionVisibility selectionVisibility = _SelectionActionVisibility.fromSelection(
@@ -81,6 +88,20 @@ class NewLibraryPage extends HookConsumerWidget {
 
       applySelection();
     }
+
+    useEffect(() {
+      final bool shouldRepair = needsUploadedAtRepair.valueOrNull == true;
+      if (!shouldRepair || repairAttemptedRef.value) {
+        return null;
+      }
+
+      repairAttemptedRef.value = true;
+      unawaited(() async {
+        await app_store.Store.put(StoreKey.shouldResetSync, true);
+        await ref.read(backgroundSyncProvider).syncRemote();
+      }());
+      return null;
+    }, [needsUploadedAtRepair.valueOrNull]);
 
     String? buildDateOverlayLabel(MediaItem item) {
       final DateTime? sourceDate = item.createdAt ?? item.addedAt;

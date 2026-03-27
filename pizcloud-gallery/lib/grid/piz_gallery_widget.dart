@@ -978,10 +978,23 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
   DateTime? _resolveSortDate(MediaItem item) {
     return switch (_sortMode) {
-      GallerySortMode.createdAtDesc => item.createdAt ?? item.addedAt,
-      GallerySortMode.addedAtDesc => item.addedAt ?? item.createdAt,
+      GallerySortMode.createdAtDesc =>
+        item.createdAt ?? item.createdLocalAt ?? item.addedAt, // new
+      GallerySortMode.addedAtDesc =>
+        item.addedAt ?? item.createdAt ?? item.createdLocalAt, // new
     };
   }
+
+  // new
+  DateTime? _resolveDisplayDate(MediaItem item) {
+    return switch (_sortMode) {
+      GallerySortMode.createdAtDesc =>
+        item.createdLocalAt ?? item.createdAt ?? item.addedAt,
+      GallerySortMode.addedAtDesc =>
+        item.addedAt ?? item.createdAt ?? item.createdLocalAt,
+    };
+  }
+  // #new
 
   void _rebuildDateBrowseEntries(List<MediaItem> items) {
     final Map<int, _DateBrowseYearBuilder> yearsByKey =
@@ -991,7 +1004,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
 
     for (int index = 0; index < items.length; index++) {
       final MediaItem item = items[index];
-      final DateTime? sourceDate = _resolveSortDate(item);
+      final DateTime? sourceDate = _resolveDisplayDate(item); // new
       if (sourceDate == null) {
         // Undated assets stay available in "All" mode only.
         continue;
@@ -2207,7 +2220,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   }
 
   String? _buildScrollbarMonthYearLabel(MediaItem item) {
-    final DateTime? sourceDate = _resolveSortDate(item);
+    final DateTime? sourceDate = _resolveDisplayDate(item); // new
     if (sourceDate == null) {
       return null;
     }

@@ -63,6 +63,7 @@ class DriftTimelineRepository extends DriftDatabaseRepository {
                   type: row.type,
                   createdAt: row.createdAt,
                   uploadedAt: row.uploadedAt, // pizcloud
+                  localDateTime: row.localDateTime, // pizcloud
                   updatedAt: row.updatedAt,
                   thumbHash: row.thumbHash,
                   width: row.width,

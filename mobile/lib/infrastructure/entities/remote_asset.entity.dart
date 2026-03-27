@@ -59,6 +59,7 @@ extension RemoteAssetEntityDataDomainEx on RemoteAssetEntityData {
     type: type,
     createdAt: createdAt,
     uploadedAt: uploadedAt, // pizcloud
+    localDateTime: localDateTime, // pizcloud
     updatedAt: updatedAt,
     durationInSeconds: durationInSeconds,
     isFavorite: isFavorite,

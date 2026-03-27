@@ -8,6 +8,7 @@ class RemoteAsset extends BaseAsset {
   final String? localAssetId;
   final String? thumbHash;
   final DateTime? uploadedAt; // pizcloud
+  final DateTime? localDateTime; // pizcloud
   final AssetVisibility visibility;
   final String ownerId;
   final String? stackId;
@@ -27,6 +28,7 @@ class RemoteAsset extends BaseAsset {
     super.isFavorite = false,
     this.thumbHash,
     this.uploadedAt, // pizcloud
+    this.localDateTime, // pizcloud
     this.visibility = AssetVisibility.timeline,
     super.livePhotoVideoId,
     this.stackId,
@@ -64,6 +66,7 @@ class RemoteAsset extends BaseAsset {
     checksum: $checksum,
     livePhotoVideoId: ${livePhotoVideoId ?? "<NA>"},
     uploadedAt: ${uploadedAt ?? "<NA>"},
+    localDateTime: ${localDateTime ?? "<NA>"},
  }''';
   }
 
@@ -77,6 +80,7 @@ class RemoteAsset extends BaseAsset {
         ownerId == other.ownerId &&
         thumbHash == other.thumbHash &&
         uploadedAt == other.uploadedAt &&
+        localDateTime == other.localDateTime &&
         visibility == other.visibility &&
         stackId == other.stackId;
   }
@@ -89,6 +93,7 @@ class RemoteAsset extends BaseAsset {
       localId.hashCode ^
       thumbHash.hashCode ^
       uploadedAt.hashCode ^
+      localDateTime.hashCode ^
       visibility.hashCode ^
       stackId.hashCode;
 
@@ -107,6 +112,7 @@ class RemoteAsset extends BaseAsset {
     bool? isFavorite,
     String? thumbHash,
     DateTime? uploadedAt, // pizcloud
+    DateTime? localDateTime, // pizcloud
     AssetVisibility? visibility,
     String? livePhotoVideoId,
     String? stackId,
@@ -126,6 +132,7 @@ class RemoteAsset extends BaseAsset {
       isFavorite: isFavorite ?? this.isFavorite,
       thumbHash: thumbHash ?? this.thumbHash,
       uploadedAt: uploadedAt ?? this.uploadedAt, // pizcloud
+      localDateTime: localDateTime ?? this.localDateTime, // pizcloud
       visibility: visibility ?? this.visibility,
       livePhotoVideoId: livePhotoVideoId ?? this.livePhotoVideoId,
       stackId: stackId ?? this.stackId,

@@ -33,6 +33,7 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
 
   final localId = asset.localId;
   if (localId != null && localId.isNotEmpty) {
+    final remoteAsset = asset is RemoteAsset ? asset : null;
     final originalUrl = LocalDeviceMediaUri.buildOriginalUri(localId);
     final thumb100 = LocalDeviceMediaUri.buildThumbUri(assetId: localId, edge: 100);
     final thumb300 = LocalDeviceMediaUri.buildThumbUri(assetId: localId, edge: 300);
@@ -50,8 +51,8 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
       localPath: null,
       duration: duration,
       createdAt: asset.createdAt,
-      // Keep sorting behavior aligned with timeline order (newest first by createdAt)
-      addedAt: asset.createdAt,
+      createdLocalAt: remoteAsset?.localDateTime ?? asset.createdAt,
+      addedAt: remoteAsset?.uploadedAt,
     );
   }
 
@@ -59,7 +60,10 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
   if (remoteId == null || remoteId.isEmpty) {
     return null;
   }
-  final addedAt = asset is RemoteAsset ? (asset.uploadedAt ?? asset.createdAt) : asset.createdAt; // pizcloud
+  final captureAt = asset.createdAt;
+  final captureLocalAt = asset is RemoteAsset ? (asset.localDateTime ?? asset.createdAt) : asset.createdAt;
+  // final addedAt = asset is RemoteAsset ? (asset.uploadedAt ?? asset.createdAt) : asset.createdAt;
+  final DateTime? addedAt = asset is RemoteAsset ? asset.uploadedAt : null; // pizcloud
 
   final thumb100 = getThumbnailUrlForRemoteId(remoteId, type: api.AssetMediaSize.thumbnail);
   final thumb300 = getThumbnailUrlForRemoteId(remoteId, type: api.AssetMediaSize.preview);
@@ -79,7 +83,8 @@ MediaItem? mapTimelineAssetToMediaItem(BaseAsset asset) {
     thumbnails: MediaThumbnails(size100: thumb100, size300: thumb300, size600: thumb600),
     localPath: null,
     duration: duration,
-    createdAt: asset.createdAt,
+    createdAt: captureAt,
+    createdLocalAt: captureLocalAt,
     addedAt: addedAt, // pizcloud
   );
 }

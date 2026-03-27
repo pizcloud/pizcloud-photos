@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/domain/services/timeline.service.dart';
+import 'package:immich_mobile/providers/infrastructure/db.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:pizcloud_gallery/pizcloud_gallery.dart';
@@ -87,6 +88,17 @@ final newLibraryTimelineQueryProvider = Provider.autoDispose<TimelineQuery>((ref
   final groupBy = ref.watch(timelineFactoryProvider).groupBy;
 
   return repository.main(users, groupBy);
+});
+
+final newLibraryNeedsUploadedAtRepairProvider = FutureProvider.autoDispose<bool>((ref) async {
+  final db = ref.watch(driftProvider);
+  final row = await db
+      .customSelect(
+        'SELECT 1 AS needs_repair FROM remote_asset_entity WHERE uploaded_at IS NULL LIMIT 1',
+        readsFrom: {db.remoteAssetEntity},
+      )
+      .getSingleOrNull();
+  return row != null;
 });
 
 final newLibraryGallerySourceProvider = Provider.autoDispose<TimelineGallerySource>((ref) {

@@ -158,9 +158,9 @@ class _GridDateOverlayState extends State<GridDateOverlay> {
   DateTime? _resolveOverlayDate(MediaItem item) {
     if (widget.preferAddedAt) {
       // final DateTime? sourceDate = item.createdAt ?? item.addedAt;
-      return item.addedAt ?? item.createdAt;
+      return item.addedAt ?? item.createdAt ?? item.createdLocalAt; // new
     }
-    return item.createdAt ?? item.addedAt;
+    return item.createdLocalAt ?? item.createdAt ?? item.addedAt; // new
   }
 
   MediaItem _itemWithOverlayDate(MediaItem item, DateTime? overlayDate) {
@@ -178,9 +178,8 @@ class _GridDateOverlayState extends State<GridDateOverlay> {
       thumbnails: item.thumbnails,
       localPath: item.localPath,
       duration: item.duration,
-      // Keep both fields aligned with current sort mode's overlay date so
-      // host formatter callbacks remain correct without API changes.
       createdAt: overlayDate,
+      createdLocalAt: overlayDate, // new
       addedAt: overlayDate,
     );
   }

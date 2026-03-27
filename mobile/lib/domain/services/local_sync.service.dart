@@ -370,7 +370,11 @@ extension on PlatformAsset {
     checksum: null,
     type: AssetType.values.elementAtOrNull(type) ?? AssetType.other,
     createdAt: tryFromSecondsSinceEpoch(createdAt, isUtc: true) ?? DateTime.timestamp(),
-    updatedAt: tryFromSecondsSinceEpoch(createdAt, isUtc: true) ?? DateTime.timestamp(),
+    // updatedAt: tryFromSecondsSinceEpoch(createdAt, isUtc: true) ?? DateTime.timestamp(), // pizcloud
+    updatedAt:
+        tryFromSecondsSinceEpoch(updatedAt, isUtc: true) ??
+        tryFromSecondsSinceEpoch(createdAt, isUtc: true) ??
+        DateTime.timestamp(), // pizcloud
     width: width,
     height: height,
     durationInSeconds: durationInSeconds,

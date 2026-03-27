@@ -130,6 +130,7 @@ class MediaItem {
   final String? localPath;
   final Duration? duration;
   final DateTime? createdAt;
+  final DateTime? createdLocalAt; // new
   final DateTime? addedAt;
 
   const MediaItem({
@@ -144,6 +145,7 @@ class MediaItem {
     this.localPath,
     this.duration,
     this.createdAt,
+    this.createdLocalAt, // new
     this.addedAt,
   });
 
@@ -205,6 +207,9 @@ class MediaItem {
       ),
       duration: _durationFromJson(json['duration']),
       createdAt: _dateTimeFromJson(json['createdAt'] ?? json['created_at']),
+      createdLocalAt: _dateTimeFromJson(
+        json['createdLocalAt'] ?? json['created_local_at'],
+      ), // new
       addedAt: _dateTimeFromJson(json['addedAt'] ?? json['added_at']),
     );
   }
@@ -222,6 +227,7 @@ class MediaItem {
       'localPath': localPath,
       'duration': duration?.inMilliseconds,
       'createdAt': createdAt?.toUtc().toIso8601String(),
+      'createdLocalAt': createdLocalAt?.toIso8601String(), // new
       'addedAt': addedAt?.toUtc().toIso8601String(),
     };
   }

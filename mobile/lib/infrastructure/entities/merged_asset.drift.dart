@@ -25,7 +25,7 @@ class MergedAssetDrift extends i1.ModularAccessor {
     );
     $arrayStartIndex += generatedlimit.amountOfVariables;
     return customSelect(
-      'SELECT rae.id AS remote_id, (SELECT lae.id FROM local_asset_entity AS lae WHERE lae.checksum = rae.checksum LIMIT 1) AS local_id, rae.name, rae.type, rae.created_at AS created_at, rae.updated_at, rae.width, rae.height, rae.duration_in_seconds, rae.is_favorite, rae.thumb_hash, rae.checksum, rae.owner_id, rae.uploaded_at, rae.live_photo_video_id, 0 AS orientation, rae.stack_id FROM remote_asset_entity AS rae LEFT JOIN stack_entity AS se ON rae.stack_id = se.id WHERE rae.deleted_at IS NULL AND rae.visibility = 0 AND rae.owner_id IN ($expandeduserIds) AND(rae.stack_id IS NULL OR rae.id = se.primary_asset_id)UNION ALL SELECT NULL AS remote_id, lae.id AS local_id, lae.name, lae.type, lae.created_at AS created_at, lae.updated_at, lae.width, lae.height, lae.duration_in_seconds, lae.is_favorite, NULL AS thumb_hash, lae.checksum, NULL AS owner_id, NULL AS uploaded_at, NULL AS live_photo_video_id, lae.orientation, NULL AS stack_id FROM local_asset_entity AS lae WHERE NOT EXISTS (SELECT 1 FROM remote_asset_entity AS rae WHERE rae.checksum = lae.checksum AND rae.owner_id IN ($expandeduserIds)) ORDER BY created_at DESC ${generatedlimit.sql}',
+      'SELECT rae.id AS remote_id, (SELECT lae.id FROM local_asset_entity AS lae WHERE lae.checksum = rae.checksum LIMIT 1) AS local_id, rae.name, rae.type, rae.created_at AS created_at, rae.local_date_time AS local_date_time, rae.updated_at, rae.width, rae.height, rae.duration_in_seconds, rae.is_favorite, rae.thumb_hash, rae.checksum, rae.owner_id, rae.uploaded_at, rae.live_photo_video_id, 0 AS orientation, rae.stack_id FROM remote_asset_entity AS rae LEFT JOIN stack_entity AS se ON rae.stack_id = se.id WHERE rae.deleted_at IS NULL AND rae.visibility = 0 AND rae.owner_id IN ($expandeduserIds) AND(rae.stack_id IS NULL OR rae.id = se.primary_asset_id)UNION ALL SELECT NULL AS remote_id, lae.id AS local_id, lae.name, lae.type, lae.created_at AS created_at, lae.created_at AS local_date_time, lae.updated_at, lae.width, lae.height, lae.duration_in_seconds, lae.is_favorite, NULL AS thumb_hash, lae.checksum, NULL AS owner_id, NULL AS uploaded_at, NULL AS live_photo_video_id, lae.orientation, NULL AS stack_id FROM local_asset_entity AS lae WHERE NOT EXISTS (SELECT 1 FROM remote_asset_entity AS rae WHERE rae.checksum = lae.checksum AND rae.owner_id IN ($expandeduserIds)) ORDER BY created_at DESC ${generatedlimit.sql}',
       variables: [
         for (var $ in userIds) i0.Variable<String>($),
         ...generatedlimit.introducedVariables,
@@ -45,6 +45,9 @@ class MergedAssetDrift extends i1.ModularAccessor {
           row.read<int>('type'),
         ),
         createdAt: row.read<DateTime>('created_at'),
+        localDateTime: row.readNullable<DateTime>(
+          'local_date_time',
+        ), // pizcloud
         updatedAt: row.read<DateTime>('updated_at'),
         width: row.readNullable<int>('width'),
         height: row.readNullable<int>('height'),
@@ -69,7 +72,7 @@ class MergedAssetDrift extends i1.ModularAccessor {
     final expandeduserIds = $expandVar($arrayStartIndex, userIds.length);
     $arrayStartIndex += userIds.length;
     return customSelect(
-      'SELECT COUNT(*) AS asset_count, CASE WHEN ?1 = 0 THEN STRFTIME(\'%Y-%m-%d\', created_at, \'localtime\') WHEN ?1 = 1 THEN STRFTIME(\'%Y-%m\', created_at, \'localtime\') END AS bucket_date FROM (SELECT rae.created_at FROM remote_asset_entity AS rae LEFT JOIN stack_entity AS se ON rae.stack_id = se.id WHERE rae.deleted_at IS NULL AND rae.visibility = 0 AND rae.owner_id IN ($expandeduserIds) AND(rae.stack_id IS NULL OR rae.id = se.primary_asset_id)UNION ALL SELECT lae.created_at FROM local_asset_entity AS lae WHERE NOT EXISTS (SELECT 1 FROM remote_asset_entity AS rae WHERE rae.checksum = lae.checksum AND rae.owner_id IN ($expandeduserIds))) GROUP BY bucket_date ORDER BY bucket_date DESC',
+      'SELECT COUNT(*) AS asset_count, CASE WHEN ?1 = 0 THEN STRFTIME(\'%Y-%m-%d\', bucket_source_date, \'localtime\') WHEN ?1 = 1 THEN STRFTIME(\'%Y-%m\', bucket_source_date, \'localtime\') END AS bucket_date FROM (SELECT COALESCE(rae.local_date_time, rae.created_at) AS bucket_source_date FROM remote_asset_entity AS rae LEFT JOIN stack_entity AS se ON rae.stack_id = se.id WHERE rae.deleted_at IS NULL AND rae.visibility = 0 AND rae.owner_id IN ($expandeduserIds) AND(rae.stack_id IS NULL OR rae.id = se.primary_asset_id)UNION ALL SELECT lae.created_at AS bucket_source_date FROM local_asset_entity AS lae WHERE NOT EXISTS (SELECT 1 FROM remote_asset_entity AS rae WHERE rae.checksum = lae.checksum AND rae.owner_id IN ($expandeduserIds))) GROUP BY bucket_date ORDER BY bucket_date DESC',
       variables: [
         i0.Variable<int>(groupBy),
         for (var $ in userIds) i0.Variable<String>($),
@@ -100,6 +103,7 @@ class MergedAssetResult {
   final String name;
   final i2.AssetType type;
   final DateTime createdAt;
+  final DateTime? localDateTime; // pizcloud
   final DateTime updatedAt;
   final int? width;
   final int? height;
@@ -118,6 +122,7 @@ class MergedAssetResult {
     required this.name,
     required this.type,
     required this.createdAt,
+    this.localDateTime, // pizcloud
     required this.updatedAt,
     this.width,
     this.height,

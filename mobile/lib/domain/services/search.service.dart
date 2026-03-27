@@ -61,6 +61,7 @@ extension on AssetResponseDto {
       checksum: checksum,
       createdAt: fileCreatedAt,
       uploadedAt: createdAt, // pizcloud
+      localDateTime: localDateTime, // pizcloud
       updatedAt: updatedAt,
       ownerId: ownerId,
       visibility: switch (visibility) {
