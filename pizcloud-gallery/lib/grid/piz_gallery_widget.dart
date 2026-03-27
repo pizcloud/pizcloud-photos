@@ -1096,9 +1096,31 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (!matchType) {
       return false;
     }
-    final bool matchSource = item.isLocal
-        ? _filterSelection.includeOnDevice
-        : _filterSelection.includeCloud;
+    // new
+    final GridStorageIndicatorState? storageState = widget
+        .storageIndicatorResolver
+        ?.call(item);
+    final bool matchSource;
+    if (storageState != null) {
+      final bool hasLocal =
+          storageState == GridStorageIndicatorState.local ||
+          storageState == GridStorageIndicatorState.merged;
+      final bool hasRemote =
+          storageState == GridStorageIndicatorState.remote ||
+          storageState == GridStorageIndicatorState.merged;
+      matchSource =
+          (hasLocal && _filterSelection.includeOnDevice) ||
+          (hasRemote && _filterSelection.includeCloud);
+    } else {
+      // Old fallback: infer storage from sourceType only.
+      // final bool matchSource = item.isLocal
+      //     ? _filterSelection.includeOnDevice
+      //     : _filterSelection.includeCloud;
+      matchSource = item.isLocal
+          ? _filterSelection.includeOnDevice
+          : _filterSelection.includeCloud;
+    }
+    // #new
     return matchSource;
   }
 
