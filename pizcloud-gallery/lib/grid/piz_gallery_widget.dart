@@ -151,6 +151,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   static const Duration _scrollbarDateHintHideDelay = Duration(
     milliseconds: 320,
   ); // new
+  static const Duration _locateStabilizationWindow = Duration(
+    milliseconds: 1800,
+  ); // new
   static const double _pendingMonthBrowseTopTolerance = 0.5; // new
   static const double _dateBrowseListBaseBottomPadding = 110; // new
   static const double _dateBrowseTopAlignPaddingSlack = 8; // new
@@ -232,6 +235,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   int _lastHandledClearSelectionSignal = 0; // new
   int _lastHandledLocateItemSignal = 0; // new
   int? _locateRequestAwaitingResolutionSignal; // new
+  Timer? _locateStabilizationTimer; // new
+  int? _locateStabilizationSignal; // new
+  List<String> _locateStabilizationCandidateIds = const <String>[]; // new
+  bool _locateStabilizationUserInteracted = false; // new
+  bool _locateStabilizationRecoveredOnce = false; // new
+  bool _isApplyingLocateStabilizationRecovery = false; // new
   // #new
 
   // =======================================================
@@ -325,10 +334,133 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     if (!mounted) {
       return;
     }
+    // new
+    final bool shouldAttemptLocateStabilizationRecovery =
+        _shouldAttemptLocateStabilizationRecovery();
+    final double? fallbackRealTopRow = shouldAttemptLocateStabilizationRecovery
+        ? _captureCurrentRealTopRow()
+        : null;
+
     _allItems = List<MediaItem>.unmodifiable(nextItems);
+    // Previous behavior:
+    // _applySortAndFilter();
     _applySortAndFilter();
     _maybeHandleLocateItemRequest();
+    if (shouldAttemptLocateStabilizationRecovery) {
+      _recoverLocatePositionAfterSourceUpdate(
+        fallbackRealTopRow: fallbackRealTopRow,
+      );
+    }
+    // #new
   }
+
+  // new
+  bool _shouldAttemptLocateStabilizationRecovery() {
+    if (_locateStabilizationSignal == null) {
+      return false;
+    }
+    if (_locateStabilizationUserInteracted ||
+        _locateStabilizationRecoveredOnce) {
+      return false;
+    }
+    return _locateStabilizationCandidateIds.isNotEmpty;
+  }
+
+  double? _captureCurrentRealTopRow() {
+    if (!_isInitialized || !grid.verticalController.hasClients) {
+      return null;
+    }
+    final int cols = grid.currentColCount <= 0 ? 1 : grid.currentColCount;
+    grid.updateViewportFirstCol();
+    final int maxFirstCol = math.max(0, grid.defaultColCount - cols);
+    final int leftCol = grid.viewportFirstCol.clamp(0, maxFirstCol);
+    final double realTopRow = grid.currentRealTopRow(
+      colCount: cols,
+      leftCol: leftCol,
+    );
+    if (!realTopRow.isFinite) {
+      return null;
+    }
+    return realTopRow;
+  }
+
+  void _recoverLocatePositionAfterSourceUpdate({
+    required double? fallbackRealTopRow,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_isInitialized) {
+        return;
+      }
+      if (!_shouldAttemptLocateStabilizationRecovery()) {
+        return;
+      }
+
+      bool recovered = false;
+      if (_locateStabilizationCandidateIds.isNotEmpty) {
+        final int resolvedIndex = mediaDataSource.items.indexWhere(
+          (item) => _locateStabilizationCandidateIds.contains(item.id),
+        );
+        if (resolvedIndex >= 0) {
+          _isApplyingLocateStabilizationRecovery = true;
+          try {
+            _locateDataIndexInView(resolvedIndex);
+          } finally {
+            _isApplyingLocateStabilizationRecovery = false;
+          }
+          recovered = true;
+        }
+      }
+
+      if (!recovered && fallbackRealTopRow != null) {
+        recovered = _restoreRealTopRowAfterSourceUpdate(fallbackRealTopRow);
+      }
+
+      if (recovered) {
+        _locateStabilizationRecoveredOnce = true;
+      }
+    });
+  }
+
+  bool _restoreRealTopRowAfterSourceUpdate(double fallbackRealTopRow) {
+    if (!_isInitialized ||
+        !grid.verticalController.hasClients ||
+        !fallbackRealTopRow.isFinite) {
+      return false;
+    }
+
+    final int cols = grid.currentColCount <= 0 ? 1 : grid.currentColCount;
+    grid.updateViewportFirstCol();
+    final int maxFirstCol = math.max(0, grid.defaultColCount - cols);
+    final int leftCol = grid.viewportFirstCol.clamp(0, maxFirstCol);
+    final double visibleRows = grid.visibleDataRowsInViewport(
+      grid.verticalController.position.viewportDimension,
+    );
+    final double maxTopRow = visibleRows.isFinite && visibleRows > 0
+        ? math.max(
+            0.0,
+            grid.realDataRowCount(colCount: cols).toDouble() - visibleRows,
+          )
+        : math.max(0.0, grid.realDataRowCount(colCount: cols).toDouble());
+    final double targetTopRow = fallbackRealTopRow
+        .clamp(0.0, maxTopRow)
+        .toDouble();
+    final double currentTopRow = grid.currentRealTopRow(
+      colCount: cols,
+      leftCol: leftCol,
+    );
+    if ((currentTopRow - targetTopRow).abs() < 0.25) {
+      return false;
+    }
+
+    _isApplyingLocateStabilizationRecovery = true;
+    try {
+      grid.jumpToRealTopRow(targetTopRow, colCount: cols, leftCol: leftCol);
+    } finally {
+      _isApplyingLocateStabilizationRecovery = false;
+    }
+    return true;
+  }
+  // #new
 
   @override
   void dispose() {
@@ -339,6 +471,8 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     _selectedYearAnchorPulseTimer = null; // new
     _scrollbarDateHintHideTimer?.cancel(); // new
     _scrollbarDateHintHideTimer = null; // new
+    _locateStabilizationTimer?.cancel(); // new
+    _locateStabilizationTimer = null; // new
     _sourceUpdatesSubscription?.cancel();
     _sourceUpdatesSubscription = null;
     if (_isInitialized) {
@@ -1511,6 +1645,36 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     return candidateIds.toList(growable: false);
   }
 
+  // new
+  void _activateLocateStabilization({
+    required int signal,
+    required List<String> candidateIds,
+  }) {
+    if (candidateIds.isEmpty) {
+      return;
+    }
+    _locateStabilizationTimer?.cancel();
+    _locateStabilizationSignal = signal;
+    _locateStabilizationCandidateIds = List<String>.unmodifiable(candidateIds);
+    _locateStabilizationUserInteracted = false;
+    _locateStabilizationRecoveredOnce = false;
+    _locateStabilizationTimer = Timer(
+      _locateStabilizationWindow,
+      _clearLocateStabilization,
+    );
+  }
+
+  void _clearLocateStabilization() {
+    _locateStabilizationTimer?.cancel();
+    _locateStabilizationTimer = null;
+    _locateStabilizationSignal = null;
+    _locateStabilizationCandidateIds = const <String>[];
+    _locateStabilizationUserInteracted = false;
+    _locateStabilizationRecoveredOnce = false;
+    _isApplyingLocateStabilizationRecovery = false;
+  }
+  // #new
+
   void _locateItemById({required int signal, required String? mediaItemId}) {
     if (!_isInitialized) {
       return;
@@ -1527,6 +1691,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       (item) => candidateIds.contains(item.id),
     );
     if (dataIndex >= 0) {
+      _activateLocateStabilization(
+        signal: signal,
+        candidateIds: candidateIds,
+      ); // new
       _locateDataIndexInView(dataIndex);
       _ackLocateRequest(signal);
       return;
@@ -1561,6 +1729,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
         (item) => candidateIds.contains(item.id),
       );
       if (resolvedIndex >= 0) {
+        _activateLocateStabilization(
+          signal: signal,
+          candidateIds: candidateIds,
+        ); // new
         _locateDataIndexInView(resolvedIndex);
         _ackLocateRequest(signal);
         return;
@@ -2267,21 +2439,48 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   }
 
   void _handleGridScrollOffsetChanged() {
-    if (!_isInitialized || !widget.showScrollbarDateHint) {
+    // new - Old behavior:
+    // if (!_isInitialized || !widget.showScrollbarDateHint) {
+    //   return;
+    // }
+    if (!_isInitialized) {
       return;
     }
+    // #new
     final double currentOffset = grid.scrollOffset.value.dy;
     final double delta = currentOffset - _lastObservedVerticalScrollOffset;
     _lastObservedVerticalScrollOffset = currentOffset;
     if (delta.abs() < 0.01) {
       return;
     }
+    _markLocateStabilizationUserScrollInteraction(); // new
+    if (!widget.showScrollbarDateHint) {
+      return;
+    } // new
     if (_dateBrowseMode != GalleryDateBrowseMode.all) {
       _hideScrollbarDateHint();
       return;
     }
     _markScrollbarDateHintInteraction();
   }
+
+  // new
+  void _markLocateStabilizationUserScrollInteraction({bool force = false}) {
+    if (_locateStabilizationSignal == null ||
+        _locateStabilizationUserInteracted ||
+        _isApplyingLocateStabilizationRecovery) {
+      return;
+    }
+    final bool userDriven =
+        force ||
+        _activePointerPositions.isNotEmpty ||
+        _isScrollbarFastScrolling;
+    if (!userDriven) {
+      return;
+    }
+    _locateStabilizationUserInteracted = true;
+  }
+  // #new
 
   void _markScrollbarDateHintInteraction() {
     if (!widget.showScrollbarDateHint) {
@@ -2909,6 +3108,9 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
       return;
     }
     _isScrollbarFastScrolling = isDragging;
+    if (isDragging) {
+      _markLocateStabilizationUserScrollInteraction(force: true);
+    } // new
     if (widget.showScrollbarDateHint) {
       if (isDragging) {
         _markScrollbarDateHintInteraction();
