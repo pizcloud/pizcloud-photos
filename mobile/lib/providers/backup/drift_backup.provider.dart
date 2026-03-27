@@ -221,6 +221,7 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
   StreamSubscription<TaskStatusUpdate>? _statusSubscription;
   StreamSubscription<TaskProgressUpdate>? _progressSubscription;
   final _logger = Logger("DriftBackupNotifier");
+  Future<void>? _ensureBackupInFlight; // pizcloud
 
   /// Remove upload item from state
   void _removeUploadItem(String taskId) {
@@ -352,7 +353,11 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
 
   Future<void> startBackup(String userId) {
     state = state.copyWith(error: BackupError.none);
-    return _uploadService.startBackup(userId, _updateEnqueueCount);
+
+    // pizcloud - Legacy behavior always enqueued a brand-new queue:
+    // return _uploadService.startBackup(userId, _updateEnqueueCount);
+    return _ensureBackupRunning(userId, trigger: "startBackup");
+    // #pizcloud
   }
 
   void _updateEnqueueCount(EnqueueStatus status) {
@@ -376,18 +381,62 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
   }
 
   Future<void> handleBackupResume(String userId) async {
-    _logger.info("Resuming backup tasks...");
-    state = state.copyWith(error: BackupError.none);
-    final tasks = await _uploadService.getActiveTasks(kBackupGroup);
-    _logger.info("Found ${tasks.length} tasks");
+    // pizcloud - Legacy behavior checked active tasks without a concurrency guard:
+    // _logger.info("Resuming backup tasks...");
+    // state = state.copyWith(error: BackupError.none);
+    // final tasks = await _uploadService.getActiveTasks(kBackupGroup);
+    // _logger.info("Found ${tasks.length} tasks");
+    //
+    // if (tasks.isEmpty) {
+    //   _logger.info("Start a new backup queue");
+    //   return startBackup(userId);
+    // }
+    //
+    // _logger.info("Tasks to resume: ${tasks.length}");
+    // return _uploadService.resumeBackup();
+    return _ensureBackupRunning(userId, trigger: "handleBackupResume");
+  }
 
-    if (tasks.isEmpty) {
-      // Start a new backup queue
-      _logger.info("Start a new backup queue");
-      return startBackup(userId);
+  Future<void> _ensureBackupRunning(String userId, {required String trigger}) {
+    final inFlight = _ensureBackupInFlight;
+    if (inFlight != null) {
+      _logger.info("$trigger joined existing backup ensure operation");
+      return inFlight;
     }
 
-    _logger.info("Tasks to resume: ${tasks.length}");
+    late final Future<void> future;
+    future =
+        Future.sync(() async {
+          _logger.info("$trigger ensuring backup is running...");
+          state = state.copyWith(error: BackupError.none);
+
+          final tasks = await _uploadService.getActiveTasks(kBackupGroup);
+          _logger.info("Found ${tasks.length} active backup tasks");
+
+          if (tasks.isEmpty) {
+            return _startNewQueueInternal(userId);
+          }
+
+          return _resumeExistingTasksInternal(tasks.length);
+        }).whenComplete(() {
+          if (identical(_ensureBackupInFlight, future)) {
+            _ensureBackupInFlight = null;
+          }
+        });
+
+    _ensureBackupInFlight = future;
+    return future;
+  }
+  // #pizcloud
+
+  Future<void> _startNewQueueInternal(String userId) {
+    _logger.info("Starting a new backup queue");
+    return _uploadService.startBackup(userId, _updateEnqueueCount); // pizcloud
+  }
+
+  Future<void> _resumeExistingTasksInternal(int taskCount) {
+    // pizcloud
+    _logger.info("Tasks to resume: $taskCount");
     return _uploadService.resumeBackup();
   }
 

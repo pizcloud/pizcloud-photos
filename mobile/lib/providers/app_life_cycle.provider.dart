@@ -193,15 +193,22 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
         _safeRun(backgroundManager.syncLocal(), "syncLocal"),
         _safeRun(backgroundManager.syncRemote().then((success) => syncSuccess = success), "syncRemote"),
       ]);
+      // pizcloud
+      // Legacy beta resume sequencing attempted to resume backup twice:
+      // if (syncSuccess) {
+      //   await Future.wait([
+      //     _safeRun(backgroundManager.hashAssets(), "hashAssets").then((_) {
+      //       _resumeBackup();
+      //     }),
+      //     _resumeBackup(),
+      //   ]);
+      // } else {
+      //   await _safeRun(backgroundManager.hashAssets(), "hashAssets");
+      // }
+      await _safeRun(backgroundManager.hashAssets(), "hashAssets");
+      // pizcloud
       if (syncSuccess) {
-        await Future.wait([
-          _safeRun(backgroundManager.hashAssets(), "hashAssets").then((_) {
-            _resumeBackup();
-          }),
-          _resumeBackup(),
-        ]);
-      } else {
-        await _safeRun(backgroundManager.hashAssets(), "hashAssets");
+        await _resumeBackup(); // pizcloud
       }
 
       if (isAlbumLinkedSyncEnable) {
