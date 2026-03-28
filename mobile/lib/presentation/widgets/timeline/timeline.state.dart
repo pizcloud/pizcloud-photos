@@ -73,10 +73,22 @@ class TimelineState {
 
 class TimelineStateNotifier extends Notifier<TimelineState> {
   void setScrubbing(bool isScrubbing) {
+    // pizcloud
+    // state = state.copyWith(isScrubbing: isScrubbing);
+    if (state.isScrubbing == isScrubbing) {
+      return;
+    }
+    // #pizcloud
     state = state.copyWith(isScrubbing: isScrubbing);
   }
 
   void setScrolling(bool isScrolling) {
+    // pizcloud
+    // state = state.copyWith(isScrolling: isScrolling);
+    if (state.isScrolling == isScrolling) {
+      return;
+    }
+    // #pizcloud
     state = state.copyWith(isScrolling: isScrolling);
   }
 

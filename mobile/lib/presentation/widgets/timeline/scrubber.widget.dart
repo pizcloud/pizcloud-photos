@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart'; // pizcloud
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
@@ -91,6 +92,12 @@ class ScrubberState extends ConsumerState<Scrubber> with TickerProviderStateMixi
   int _monthCount = 0;
   DateTime? _currentScrubberDate;
   Debouncer? _scrubberDebouncer;
+  // pizcloud
+  bool _setScrollingQueued = false;
+  bool? _pendingScrollingValue;
+  bool _setScrollUiQueued = false;
+  bool _pendingScrollUiUpdate = false;
+  // #pizcloud
 
   late AnimationController _thumbAnimationController;
   Timer? _fadeOutTimer;
@@ -159,6 +166,90 @@ class ScrubberState extends ConsumerState<Scrubber> with TickerProviderStateMixi
     return _segments.map((e) => "${e.date.month}_${e.date.year}").toSet().length;
   }
 
+  // pizcloud
+  void _setTimelineScrollingSafely(bool isScrolling) {
+    final TimelineState currentState = ref.read(timelineStateProvider);
+    if (currentState.isScrolling == isScrolling) {
+      return;
+    }
+
+    final SchedulerPhase phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.persistentCallbacks) {
+      _pendingScrollingValue = isScrolling;
+      if (_setScrollingQueued) {
+        return;
+      }
+
+      _setScrollingQueued = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _setScrollingQueued = false;
+        final bool? pendingValue = _pendingScrollingValue;
+        _pendingScrollingValue = null;
+        if (!mounted || pendingValue == null) {
+          return;
+        }
+
+        final TimelineState state = ref.read(timelineStateProvider);
+        if (state.isScrolling != pendingValue) {
+          ref.read(timelineStateProvider.notifier).setScrolling(pendingValue);
+        }
+      });
+      return;
+    }
+
+    ref.read(timelineStateProvider.notifier).setScrolling(isScrolling);
+  }
+
+  void _updateScrollUiSafely() {
+    final SchedulerPhase phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.persistentCallbacks) {
+      _pendingScrollUiUpdate = true;
+      if (_setScrollUiQueued) {
+        return;
+      }
+
+      _setScrollUiQueued = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _setScrollUiQueued = false;
+        if (!mounted || !_pendingScrollUiUpdate) {
+          return;
+        }
+        _pendingScrollUiUpdate = false;
+        _updateScrollUiNow();
+      });
+      _resetThumbTimer();
+      return;
+    }
+
+    _updateScrollUiNow();
+  }
+
+  void _updateScrollUiNow() {
+    if (!mounted) {
+      return;
+    }
+
+    final double nextOffset = _currentOffset;
+    final bool shouldMoveThumb = (_thumbTopOffset - nextOffset).abs() > 0.1;
+    final bool shouldReverseLabel = _labelAnimation.status != AnimationStatus.reverse;
+    final bool shouldShowThumb = _thumbAnimationController.status != AnimationStatus.forward;
+
+    if (shouldMoveThumb) {
+      setState(() {
+        _thumbTopOffset = nextOffset;
+      });
+    }
+
+    if (shouldReverseLabel) {
+      _labelAnimationController.reverse();
+    }
+    if (shouldShowThumb) {
+      _thumbAnimationController.forward();
+    }
+    _resetThumbTimer();
+  }
+  // #pizcloud
+
   bool _onScrollNotification(ScrollNotification notification) {
     if (_isDragging) {
       // If the user is dragging the thumb, we don't want to update the position
@@ -166,23 +257,29 @@ class ScrubberState extends ConsumerState<Scrubber> with TickerProviderStateMixi
     }
 
     if (notification is ScrollStartNotification || notification is ScrollUpdateNotification) {
-      ref.read(timelineStateProvider.notifier).setScrolling(true);
+      _setTimelineScrollingSafely(true); // pizcloud
     } else if (notification is ScrollEndNotification) {
-      ref.read(timelineStateProvider.notifier).setScrolling(false);
+      _setTimelineScrollingSafely(false); // pizcloud
     }
-
-    setState(() {
-      if (notification is ScrollUpdateNotification) {
-        _thumbTopOffset = _currentOffset;
-        if (_labelAnimation.status != AnimationStatus.reverse) {
-          _labelAnimationController.reverse();
-        }
-        if (_thumbAnimationController.status != AnimationStatus.forward) {
-          _thumbAnimationController.forward();
-        }
-      }
+    // pizcloud
+    // setState(() {
+    //   if (notification is ScrollUpdateNotification) {
+    //     _thumbTopOffset = _currentOffset;
+    //     if (_labelAnimation.status != AnimationStatus.reverse) {
+    //       _labelAnimationController.reverse();
+    //     }
+    //     if (_thumbAnimationController.status != AnimationStatus.forward) {
+    //       _thumbAnimationController.forward();
+    //     }
+    //   }
+    //   _resetThumbTimer();
+    // });
+    if (notification is ScrollUpdateNotification) {
+      _updateScrollUiSafely();
+    } else {
       _resetThumbTimer();
-    });
+    }
+    // #pizcloud
 
     return false;
   }

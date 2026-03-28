@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/constants/constants.dart';
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_media_mapper.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
@@ -24,7 +25,16 @@ Future<void> focusNewLibraryAndLocateAsset({
   await context.maybePop();
   await WidgetsBinding.instance.endOfFrame;
 
-  await appRouter.navigate(const TabShellRoute(children: [NewLibraryRoute()]));
+  // await appRouter.navigate(const TabShellRoute(children: [NewLibraryRoute()]));
+  final TabsRouter? tabsRouter = context.mounted ? TabsRouterScope.of(context)?.controller : null;
+  if (tabsRouter != null) {
+    if (tabsRouter.activeIndex != kNewLibraryTabIndex) {
+      tabsRouter.setActiveIndex(kNewLibraryTabIndex);
+    }
+  } else {
+    await appRouter.navigate(const TabShellRoute(children: [NewLibraryRoute()]));
+  }
+
   await WidgetsBinding.instance.endOfFrame;
   tabNotifier.state = TabEnum.newLibrary;
 

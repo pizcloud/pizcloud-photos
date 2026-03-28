@@ -130,9 +130,7 @@ class TrashPage extends HookConsumerWidget {
                   selectionEnabledHook.value = false;
                   selection.value = {};
                 },
-          icon: !selectionEnabledHook.value
-              ? Icon(context.platformIcons.back)
-              : Icon(context.platformIcons.clear),
+          icon: !selectionEnabledHook.value ? Icon(context.platformIcons.back) : Icon(context.platformIcons.clear),
         ),
         automaticallyImplyLeading: false,
         title: Text(getAppBarTitle(count)),
@@ -179,9 +177,7 @@ class TrashPage extends HookConsumerWidget {
                         : handlePermanentDelete,
                   ),
                   TextButton.icon(
-                    icon: Icon(
-                      context.platformIcon(material: Icons.history_rounded, cupertino: CupertinoIcons.clock),
-                    ),
+                    icon: Icon(context.platformIcon(material: Icons.history_rounded, cupertino: CupertinoIcons.clock)),
                     label: Text(
                       selection.value.isEmpty ? 'trash_page_restore_all'.tr() : 'restore'.tr(),
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
