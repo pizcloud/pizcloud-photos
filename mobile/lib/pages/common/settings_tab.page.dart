@@ -22,6 +22,7 @@ import 'package:immich_mobile/providers/locale_provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 // import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
+import 'package:immich_mobile/pages/common/instructions.page.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_profile_info.dart';
 // import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
@@ -161,6 +162,15 @@ class SettingsTabPage extends HookConsumerWidget {
     }
 
     // pizcloud
+    Widget buildInstructionsButton() {
+      return buildActionButton(
+        context.platformIcon(material: Icons.menu_book_outlined, cupertino: CupertinoIcons.book),
+        "instructions_title",
+        subtitle: "settings_quick_instructions_subtitle",
+        () => Navigator.of(context).push(platformPageRoute(context: context, builder: (_) => const InstructionsPage())),
+      );
+    }
+
     Widget buildManageAccountButton() {
       return buildActionButton(
         context.platformIcon(
@@ -424,6 +434,7 @@ class SettingsTabPage extends HookConsumerWidget {
                 buildManageAccountButton(), // pizcloud
                 buildActionSectionTitle("settings_quick_system_section"),
                 if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
+                buildInstructionsButton(), // pizcloud
                 buildSettingButton(),
                 // buildSignOutButton(),
                 // buildFooter(),
