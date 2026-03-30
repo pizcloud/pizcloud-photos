@@ -13,6 +13,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_provider.dart';
 import 'package:immich_mobile/models/pizcloud/saved_login_account.model.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/backup/backup.provider.dart';
@@ -152,6 +153,10 @@ class LoginForm extends HookConsumerWidget {
 
     bool isSyncRemoteDeletionsMode() => Platform.isAndroid && Store.get(StoreKey.manageLocalMediaAndroid, false);
 
+    Future<void> markFirstLoginWalkthroughPending() async {
+      await ref.read(firstLoginWalkthroughControllerProvider.notifier).markPendingStartIfNeeded();
+    }
+
     String? validateEmail(String? value) {
       final email = (value ?? '').trim();
       if (email.isEmpty) return 'Please enter your email';
@@ -189,6 +194,7 @@ class LoginForm extends HookConsumerWidget {
           if (isSyncRemoteDeletionsMode()) {
             await getManageMediaPermission();
           }
+          await markFirstLoginWalkthroughPending();
           // await waitForAccessTokenReady();
           unawaited(handleSyncFlow());
           ref.read(websocketProvider.notifier).connect();
@@ -251,6 +257,7 @@ class LoginForm extends HookConsumerWidget {
           if (isSyncRemoteDeletionsMode()) {
             await getManageMediaPermission();
           }
+          await markFirstLoginWalkthroughPending();
           // await waitForAccessTokenReady();
           unawaited(handleSyncFlow());
           ref.read(websocketProvider.notifier).connect();
@@ -261,7 +268,7 @@ class LoginForm extends HookConsumerWidget {
           unawaited(ref.watch(backupProvider.notifier).resumeBackup());
         }
         unawaited(context.replaceRoute(const TabControllerRoute()));
-      } on PlatformException catch (e) {
+      } on PlatformException {
         if (!context.mounted) return;
       } catch (e) {
         if (!context.mounted) return;

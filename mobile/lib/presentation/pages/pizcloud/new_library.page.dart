@@ -11,6 +11,8 @@ import 'package:immich_mobile/domain/models/setting.model.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/domain/models/timeline.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart' as app_store;
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_keys.dart';
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_provider.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_action_runner.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_actions.dart';
 import 'package:immich_mobile/presentation/pages/pizcloud/new_library_viewer_capability.dart';
@@ -157,6 +159,18 @@ class NewLibraryPage extends HookConsumerWidget {
       sortFilterMenuTexts: sortFilterMenuTexts,
       showDateBrowseOverlay: true,
       dateBrowseTexts: dateBrowseTexts,
+      dateBrowseYearButtonKey: walkthroughDateBrowseYearButtonKey,
+      dateBrowseMonthButtonKey: walkthroughDateBrowseMonthButtonKey,
+      firstMonthBrowseRowKey: walkthroughDateBrowseFirstMonthRowKey,
+      onDateBrowseYearTapped: () {
+        ref.read(firstLoginWalkthroughControllerProvider.notifier).onDateBrowseYearTapped();
+      },
+      onDateBrowseMonthTapped: () {
+        ref.read(firstLoginWalkthroughControllerProvider.notifier).onDateBrowseMonthTapped();
+      },
+      onFirstMonthBrowseRowTapped: () {
+        ref.read(firstLoginWalkthroughControllerProvider.notifier).onDateBrowseFirstMonthRowTapped();
+      },
       showStorageIndicator: showStorageIndicator,
       showScrollbarDateHint: true,
       locateItemId: pendingLocateRequest?.mediaItemId,

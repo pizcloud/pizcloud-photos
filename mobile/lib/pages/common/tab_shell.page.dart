@@ -9,6 +9,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
 import 'package:immich_mobile/domain/utils/event_stream.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_keys.dart'; // pizcloud
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_overlay.dart'; // pizcloud
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/auth.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/haptic_feedback.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/album.provider.dart';
@@ -42,6 +45,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
   void initState() {
     super.initState();
     _eventSubscription = EventStream.shared.listen<MultiSelectToggleEvent>(_onMultiSelectToggle);
+    unawaited(ref.read(firstLoginWalkthroughControllerProvider.notifier).initializeIfNeeded()); // pizcloud
   }
 
   @override
@@ -76,7 +80,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
       ),
       NavigationDestination(
         label: 'backup'.tr(),
-        icon: Icon(context.platformIcons.cloudUploadSolid),
+        icon: Icon(context.platformIcons.cloudUploadSolid, key: walkthroughBackupTabKey), // pizcloud
         selectedIcon: Icon(context.platformIcons.cloudUploadSolid, color: context.primaryColor),
         enabled: !isReadonlyModeEnabled,
       ),
@@ -197,6 +201,7 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
                   buildTabContent(),
 
                 const MediaPermissionLifecycleListener(),
+                const FirstLoginWalkthroughOverlayHost(), // pizcloud
               ],
             ),
           ),
@@ -233,6 +238,10 @@ void _onNavigationSelected(TabsRouter router, int index, WidgetRef ref) {
   if (router.activeIndex == kNewLibraryTabIndex && index == kNewLibraryTabIndex) {
     ref.read(newLibraryReselectSignalProvider.notifier).state++;
   }
+
+  if (index == kBackupTabIndex) {
+    ref.read(firstLoginWalkthroughControllerProvider.notifier).onBackupTabTapped();
+  } // pizcloud
 
   ref.read(hapticFeedbackProvider.notifier).selectionClick();
   router.setActiveIndex(index);

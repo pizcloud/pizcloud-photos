@@ -98,7 +98,11 @@ enum StoreKey<T> {
   pizcloudLoginMethod<String>._(1012),
 
   // pizcloud - backup reminder push notification preference
-  backupNotificationEnabled<bool>._(1013);
+  backupNotificationEnabled<bool>._(1013),
+
+  // pizcloud first-login walkthrough flags
+  firstLoginWalkthroughPending<bool>._(1014),
+  firstLoginWalkthroughCompleted<bool>._(1015);
 
   const StoreKey._(this.id);
   final int id;

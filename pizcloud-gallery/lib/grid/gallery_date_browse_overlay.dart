@@ -28,11 +28,19 @@ class GalleryDateBrowseOverlay extends StatelessWidget {
     required this.mode,
     required this.texts,
     required this.onModeChanged,
+    this.yearButtonKey,
+    this.monthButtonKey,
+    this.onYearTapped,
+    this.onMonthTapped,
   });
 
   final GalleryDateBrowseMode mode;
   final GalleryDateBrowseTexts texts;
   final ValueChanged<GalleryDateBrowseMode> onModeChanged;
+  final Key? yearButtonKey;
+  final Key? monthButtonKey;
+  final VoidCallback? onYearTapped;
+  final VoidCallback? onMonthTapped;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +74,7 @@ class GalleryDateBrowseOverlay extends StatelessWidget {
               label: texts.optionYear,
               value: GalleryDateBrowseMode.year,
               palette: palette,
+              buttonKey: yearButtonKey,
             ),
             const SizedBox(width: 4),
             _buildModeButton(
@@ -73,6 +82,7 @@ class GalleryDateBrowseOverlay extends StatelessWidget {
               label: texts.optionMonth,
               value: GalleryDateBrowseMode.month,
               palette: palette,
+              buttonKey: monthButtonKey,
             ),
           ],
         ),
@@ -85,6 +95,7 @@ class GalleryDateBrowseOverlay extends StatelessWidget {
     required String label,
     required GalleryDateBrowseMode value,
     required GridAppearancePalette palette,
+    Key? buttonKey,
   }) {
     final bool selected = mode == value;
     final Color selectedBackground = palette.fpsBadgeText.withValues(
@@ -95,8 +106,16 @@ class GalleryDateBrowseOverlay extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
+        key: buttonKey,
         borderRadius: BorderRadius.circular(8),
-        onTap: () => onModeChanged(value),
+        onTap: () {
+          if (value == GalleryDateBrowseMode.year) {
+            onYearTapped?.call();
+          } else if (value == GalleryDateBrowseMode.month) {
+            onMonthTapped?.call();
+          }
+          onModeChanged(value);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOutCubic,

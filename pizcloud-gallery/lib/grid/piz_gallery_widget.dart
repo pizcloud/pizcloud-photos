@@ -60,6 +60,13 @@ class PizGallery extends StatefulWidget {
   final GallerySortFilterMenuTexts sortFilterMenuTexts;
   final bool showDateBrowseOverlay;
   final GalleryDateBrowseTexts dateBrowseTexts;
+  // new
+  final Key? dateBrowseYearButtonKey;
+  final Key? dateBrowseMonthButtonKey;
+  final Key? firstMonthBrowseRowKey;
+  final VoidCallback? onDateBrowseYearTapped;
+  final VoidCallback? onDateBrowseMonthTapped;
+  final VoidCallback? onFirstMonthBrowseRowTapped;
   final bool showStorageIndicator; // new
   final GridStorageIndicatorResolver? storageIndicatorResolver; // new
   final bool showScrollbarDateHint; // new
@@ -94,6 +101,12 @@ class PizGallery extends StatefulWidget {
     this.sortFilterMenuTexts = const GallerySortFilterMenuTexts.defaults(),
     this.showDateBrowseOverlay = false,
     this.dateBrowseTexts = const GalleryDateBrowseTexts.defaults(),
+    this.dateBrowseYearButtonKey,
+    this.dateBrowseMonthButtonKey,
+    this.firstMonthBrowseRowKey,
+    this.onDateBrowseYearTapped,
+    this.onDateBrowseMonthTapped,
+    this.onFirstMonthBrowseRowTapped,
     this.showStorageIndicator = false,
     this.storageIndicatorResolver,
     this.showScrollbarDateHint = false,
@@ -2225,6 +2238,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           mode: _dateBrowseMode,
           texts: widget.dateBrowseTexts,
           onModeChanged: _setDateBrowseMode,
+          yearButtonKey: widget.dateBrowseYearButtonKey,
+          monthButtonKey: widget.dateBrowseMonthButtonKey,
+          onYearTapped: widget.onDateBrowseYearTapped,
+          onMonthTapped: widget.onDateBrowseMonthTapped,
         ),
       ),
     );
@@ -2336,9 +2353,12 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
                               const SizedBox(height: _dateBrowseRowSpacing),
                           itemBuilder: (context, index) {
                             final _DateBrowseRowData row = rows[index];
+                            final bool isFirstMonthRow =
+                                !showYearList && index == 0;
                             return _buildDateBrowseRow(
                               row: row,
                               colors: colors,
+                              isFirstMonthRow: isFirstMonthRow,
                             );
                           },
                         );
@@ -2712,6 +2732,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
   Widget _buildDateBrowseRow({
     required _DateBrowseRowData row,
     required _DateBrowseColorScheme colors,
+    required bool isFirstMonthRow,
   }) {
     final bool isYearRow = row.kind == _DateBrowseRowKind.year;
     final bool isSelectedYearAnchorRow =
@@ -2727,14 +2748,19 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
     //     ? widget.dateBrowseTexts.optionYear
     //     : widget.dateBrowseTexts.optionMonth;
 
-    return SizedBox(
+    final Widget rowBody = SizedBox(
       height: _dateBrowseRowHeight,
       child: Material(
         color: Colors.transparent,
         // borderRadius: BorderRadius.circular(14),
         child: InkWell(
           // borderRadius: BorderRadius.circular(14),
-          onTap: row.onTap,
+          onTap: () {
+            if (isFirstMonthRow) {
+              widget.onFirstMonthBrowseRowTapped?.call();
+            }
+            row.onTap();
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
@@ -2897,6 +2923,10 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
         ),
       ),
     );
+    if (isFirstMonthRow && widget.firstMonthBrowseRowKey != null) {
+      return KeyedSubtree(key: widget.firstMonthBrowseRowKey, child: rowBody);
+    }
+    return rowBody;
   }
 
   Widget _buildDateBrowseStatChip({

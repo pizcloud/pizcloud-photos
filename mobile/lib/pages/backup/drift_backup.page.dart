@@ -12,6 +12,8 @@ import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_keys.dart'; // pizcloud
+import 'package:immich_mobile/features/walkthrough/first_login_walkthrough_provider.dart'; // pizcloud
 import 'package:immich_mobile/generated/intl_keys.g.dart';
 import 'package:immich_mobile/presentation/widgets/backup/backup_toggle_button.widget.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
@@ -279,7 +281,9 @@ class _BackupAlbumSelectionCard extends ConsumerWidget {
                 ),
               ),
               FilledButton.tonal(
+                key: walkthroughBackupSelectButtonKey, // pizcloud
                 onPressed: () async {
+                  ref.read(firstLoginWalkthroughControllerProvider.notifier).onBackupSelectTapped(); // pizcloud
                   await context.pushRoute(const DriftBackupAlbumSelectionRoute());
                   final currentUser = ref.read(currentUserProvider);
                   if (currentUser == null) {
