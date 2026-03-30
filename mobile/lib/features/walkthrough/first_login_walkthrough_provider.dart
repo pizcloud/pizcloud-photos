@@ -88,8 +88,34 @@ class FirstLoginWalkthroughController extends StateNotifier<FirstLoginWalkthroug
       return;
     }
 
-    state = null;
-    unawaited(_persistCompletion());
+    _finishWalkthrough();
+  }
+
+  void onTargetMissingTimeout(FirstLoginWalkthroughStep missingStep) {
+    if (state != missingStep) {
+      return;
+    }
+
+    switch (missingStep) {
+      case FirstLoginWalkthroughStep.dateBrowseYear:
+      case FirstLoginWalkthroughStep.dateBrowseMonth:
+        // Keep current step; these targets should exist in normal flow.
+        return;
+      case FirstLoginWalkthroughStep.dateBrowseFirstMonthRow:
+        state = FirstLoginWalkthroughStep.backupTab;
+        return;
+      case FirstLoginWalkthroughStep.backupTab:
+      case FirstLoginWalkthroughStep.backupSelectButton:
+        _finishWalkthrough();
+        return;
+    }
+  }
+
+  void onBackupTabBlockedByReadonly() {
+    if (state != FirstLoginWalkthroughStep.backupTab) {
+      return;
+    }
+    _finishWalkthrough();
   }
 
   void _advanceIfCurrent({required FirstLoginWalkthroughStep expected, required FirstLoginWalkthroughStep next}) {
@@ -102,6 +128,11 @@ class FirstLoginWalkthroughController extends StateNotifier<FirstLoginWalkthroug
   Future<void> _persistCompletion() async {
     await Store.put(StoreKey.firstLoginWalkthroughCompleted, true);
     await Store.put(StoreKey.firstLoginWalkthroughPending, false);
+  }
+
+  void _finishWalkthrough() {
+    state = null;
+    unawaited(_persistCompletion());
   }
 }
 

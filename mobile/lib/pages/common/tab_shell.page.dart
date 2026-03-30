@@ -40,6 +40,7 @@ class TabShellPage extends ConsumerStatefulWidget {
 class _TabShellPageState extends ConsumerState<TabShellPage> {
   StreamSubscription? _eventSubscription;
   bool _hideNavigationBar = false;
+  bool _readonlyWalkthroughResolutionQueued = false; // pizcloud
 
   @override
   void initState() {
@@ -68,6 +69,23 @@ class _TabShellPageState extends ConsumerState<TabShellPage> {
   Widget build(BuildContext context) {
     final isScreenLandscape = context.orientation == Orientation.landscape;
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
+    // pizcloud
+    final walkthroughStep = ref.watch(firstLoginWalkthroughControllerProvider);
+
+    if (isReadonlyModeEnabled && walkthroughStep == FirstLoginWalkthroughStep.backupTab) {
+      if (!_readonlyWalkthroughResolutionQueued) {
+        _readonlyWalkthroughResolutionQueued = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          ref.read(firstLoginWalkthroughControllerProvider.notifier).onBackupTabBlockedByReadonly();
+        });
+      }
+    } else {
+      _readonlyWalkthroughResolutionQueued = false;
+    }
+    // #pizcloud
 
     final navigationDestinations = [
       NavigationDestination(

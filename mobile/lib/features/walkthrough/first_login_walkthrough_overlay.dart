@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
@@ -71,6 +72,10 @@ class _FirstLoginWalkthroughOverlayLayer extends ConsumerStatefulWidget {
 class _FirstLoginWalkthroughOverlayLayerState extends ConsumerState<_FirstLoginWalkthroughOverlayLayer>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
+  Timer? _missingTargetWatchdogTimer;
+  FirstLoginWalkthroughStep? _watchdogStep;
+
+  static const Duration _missingTargetWatchdogTimeout = Duration(milliseconds: 1400);
 
   @override
   void initState() {
@@ -82,6 +87,7 @@ class _FirstLoginWalkthroughOverlayLayerState extends ConsumerState<_FirstLoginW
 
   @override
   void dispose() {
+    _clearMissingTargetWatchdog();
     _pulseController.dispose();
     super.dispose();
   }
@@ -90,6 +96,7 @@ class _FirstLoginWalkthroughOverlayLayerState extends ConsumerState<_FirstLoginW
   Widget build(BuildContext context) {
     final FirstLoginWalkthroughStep? step = ref.watch(firstLoginWalkthroughControllerProvider);
     if (step == null) {
+      _clearMissingTargetWatchdog();
       return const SizedBox.shrink();
     }
 
@@ -99,12 +106,14 @@ class _FirstLoginWalkthroughOverlayLayerState extends ConsumerState<_FirstLoginW
         final GlobalKey targetKey = _targetKeyForStep(step);
         final Rect? targetRect = _readTargetRect(targetKey);
         if (targetRect == null) {
+          _ensureMissingTargetWatchdog(step);
           return const SizedBox.shrink();
         }
+        _clearMissingTargetWatchdog();
 
         final Size screenSize = MediaQuery.of(context).size;
         final EdgeInsets safeArea = MediaQuery.of(context).padding;
-        const double highlightPadding = 8;
+        final double highlightPadding = _highlightPaddingForStep(step);
         const double bubbleWidth = 290;
         final Rect highlightRect = targetRect.inflate(highlightPadding);
         final double pulse = Curves.easeOutCubic.transform(_pulseController.value);
@@ -119,65 +128,71 @@ class _FirstLoginWalkthroughOverlayLayerState extends ConsumerState<_FirstLoginW
           math.max(safeArea.top + 10, screenSize.height - safeArea.bottom - 80),
         );
 
-        return IgnorePointer(
-          // Keep existing interaction flow untouched; walkthrough only reacts to real target taps.
-          ignoring: true,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _SpotlightMaskPainter(
-                    highlightRect: highlightRect,
-                    borderRadius: 12,
-                    overlayColor: Colors.black.withValues(alpha: 0.58),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: highlightRect.left - ringSpread,
-                top: highlightRect.top - ringSpread,
-                width: highlightRect.width + (ringSpread * 2),
-                height: highlightRect.height + (ringSpread * 2),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.3 + (pulse * 0.35)),
-                        blurRadius: 16 + (pulse * 8),
-                        spreadRadius: 2 + (pulse * 3),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: bubbleLeft,
-                top: bubbleTop,
-                width: bubbleWidth,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.84),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    child: Text(
-                      step.messageKey.tr(namedArgs: {'step': '${step.order}', 'total': '5'}),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
+        return Stack(
+          children: [
+            IgnorePointer(
+              // Legacy behavior used a full pass-through overlay (`ignoring: true` for everything).
+              // New behavior keeps visuals pass-through but adds explicit blockers outside the target hole.
+              ignoring: true,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _SpotlightMaskPainter(
+                        highlightRect: highlightRect,
+                        borderRadius: 12,
+                        overlayColor: Colors.black.withValues(alpha: 0.58),
                       ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    left: highlightRect.left - ringSpread,
+                    top: highlightRect.top - ringSpread,
+                    width: highlightRect.width + (ringSpread * 2),
+                    height: highlightRect.height + (ringSpread * 2),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.3 + (pulse * 0.35)),
+                            blurRadius: 16 + (pulse * 8),
+                            spreadRadius: 2 + (pulse * 3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: bubbleLeft,
+                    top: bubbleTop,
+                    width: bubbleWidth,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.84),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        child: Text(
+                          step.messageKey.tr(namedArgs: {'step': '${step.order}', 'total': '5'}),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            _OutsideTargetInteractionBlocker(holeRect: highlightRect, screenSize: screenSize),
+          ],
         );
       },
     );
@@ -206,6 +221,34 @@ class _FirstLoginWalkthroughOverlayLayerState extends ConsumerState<_FirstLoginW
     final Offset topLeft = renderObject.localToGlobal(Offset.zero);
     return topLeft & renderObject.size;
   }
+
+  double _highlightPaddingForStep(FirstLoginWalkthroughStep step) {
+    return switch (step) {
+      FirstLoginWalkthroughStep.backupTab => 16,
+      FirstLoginWalkthroughStep.backupSelectButton => 10,
+      _ => 8,
+    };
+  }
+
+  void _ensureMissingTargetWatchdog(FirstLoginWalkthroughStep step) {
+    if (_watchdogStep == step && _missingTargetWatchdogTimer != null) {
+      return;
+    }
+    _clearMissingTargetWatchdog();
+    _watchdogStep = step;
+    _missingTargetWatchdogTimer = Timer(_missingTargetWatchdogTimeout, () {
+      if (!mounted) {
+        return;
+      }
+      ref.read(firstLoginWalkthroughControllerProvider.notifier).onTargetMissingTimeout(step);
+    });
+  }
+
+  void _clearMissingTargetWatchdog() {
+    _missingTargetWatchdogTimer?.cancel();
+    _missingTargetWatchdogTimer = null;
+    _watchdogStep = null;
+  }
 }
 
 class _SpotlightMaskPainter extends CustomPainter {
@@ -228,5 +271,61 @@ class _SpotlightMaskPainter extends CustomPainter {
     return oldDelegate.highlightRect != highlightRect ||
         oldDelegate.overlayColor != overlayColor ||
         oldDelegate.borderRadius != borderRadius;
+  }
+}
+
+class _OutsideTargetInteractionBlocker extends StatelessWidget {
+  const _OutsideTargetInteractionBlocker({required this.holeRect, required this.screenSize});
+
+  final Rect holeRect;
+  final Size screenSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final Rect screenRect = Offset.zero & screenSize;
+    final Rect safeHoleRect = holeRect.intersect(screenRect);
+    if (safeHoleRect.isEmpty) {
+      return const Positioned.fill(child: _TapBlocker());
+    }
+
+    final double topHeight = safeHoleRect.top.clamp(0.0, screenSize.height);
+    final double bottomTop = safeHoleRect.bottom.clamp(0.0, screenSize.height);
+    final double middleHeight = math.max(0, bottomTop - topHeight);
+    final double leftWidth = safeHoleRect.left.clamp(0.0, screenSize.width);
+    final double rightStart = safeHoleRect.right.clamp(0.0, screenSize.width);
+
+    return Stack(
+      children: [
+        if (topHeight > 0)
+          Positioned(left: 0, top: 0, width: screenSize.width, height: topHeight, child: const _TapBlocker()),
+        if (bottomTop < screenSize.height)
+          Positioned(
+            left: 0,
+            top: bottomTop,
+            width: screenSize.width,
+            height: screenSize.height - bottomTop,
+            child: const _TapBlocker(),
+          ),
+        if (middleHeight > 0 && leftWidth > 0)
+          Positioned(left: 0, top: topHeight, width: leftWidth, height: middleHeight, child: const _TapBlocker()),
+        if (middleHeight > 0 && rightStart < screenSize.width)
+          Positioned(
+            left: rightStart,
+            top: topHeight,
+            width: screenSize.width - rightStart,
+            height: middleHeight,
+            child: const _TapBlocker(),
+          ),
+      ],
+    );
+  }
+}
+
+class _TapBlocker extends StatelessWidget {
+  const _TapBlocker();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AbsorbPointer(absorbing: true, child: SizedBox.expand());
   }
 }
