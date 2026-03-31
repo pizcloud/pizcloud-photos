@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/services/pizcloud/walkthrough_state.service.dart';
 
 enum FirstLoginWalkthroughStep {
   dateBrowseYear,
@@ -31,7 +32,14 @@ extension FirstLoginWalkthroughStepExtension on FirstLoginWalkthroughStep {
 }
 
 class FirstLoginWalkthroughController extends StateNotifier<FirstLoginWalkthroughStep?> {
-  FirstLoginWalkthroughController() : super(null);
+  FirstLoginWalkthroughController({WalkthroughStateService? remoteStateService})
+    : _remoteStateService = remoteStateService ?? walkthroughStateService,
+      super(null);
+
+  static const int _firstLoginWalkthroughVersion = 1;
+  static const Duration _remoteStateTimeout = Duration(milliseconds: 550);
+
+  final WalkthroughStateService _remoteStateService;
 
   Future<void> initializeIfNeeded() async {
     if (state != null) {
@@ -44,6 +52,21 @@ class FirstLoginWalkthroughController extends StateNotifier<FirstLoginWalkthroug
       return;
     }
 
+    final bool? remoteCompleted = await _fetchRemoteCompletedState();
+    if (remoteCompleted == true) {
+      await _applyRemoteCompletedState();
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+    final bool completedAfterRemote = Store.get(StoreKey.firstLoginWalkthroughCompleted, false);
+    final bool pendingAfterRemote = Store.get(StoreKey.firstLoginWalkthroughPending, false);
+    if (state != null || completedAfterRemote || !pendingAfterRemote) {
+      return;
+    }
+
     state = FirstLoginWalkthroughStep.dateBrowseYear;
   }
 
@@ -53,6 +76,8 @@ class FirstLoginWalkthroughController extends StateNotifier<FirstLoginWalkthroug
       return;
     }
     await Store.put(StoreKey.firstLoginWalkthroughPending, true);
+    // Keep login flow non-blocking; if server already marks this user completed, local state will reconcile.
+    unawaited(_syncCompletedFromRemoteIfAny());
   }
 
   void onDateBrowseYearTapped() {
@@ -126,13 +151,54 @@ class FirstLoginWalkthroughController extends StateNotifier<FirstLoginWalkthroug
   }
 
   Future<void> _persistCompletion() async {
-    await Store.put(StoreKey.firstLoginWalkthroughCompleted, true);
-    await Store.put(StoreKey.firstLoginWalkthroughPending, false);
+    await _setCompletedLocally();
+    unawaited(_remoteStateService.markFirstLoginCompleted(version: _firstLoginWalkthroughVersion));
   }
 
   void _finishWalkthrough() {
     state = null;
     unawaited(_persistCompletion());
+  }
+
+  Future<void> _setCompletedLocally() async {
+    await Store.put(StoreKey.firstLoginWalkthroughCompleted, true);
+    await Store.put(StoreKey.firstLoginWalkthroughPending, false);
+  }
+
+  Future<bool?> _fetchRemoteCompletedState() async {
+    try {
+      final FirstLoginWalkthroughRemoteState? remoteState = await _remoteStateService.fetchFirstLoginState().timeout(
+        _remoteStateTimeout,
+      );
+      if (remoteState == null) {
+        return null;
+      }
+      // Keep version available for future rollout compatibility without changing current flow.
+      final int? version = remoteState.version;
+      if (version != null && version < 0) {
+        return null;
+      }
+      return remoteState.completed;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _syncCompletedFromRemoteIfAny() async {
+    final bool? remoteCompleted = await _fetchRemoteCompletedState();
+    if (remoteCompleted == true) {
+      await _applyRemoteCompletedState();
+    }
+  }
+
+  Future<void> _applyRemoteCompletedState() async {
+    if (!mounted) {
+      return;
+    }
+    if (state != null) {
+      state = null;
+    }
+    await _setCompletedLocally();
   }
 }
 
