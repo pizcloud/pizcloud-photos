@@ -150,17 +150,14 @@ class DriftReviewDuplicatesPage extends ConsumerWidget {
     required Set<String> selectedKeepAssetIds,
   }) async {
     final removableCount = _getGroupTrashCount(group, selectedKeepAssetIds);
-
-    if (removableCount > 0) {
-      final confirmMessageKey = useTrash ? 'bulk_trash_duplicates_confirmation' : 'bulk_delete_duplicates_confirmation';
-      final shouldProceed = await _showConfirmDialog(
-        context: context,
-        title: useTrash ? 'to_trash'.t(context: context) : 'delete_permanently'.t(context: context),
-        message: confirmMessageKey.t(context: context, args: {'count': removableCount}),
-      );
-      if (!shouldProceed || !context.mounted) {
-        return;
-      }
+    final shouldProceed = await _showGroupResolveConfirm(
+      context: context,
+      useTrash: useTrash,
+      removableCount: removableCount,
+      groupAssetCount: group.assets.length,
+    );
+    if (!shouldProceed || !context.mounted) {
+      return;
     }
 
     try {
@@ -313,6 +310,35 @@ int _getRemovableAssetsCount(List<DuplicateGroup> groups) {
 
 int _getGroupTrashCount(DuplicateGroup group, Set<String> selectedKeepAssetIds) {
   return group.assets.where((item) => !selectedKeepAssetIds.contains(item.asset.id)).length;
+}
+
+Future<bool> _showGroupResolveConfirm({
+  required BuildContext context,
+  required bool useTrash,
+  required int removableCount,
+  required int groupAssetCount,
+}) {
+  if (removableCount <= 0) {
+    return _showConfirmDialog(
+      context: context,
+      title: 'resolve_duplicates'.t(context: context),
+      message: 'group_resolve_without_delete_confirmation'.t(context: context),
+    );
+  }
+
+  final isAllInGroup = removableCount == groupAssetCount;
+  final messageKey = switch ((useTrash, isAllInGroup)) {
+    (true, true) => 'group_trash_all_duplicates_confirmation',
+    (true, false) => 'group_trash_duplicates_confirmation',
+    (false, true) => 'group_delete_all_duplicates_confirmation',
+    (false, false) => 'group_delete_duplicates_confirmation',
+  };
+
+  return _showConfirmDialog(
+    context: context,
+    title: useTrash ? 'to_trash'.t(context: context) : 'delete_permanently'.t(context: context),
+    message: messageKey.t(context: context, args: {'count': removableCount}),
+  );
 }
 
 class _DuplicateGroupCard extends StatelessWidget {
