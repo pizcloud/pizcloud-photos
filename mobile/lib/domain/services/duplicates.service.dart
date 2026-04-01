@@ -52,24 +52,26 @@ class DuplicatesService {
       throw StateError('Duplicate group must contain at least one asset');
     }
 
-    final maxFileSize = group.assets.fold<int>(0, (current, item) => math.max(current, item.fileSizeInBytes ?? 0));
-    final largestAssets = group.assets.where((item) => (item.fileSizeInBytes ?? 0) == maxFileSize).toList();
-    largestAssets.sort((a, b) => b.exifScore.compareTo(a.exifScore));
-    return largestAssets.first.asset.id;
+    return _suggestKeepAssetIdFromItems(group.assets);
   }
 
   Future<void> resolveGroup({
     required DuplicateGroup group,
-    required String keepAssetId,
+    required Set<String> keepAssetIds,
     required bool useTrash,
   }) async {
     final deleteIds = group.assets
         .map((item) => item.asset.id)
-        .where((assetId) => assetId != keepAssetId)
+        .where((assetId) => !keepAssetIds.contains(assetId))
         .toList(growable: false);
 
     if (deleteIds.isNotEmpty) {
       await _repository.deleteAssets(deleteIds, force: !useTrash);
+    }
+
+    // If every asset in the group was trashed/deleted, there is nothing left to mark as resolved.
+    if (keepAssetIds.isEmpty) {
+      return;
     }
 
     await _repository.resolveDuplicateGroup(group.duplicateId);
@@ -83,7 +85,7 @@ class DuplicatesService {
 
   Future<void> deduplicateAll({
     required List<DuplicateGroup> groups,
-    required Map<String, String> keepSelectionByGroupId,
+    required Map<String, Set<String>> keepSelectionByGroupId,
     required bool useTrash,
   }) async {
     if (groups.isEmpty) {
@@ -98,7 +100,16 @@ class DuplicatesService {
         continue;
       }
 
-      final keepAssetId = keepSelectionByGroupId[group.duplicateId] ?? suggestKeepAssetId(group);
+      final selectedKeepAssetIds = keepSelectionByGroupId[group.duplicateId] ?? const <String>{};
+      final selectedItems = group.assets
+          .where((item) => selectedKeepAssetIds.contains(item.asset.id))
+          .toList(growable: false);
+
+      final keepAssetId = switch (selectedItems.length) {
+        1 => selectedItems.first.asset.id,
+        > 1 => _suggestKeepAssetIdFromItems(selectedItems),
+        _ => suggestKeepAssetId(group),
+      };
       duplicateIds.add(group.duplicateId);
       deleteIds.addAll(group.assets.map((item) => item.asset.id).where((assetId) => assetId != keepAssetId));
     }
@@ -114,6 +125,13 @@ class DuplicatesService {
 
   Future<void> keepAll(List<String> duplicateIds) {
     return _repository.resolveDuplicateGroups(duplicateIds);
+  }
+
+  String _suggestKeepAssetIdFromItems(List<DuplicateAssetItem> items) {
+    final maxFileSize = items.fold<int>(0, (current, item) => math.max(current, item.fileSizeInBytes ?? 0));
+    final largestAssets = items.where((item) => (item.fileSizeInBytes ?? 0) == maxFileSize).toList();
+    largestAssets.sort((a, b) => b.exifScore.compareTo(a.exifScore));
+    return largestAssets.first.asset.id;
   }
 }
 

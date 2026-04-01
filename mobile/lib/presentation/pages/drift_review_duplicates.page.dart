@@ -41,6 +41,9 @@ class DriftReviewDuplicatesPage extends ConsumerWidget {
     final hasGroups = groups.isNotEmpty;
     final isMutating = state?.isMutating ?? false;
     final removableAssetsCount = _getRemovableAssetsCount(groups);
+    final initialGroupCount = state?.initialGroupCount ?? 0;
+    final resolvedGroupCount = (initialGroupCount - groups.length).clamp(0, initialGroupCount).toInt();
+    final progressValue = initialGroupCount <= 0 ? 0.0 : resolvedGroupCount / initialGroupCount;
 
     return PlatformScaffold(
       appBar: PlatformAppBar(
@@ -74,7 +77,7 @@ class DriftReviewDuplicatesPage extends ConsumerWidget {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return _DuplicateBulkActionsCard(
@@ -84,6 +87,9 @@ class DriftReviewDuplicatesPage extends ConsumerWidget {
                         isBusy: state.isMutating,
                         removableCount: removableAssetsCount,
                         hasGroups: hasGroups,
+                        resolvedGroupCount: resolvedGroupCount,
+                        totalGroupCount: initialGroupCount,
+                        progressValue: progressValue,
                         onDeduplicateAll: () =>
                             _onDeduplicateAll(context: context, ref: ref, groups: groups, useTrash: useTrash),
                         onKeepAll: () => _onKeepAll(context: context, ref: ref, groups: groups),
@@ -91,21 +97,40 @@ class DriftReviewDuplicatesPage extends ConsumerWidget {
                     }
 
                     final group = groups[index - 1];
-                    return _DuplicateGroupCard(
-                      index: index - 1,
-                      group: group,
-                      selectedKeepAssetId: state.keepSelectionByGroupId[group.duplicateId],
-                      isResolving: state.resolvingGroupIds.contains(group.duplicateId),
-                      isStacking: state.stackingGroupIds.contains(group.duplicateId),
-                      isBusy: state.isMutating,
-                      useTrash: useTrash,
-                      onKeepSelected: (assetId) {
-                        ref.read(duplicatesProvider.notifier).setKeepSelection(group.duplicateId, assetId);
-                      },
-                      onResolve: () => _onResolveGroup(context: context, ref: ref, group: group, useTrash: useTrash),
-                      onStack: () => _onStackGroup(context: context, ref: ref, group: group),
-                      onOpenAsset: (assetIndex) =>
-                          _openAssetViewer(context: context, ref: ref, group: group, index: assetIndex),
+                    final selectedKeepAssetIds = state.keepSelectionByGroupId[group.duplicateId] ?? const <String>{};
+                    final trashCount = _getGroupTrashCount(group, selectedKeepAssetIds);
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _DuplicateGroupCard(
+                        index: index - 1,
+                        group: group,
+                        selectedKeepAssetIds: selectedKeepAssetIds,
+                        isResolving: state.resolvingGroupIds.contains(group.duplicateId),
+                        isStacking: state.stackingGroupIds.contains(group.duplicateId),
+                        isBusy: state.isMutating,
+                        useTrash: useTrash,
+                        trashCount: trashCount,
+                        onKeepSelected: (assetId) {
+                          ref.read(duplicatesProvider.notifier).setKeepSelection(group.duplicateId, assetId);
+                        },
+                        onSelectKeepAll: () {
+                          ref.read(duplicatesProvider.notifier).selectKeepAll(group.duplicateId);
+                        },
+                        onSelectTrashAll: () {
+                          ref.read(duplicatesProvider.notifier).selectTrashAll(group.duplicateId);
+                        },
+                        onResolve: () => _onResolveGroup(
+                          context: context,
+                          ref: ref,
+                          group: group,
+                          useTrash: useTrash,
+                          selectedKeepAssetIds: selectedKeepAssetIds,
+                        ),
+                        onStack: () => _onStackGroup(context: context, ref: ref, group: group),
+                        onOpenAsset: (assetIndex) =>
+                            _openAssetViewer(context: context, ref: ref, group: group, index: assetIndex),
+                      ),
                     );
                   },
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -122,20 +147,20 @@ class DriftReviewDuplicatesPage extends ConsumerWidget {
     required WidgetRef ref,
     required DuplicateGroup group,
     required bool useTrash,
+    required Set<String> selectedKeepAssetIds,
   }) async {
-    final removableCount = group.assets.length - 1;
-    if (removableCount <= 0) {
-      return;
-    }
+    final removableCount = _getGroupTrashCount(group, selectedKeepAssetIds);
 
-    final confirmMessageKey = useTrash ? 'bulk_trash_duplicates_confirmation' : 'bulk_delete_duplicates_confirmation';
-    final shouldProceed = await _showConfirmDialog(
-      context: context,
-      title: useTrash ? 'to_trash'.t(context: context) : 'delete_permanently'.t(context: context),
-      message: confirmMessageKey.t(context: context, args: {'count': removableCount}),
-    );
-    if (!shouldProceed || !context.mounted) {
-      return;
+    if (removableCount > 0) {
+      final confirmMessageKey = useTrash ? 'bulk_trash_duplicates_confirmation' : 'bulk_delete_duplicates_confirmation';
+      final shouldProceed = await _showConfirmDialog(
+        context: context,
+        title: useTrash ? 'to_trash'.t(context: context) : 'delete_permanently'.t(context: context),
+        message: confirmMessageKey.t(context: context, args: {'count': removableCount}),
+      );
+      if (!shouldProceed || !context.mounted) {
+        return;
+      }
     }
 
     try {
@@ -286,15 +311,22 @@ int _getRemovableAssetsCount(List<DuplicateGroup> groups) {
   return groups.fold<int>(0, (count, group) => count + (group.assets.length > 1 ? group.assets.length - 1 : 0));
 }
 
+int _getGroupTrashCount(DuplicateGroup group, Set<String> selectedKeepAssetIds) {
+  return group.assets.where((item) => !selectedKeepAssetIds.contains(item.asset.id)).length;
+}
+
 class _DuplicateGroupCard extends StatelessWidget {
   final int index;
   final DuplicateGroup group;
-  final String? selectedKeepAssetId;
+  final Set<String> selectedKeepAssetIds;
   final bool isResolving;
   final bool isStacking;
   final bool isBusy;
   final bool useTrash;
+  final int trashCount;
   final ValueChanged<String> onKeepSelected;
+  final VoidCallback onSelectKeepAll;
+  final VoidCallback onSelectTrashAll;
   final Future<void> Function() onResolve;
   final Future<void> Function() onStack;
   final ValueChanged<int> onOpenAsset;
@@ -302,12 +334,15 @@ class _DuplicateGroupCard extends StatelessWidget {
   const _DuplicateGroupCard({
     required this.index,
     required this.group,
-    required this.selectedKeepAssetId,
+    required this.selectedKeepAssetIds,
     required this.isResolving,
     required this.isStacking,
     required this.isBusy,
     required this.useTrash,
+    required this.trashCount,
     required this.onKeepSelected,
+    required this.onSelectKeepAll,
+    required this.onSelectTrashAll,
     required this.onResolve,
     required this.onStack,
     required this.onOpenAsset,
@@ -315,8 +350,10 @@ class _DuplicateGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final removableCount = group.assets.length - 1;
     final selectionEnabled = !isBusy && !isResolving && !isStacking;
+    final canResolve = !isBusy && !isResolving;
+    final canStack = !isBusy && !isStacking;
+    final keepCount = group.assets.length - trashCount;
 
     return Container(
       decoration: BoxDecoration(
@@ -350,12 +387,44 @@ class _DuplicateGroupCard extends StatelessWidget {
                   'assets_count'.t(context: context, args: {'count': group.assets.length}),
                   style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurface.withAlpha(170)),
                 ),
+                const Spacer(),
+                Text(
+                  'assets_count'.t(context: context, args: {'count': trashCount}),
+                  style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurface.withAlpha(150)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: selectionEnabled ? onSelectKeepAll : null,
+                  icon: const Icon(Icons.done_all_rounded, size: 16),
+                  label: Text('select_keep_all'.t(context: context)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: selectionEnabled ? onSelectTrashAll : null,
+                  icon: const Icon(Icons.remove_done_rounded, size: 16),
+                  label: Text('select_trash_all'.t(context: context)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
             ...List.generate(group.assets.length, (assetIndex) {
               final item = group.assets[assetIndex];
-              final isSelected = item.asset.id == selectedKeepAssetId;
+              final isSelected = selectedKeepAssetIds.contains(item.asset.id);
               return Padding(
                 padding: EdgeInsets.only(bottom: assetIndex == group.assets.length - 1 ? 0 : 8),
                 child: _DuplicateAssetTile(
@@ -372,7 +441,7 @@ class _DuplicateGroupCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: isBusy || isStacking || removableCount <= 0 ? null : onStack,
+                    onPressed: canStack && group.assets.length > 1 ? onStack : null,
                     icon: isStacking
                         ? SizedBox(
                             height: 16,
@@ -386,19 +455,35 @@ class _DuplicateGroupCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: isBusy || isResolving || removableCount <= 0 ? null : onResolve,
+                    onPressed: canResolve ? onResolve : null,
                     icon: isResolving
                         ? SizedBox(
                             height: 16,
                             width: 16,
                             child: CircularProgressIndicator(strokeWidth: 2, color: context.colorScheme.onPrimary),
                           )
-                        : Icon(useTrash ? Icons.delete_outline_rounded : Icons.delete_forever_outlined),
-                    label: Text(useTrash ? 'to_trash'.t(context: context) : 'delete_permanently'.t(context: context)),
+                        : Icon(
+                            trashCount == 0
+                                ? Icons.check_circle_outline_rounded
+                                : (useTrash ? Icons.delete_outline_rounded : Icons.delete_forever_outlined),
+                          ),
+                    label: Text(
+                      trashCount == 0
+                          ? 'keep_all'.t(context: context)
+                          : (useTrash ? 'to_trash'.t(context: context) : 'delete_permanently'.t(context: context)),
+                    ),
                   ),
                 ),
               ],
             ),
+            if (group.assets.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  '$keepCount/${group.assets.length}',
+                  style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurface.withAlpha(145)),
+                ),
+              ),
           ],
         ),
       ),
@@ -413,6 +498,9 @@ class _DuplicateBulkActionsCard extends StatelessWidget {
   final bool isBusy;
   final bool hasGroups;
   final int removableCount;
+  final int resolvedGroupCount;
+  final int totalGroupCount;
+  final double progressValue;
   final Future<void> Function() onDeduplicateAll;
   final Future<void> Function() onKeepAll;
 
@@ -423,6 +511,9 @@ class _DuplicateBulkActionsCard extends StatelessWidget {
     required this.isBusy,
     required this.hasGroups,
     required this.removableCount,
+    required this.resolvedGroupCount,
+    required this.totalGroupCount,
+    required this.progressValue,
     required this.onDeduplicateAll,
     required this.onKeepAll,
   });
@@ -430,6 +521,7 @@ class _DuplicateBulkActionsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(20)),
         gradient: LinearGradient(
@@ -438,6 +530,9 @@ class _DuplicateBulkActionsCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         border: Border.all(color: context.colorScheme.primary.withAlpha(38)),
+        boxShadow: [
+          BoxShadow(color: context.colorScheme.shadow.withAlpha(18), blurRadius: 14, offset: const Offset(0, 4)),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -447,6 +542,32 @@ class _DuplicateBulkActionsCard extends StatelessWidget {
             Text(
               'duplicates_description'.t(context: context),
               style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurface.withAlpha(165)),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  '$resolvedGroupCount/$totalGroupCount',
+                  style: context.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: context.primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'assets_count'.t(context: context, args: {'count': removableCount}),
+                  style: context.textTheme.labelMedium?.copyWith(color: context.colorScheme.onSurface.withAlpha(150)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(999)),
+              child: LinearProgressIndicator(
+                minHeight: 6,
+                value: progressValue.clamp(0.0, 1.0),
+                backgroundColor: context.colorScheme.surfaceContainerHighest,
+              ),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -555,7 +676,7 @@ class _DuplicateAssetTile extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: Icon(
-                  selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
                   color: selectable
                       ? (selected ? context.primaryColor : context.colorScheme.onSurface.withAlpha(160))
                       : context.colorScheme.onSurface.withAlpha(96),

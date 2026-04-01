@@ -20,11 +20,12 @@ final duplicatesProvider = StateNotifierProvider.autoDispose<DuplicatesNotifier,
 
 class DuplicatesState {
   final AsyncValue<List<DuplicateGroup>> groups;
-  final Map<String, String> keepSelectionByGroupId;
+  final Map<String, Set<String>> keepSelectionByGroupId;
   final Set<String> resolvingGroupIds;
   final Set<String> stackingGroupIds;
   final bool isKeepingAll;
   final bool isDeduplicatingAll;
+  final int initialGroupCount;
 
   const DuplicatesState({
     required this.groups,
@@ -33,6 +34,7 @@ class DuplicatesState {
     this.stackingGroupIds = const {},
     this.isKeepingAll = false,
     this.isDeduplicatingAll = false,
+    this.initialGroupCount = 0,
   });
 
   const DuplicatesState.initial() : this(groups: const AsyncValue.loading());
@@ -42,11 +44,12 @@ class DuplicatesState {
 
   DuplicatesState copyWith({
     AsyncValue<List<DuplicateGroup>>? groups,
-    Map<String, String>? keepSelectionByGroupId,
+    Map<String, Set<String>>? keepSelectionByGroupId,
     Set<String>? resolvingGroupIds,
     Set<String>? stackingGroupIds,
     bool? isKeepingAll,
     bool? isDeduplicatingAll,
+    int? initialGroupCount,
   }) {
     return DuplicatesState(
       groups: groups ?? this.groups,
@@ -55,6 +58,7 @@ class DuplicatesState {
       stackingGroupIds: stackingGroupIds ?? this.stackingGroupIds,
       isKeepingAll: isKeepingAll ?? this.isKeepingAll,
       isDeduplicatingAll: isDeduplicatingAll ?? this.isDeduplicatingAll,
+      initialGroupCount: initialGroupCount ?? this.initialGroupCount,
     );
   }
 }
@@ -78,6 +82,7 @@ class DuplicatesNotifier extends StateNotifier<DuplicatesState> {
         stackingGroupIds: const {},
         isKeepingAll: false,
         isDeduplicatingAll: false,
+        initialGroupCount: groups.length,
       );
     } catch (error, stackTrace) {
       state = state.copyWith(groups: AsyncValue.error(error, stackTrace));
@@ -90,7 +95,47 @@ class DuplicatesNotifier extends StateNotifier<DuplicatesState> {
         state.stackingGroupIds.contains(duplicateId)) {
       return;
     }
-    state = state.copyWith(keepSelectionByGroupId: {...state.keepSelectionByGroupId, duplicateId: assetId});
+
+    final nextSelectedIds = Set<String>.from(state.keepSelectionByGroupId[duplicateId] ?? const <String>{});
+    if (nextSelectedIds.contains(assetId)) {
+      nextSelectedIds.remove(assetId);
+    } else {
+      nextSelectedIds.add(assetId);
+    }
+
+    state = state.copyWith(keepSelectionByGroupId: {...state.keepSelectionByGroupId, duplicateId: nextSelectedIds});
+  }
+
+  void selectKeepAll(String duplicateId) {
+    final groups = state.groups.valueOrNull;
+    if (groups == null ||
+        state.isBulkMutating ||
+        state.resolvingGroupIds.contains(duplicateId) ||
+        state.stackingGroupIds.contains(duplicateId)) {
+      return;
+    }
+
+    final group = groups.firstWhereOrNull((item) => item.duplicateId == duplicateId);
+    if (group == null) {
+      return;
+    }
+
+    state = state.copyWith(
+      keepSelectionByGroupId: {
+        ...state.keepSelectionByGroupId,
+        duplicateId: group.assets.map((item) => item.asset.id).toSet(),
+      },
+    );
+  }
+
+  void selectTrashAll(String duplicateId) {
+    if (state.isBulkMutating ||
+        state.resolvingGroupIds.contains(duplicateId) ||
+        state.stackingGroupIds.contains(duplicateId)) {
+      return;
+    }
+
+    state = state.copyWith(keepSelectionByGroupId: {...state.keepSelectionByGroupId, duplicateId: <String>{}});
   }
 
   Future<void> resolveGroup(String duplicateId, {required bool useTrash}) async {
@@ -107,12 +152,15 @@ class DuplicatesNotifier extends StateNotifier<DuplicatesState> {
       return;
     }
 
-    final keepAssetId = state.keepSelectionByGroupId[duplicateId] ?? _service.suggestKeepAssetId(group);
+    final keepAssetIds = Set<String>.from(state.keepSelectionByGroupId[duplicateId] ?? const <String>{});
+    if (keepAssetIds.isEmpty && group.assets.length == 1) {
+      keepAssetIds.add(group.assets.first.asset.id);
+    }
 
     state = state.copyWith(resolvingGroupIds: {...state.resolvingGroupIds, duplicateId});
 
     try {
-      await _service.resolveGroup(group: group, keepAssetId: keepAssetId, useTrash: useTrash);
+      await _service.resolveGroup(group: group, keepAssetIds: keepAssetIds, useTrash: useTrash);
       _removeGroupFromState(duplicateId);
     } finally {
       final nextResolving = Set<String>.from(state.resolvingGroupIds)..remove(duplicateId);
@@ -173,7 +221,7 @@ class DuplicatesNotifier extends StateNotifier<DuplicatesState> {
       return;
     }
 
-    final keepSelectionByGroupId = Map<String, String>.from(state.keepSelectionByGroupId);
+    final keepSelectionByGroupId = _cloneKeepSelectionMap(state.keepSelectionByGroupId);
 
     state = state.copyWith(isDeduplicatingAll: true);
     try {
@@ -184,15 +232,21 @@ class DuplicatesNotifier extends StateNotifier<DuplicatesState> {
     }
   }
 
-  Map<String, String> _getDefaultKeepSelection(List<DuplicateGroup> groups) {
-    return {for (final group in groups) group.duplicateId: _service.suggestKeepAssetId(group)};
+  Map<String, Set<String>> _getDefaultKeepSelection(List<DuplicateGroup> groups) {
+    return {
+      for (final group in groups) group.duplicateId: {_service.suggestKeepAssetId(group)},
+    };
   }
 
   void _removeGroupFromState(String duplicateId) {
     final latestGroups = state.groups.valueOrNull ?? const <DuplicateGroup>[];
     final remainingGroups = latestGroups.where((item) => item.duplicateId != duplicateId).toList(growable: false);
-    final keepSelectionByGroupId = Map<String, String>.from(state.keepSelectionByGroupId)..remove(duplicateId);
+    final keepSelectionByGroupId = _cloneKeepSelectionMap(state.keepSelectionByGroupId)..remove(duplicateId);
 
     state = state.copyWith(groups: AsyncValue.data(remainingGroups), keepSelectionByGroupId: keepSelectionByGroupId);
+  }
+
+  Map<String, Set<String>> _cloneKeepSelectionMap(Map<String, Set<String>> source) {
+    return {for (final entry in source.entries) entry.key: Set<String>.from(entry.value)};
   }
 }
