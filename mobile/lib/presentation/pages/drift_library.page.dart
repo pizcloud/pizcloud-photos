@@ -18,6 +18,7 @@ import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/utils/image_url_builder.dart';
 import 'package:immich_mobile/widgets/map/map_thumbnail.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:immich_mobile/presentation/pages/drift_review_duplicates.page.dart'; // pizcloud
 
 @RoutePage()
 class DriftLibraryPage extends ConsumerWidget {
@@ -59,6 +60,7 @@ class DriftLibraryPage extends ConsumerWidget {
         slivers: [
           _LibraryIntroHeader(),
           _LibraryQuickActionsSection(),
+          _LibraryOrganizeSection(),
           _LibraryExploreSection(),
           _LibraryManageSection(),
         ],
@@ -353,6 +355,125 @@ class _LibraryExploreSection extends StatelessWidget {
     );
   }
 }
+
+// pizcloud
+class _LibraryOrganizeSection extends ConsumerWidget {
+  const _LibraryOrganizeSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      sliver: SliverToBoxAdapter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _LibrarySectionHeader(
+              title: 'organize_your_library',
+              subtitle: 'utilities',
+              icon: Icons.auto_fix_high_outlined,
+            ),
+            const SizedBox(height: 10),
+            _LibraryOrganizeTile(
+              icon: Icons.filter_none_rounded,
+              title: 'review_duplicates'.t(context: context),
+              subtitle: 'duplicates_description'.t(context: context),
+              enabled: true,
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DriftReviewDuplicatesPage()));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LibraryOrganizeTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _LibraryOrganizeTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: const BorderRadius.all(Radius.circular(20)),
+      onTap: enabled ? onTap : null,
+      child: Ink(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          border: Border.all(color: context.colorScheme.outline.withAlpha(24)),
+          color: context.colorScheme.surfaceContainerLow.withAlpha(enabled ? 180 : 120),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                height: 40,
+                width: 40,
+                decoration: BoxDecoration(
+                  color: context.colorScheme.primary.withAlpha(22),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                ),
+                child: Icon(icon, color: context.primaryColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: enabled ? context.colorScheme.onSurface : context.colorScheme.onSurface.withAlpha(150),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurface.withAlpha(150)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              if (enabled)
+                Icon(Icons.chevron_right_rounded, color: context.colorScheme.onSurface.withAlpha(170))
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(999)),
+                    color: context.colorScheme.surfaceContainerHighest,
+                  ),
+                  child: Text(
+                    'disabled'.t(context: context),
+                    style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurface.withAlpha(155)),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+// #pizcloud
 
 class _LibraryExploreCardShell extends StatelessWidget {
   const _LibraryExploreCardShell({

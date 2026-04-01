@@ -32,6 +32,7 @@ class ApiService implements Authentication {
   late DownloadApi downloadApi;
   late TrashApi trashApi;
   late StacksApi stacksApi;
+  late DuplicatesApi duplicatesApi; // pizcloud
   late ViewsApi viewApi;
   late MemoriesApi memoriesApi;
   late SessionsApi sessionsApi;
@@ -94,6 +95,7 @@ class ApiService implements Authentication {
     downloadApi = DownloadApi(_apiClient);
     trashApi = TrashApi(_apiClient);
     stacksApi = StacksApi(_apiClient);
+    duplicatesApi = DuplicatesApi(_apiClient); // pizcloud
     viewApi = ViewsApi(_apiClient);
     memoriesApi = MemoriesApi(_apiClient);
     sessionsApi = SessionsApi(_apiClient);
