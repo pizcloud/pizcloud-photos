@@ -142,13 +142,30 @@ class InstructionSlidesPage extends StatefulWidget {
 }
 
 class _InstructionSlidesPageState extends State<InstructionSlidesPage> {
+  String _currentLanguageCode = 'en';
   late Future<List<InstructionSlide>> _slidesFuture = _loadSlides();
   final PageController _pageController = PageController();
 
   int _activePage = 0;
 
   Future<List<InstructionSlide>> _loadSlides() {
-    return widget.contentService.fetchSlides(feature: widget.feature);
+    return widget.contentService.fetchSlides(feature: widget.feature, languageCode: _currentLanguageCode);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final languageCode = context.locale.languageCode;
+    if (_currentLanguageCode == languageCode) {
+      return;
+    }
+
+    _currentLanguageCode = languageCode;
+    _activePage = 0;
+    _slidesFuture = _loadSlides();
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(0);
+    }
   }
 
   void _reload() {

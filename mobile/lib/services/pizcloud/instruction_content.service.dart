@@ -37,7 +37,7 @@ class InstructionContentService {
   final Duration requestTimeout;
   final http.Client? httpClient;
 
-  Future<List<InstructionSlide>> fetchSlides({required InstructionFeature feature}) async {
+  Future<List<InstructionSlide>> fetchSlides({required InstructionFeature feature, String? languageCode}) async {
     final baseUri = _resolveBaseUri();
     if (baseUri == null) {
       return _fallbackSlides[feature] ?? const [];
@@ -47,26 +47,22 @@ class InstructionContentService {
     final shouldCloseClient = httpClient == null;
 
     try {
-      final slides = <InstructionSlide>[];
-      var foundAtLeastOne = false;
+      final primaryLanguageFolder = _resolveLanguageFolder(languageCode);
+      final languageFolders = <String>[primaryLanguageFolder, if (primaryLanguageFolder != 'en') 'en'];
 
-      final maxSlides = maxSlidesPerFeature < 1 ? 1 : maxSlidesPerFeature;
-      for (var index = 1; index <= maxSlides; index++) {
-        final slideUri = _buildSlideUri(baseUri: baseUri, feature: feature, index: index);
-        final exists = await _resourceExists(uri: slideUri, client: client);
-
-        if (!exists) {
-          if (foundAtLeastOne) {
-            break;
-          }
-          continue;
+      for (final languageFolder in languageFolders) {
+        final slides = await _collectSlides(
+          baseUri: baseUri,
+          feature: feature,
+          languageFolder: languageFolder,
+          client: client,
+        );
+        if (slides.isNotEmpty) {
+          return slides;
         }
-
-        foundAtLeastOne = true;
-        slides.add(InstructionSlide(imageUrl: slideUri.toString()));
       }
 
-      return slides;
+      return const <InstructionSlide>[];
     } finally {
       if (shouldCloseClient) {
         client.close();
@@ -88,7 +84,48 @@ class InstructionContentService {
     return baseUri;
   }
 
-  Uri _buildSlideUri({required Uri baseUri, required InstructionFeature feature, required int index}) {
+  String _resolveLanguageFolder(String? languageCode) {
+    final normalizedCode = languageCode?.trim().toLowerCase();
+    if (normalizedCode != null && normalizedCode.startsWith('vi')) {
+      return 'vi';
+    }
+    return 'en';
+  }
+
+  Future<List<InstructionSlide>> _collectSlides({
+    required Uri baseUri,
+    required InstructionFeature feature,
+    required String languageFolder,
+    required http.Client client,
+  }) async {
+    final slides = <InstructionSlide>[];
+    var foundAtLeastOne = false;
+
+    final maxSlides = maxSlidesPerFeature < 1 ? 1 : maxSlidesPerFeature;
+    for (var index = 1; index <= maxSlides; index++) {
+      final slideUri = _buildSlideUri(baseUri: baseUri, feature: feature, languageFolder: languageFolder, index: index);
+      final exists = await _resourceExists(uri: slideUri, client: client);
+
+      if (!exists) {
+        if (foundAtLeastOne) {
+          break;
+        }
+        continue;
+      }
+
+      foundAtLeastOne = true;
+      slides.add(InstructionSlide(imageUrl: slideUri.toString()));
+    }
+
+    return slides;
+  }
+
+  Uri _buildSlideUri({
+    required Uri baseUri,
+    required InstructionFeature feature,
+    required String languageFolder,
+    required int index,
+  }) {
     final baseSegments = baseUri.pathSegments.where((segment) => segment.isNotEmpty).toList(growable: false);
     final normalizedRootPath = imageRootPath.trim().replaceAll(RegExp(r'^/+|/+$'), '');
     final rootSegments = normalizedRootPath.isEmpty
@@ -96,7 +133,9 @@ class InstructionContentService {
         : normalizedRootPath.split('/').where((segment) => segment.isNotEmpty).toList(growable: false);
     final extension = imageFileExtension.trim().replaceAll('.', '');
 
-    return baseUri.replace(pathSegments: [...baseSegments, ...rootSegments, feature.apiSegment, '$index.$extension']);
+    return baseUri.replace(
+      pathSegments: [...baseSegments, ...rootSegments, feature.apiSegment, languageFolder, '$index.$extension'],
+    );
   }
 
   Future<bool> _resourceExists({required Uri uri, required http.Client client}) async {
