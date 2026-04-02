@@ -1302,6 +1302,7 @@
   "language_search_hint": "Search languages...",
   "language_setting_description": "Select your preferred language",
   "large_files": "Large Files",
+  "large_files_description": "Review your largest assets and quickly free up storage",
   "last": "Last",
   "last_months": "{count, plural, one {Last month} other {Last # months}}",
   "last_seen": "Last seen",

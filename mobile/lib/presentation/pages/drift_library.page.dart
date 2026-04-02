@@ -19,6 +19,7 @@ import 'package:immich_mobile/utils/image_url_builder.dart';
 import 'package:immich_mobile/widgets/map/map_thumbnail.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:immich_mobile/presentation/pages/drift_review_duplicates.page.dart'; // pizcloud
+import 'package:immich_mobile/presentation/pages/drift_review_large_files.page.dart'; // pizcloud
 
 @RoutePage()
 class DriftLibraryPage extends ConsumerWidget {
@@ -381,6 +382,16 @@ class _LibraryOrganizeSection extends ConsumerWidget {
               enabled: true,
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DriftReviewDuplicatesPage()));
+              },
+            ),
+            const SizedBox(height: 10),
+            _LibraryOrganizeTile(
+              icon: Icons.sd_storage_outlined,
+              title: 'review_large_files'.t(context: context),
+              subtitle: 'large_files_description'.t(context: context),
+              enabled: true,
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DriftReviewLargeFilesPage()));
               },
             ),
           ],

@@ -72,6 +72,18 @@ class SearchApiRepository extends ApiRepository {
     );
   }
 
+  // pizcloud
+  Future<List<AssetResponseDto>> searchLargeAssets({int minFileSize = 0, int size = 250}) async {
+    ensureEndpoint(_apiService);
+    final assets = await _api.searchLargeAssets(
+      minFileSize: minFileSize,
+      size: size,
+      visibility: AssetVisibility.timeline,
+    );
+    return assets ?? const <AssetResponseDto>[];
+  }
+  // #pizcloud
+
   Future<List<String>?> getSearchSuggestions(
     SearchSuggestionType type, {
     String? country,
