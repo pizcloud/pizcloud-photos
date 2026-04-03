@@ -1,3 +1,5 @@
+import 'dart:async'; // pizcloud
+
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
@@ -22,6 +24,7 @@ class BackupToggleButtonState extends ConsumerState<BackupToggleButton> with Sin
   late AnimationController _animationController;
   late Animation<double> _gradientAnimation;
   bool _isEnabled = false;
+  int _toggleRequestId = 0; // pizcloud
 
   @override
   void initState() {
@@ -43,24 +46,28 @@ class BackupToggleButtonState extends ConsumerState<BackupToggleButton> with Sin
   }
 
   Future<void> _onToggle(bool value) async {
+    final requestId = ++_toggleRequestId; // pizcloud
     await ref.read(appSettingsServiceProvider).setSetting(AppSettingsEnum.enableBackup, value);
+    if (!mounted || requestId != _toggleRequestId) {
+      return;
+    } // pizcloud
 
     setState(() {
       _isEnabled = value;
     });
 
     if (value) {
-      await _showLowBatteryWarningIfNeeded(); // pizcloud
       widget.onStart.call();
+      unawaited(_showLowBatteryWarningIfNeeded(requestId)); // pizcloud
     } else {
       widget.onStop.call();
     }
   }
 
   // pizcloud
-  Future<void> _showLowBatteryWarningIfNeeded() async {
+  Future<void> _showLowBatteryWarningIfNeeded(int requestId) async {
     final shouldWarn = await ref.read(backgroundWorkerFgServiceProvider).isLowBatteryWarningRequired();
-    if (!mounted || !shouldWarn) {
+    if (!mounted || requestId != _toggleRequestId || !_isEnabled || !shouldWarn) {
       return;
     }
 
