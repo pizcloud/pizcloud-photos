@@ -151,17 +151,33 @@ class BackgroundSyncManager {
     final token = Store.tryGet<String>(StoreKey.accessToken); // pizcloud
     final hasToken = token?.isNotEmpty == true; // pizcloud
 
-    if (_syncTask != null || !hasToken) {
-      return _syncTask!.future.then((result) => result ?? false).catchError((_) => false);
+    // pizcloud
+    // if (_syncTask != null || !hasToken) {
+    //   return _syncTask!.future.then((result) => result ?? false).catchError((_) => false);
+    // }
+    //
+    // 1) If a sync task is already running, join it.
+    // 2) If there is no running task and no access token, fail-safe with `false`.
+    // 3) Otherwise, start a new remote sync.
+    final runningTask = _syncTask;
+    if (runningTask != null) {
+      return runningTask.future.then((result) => result ?? false).catchError((_) => false);
     }
+
+    if (!hasToken) {
+      return Future.value(false);
+    }
+    // #pizcloud
 
     onRemoteSyncStart?.call();
 
-    _syncTask = runInIsolateGentle(
+    final startedTask = runInIsolateGentle(
       computation: (ref) => ref.read(syncStreamServiceProvider).sync(),
       debugLabel: 'remote-sync',
     );
-    return _syncTask!
+    _syncTask = startedTask;
+
+    return startedTask
         .then((result) {
           final success = result ?? false;
           onRemoteSyncComplete?.call(success);
