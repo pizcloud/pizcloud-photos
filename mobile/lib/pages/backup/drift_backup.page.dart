@@ -19,6 +19,7 @@ import 'package:immich_mobile/presentation/widgets/backup/backup_toggle_button.w
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/backup/backup_album.provider.dart';
 import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
+import 'package:immich_mobile/providers/infrastructure/platform.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/sync_status.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
@@ -36,12 +37,33 @@ class DriftBackupPage extends ConsumerStatefulWidget {
 
 class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
   bool? syncSuccess;
+  // pizcloud
+  bool _showLowBatteryWarning = false;
+  Timer? _powerStatusPollingTimer;
+
+  Future<void> _refreshLowBatteryWarning() async {
+    final shouldShow = await ref.read(backgroundWorkerFgServiceProvider).isLowBatteryWarningRequired();
+    if (!mounted || shouldShow == _showLowBatteryWarning) {
+      return;
+    }
+
+    setState(() {
+      _showLowBatteryWarning = shouldShow;
+    });
+  }
+  // #pizcloud
 
   @override
   void initState() {
     super.initState();
 
     WakelockPlus.enable();
+    // pizcloud
+    unawaited(_refreshLowBatteryWarning());
+    _powerStatusPollingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      unawaited(_refreshLowBatteryWarning());
+    });
+    // #pizcloud
 
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) {
@@ -63,6 +85,7 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
 
   @override
   dispose() {
+    _powerStatusPollingTimer?.cancel(); // pizcloud
     super.dispose();
     WakelockPlus.disable();
   }
@@ -160,6 +183,53 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
                   await stopBackup();
                 },
               ),
+              // pizcloud
+              if (_showLowBatteryWarning)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
+                      border: Border.all(color: context.colorScheme.error.withValues(alpha: 0.35)),
+                      color: context.colorScheme.errorContainer.withValues(alpha: 0.2),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          context.platformIcon(
+                            material: Icons.battery_alert_rounded,
+                            cupertino: CupertinoIcons.battery_25,
+                          ),
+                          color: context.colorScheme.error,
+                          fill: 1,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "backup_low_battery_warning_title".t(context: context),
+                                style: context.textTheme.labelLarge?.copyWith(
+                                  color: context.colorScheme.error,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "backup_low_battery_warning_message".t(context: context),
+                                style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.error),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              // #pizcloud
               switch (error) {
                 BackupError.none => const SizedBox.shrink(),
                 BackupError.syncFailed => Padding(

@@ -111,12 +111,51 @@ data class BackgroundWorkerSettings (
 
   override fun hashCode(): Int = toList().hashCode()
 }
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class PowerStatus (
+  val isCharging: Boolean,
+  val batteryLevelPercent: Long? = null,
+  val isLowPowerMode: Boolean
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PowerStatus {
+      val isCharging = pigeonVar_list[0] as Boolean
+      val batteryLevelPercent = pigeonVar_list[1] as Long?
+      val isLowPowerMode = pigeonVar_list[2] as Boolean
+      return PowerStatus(isCharging, batteryLevelPercent, isLowPowerMode)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      isCharging,
+      batteryLevelPercent,
+      isLowPowerMode,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other !is PowerStatus) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return BackgroundWorkerPigeonUtils.deepEquals(toList(), other.toList())  }
+
+  override fun hashCode(): Int = toList().hashCode()
+}
 private open class BackgroundWorkerPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
       129.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           BackgroundWorkerSettings.fromList(it)
+        }
+      }
+      130.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PowerStatus.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -126,6 +165,10 @@ private open class BackgroundWorkerPigeonCodec : StandardMessageCodec() {
     when (value) {
       is BackgroundWorkerSettings -> {
         stream.write(129)
+        writeValue(stream, value.toList())
+      }
+      is PowerStatus -> {
+        stream.write(130)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -138,6 +181,7 @@ interface BackgroundWorkerFgHostApi {
   fun enable()
   fun saveNotificationMessage(title: String, body: String)
   fun configure(settings: BackgroundWorkerSettings)
+  fun getPowerStatus(): PowerStatus
   fun disable()
 
   companion object {
@@ -193,6 +237,21 @@ interface BackgroundWorkerFgHostApi {
             val wrapped: List<Any?> = try {
               api.configure(settingsArg)
               listOf(null)
+            } catch (exception: Throwable) {
+              BackgroundWorkerPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.immich_mobile.BackgroundWorkerFgHostApi.getPowerStatus$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.getPowerStatus())
             } catch (exception: Throwable) {
               BackgroundWorkerPigeonUtils.wrapError(exception)
             }

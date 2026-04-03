@@ -5,6 +5,7 @@ import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/providers/app_settings.provider.dart';
 import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
+import 'package:immich_mobile/providers/infrastructure/platform.provider.dart'; // pizcloud
 import 'package:immich_mobile/services/app_settings.service.dart';
 
 class BackupToggleButton extends ConsumerStatefulWidget {
@@ -49,11 +50,28 @@ class BackupToggleButtonState extends ConsumerState<BackupToggleButton> with Sin
     });
 
     if (value) {
+      await _showLowBatteryWarningIfNeeded(); // pizcloud
       widget.onStart.call();
     } else {
       widget.onStop.call();
     }
   }
+
+  // pizcloud
+  Future<void> _showLowBatteryWarningIfNeeded() async {
+    final shouldWarn = await ref.read(backgroundWorkerFgServiceProvider).isLowBatteryWarningRequired();
+    if (!mounted || !shouldWarn) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("backup_low_battery_warning_snackbar".t(context: context)),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+  // #pizcloud
 
   @override
   Widget build(BuildContext context) {

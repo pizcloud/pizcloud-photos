@@ -1,6 +1,11 @@
 package app.alextran.immich.background
 
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.os.Build
+import android.os.PowerManager
 import android.provider.MediaStore
 import android.util.Log
 import androidx.work.BackoffPolicy
@@ -9,6 +14,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import io.flutter.embedding.engine.FlutterEngineCache
+import kotlin.math.roundToLong
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "BackgroundWorkerApiImpl"
@@ -27,6 +33,33 @@ class BackgroundWorkerApiImpl(context: Context) : BackgroundWorkerFgHostApi {
   override fun configure(settings: BackgroundWorkerSettings) {
     BackgroundWorkerPreferences(ctx).updateSettings(settings)
     enqueueMediaObserver(ctx)
+  }
+
+  override fun getPowerStatus(): PowerStatus {
+    val statusIntent = ctx.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    val batteryStatus = statusIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+    val isCharging =
+      batteryStatus == BatteryManager.BATTERY_STATUS_CHARGING ||
+      batteryStatus == BatteryManager.BATTERY_STATUS_FULL
+
+    val level = statusIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+    val scale = statusIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+    val batteryLevelPercent =
+      if (level >= 0 && scale > 0) ((level * 100.0) / scale).roundToLong() else null
+
+    val powerManager = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
+    val isLowPowerMode =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        powerManager.isPowerSaveMode
+      } else {
+        false
+      }
+
+    return PowerStatus(
+      isCharging = isCharging,
+      batteryLevelPercent = batteryLevelPercent,
+      isLowPowerMode = isLowPowerMode,
+    )
   }
 
   override fun disable() {

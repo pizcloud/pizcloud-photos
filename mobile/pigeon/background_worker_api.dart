@@ -18,6 +18,16 @@ class BackgroundWorkerSettings {
   const BackgroundWorkerSettings({required this.requiresCharging, required this.minimumDelaySeconds});
 }
 
+// pizcloud
+class PowerStatus {
+  final bool isCharging;
+  final int? batteryLevelPercent;
+  final bool isLowPowerMode;
+
+  const PowerStatus({required this.isCharging, this.batteryLevelPercent, required this.isLowPowerMode});
+}
+// #pizcloud
+
 @HostApi()
 abstract class BackgroundWorkerFgHostApi {
   void enable();
@@ -25,6 +35,8 @@ abstract class BackgroundWorkerFgHostApi {
   void saveNotificationMessage(String title, String body);
 
   void configure(BackgroundWorkerSettings settings);
+
+  PowerStatus getPowerStatus(); // pizcloud
 
   void disable();
 }

@@ -1,4 +1,5 @@
 import BackgroundTasks
+import UIKit // pizcloud
 
 class BackgroundWorkerApiImpl: BackgroundWorkerFgHostApi {
 
@@ -15,6 +16,28 @@ class BackgroundWorkerApiImpl: BackgroundWorkerFgHostApi {
   func saveNotificationMessage(title: String, body: String) throws {
     // Android only
   }
+
+  // pizcloud
+  func getPowerStatus() throws -> PowerStatus {
+    UIDevice.current.isBatteryMonitoringEnabled = true
+
+    let batteryState = UIDevice.current.batteryState
+    let isCharging = batteryState == .charging || batteryState == .full
+
+    let batteryLevel = UIDevice.current.batteryLevel
+    let batteryLevelPercent: Int64? = batteryLevel >= 0
+      ? Int64((batteryLevel * 100).rounded())
+      : nil
+
+    let isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+
+    return PowerStatus(
+      isCharging: isCharging,
+      batteryLevelPercent: batteryLevelPercent,
+      isLowPowerMode: isLowPowerMode
+    )
+  }
+  // #pizcloud
 
   func disable() throws {
     BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: BackgroundWorkerApiImpl.refreshTaskID)

@@ -34,6 +34,22 @@ import 'package:immich_mobile/wm_executor.dart';
 import 'package:isar/isar.dart';
 import 'package:logging/logging.dart';
 
+// pizcloud
+const int kLowBatteryWarningThresholdPercent = 20;
+
+bool isLowBatteryWarningRequiredFromStatus(
+  PowerStatus status, {
+  int thresholdPercent = kLowBatteryWarningThresholdPercent,
+}) {
+  if (status.isLowPowerMode) {
+    return true;
+  }
+
+  final batteryLevel = status.batteryLevelPercent;
+  return batteryLevel != null && batteryLevel <= thresholdPercent;
+}
+// #pizcloud
+
 class BackgroundWorkerFgService {
   final BackgroundWorkerFgHostApi _foregroundHostApi;
 
@@ -55,6 +71,25 @@ class BackgroundWorkerFgService {
           Store.get(AppSettingsEnum.backupRequireCharging.storeKey, AppSettingsEnum.backupRequireCharging.defaultValue),
     ),
   );
+
+  // pizcloud
+  Future<PowerStatus?> getPowerStatusSafe() async {
+    try {
+      return await _foregroundHostApi.getPowerStatus();
+    } catch (_) {
+      // Swallow native bridge failures to avoid impacting backup flow.
+      return null;
+    }
+  }
+
+  Future<bool> isLowBatteryWarningRequired({int thresholdPercent = kLowBatteryWarningThresholdPercent}) async {
+    final status = await getPowerStatusSafe();
+    if (status == null) {
+      return false;
+    }
+    return isLowBatteryWarningRequiredFromStatus(status, thresholdPercent: thresholdPercent);
+  }
+  // #pizcloud
 
   Future<void> disable() => _foregroundHostApi.disable();
 }
