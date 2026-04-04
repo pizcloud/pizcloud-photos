@@ -30,7 +30,7 @@ class RemoteImageRequest extends ImageRequest {
       }
 
       return await _decodeBuffer(buffer, decode, scale);
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (_isCancelled) {
         return null;
       }
@@ -41,9 +41,9 @@ class RemoteImageRequest extends ImageRequest {
       }
 
       // pizcloud
-      // rethrow;
+      // return null;
       log.warning('Remote image request failed for $uri', e);
-      return null;
+      Error.throwWithStackTrace(e, stackTrace);
     } finally {
       _request = null;
     }

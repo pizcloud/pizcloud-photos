@@ -90,9 +90,9 @@ class DriftReviewLargeFilesPage extends ConsumerWidget {
       await context.pushRoute(AssetViewerRoute(initialIndex: index, timelineService: timelineService));
     } finally {
       await timelineService.dispose();
-      if (context.mounted) {
-        ref.invalidate(largeFilesProvider);
-      }
+      // if (context.mounted) {
+      //   ref.invalidate(largeFilesProvider);
+      // }
     }
   }
 }

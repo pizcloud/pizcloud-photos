@@ -64,6 +64,36 @@ class RemoteAssetRepository extends DriftDatabaseRepository {
     return query.map((row) => row.toDto()).getSingleOrNull();
   }
 
+  // pizcloud
+  /// Maps remote asset ids to matching local asset ids (via checksum join).
+  Future<Map<String, String>> getLocalIdsByRemoteIds(Iterable<String> remoteIds) async {
+    final ids = remoteIds.where((id) => id.isNotEmpty).toSet().toList(growable: false);
+    if (ids.isEmpty) {
+      return const <String, String>{};
+    }
+
+    final query = _db.remoteAssetEntity.select().addColumns([_db.localAssetEntity.id]).join([
+      leftOuterJoin(
+        _db.localAssetEntity,
+        _db.remoteAssetEntity.checksum.equalsExp(_db.localAssetEntity.checksum),
+        useColumns: false,
+      ),
+    ])..where(_db.remoteAssetEntity.id.isIn(ids));
+
+    final rows = await query.get();
+    final result = <String, String>{};
+    for (final row in rows) {
+      final remoteId = row.readTable(_db.remoteAssetEntity).id;
+      final localId = row.read(_db.localAssetEntity.id);
+      if (localId != null) {
+        result[remoteId] = localId;
+      }
+    }
+
+    return result;
+  }
+  // #pizcloud
+
   Future<List<RemoteAsset>> getStackChildren(RemoteAsset asset) {
     final stackId = asset.stackId;
     if (stackId == null) {

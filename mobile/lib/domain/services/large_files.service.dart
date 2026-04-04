@@ -1,5 +1,6 @@
 import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/extensions/string_extensions.dart';
+import 'package:immich_mobile/infrastructure/repositories/remote_asset.repository.dart';
 import 'package:immich_mobile/infrastructure/repositories/search_api.repository.dart';
 import 'package:openapi/api.dart' hide AssetVisibility;
 import 'package:openapi/api.dart' as api show AssetVisibility;
@@ -13,16 +14,22 @@ class LargeFileAssetItem {
 
 class LargeFilesService {
   final SearchApiRepository _repository;
+  final RemoteAssetRepository _remoteAssetRepository;
 
-  const LargeFilesService(this._repository);
+  const LargeFilesService(this._repository, this._remoteAssetRepository);
 
   Future<List<LargeFileAssetItem>> getLargeFileAssets({int minFileSize = 0}) async {
     final assets = await _repository.searchLargeAssets(minFileSize: minFileSize);
+    final localIdsByRemoteId = await _remoteAssetRepository.getLocalIdsByRemoteIds(assets.map((asset) => asset.id));
 
     final items = assets
         .map(
-          (asset) =>
-              LargeFileAssetItem(asset: asset.toRemoteAsset(), fileSizeInBytes: asset.exifInfo?.fileSizeInByte ?? 0),
+          (asset) => LargeFileAssetItem(
+            // Old behavior:
+            // asset: asset.toRemoteAsset(),
+            asset: asset.toRemoteAsset(localId: localIdsByRemoteId[asset.id]),
+            fileSizeInBytes: asset.exifInfo?.fileSizeInByte ?? 0,
+          ),
         )
         .where((item) => item.fileSizeInBytes > minFileSize)
         .toList(growable: false);
@@ -33,7 +40,7 @@ class LargeFilesService {
 }
 
 extension on AssetResponseDto {
-  RemoteAsset toRemoteAsset() {
+  RemoteAsset toRemoteAsset({String? localId}) {
     return RemoteAsset(
       id: id,
       name: originalFileName,
@@ -56,7 +63,8 @@ extension on AssetResponseDto {
       isFavorite: isFavorite,
       livePhotoVideoId: livePhotoVideoId,
       thumbHash: thumbhash,
-      localId: null,
+      // localId: null,
+      localId: localId,
       type: type.toAssetType(),
       stackId: stack?.id,
     );

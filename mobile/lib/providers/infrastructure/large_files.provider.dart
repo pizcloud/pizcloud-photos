@@ -1,11 +1,16 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/domain/services/large_files.service.dart';
+import 'package:immich_mobile/providers/infrastructure/asset.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/search.provider.dart';
 
 const largeFilesMinFileSizeInBytes = 0;
 
 final largeFilesServiceProvider = Provider<LargeFilesService>(
-  (ref) => LargeFilesService(ref.watch(searchApiRepositoryProvider)),
+  (ref) => LargeFilesService(
+    // ref.watch(searchApiRepositoryProvider),
+    ref.watch(searchApiRepositoryProvider),
+    ref.watch(remoteAssetRepositoryProvider),
+  ),
 );
 
 final largeFilesProvider = FutureProvider.autoDispose<List<LargeFileAssetItem>>(
