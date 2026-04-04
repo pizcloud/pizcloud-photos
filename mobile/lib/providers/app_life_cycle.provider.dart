@@ -194,12 +194,24 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
         _safeRun(backgroundManager.syncRemote().then((success) => syncSuccess = success), "syncRemote"),
       ]);
       if (syncSuccess) {
-        await Future.wait([
-          _safeRun(backgroundManager.hashAssets(), "hashAssets").then((_) {
-            _resumeBackup();
-          }),
-          _resumeBackup(),
-        ]);
+        // pizcloud
+        // await Future.wait([
+        //   _safeRun(backgroundManager.hashAssets(), "hashAssets").then((_) {
+        //     _resumeBackup();
+        //   }),
+        //   _resumeBackup(),
+        // ]);
+        //
+        // New behavior:
+        // 1) Start resume early (in parallel with hashing) to keep UI responsive.
+        // 2) Await hashing completion.
+        // 3) Await the early resume call.
+        // 4) Re-check resume once after hash, to pick up any newly-hashed candidates.
+        final earlyResume = _resumeBackup();
+        await _safeRun(backgroundManager.hashAssets(), "hashAssets");
+        await earlyResume;
+        await _resumeBackup();
+        // #pizcloud
       } else {
         await _safeRun(backgroundManager.hashAssets(), "hashAssets");
       }

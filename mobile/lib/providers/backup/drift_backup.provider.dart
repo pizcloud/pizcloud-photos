@@ -220,6 +220,7 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
   final UploadService _uploadService;
   StreamSubscription<TaskStatusUpdate>? _statusSubscription;
   StreamSubscription<TaskProgressUpdate>? _progressSubscription;
+  Future<void>? _resumeBackupInFlight; // pizcloud: single-flight guard for resume backup
   final _logger = Logger("DriftBackupNotifier");
 
   /// Remove upload item from state
@@ -375,7 +376,42 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
     }
   }
 
-  Future<void> handleBackupResume(String userId) async {
+  Future<void> handleBackupResume(String userId) {
+    // pizcloud
+    final runningResume = _resumeBackupInFlight;
+    if (runningResume != null) {
+      _logger.fine("Backup resume already in progress. Joining existing task.");
+      return runningResume;
+    }
+
+    // Old behavior (kept for reference):
+    // Future<void> handleBackupResume(String userId) async {
+    //   _logger.info("Resuming backup tasks...");
+    //   state = state.copyWith(error: BackupError.none);
+    //   final tasks = await _uploadService.getActiveTasks(kBackupGroup);
+    //   _logger.info("Found ${tasks.length} tasks");
+    //
+    //   if (tasks.isEmpty) {
+    //     _logger.info("Start a new backup queue");
+    //     return startBackup(userId);
+    //   }
+    //
+    //   _logger.info("Tasks to resume: ${tasks.length}");
+    //   return _uploadService.resumeBackup();
+    // }
+
+    final startedResume = Future<void>.sync(() => _handleBackupResumeInternal(userId));
+    _resumeBackupInFlight = startedResume;
+
+    return startedResume.whenComplete(() {
+      if (identical(_resumeBackupInFlight, startedResume)) {
+        _resumeBackupInFlight = null;
+      }
+    });
+    // #pizcloud
+  }
+
+  Future<void> _handleBackupResumeInternal(String userId) async {
     _logger.info("Resuming backup tasks...");
     state = state.copyWith(error: BackupError.none);
     final tasks = await _uploadService.getActiveTasks(kBackupGroup);
