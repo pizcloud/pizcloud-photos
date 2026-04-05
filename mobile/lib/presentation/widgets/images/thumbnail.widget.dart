@@ -1,3 +1,4 @@
+import 'dart:async'; // pizcloud
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -45,8 +46,23 @@ class Thumbnail extends StatefulWidget {
 }
 
 class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMixin {
-  ui.Image? _providerImage;
-  ui.Image? _previousImage;
+  // pizcloud
+  // ui.Image? _providerImage;
+  // ui.Image? _previousImage;
+  //
+  // Keep ImageInfo ownership in this widget and dispose it explicitly.
+  ImageInfo? _providerImageInfo;
+  ImageInfo? _previousImageInfo;
+
+  static const List<Duration> _retryBackoff = [
+    Duration(milliseconds: 250),
+    Duration(milliseconds: 600),
+    Duration(milliseconds: 1200),
+  ];
+  Timer? _retryTimer;
+  int _retryAttempt = 0;
+  bool _hadImageError = false;
+  // #pizcloud
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -69,27 +85,28 @@ class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMix
 
   void _onAnimationStatusChanged(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
-      _previousImage?.dispose();
-      _previousImage = null;
+      _previousImageInfo?.dispose();
+      _previousImageInfo = null;
     }
   }
 
   void _loadFromThumbhashProvider() {
     _stopListeningToThumbhashStream();
     final thumbhashProvider = widget.thumbhashProvider;
-    if (thumbhashProvider == null || _providerImage != null) return;
+    if (thumbhashProvider == null || _providerImageInfo != null) return;
 
     final thumbhashStream = _thumbhashStream = thumbhashProvider.resolve(ImageConfiguration.empty);
     final thumbhashStreamListener = _thumbhashStreamListener = ImageStreamListener(
       (ImageInfo imageInfo, bool synchronousCall) {
         _stopListeningToThumbhashStream();
-        if (!mounted || _providerImage != null) {
+        if (!mounted || _providerImageInfo != null) {
           imageInfo.dispose();
           return;
         }
         _fadeController.value = 1.0;
         setState(() {
-          _providerImage = imageInfo.image;
+          _providerImageInfo?.dispose();
+          _providerImageInfo = imageInfo;
         });
       },
       onError: (exception, stackTrace) {
@@ -101,6 +118,8 @@ class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMix
   }
 
   void _loadFromImageProvider() {
+    _retryTimer?.cancel(); // pizcloud
+    _retryTimer = null; // pizcloud
     _stopListeningToImageStream();
     final imageProvider = widget.imageProvider;
     if (imageProvider == null) return;
@@ -114,11 +133,15 @@ class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMix
           return;
         }
 
-        if (_providerImage == imageInfo.image) {
+        // pizcloud
+        final providerImageInfo = _providerImageInfo;
+        if (providerImageInfo != null && imageInfo.isCloneOf(providerImageInfo)) {
+          imageInfo.dispose();
           return;
         }
+        // #pizcloud
 
-        if ((synchronousCall && _providerImage == null) || !_isVisible()) {
+        if ((synchronousCall && _providerImageInfo == null) || !_isVisible()) {
           _fadeController.value = 1.0;
         } else if (_fadeController.isAnimating) {
           _fadeController.forward();
@@ -127,22 +150,45 @@ class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMix
         }
 
         setState(() {
-          _previousImage?.dispose();
-          if (_providerImage != null) {
-            _previousImage = _providerImage;
+          // pizcloud
+          _retryAttempt = 0;
+          _hadImageError = false;
+
+          _previousImageInfo?.dispose();
+          if (_providerImageInfo != null) {
+            _previousImageInfo = _providerImageInfo;
           } else {
-            _previousImage = null;
+            _previousImageInfo = null;
           }
-          _providerImage = imageInfo.image;
+          _providerImageInfo = imageInfo;
+          // #pizcloud
         });
       },
       onError: (exception, stackTrace) {
         log.severe('Error loading image: $exception', exception, stackTrace);
         _stopListeningToImageStream();
+        _hadImageError = true; // pizcloud
+        _scheduleRetry(); // pizcloud
       },
     );
     imageStream.addListener(imageStreamListener);
   }
+
+  // pizcloud
+  void _scheduleRetry() {
+    if (!mounted || widget.imageProvider == null || !_hadImageError) return;
+    if (_retryTimer != null || _retryAttempt >= _retryBackoff.length) return;
+
+    final delay = _retryBackoff[_retryAttempt];
+    _retryTimer = Timer(delay, () {
+      _retryTimer = null;
+      if (!mounted || widget.imageProvider == null || !_hadImageError) return;
+
+      _retryAttempt++;
+      _loadFromImageProvider();
+    });
+  }
+  // #pizcloud
 
   void _stopListeningToImageStream() {
     if (_imageStreamListener != null && _imageStream != null) {
@@ -172,13 +218,19 @@ class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMix
     if (widget.imageProvider != oldWidget.imageProvider) {
       if (_fadeController.isAnimating) {
         _fadeController.stop();
-        _previousImage?.dispose();
-        _previousImage = null;
+        _previousImageInfo?.dispose();
+        _previousImageInfo = null;
       }
+      // pizcloud
+      _retryTimer?.cancel();
+      _retryTimer = null;
+      _retryAttempt = 0;
+      _hadImageError = false;
+      // #pizcloud
       _loadFromImageProvider();
     }
 
-    if (_providerImage == null && oldWidget.thumbhashProvider != widget.thumbhashProvider) {
+    if (_providerImageInfo == null && oldWidget.thumbhashProvider != widget.thumbhashProvider) {
       _loadFromThumbhashProvider();
     }
   }
@@ -216,8 +268,8 @@ class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMix
       animation: _fadeAnimation,
       builder: (context, child) {
         return _ThumbnailLeaf(
-          image: _providerImage,
-          previousImage: _previousImage,
+          image: _providerImageInfo?.image,
+          previousImage: _previousImageInfo?.image,
           fadeValue: _fadeAnimation.value,
           fit: widget.fit,
           placeholderGradient: gradient,
@@ -242,9 +294,15 @@ class _ThumbnailState extends State<Thumbnail> with SingleTickerProviderStateMix
 
     _fadeController.removeStatusListener(_onAnimationStatusChanged);
     _fadeController.dispose();
+    // pizcloud
+    _retryTimer?.cancel();
+    _retryTimer = null;
     _stopListeningToStream();
-    _providerImage?.dispose();
-    _previousImage?.dispose();
+    _providerImageInfo?.dispose();
+    _providerImageInfo = null;
+    _previousImageInfo?.dispose();
+    _previousImageInfo = null;
+    // #pizcloud
     super.dispose();
   }
 }
