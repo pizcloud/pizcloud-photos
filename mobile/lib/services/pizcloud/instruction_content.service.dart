@@ -24,7 +24,7 @@ class InstructionContentService {
   const InstructionContentService({
     this.apiBaseUrl,
     this.imageRootPath = '/images/instructions',
-    this.imageFileExtension = 'png',
+    this.imageFileExtension = 'jpg',
     this.maxSlidesPerFeature = 30,
     this.requestTimeout = const Duration(seconds: 4),
     this.httpClient,

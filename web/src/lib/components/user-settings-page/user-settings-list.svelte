@@ -14,7 +14,6 @@
     mdiApi,
     mdiBellOutline,
     mdiCogOutline,
-    mdiDevices,
     mdiDownload,
     mdiFeatureSearchOutline,
     mdiLockSmart,
@@ -24,7 +23,6 @@
   import SettingAccordionState from '../shared-components/settings/setting-accordion-state.svelte';
   import SettingAccordion from '../shared-components/settings/setting-accordion.svelte';
   import AppSettings from './app-settings.svelte';
-  import DeviceList from './device-list.svelte';
   import PartnerSettings from './partner-settings.svelte';
   import UserAPIKeyList from './user-api-key-list.svelte';
 
@@ -69,14 +67,17 @@
     <UserAPIKeyList bind:keys />
   </SettingAccordion>
 
-  <SettingAccordion
+  <!-- pizcloud -->
+  <!-- <SettingAccordion
     icon={mdiDevices}
     key="authorized-devices"
     title={$t('authorized_devices')}
     subtitle={$t('manage_your_devices')}
   >
     <DeviceList bind:devices={sessions} />
-  </SettingAccordion>
+  </SettingAccordion> -->
+
+  <!-- #pizcloud -->
 
   <SettingAccordion
     icon={mdiDownload}
