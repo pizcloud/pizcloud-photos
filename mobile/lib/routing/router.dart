@@ -79,6 +79,7 @@ import 'package:immich_mobile/pages/search/recently_taken.page.dart';
 import 'package:immich_mobile/pages/search/search.page.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_payout_method_page.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_withdrawals_page.dart';
+import 'package:immich_mobile/pages/settings/authorized_devices.page.dart';
 import 'package:immich_mobile/pages/settings/sync_status.page.dart';
 import 'package:immich_mobile/pages/share_intent/share_intent.page.dart';
 import 'package:immich_mobile/presentation/pages/dev/feat_in_development.page.dart';
@@ -256,6 +257,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: SettingsSubRoute.page, guards: [_duplicateGuard]),
     AutoRoute(page: AppLogRoute.page, guards: [_duplicateGuard]),
     AutoRoute(page: AppLogDetailRoute.page, guards: [_duplicateGuard]),
+    AutoRoute(page: AuthorizedDevicesRoute.page, guards: [_authGuard, _duplicateGuard]), // pizcloud
     CustomRoute(
       page: ArchiveRoute.page,
       guards: [_authGuard, _duplicateGuard],

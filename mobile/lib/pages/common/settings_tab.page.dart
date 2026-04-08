@@ -229,6 +229,15 @@ class SettingsTabPage extends HookConsumerWidget {
       );
     }
 
+    Widget buildManageDevicesButton() {
+      return buildActionButton(
+        context.platformIcon(material: Icons.devices_outlined, cupertino: CupertinoIcons.device_phone_portrait),
+        "authorized_devices",
+        subtitle: "manage_your_devices",
+        () => context.pushRoute(const AuthorizedDevicesRoute()),
+      );
+    }
+
     Widget buildReferralProgramButton() {
       return buildActionButton(
         context.platformIcon(material: Icons.wallet_giftcard, cupertino: CupertinoIcons.gift),
@@ -432,6 +441,7 @@ class SettingsTabPage extends HookConsumerWidget {
                 buildReferralProgramButton(), // pizcloud
                 buildDiscountCodeButton(), // pizcloud
                 buildManageAccountButton(), // pizcloud
+                buildManageDevicesButton(), // pizcloud
                 buildActionSectionTitle("settings_quick_system_section"),
                 if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
                 buildInstructionsButton(), // pizcloud

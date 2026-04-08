@@ -20,6 +20,23 @@ class SessionsAPIRepository extends ApiRepository {
   SessionsApi get _api => _apiService.sessionsApi;
   // #pizcloud
 
+  // pizcloud
+  Future<List<SessionResponseDto>> getSessions() async {
+    ensureEndpoint(_apiService);
+    return await _api.getSessions() ?? <SessionResponseDto>[];
+  }
+
+  Future<void> deleteSession(String id) async {
+    ensureEndpoint(_apiService);
+    await _api.deleteSession(id);
+  }
+
+  Future<void> deleteAllSessions() async {
+    ensureEndpoint(_apiService);
+    await _api.deleteAllSessions();
+  }
+  // #pizcloud
+
   Future<SessionCreateResponse> createSession(String deviceType, String deviceOS, {int? duration}) async {
     // pizcloud
     // final dto = await checkNull(

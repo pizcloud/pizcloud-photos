@@ -404,6 +404,22 @@ class ArchiveRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [AuthorizedDevicesPage]
+class AuthorizedDevicesRoute extends PageRouteInfo<void> {
+  const AuthorizedDevicesRoute({List<PageRouteInfo>? children})
+    : super(AuthorizedDevicesRoute.name, initialChildren: children);
+
+  static const String name = 'AuthorizedDevicesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AuthorizedDevicesPage();
+    },
+  );
+}
+
+/// generated route for
 /// [AssetTroubleshootPage]
 class AssetTroubleshootRoute extends PageRouteInfo<AssetTroubleshootRouteArgs> {
   AssetTroubleshootRoute({
