@@ -14,6 +14,8 @@
   import AlbumTransferOwnershipModal from '$lib/modals/pizcloud/AlbumTransferOwnershipModal.svelte'; // pizcloud
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
   import { handleDeleteAlbum, handleDownloadAlbum } from '$lib/services/album.service';
+  import { sendAlbumInvitePushByEmailsBestEffort } from '$lib/services/pizcloud/album-share-email.service';
+  // pizcloud
   import { isPendingTransfer } from '$lib/services/pizcloud/album-transfer.service';
   import { albumTransferManager, TransferRefreshReason } from '$lib/stores/album-transfer-manager.svelte';
   // pizcloud
@@ -396,12 +398,24 @@
       return;
     }
     try {
+      const addedUserIds = new Set(albumUsers.map(({ userId }) => userId)); // pizcloud
       const album = await addUsersToAlbum({
         id: albumToShare.id,
         addUsersDto: {
           albumUsers,
         },
       });
+      // pizcloud
+      const emailsToNotify = [
+        ...new Set(
+          album.albumUsers
+            .filter(({ user }) => addedUserIds.has(user.id))
+            .map(({ user }) => user.email.trim().toLowerCase())
+            .filter((email) => !!email),
+        ),
+      ];
+      void sendAlbumInvitePushByEmailsBestEffort(album.id, emailsToNotify);
+      // #pizcloud
       updateAlbumInfo(album);
     } catch (error) {
       handleError(error, $t('errors.unable_to_add_album_users'));

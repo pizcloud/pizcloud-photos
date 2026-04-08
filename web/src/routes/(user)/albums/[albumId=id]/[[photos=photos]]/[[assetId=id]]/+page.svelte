@@ -40,6 +40,8 @@
   import AlbumUsersModal from '$lib/modals/AlbumUsersModal.svelte';
   import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
   import { handleDeleteAlbum, handleDownloadAlbum } from '$lib/services/album.service';
+  import { sendAlbumInvitePushByEmailsBestEffort } from '$lib/services/pizcloud/album-share-email.service';
+  // pizcloud
   import { AssetInteraction } from '$lib/stores/asset-interaction.svelte';
   import { assetViewingStore } from '$lib/stores/asset-viewing.store';
   import { SlideshowNavigation, SlideshowState, slideshowStore } from '$lib/stores/slideshow.store';
@@ -222,12 +224,24 @@
 
   const handleAddUsers = async (albumUsers: AlbumUserAddDto[]) => {
     try {
-      await addUsersToAlbum({
+      const addedUserIds = new Set(albumUsers.map(({ userId }) => userId)); // pizcloud
+      const updatedAlbum = await addUsersToAlbum({
         id: album.id,
         addUsersDto: {
           albumUsers,
         },
       });
+      // pizcloud
+      const emailsToNotify = [
+        ...new Set(
+          updatedAlbum.albumUsers
+            .filter(({ user }) => addedUserIds.has(user.id))
+            .map(({ user }) => user.email.trim().toLowerCase())
+            .filter((email) => !!email),
+        ),
+      ];
+      void sendAlbumInvitePushByEmailsBestEffort(album.id, emailsToNotify);
+      // #pizcloud
       await refreshAlbum();
 
       viewMode = AlbumPageViewMode.VIEW;

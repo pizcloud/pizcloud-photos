@@ -22,6 +22,7 @@ import 'package:immich_mobile/providers/api.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/infrastructure/remote_album.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
+import 'package:immich_mobile/services/pizcloud/album_share_email_api.service.dart'; // pizcloud
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
 import 'package:immich_mobile/widgets/common/user_circle_avatar.dart';
 import 'package:openapi/api.dart'; // pizcloud
@@ -148,6 +149,25 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
         final sharedUsers = await ref.read(remoteAlbumSharedUsersProvider(album.id).future);
         final existingIds = {...sharedUsers.map((user) => user.id), album.ownerId};
         final userIdsToAdd = resolution.userIds.where((id) => !existingIds.contains(id)).toList();
+        final normalizedSelectedEmails = selectedEmails
+            .map((email) => email.trim().toLowerCase())
+            .where((email) => email.isNotEmpty)
+            .toSet();
+        final existingSharedEmails = sharedUsers.map((user) => user.email.trim().toLowerCase()).toSet();
+        final missingEmails = resolution.missingEmails
+            .map((email) => email.trim().toLowerCase())
+            .where((email) => email.isNotEmpty)
+            .toSet();
+        final emailsToNotify = normalizedSelectedEmails
+            .difference(existingSharedEmails)
+            .difference(missingEmails)
+            .toSet();
+        if (isOwner) {
+          final ownerEmail = ref.read(currentUserProvider)?.email.trim().toLowerCase();
+          if (ownerEmail != null && ownerEmail.isNotEmpty) {
+            emailsToNotify.remove(ownerEmail);
+          }
+        }
 
         if (resolution.missingEmails.isNotEmpty) {
           final preview = resolution.missingEmails.take(3).join(', ');
@@ -165,6 +185,9 @@ class DriftAlbumOptionsPage extends HookConsumerWidget {
         }
 
         await ref.read(remoteAlbumProvider.notifier).addUsers(album.id, userIdsToAdd);
+        unawaited(
+          AlbumShareEmailApiService.sendAlbumInvitePushByEmailsBestEffort(albumId: album.id, emails: emailsToNotify),
+        );
 
         if (userIdsToAdd.isNotEmpty) {
           ImmichToast.show(
