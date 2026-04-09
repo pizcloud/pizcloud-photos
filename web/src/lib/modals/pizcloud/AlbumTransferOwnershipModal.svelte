@@ -1,21 +1,5 @@
 <script lang="ts">
   import { invalidate } from '$app/navigation';
-  import { t } from 'svelte-i18n';
-  import {
-    Button,
-    Icon,
-    IconButton,
-    Input,
-    Modal,
-    ModalBody,
-    Stack,
-    Text,
-    modalManager,
-    toastManager,
-  } from '@immich/ui';
-  import { mdiCheck, mdiClose, mdiDeleteOutline, mdiSwapHorizontal } from '@mdi/js';
-  import type { AlbumResponseDto } from '@immich/sdk';
-  import { handleError } from '$lib/utils/handle-error';
   import { addSharedEmail, getSharedEmails, removeSharedEmail } from '$lib/services/pizcloud/album-share-email.service';
   import { resolveAlbumShareEmails } from '$lib/services/pizcloud/album-share-resolve.service';
   import {
@@ -23,9 +7,26 @@
     getAlbumTransfer,
     isPendingTransfer,
     requestAlbumTransfer,
+    sendAlbumTransferOwnershipPushByEmailBestEffort,
     type AlbumTransferDto,
   } from '$lib/services/pizcloud/album-transfer.service';
   import { albumTransferManager, TransferRefreshReason } from '$lib/stores/album-transfer-manager.svelte';
+  import { handleError } from '$lib/utils/handle-error';
+  import type { AlbumResponseDto } from '@immich/sdk';
+  import {
+    Button,
+    Icon,
+    IconButton,
+    Input,
+    Modal,
+    ModalBody,
+    modalManager,
+    Stack,
+    Text,
+    toastManager,
+  } from '@immich/ui';
+  import { mdiCheck, mdiClose, mdiDeleteOutline, mdiSwapHorizontal } from '@mdi/js';
+  import { t } from 'svelte-i18n';
 
   interface Props {
     album: AlbumResponseDto;
@@ -145,7 +146,16 @@
         return;
       }
 
-      pendingTransfer = await requestAlbumTransfer(album.id, resolution.userIds[0]);
+      // pendingTransfer = await requestAlbumTransfer(album.id, resolution.userIds[0]);
+      const transfer = await requestAlbumTransfer(album.id, resolution.userIds[0]);
+      pendingTransfer = transfer;
+      const toEmail = normalizeEmail(transfer.toUser.email || selectedEmail);
+      void sendAlbumTransferOwnershipPushByEmailBestEffort({
+        albumId: album.id,
+        toEmail,
+        transferId: transfer.id,
+        albumName: album.albumName,
+      });
       albumTransferManager.setTransfer(album.id, pendingTransfer);
       didChange = true;
       await refreshAfterMutation({ includeIncoming: false });

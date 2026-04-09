@@ -1,13 +1,23 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/domain/models/album/pizcloud/album_transfer.model.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/services/api.service.dart';
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_persist;
+import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 import 'package:openapi/api.dart';
 
 class AlbumTransferApiService {
   AlbumTransferApiService._();
+
+  static final PizcloudBaseUrlService _baseUrlService = PizcloudBaseUrlService();
+
+  static Future<piz_persist.ApiPersistCookieJarService> _apiFuture() async {
+    final baseUrl = await _baseUrlService.resolveBaseUrl();
+    return piz_persist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+  }
 
   static void _ensureEndpoint(ApiService apiService) {
     final endpoint = Store.tryGet(StoreKey.serverEndpoint);
@@ -60,7 +70,8 @@ class AlbumTransferApiService {
       throw ApiException(response.statusCode, response.body);
     }
 
-    if (response.body == null || response.body.trim().isEmpty || response.body.trim() == 'null') {
+    // if (response.body == null || response.body.trim().isEmpty || response.body.trim() == 'null') {
+    if (response.body.trim().isEmpty || response.body.trim() == 'null') {
       return null;
     }
 
@@ -150,5 +161,56 @@ class AlbumTransferApiService {
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return AlbumTransferDto.fromJson(data);
+  }
+
+  static Future<void> sendAlbumTransferOwnershipPushByEmail({
+    required String albumId,
+    required String toEmail,
+    String? transferId,
+    String? albumName,
+  }) async {
+    final normalizedAlbumId = albumId.trim();
+    final normalizedToEmail = toEmail.trim().toLowerCase();
+    final normalizedTransferId = transferId?.trim();
+    final normalizedAlbumName = albumName?.trim();
+
+    if (normalizedAlbumId.isEmpty || normalizedToEmail.isEmpty) {
+      return;
+    }
+
+    final api = await _apiFuture();
+    final res = await api.client.post<dynamic>(
+      '/notifications/album-transfer-ownership',
+      data: {
+        'albumId': normalizedAlbumId,
+        'toEmail': normalizedToEmail,
+        if (normalizedTransferId != null && normalizedTransferId.isNotEmpty) 'transferId': normalizedTransferId,
+        if (normalizedAlbumName != null && normalizedAlbumName.isNotEmpty) 'albumName': normalizedAlbumName,
+      },
+    );
+
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('Failed to send album transfer ownership push by email. status=$status');
+    }
+  }
+
+  static Future<void> sendAlbumTransferOwnershipPushByEmailBestEffort({
+    required String albumId,
+    required String toEmail,
+    String? transferId,
+    String? albumName,
+  }) async {
+    try {
+      await sendAlbumTransferOwnershipPushByEmail(
+        albumId: albumId,
+        toEmail: toEmail,
+        transferId: transferId,
+        albumName: albumName,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('sendAlbumTransferOwnershipPushByEmailBestEffort failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -138,10 +140,26 @@ class DriftAlbumTransferOwnershipPage extends HookConsumerWidget {
           return;
         }
 
-        await AlbumTransferApiService.requestTransfer(
+        // await AlbumTransferApiService.requestTransfer(
+        //   apiService,
+        //   albumId: album.id,
+        //   toUserId: resolution.userIds.first,
+        // );
+        final transfer = await AlbumTransferApiService.requestTransfer(
           apiService,
           albumId: album.id,
           toUserId: resolution.userIds.first,
+        );
+        final toEmail = transfer.toUser.email.trim().toLowerCase().isNotEmpty
+            ? transfer.toUser.email.trim().toLowerCase()
+            : email;
+        unawaited(
+          AlbumTransferApiService.sendAlbumTransferOwnershipPushByEmailBestEffort(
+            albumId: album.id,
+            toEmail: toEmail,
+            transferId: transfer.id,
+            albumName: album.name,
+          ),
         );
         // ref.invalidate(albumTransferByAlbumProvider(album.id));
         await _refreshTransferAfterLocalMutation(ref);

@@ -1,4 +1,5 @@
-import { getApiBaseUrl } from '$lib/utils/api-base';
+import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+import { getApiBaseUrl, getPizcloudApiBaseUrl } from '$lib/utils/api-base';
 
 export type AlbumTransferUser = {
   id: string;
@@ -44,6 +45,13 @@ type RequestOptions = {
   body?: unknown;
 };
 
+type TransferOwnershipPushOptions = {
+  albumId: string;
+  toEmail: string;
+  transferId?: string;
+  albumName?: string;
+};
+
 const isObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
 };
@@ -62,16 +70,21 @@ const normalizeUser = (value: unknown): AlbumTransferUser => {
 
 const normalizeStatus = (value: unknown): AlbumTransferStatus => {
   switch (value) {
-    case AlbumTransferStatus.Pending:
+    case AlbumTransferStatus.Pending: {
       return AlbumTransferStatus.Pending;
-    case AlbumTransferStatus.Accepted:
+    }
+    case AlbumTransferStatus.Accepted: {
       return AlbumTransferStatus.Accepted;
-    case AlbumTransferStatus.Declined:
+    }
+    case AlbumTransferStatus.Declined: {
       return AlbumTransferStatus.Declined;
-    case AlbumTransferStatus.Canceled:
+    }
+    case AlbumTransferStatus.Canceled: {
       return AlbumTransferStatus.Canceled;
-    default:
+    }
+    default: {
       return AlbumTransferStatus.Pending;
+    }
   }
 };
 
@@ -109,10 +122,34 @@ const parseErrorBody = async (res: Response): Promise<{ message: string; code?: 
       return { message, code: typeof parsed.message === 'string' ? parsed.message : undefined };
     }
   } catch {
-
+    // Fall back to the raw response text below.
   }
 
   return { message: text };
+};
+
+const normalizePizcloudBaseUrl = () => {
+  // prefer health-check pizcloudApi, fallback to env
+  const healthBaseUrl = getPizcloudApiBaseUrl();
+  const fallbackBaseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
+  return (healthBaseUrl || fallbackBaseUrl).replace(/\/+$/, '');
+};
+
+const requestPizcloudNoContent = async (path: string, init?: RequestInit): Promise<void> => {
+  const baseUrl = normalizePizcloudBaseUrl();
+  if (!baseUrl) {
+    throw new Error('Missing pizcloud server url');
+  }
+
+  const res = await fetch(`${baseUrl}${path}`, {
+    credentials: 'include',
+    ...init,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Request failed: ${res.status}`);
+  }
 };
 
 const request = async (path: string, options: RequestOptions): Promise<Response> => {
@@ -191,6 +228,43 @@ export const acceptAlbumTransfer = async (transferId: string): Promise<AlbumTran
 export const declineAlbumTransfer = async (transferId: string): Promise<AlbumTransferDto> => {
   const data = await requestJson<unknown>(`/album-transfers/${transferId}/decline`, { method: 'POST' });
   return normalizeTransfer(data);
+};
+
+export const sendAlbumTransferOwnershipPushByEmail = async ({
+  albumId,
+  toEmail,
+  transferId,
+  albumName,
+}: TransferOwnershipPushOptions): Promise<void> => {
+  const normalizedAlbumId = albumId.trim();
+  const normalizedToEmail = toEmail.trim().toLowerCase();
+  const normalizedTransferId = transferId?.trim();
+  const normalizedAlbumName = albumName?.trim();
+
+  if (!normalizedAlbumId || !normalizedToEmail) {
+    return;
+  }
+
+  await requestPizcloudNoContent('/notifications/album-transfer-ownership', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      albumId: normalizedAlbumId,
+      toEmail: normalizedToEmail,
+      ...(normalizedTransferId ? { transferId: normalizedTransferId } : {}),
+      ...(normalizedAlbumName ? { albumName: normalizedAlbumName } : {}),
+    }),
+  });
+};
+
+export const sendAlbumTransferOwnershipPushByEmailBestEffort = async (
+  options: TransferOwnershipPushOptions,
+): Promise<void> => {
+  try {
+    await sendAlbumTransferOwnershipPushByEmail(options);
+  } catch (error) {
+    console.warn('sendAlbumTransferOwnershipPushByEmailBestEffort failed', error);
+  }
 };
 
 export const isPendingTransfer = (transfer: AlbumTransferDto | null | undefined): transfer is AlbumTransferDto => {
