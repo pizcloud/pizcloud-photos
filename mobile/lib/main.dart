@@ -180,16 +180,22 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
   // pizcloud
   Future<void> _handlePushNotificationTap(Map<String, dynamic> data) async {
     final type = (data['type'] ?? '').toString().trim().toLowerCase();
+
+    if (!ref.read(authProvider).isAuthenticated) {
+      return;
+    }
+
+    if (type == 'album_transfer_ownership') {
+      await _openAlbumsFromPush();
+      return;
+    }
+
     if (type != 'album_invite') {
       return;
     }
 
     final albumId = _extractAlbumIdFromNotification(data);
     if (albumId == null || albumId.isEmpty) {
-      return;
-    }
-
-    if (!ref.read(authProvider).isAuthenticated) {
       return;
     }
 
@@ -224,6 +230,25 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
       }
 
       unawaited(ref.read(appRouterProvider).push(route));
+    });
+  }
+
+  Future<void> _openAlbumsFromPush() async {
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      final appRouter = ref.read(appRouterProvider);
+      if (Store.isBetaTimelineEnabled) {
+        unawaited(appRouter.navigate(const TabShellRoute(children: [DriftAlbumsRoute()])));
+      } else {
+        unawaited(appRouter.navigate(const TabControllerRoute(children: [AlbumsRoute()])));
+      }
     });
   }
   // #pizcloud
