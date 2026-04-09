@@ -13,7 +13,7 @@ class ImmichTitleText extends StatelessWidget {
       image: AssetImage(context.isDarkTheme ? 'assets/pizcloud-text-dark.png' : 'assets/pizcloud-text-light.png'),
       width: fontSize * 4,
       filterQuality: FilterQuality.high,
-      color: context.primaryColor,
+      // color: context.primaryColor,
     );
   }
 }

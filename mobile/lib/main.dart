@@ -23,6 +23,7 @@ import 'package:immich_mobile/generated/intl_keys.g.dart';
 import 'package:immich_mobile/platform/background_worker_lock_api.g.dart';
 import 'package:immich_mobile/providers/app_life_cycle.provider.dart';
 import 'package:immich_mobile/providers/asset_viewer/share_intent_upload.provider.dart';
+import 'package:immich_mobile/providers/auth.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/db.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/db.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/platform.provider.dart';
@@ -34,6 +35,7 @@ import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/services/background.service.dart';
 import 'package:immich_mobile/services/deep_link.service.dart';
 import 'package:immich_mobile/services/local_notification.service.dart';
+import 'package:immich_mobile/services/pizcloud/push_notification.service.dart'; // pizcloud
 import 'package:immich_mobile/theme/dynamic_theme.dart';
 import 'package:immich_mobile/theme/theme_data.dart';
 import 'package:immich_mobile/utils/bootstrap.dart';
@@ -175,6 +177,57 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
     await ref.read(localNotificationService).setup();
   }
 
+  // pizcloud
+  Future<void> _handlePushNotificationTap(Map<String, dynamic> data) async {
+    final type = (data['type'] ?? '').toString().trim().toLowerCase();
+    if (type != 'album_invite') {
+      return;
+    }
+
+    final albumId = _extractAlbumIdFromNotification(data);
+    if (albumId == null || albumId.isEmpty) {
+      return;
+    }
+
+    if (!ref.read(authProvider).isAuthenticated) {
+      return;
+    }
+
+    await _openAlbumFromPush(albumId);
+  }
+
+  String? _extractAlbumIdFromNotification(Map<String, dynamic> data) {
+    final rawAlbumId = data['album_id'] ?? data['albumId'];
+    if (rawAlbumId == null) {
+      return null;
+    }
+
+    final albumId = rawAlbumId.toString().trim();
+    if (albumId.isEmpty) {
+      return null;
+    }
+
+    return albumId;
+  }
+
+  Future<void> _openAlbumFromPush(String albumId) async {
+    final deepLinkHandler = ref.read(deepLinkServiceProvider);
+    final route = await deepLinkHandler.buildAlbumRouteFromNotification(albumId);
+    if (route == null || !mounted) {
+      return;
+    }
+
+    // Old behavior: push notifications did not trigger in-app route navigation.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      unawaited(ref.read(appRouterProvider).push(route));
+    });
+  }
+  // #pizcloud
+
   Future<DeepLink> _deepLinkBuilder(PlatformDeepLink deepLink) async {
     final deepLinkHandler = ref.read(deepLinkServiceProvider);
     final currentRouteName = ref.read(currentRouteNameProvider.notifier).state;
@@ -208,6 +261,7 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
   @override
   initState() {
     super.initState();
+    PushNotificationService.setTapHandler(_handlePushNotificationTap); // pizcloud
     initApp().then((_) => dPrint(() => "App Init Completed"));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // needs to be delayed so that EasyLocalization is working
@@ -233,6 +287,7 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
 
   @override
   void dispose() {
+    PushNotificationService.setTapHandler(null); // pizcloud
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

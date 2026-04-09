@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,6 +13,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
 }
 
+typedef PushNotificationTapHandler = FutureOr<void> Function(Map<String, dynamic> data);
+
 class PushNotificationService {
   PushNotificationService._();
 
@@ -22,10 +25,16 @@ class PushNotificationService {
 
   static String? _baseUrl;
   static String? _authToken;
+  static PushNotificationTapHandler? _tapHandler;
+  static bool _didHandleInitialMessage = false;
 
   static StreamSubscription<RemoteMessage>? _onMessageSub;
   static StreamSubscription<RemoteMessage>? _onOpenSub;
   static StreamSubscription<String>? _onTokenRefreshSub;
+
+  static void setTapHandler(PushNotificationTapHandler? handler) {
+    _tapHandler = handler;
+  }
 
   /// Call this after user logged-in (have authToken).
   static Future<void> initAndRegister({required String baseUrl, required String authToken}) async {
@@ -33,6 +42,7 @@ class PushNotificationService {
     _authToken = authToken;
 
     await _ensureFirebaseInitialized();
+    await _handleInitialMessageIfAny();
 
     await _registerWithRetry();
   }
@@ -60,9 +70,9 @@ class PushNotificationService {
 
     await _initLocalNotifications();
 
-    _onMessageSub?.cancel();
-    _onOpenSub?.cancel();
-    _onTokenRefreshSub?.cancel();
+    await _onMessageSub?.cancel();
+    await _onOpenSub?.cancel();
+    await _onTokenRefreshSub?.cancel();
 
     _onMessageSub = FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     _onOpenSub = FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
@@ -79,8 +89,17 @@ class PushNotificationService {
     await _local.initialize(
       init,
       onDidReceiveNotificationResponse: (resp) {
-        // Notification tapped while app in foreground/background (local notif).
-        // You can parse payload & route.
+        final payload = resp.payload;
+        if (payload == null || payload.isEmpty) {
+          return;
+        }
+
+        final data = _decodePayloadMap(payload);
+        if (data == null) {
+          return;
+        }
+
+        unawaited(_dispatchNotificationTap(data));
       },
     );
 
@@ -113,11 +132,54 @@ class PushNotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      payload: message.data.isNotEmpty ? message.data.toString() : null,
+      payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
     );
   }
 
-  static Future<void> _onMessageOpenedApp(RemoteMessage message) async {}
+  static Future<void> _onMessageOpenedApp(RemoteMessage message) async {
+    await _dispatchNotificationTap(message.data);
+  }
+
+  static Future<void> _handleInitialMessageIfAny() async {
+    if (_didHandleInitialMessage) {
+      return;
+    }
+    _didHandleInitialMessage = true;
+
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage == null) {
+      return;
+    }
+
+    await _dispatchNotificationTap(initialMessage.data);
+  }
+
+  static Map<String, dynamic>? _decodePayloadMap(String payload) {
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map) {
+        return null;
+      }
+
+      return decoded.map((key, value) => MapEntry(key.toString(), value));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> _dispatchNotificationTap(Map<String, dynamic> data) async {
+    if (data.isEmpty) {
+      return;
+    }
+
+    final handler = _tapHandler;
+    if (handler == null) {
+      return;
+    }
+
+    await handler(data);
+  }
+
   static Future<void> _registerWithRetry() async {
     if (_baseUrl == null || _authToken == null) return;
 

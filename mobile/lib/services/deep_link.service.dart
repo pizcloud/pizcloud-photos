@@ -59,6 +59,30 @@ class DeepLinkService {
     this._betaMemoryServiceProvider,
   );
 
+  // pizcloud
+  Future<PageRouteInfo?> buildAlbumRouteFromNotification(String albumId) async {
+    final normalizedAlbumId = albumId.trim();
+    if (normalizedAlbumId.isEmpty) {
+      return null;
+    }
+
+    final directRoute = await _buildAlbumDeepLink(normalizedAlbumId);
+    if (directRoute != null) {
+      return directRoute;
+    }
+
+    if (!Store.isBetaTimelineEnabled) {
+      return null;
+    }
+
+    try {
+      await _betaRemoteAlbumService.syncAlbumFromServer(normalizedAlbumId);
+    } catch (_) {}
+
+    return _buildAlbumDeepLink(normalizedAlbumId);
+  }
+  // #pizcloud
+
   DeepLink _handleColdStart(PageRouteInfo<dynamic> route, bool isColdStart) {
     return DeepLink([
       // we need something to segue back to if the app was cold started
