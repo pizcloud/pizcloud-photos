@@ -8,11 +8,11 @@ import FutoLayout from 'src/emails/components/futo.layout';
  * Variable is {{LICENSEKEY}}
  * */
 export const LicenseEmail = () => (
-  <FutoLayout preview="Your Immich Server License">
-    <Text>Thank you for supporting Immich and open-source software</Text>
+  <FutoLayout preview="Your PizCloud Server License">
+    <Text>Thank you for supporting PizCloud and open-source software</Text>
 
     <Text>
-      Your <strong>Immich</strong> key is
+      Your <strong>PizCloud</strong> key is
     </Text>
 
     <Section className="my-2 bg-gray-200 rounded-2xl text-center p-4">
@@ -25,7 +25,7 @@ export const LicenseEmail = () => (
 
     <Section className="flex justify-center my-6">
       <ImmichButton
-        href={`https://my.immich.app/link?target=activate_license&licenseKey={{LICENSEKEY}}&activationKey={{ACTIVATIONKEY}}`}
+        href={`https://photos.pizcloud.com/link?target=activate_license&licenseKey={{LICENSEKEY}}&activationKey={{ACTIVATIONKEY}}`}
       >
         Activate
       </ImmichButton>
@@ -35,9 +35,9 @@ export const LicenseEmail = () => (
       <Link
         className="text-immich-primary text-sm"
         // style={{ marginTop: '50px', color: 'rgb(66, 80, 175)', fontSize: '0.9rem' }}
-        href={`https://my.immich.app/link?target=activate_license&licenseKey={{LICENSEKEY}}&activationKey={{ACTIVATIONKEY}}`}
+        href={`https://photos.pizcloud.com/link?target=activate_license&licenseKey={{LICENSEKEY}}&activationKey={{ACTIVATIONKEY}}`}
       >
-        https://my.immich.app/link?target=activate_license&licenseKey={'{{LICENSEKEY}}'}&activationKey=
+        https://photos.pizcloud.com/link?target=activate_license&licenseKey={'{{LICENSEKEY}}'}&activationKey=
         {'{{ACTIVATIONKEY}}'}
       </Link>
     </Text>

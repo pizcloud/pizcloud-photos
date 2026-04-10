@@ -86,7 +86,7 @@ describe(MaintenanceService.name, () => {
         }),
       ).resolves.toEqual(
         expect.stringMatching(
-          /^https:\/\/my.immich.app\/maintenance\?token=[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$/,
+          /^https:\/\/photos.pizcloud.com\/maintenance\?token=[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$/,
         ),
       );
 

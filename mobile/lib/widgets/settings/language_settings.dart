@@ -8,6 +8,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:immich_mobile/constants/locales.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/services/localization.service.dart';
+import 'package:immich_mobile/services/pizcloud/push_notification.service.dart'; // pizcloud
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/widgets/common/search_field.dart';
 
@@ -24,6 +25,7 @@ class LanguageSettings extends HookConsumerWidget {
     try {
       await context.setLocale(selectedLocale.value);
       await loadTranslations();
+      unawaited(PushNotificationService.syncDeviceLocale(locale: selectedLocale.value.toLanguageTag())); // pizcloud
     } finally {
       isLoading.value = false;
     }

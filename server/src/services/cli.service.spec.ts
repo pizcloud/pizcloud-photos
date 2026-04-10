@@ -37,7 +37,7 @@ describe(CliService.name, () => {
       mocks.user.getAdmin.mockResolvedValue(admin);
       mocks.user.update.mockResolvedValue(factory.userAdmin({ isAdmin: true }));
 
-      const ask = vitest.fn().mockImplementation(() => {});
+      const ask = vitest.fn().mockImplementation(() => { });
 
       const response = await sut.resetAdminPassword(ask);
 
@@ -132,7 +132,7 @@ describe(CliService.name, () => {
       });
     });
 
-    const RE_LOGIN_URL = /https:\/\/my.immich.app\/maintenance\?token=([A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*)/;
+    const RE_LOGIN_URL = /https:\/\/photos.pizcloud.com\/maintenance\?token=([A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*)/;
 
     it('should return a valid login URL', async () => {
       mocks.systemMetadata.get.mockResolvedValue({ isMaintenanceMode: true, secret: 'secret' });

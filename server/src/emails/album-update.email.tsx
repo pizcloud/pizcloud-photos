@@ -71,10 +71,10 @@ export const AlbumUpdateEmail = ({
 };
 
 AlbumUpdateEmail.PreviewProps = {
-  baseUrl: 'https://demo.immich.app',
-  albumName: 'Trip to Europe',
+  baseUrl: 'https://photos.pizcloud.com',
+  albumName: 'My album',
   albumId: 'b63f6dae-e1c9-401b-9a85-9dbbf5612539',
-  recipientName: 'Alan Turing',
+  recipientName: 'User',
   cid: '',
   customTemplate: '',
 } as AlbumUpdateEmailProps;

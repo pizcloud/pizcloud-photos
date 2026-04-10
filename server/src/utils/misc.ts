@@ -22,7 +22,7 @@ import { extraSyncModels } from 'src/dtos/sync.dto';
 import { ApiCustomExtension, ImmichCookie, ImmichHeader, MetadataKey } from 'src/enum';
 import { LoggingRepository } from 'src/repositories/logging.repository';
 
-export class ImmichStartupError extends Error {}
+export class ImmichStartupError extends Error { }
 export const isStartUpError = (error: unknown): error is ImmichStartupError => error instanceof ImmichStartupError;
 
 export const getKeyByValue = (object: Record<string, unknown>, value: unknown) =>
@@ -48,7 +48,7 @@ export const getMethodNames = (instance: any) => {
   return methods;
 };
 
-export const getExternalDomain = (server: SystemConfig['server'], defaultDomain = 'https://my.immich.app') =>
+export const getExternalDomain = (server: SystemConfig['server'], defaultDomain = 'https://photos.pizcloud.com') =>
   server.externalDomain || defaultDomain;
 
 /**

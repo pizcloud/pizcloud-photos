@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 
 import 'package:immich_mobile/features/pizcloud/notifications/notification_api_client.dart';
 
@@ -194,8 +195,6 @@ class PushNotificationService {
       try {
         final token = await FirebaseMessaging.instance.getToken();
 
-        // print('[FCM] attempt=$attempt token=${token?.substring(0, 12)}...');
-
         if (token != null && token.isNotEmpty) {
           await _registerTokenToServer(token);
           return; // success
@@ -211,7 +210,7 @@ class PushNotificationService {
     // If still null, do nothing. Token refresh listener may fire later and register.
   }
 
-  static Future<void> _registerTokenToServer(String fcmToken) async {
+  static Future<void> _registerTokenToServer(String fcmToken, {String? locale}) async {
     final baseUrl = _baseUrl;
     final authToken = _authToken;
     if (baseUrl == null || authToken == null) return;
@@ -222,9 +221,35 @@ class PushNotificationService {
     final api = NotificationApiClient(baseUrl: baseUrl, authToken: authToken);
 
     try {
-      await api.registerDevice(token: fcmToken, deviceId: deviceId, platform: platform);
+      await api.registerDevice(
+        token: fcmToken,
+        deviceId: deviceId,
+        platform: platform,
+        locale: _resolveLocaleTag(locale),
+      );
     } catch (e) {
       rethrow;
+    }
+  }
+
+  static String _resolveLocaleTag([String? locale]) {
+    final raw = (locale ?? Intl.defaultLocale ?? '').trim();
+    if (raw.isEmpty) {
+      return 'en';
+    }
+    return raw.replaceAll('_', '-');
+  }
+
+  static Future<void> syncDeviceLocale({String? locale}) async {
+    if (_baseUrl == null || _authToken == null) return;
+
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null || token.isEmpty) return;
+
+      await _registerTokenToServer(token, locale: locale);
+    } catch (_) {
+      // Best-effort sync
     }
   }
 

@@ -37,7 +37,7 @@ export const WelcomeEmail = ({ baseUrl, displayName, username, password, customT
 
   return (
     <ImmichLayout
-      preview={customTemplate ? emailContent.toString() : 'You have been invited to a new Immich instance.'}
+      preview={customTemplate ? emailContent.toString() : 'You have been invited to a new PizCloud instance.'}
     >
       {customTemplate && (
         <Text className="m-0">
@@ -61,9 +61,9 @@ export const WelcomeEmail = ({ baseUrl, displayName, username, password, customT
 };
 
 WelcomeEmail.PreviewProps = {
-  baseUrl: 'https://demo.immich.app/auth/login',
-  displayName: 'Alan Turing',
-  username: 'alanturing@immich.app',
+  baseUrl: 'https://account.pizcloud.com/login?service=photos',
+  displayName: 'User',
+  username: 'testuser@gmail.com',
   password: 'mysuperpassword',
 } as WelcomeEmailProps;
 

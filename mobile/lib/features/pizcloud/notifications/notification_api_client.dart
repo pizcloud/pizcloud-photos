@@ -12,6 +12,7 @@ class NotificationApiClient {
     required String deviceId,
     required String platform, // "android" | "ios"
     String? appVersion,
+    String? locale,
   }) async {
     debugPrint('registerDevice-baseUrl: $baseUrl');
     // Old http-based implementation (kept for reference)
@@ -35,12 +36,16 @@ class NotificationApiClient {
       baseUrl: baseUrl,
       // headers: {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json'},
     );
+    final normalizedLocale = locale?.trim();
+    final effectiveLocale = (normalizedLocale == null || normalizedLocale.isEmpty) ? 'en' : normalizedLocale;
+
     final res = await client.client.post<dynamic>(
       '/notifications/devices',
       data: {
         'token': token,
         'deviceId': deviceId,
         'platform': platform,
+        'locale': effectiveLocale,
         if (appVersion != null) 'appVersion': appVersion,
       },
     );

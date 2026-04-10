@@ -334,7 +334,7 @@ describe(SharedLinkService.name, () => {
 
       await expect(sut.getMetadataTags(authStub.adminSharedLink)).resolves.toEqual({
         description: '1 shared photos & videos',
-        imageUrl: `https://my.immich.app/api/assets/asset-id/thumbnail?key=LCtkaJX4R1O_9D-2lq0STzsPryoL1UdAbyb6Sna1xxmQCSuqU2J1ZUsqt6GR-yGm1s0`,
+        imageUrl: `https://photos.pizcloud.com/api/assets/asset-id/thumbnail?key=LCtkaJX4R1O_9D-2lq0STzsPryoL1UdAbyb6Sna1xxmQCSuqU2J1ZUsqt6GR-yGm1s0`,
         title: 'Public Share',
       });
 
@@ -345,7 +345,7 @@ describe(SharedLinkService.name, () => {
       mocks.sharedLink.get.mockResolvedValue({ ...sharedLinkStub.individual, album: null, assets: [] });
       await expect(sut.getMetadataTags(authStub.adminSharedLink)).resolves.toEqual({
         description: '0 shared photos & videos',
-        imageUrl: `https://my.immich.app/feature-panel.png`,
+        imageUrl: `https://photos.pizcloud.com/feature-panel.png`,
         title: 'Public Share',
       });
 
