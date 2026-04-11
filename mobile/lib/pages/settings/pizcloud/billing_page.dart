@@ -283,69 +283,6 @@ class _PlanCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Expanded(
-                  //   child: Row(
-                  //     children: [
-                  //       Text(data.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                  //       const SizedBox(width: 8),
-                  //       if (data.highlighted)
-                  //         Container(
-                  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  //           decoration: BoxDecoration(
-                  //             color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  //             borderRadius: BorderRadius.circular(12),
-                  //           ),
-                  //           child: Text(
-                  //             'Most Popular',
-                  //             style: theme.textTheme.labelSmall?.copyWith(
-                  //               color: theme.colorScheme.primary,
-                  //               fontWeight: FontWeight.w700,
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       if (selected) ...[
-                  //         const SizedBox(width: 8),
-                  //         Container(
-                  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  //           decoration: BoxDecoration(
-                  //             color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  //             borderRadius: BorderRadius.circular(12),
-                  //           ),
-                  //           child: Text(
-                  //             'Selected',
-                  //             style: theme.textTheme.labelSmall?.copyWith(
-                  //               color: theme.colorScheme.primary,
-                  //               fontWeight: FontWeight.w700,
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ],
-                  //       if (data.referralDiscountApplied) ...[
-                  //         const SizedBox(width: 8),
-                  //         Container(
-                  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  //           decoration: BoxDecoration(
-                  //             color: Colors.green.withValues(alpha: 0.12),
-                  //             borderRadius: BorderRadius.circular(12),
-                  //           ),
-                  //           child: Row(
-                  //             children: [
-                  //               Icon(Icons.local_offer, size: 14, color: Colors.green[700]),
-                  //               const SizedBox(width: 4),
-                  //               Text(
-                  //                 '-30%',
-                  //                 style: theme.textTheme.labelSmall?.copyWith(
-                  //                   color: Colors.green[700],
-                  //                   fontWeight: FontWeight.w700,
-                  //                 ),
-                  //               ),
-                  //             ],
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ],
-                  //   ),
-                  // ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -576,36 +513,11 @@ class BillingPage extends HookConsumerWidget {
           );
         }
       }
-      // for (final p in realProducts) {
-      //   final isM = _looksMonthly(p.id) || _looksMonthly(p.title) || _looksMonthly(p.description);
-      //   final isY = _looksYearly(p.id) || _looksYearly(p.title) || _looksYearly(p.description);
-      //   final resolvedMonthly = isM || (!isM && !isY); // default monthly if unknown
-      //   items.add(
-      //     PlanDisplay(
-      //       id: p.id,
-      //       title: _planShortTitle(p.title, p.id),
-      //       price: p.price,
-      //       isMonthly: resolvedMonthly,
-      //       features: _featuresFor('${p.id} ${p.title} ${p.description}'),
-      //       highlighted: _isMostPopular('${p.id} ${p.title}'),
-      //       raw: p,
-      //     ),
-      //   );
-      // }
     }
 
     // Filter by current period
     final filtered = items.where((e) => period.value == BillingPeriod.monthly ? e.isMonthly : !e.isMonthly).toList();
 
-    // OLD: Sort Basic → Pro → Premium
-    // int rank(String t) {
-    //   final s = t.toLowerCase();
-    //   if (s.contains('premium') || s.contains('2tb')) return 3;
-    //   if (s.contains('pro') || s.contains('500')) return 2;
-    //   return 1;
-    // }
-    //
-    // filtered.sort((a, b) => rank(a.title).compareTo(rank(b.title)));
     final orderIndex = <String, int>{};
     for (var i = 0; i < IapService.productIdOrder.length; i += 1) {
       orderIndex[IapService.productIdOrder[i]] = i;
@@ -628,70 +540,70 @@ class BillingPage extends HookConsumerWidget {
       // Sticky CTA
       material: (_, __) => MaterialScaffoldData(
         bottomNavBar: showCta
-          ? SafeArea(
-              top: false,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 12,
-                      offset: const Offset(0, -4),
-                      color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Summary line
-                    Text(
-                      'subscription.continue_with'.tr(
-                        namedArgs: {
-                          'plan': selectedPlan.value!.title,
-                          'price': selectedPlan.value!.price,
-                          'period': period.value == BillingPeriod.monthly
-                              ? 'subscription.period_month'.tr()
-                              : 'subscription.period_year'.tr(),
-                        },
+            ? SafeArea(
+                top: false,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 12,
+                        offset: const Offset(0, -4),
+                        color: theme.colorScheme.shadow.withValues(alpha: 0.08),
                       ),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final plan = selectedPlan.value!;
-                          if (plan.raw != null) {
-                            // Real purchase
-                            ref.read(billingControllerProvider.notifier).buy(plan.raw!, offerToken: plan.offerToken);
-                          } else {
-                            try {
-                              await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
-                              _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
-                            } catch (e) {
-                              _snack(context, 'Fake buy failed: $e');
-                            }
-
-                            // Fake purchase
-                            // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Summary line
+                      Text(
+                        'subscription.continue_with'.tr(
+                          namedArgs: {
+                            'plan': selectedPlan.value!.title,
+                            'price': selectedPlan.value!.price,
+                            'period': period.value == BillingPeriod.monthly
+                                ? 'subscription.period_month'.tr()
+                                : 'subscription.period_year'.tr(),
+                          },
                         ),
-                        child: const Text('subscription.buy_now').tr(),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final plan = selectedPlan.value!;
+                            if (plan.raw != null) {
+                              // Real purchase
+                              ref.read(billingControllerProvider.notifier).buy(plan.raw!, offerToken: plan.offerToken);
+                            } else {
+                              try {
+                                await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
+                                _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
+                              } catch (e) {
+                                _snack(context, 'Fake buy failed: $e');
+                              }
+
+                              // Fake purchase
+                              // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('subscription.buy_now').tr(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            )
-          : null,
+              )
+            : null,
       ),
       body: SafeArea(
         child: ListView(
