@@ -5,6 +5,17 @@ import { UserAdminService } from 'src/services/user-admin.service';
 
 export type Period = 'monthly' | 'yearly';
 
+export type EntitlementStatus =
+  | 'active'
+  | 'in_grace_period'
+  | 'on_hold'
+  | 'paused'
+  | 'canceled_pending_expiry'
+  | 'expired'
+  | 'revoked'
+  | 'pending'
+  | 'pending_purchase_canceled';
+
 export type EntitlementWebhookBody = {
   userId: string;
   email: string;
@@ -15,6 +26,21 @@ export type EntitlementWebhookBody = {
   seats?: number;
   shareEnabled?: boolean;
   signature: string;       // HMAC-SHA256(JSON(payload_without_signature))
+
+  // Optional fields for normalized entitlement snapshots from external billing service.
+  schemaVersion?: 2;
+  eventId?: string;
+  eventTimeMs?: number;
+  source?: 'google_play_rtdn' | 'app_store_server_notification';
+  platform?: 'android' | 'ios';
+  entitlementStatus?: EntitlementStatus;
+  autoRenewEnabled?: boolean;
+  expiresAtMs?: number;
+  cancelReason?: 'user' | 'system' | 'developer' | 'replacement' | 'unknown';
+  providerNotificationType?: number;
+  providerSubscriptionState?: string;
+  purchaseToken?: string;
+  linkedPurchaseToken?: string;
 };
 
 type MlTier = 'free' | 'basic' | 'pro1' | 'pro2' | 'pro3' | 'premium';
@@ -40,6 +66,17 @@ type EntitlementData = {
   period?: Period;
   expiresAtMs?: number;
   purchaseToken?: string;
+  linkedPurchaseToken?: string;
+  schemaVersion?: 2;
+  eventId?: string;
+  eventTimeMs?: number;
+  source?: 'google_play_rtdn' | 'app_store_server_notification';
+  platform?: 'android' | 'ios';
+  entitlementStatus?: EntitlementStatus;
+  autoRenewEnabled?: boolean;
+  cancelReason?: 'user' | 'system' | 'developer' | 'replacement' | 'unknown';
+  providerNotificationType?: number;
+  providerSubscriptionState?: string;
 };
 
 const PRODUCT_MAP: Record<string, ProductInfo> = {
@@ -68,12 +105,20 @@ const PRODUCT_MAP: Record<string, ProductInfo> = {
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
+  private static readonly RECENT_EVENT_IDS_LIMIT = 40;
 
   private readonly entitlements = new Map<string, EntitlementData>();
 
   private readonly purchaseTokenToUser = new Map<
     string,
     { userId: string; userEmail?: string; productId: string }
+  >();
+  private readonly entitlementEventMeta = new Map<
+    string,
+    {
+      lastEventTimeMs?: number;
+      recentEventIds: string[];
+    }
   >();
 
   constructor(private readonly userAdmin: UserAdminService,) { }
@@ -83,8 +128,91 @@ export class BillingService {
       ? Math.max(0, Math.floor(storageLimitGb))
       : 0;
 
-    if (limitGiB === 0) return 0;
+    if (limitGiB === 0) {
+      return 0;
+    }
     return limitGiB * 1024 ** 3;
+  }
+
+  private resolveStorageLimitGb(body: EntitlementWebhookBody): number {
+    const direct = Number(body.storageLimitGb);
+    if (Number.isFinite(direct)) {
+      return Math.max(0, Math.floor(direct));
+    }
+
+    // Keep a safe fallback for malformed payloads: if productId is known, use mapped size.
+    const mapped = PRODUCT_MAP[body.productId]?.storageLimitGb;
+    if (Number.isFinite(mapped)) {
+      return Math.max(0, Math.floor(mapped));
+    }
+
+    this.logger.warn(
+      `Entitlement webhook: invalid storageLimitGb for email=${body.email}, productId=${body.productId}. Fallback to 0.`,
+    );
+    return 0;
+  }
+
+  private parseEventId(input?: string): string | undefined {
+    const eventId = input?.trim();
+    return eventId || undefined;
+  }
+
+  private parseEventTimeMs(input?: number): number | undefined {
+    const value = typeof input === 'number' ? input : Number.NaN;
+    if (!Number.isFinite(value)) {
+      return undefined;
+    }
+
+    const normalized = Math.floor(value);
+    return normalized > 0 ? normalized : undefined;
+  }
+
+  private shouldSkipEvent(resolvedUserId: string, body: EntitlementWebhookBody): boolean {
+    const current = this.entitlementEventMeta.get(resolvedUserId);
+    if (current == null) {
+      return false;
+    }
+
+    const eventId = this.parseEventId(body.eventId);
+    if (eventId && current.recentEventIds.includes(eventId)) {
+      this.logger.log(`Entitlement webhook: duplicate event ignored userId=${resolvedUserId}, eventId=${eventId}`);
+      return true;
+    }
+
+    const eventTimeMs = this.parseEventTimeMs(body.eventTimeMs);
+    if (eventTimeMs != null && current.lastEventTimeMs != null && eventTimeMs < current.lastEventTimeMs) {
+      this.logger.warn(
+        `Entitlement webhook: stale event ignored userId=${resolvedUserId}, eventTimeMs=${eventTimeMs}, lastEventTimeMs=${current.lastEventTimeMs}`,
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  private recordEventMeta(resolvedUserId: string, body: EntitlementWebhookBody): void {
+    const previous = this.entitlementEventMeta.get(resolvedUserId);
+    const previousIds = previous?.recentEventIds ?? [];
+    const recentEventIds = [...previousIds];
+
+    const eventId = this.parseEventId(body.eventId);
+    if (eventId && !recentEventIds.includes(eventId)) {
+      recentEventIds.push(eventId);
+      if (recentEventIds.length > BillingService.RECENT_EVENT_IDS_LIMIT) {
+        recentEventIds.splice(0, recentEventIds.length - BillingService.RECENT_EVENT_IDS_LIMIT);
+      }
+    }
+
+    const eventTimeMs = this.parseEventTimeMs(body.eventTimeMs);
+    let lastEventTimeMs = previous?.lastEventTimeMs;
+    if (eventTimeMs != null) {
+      lastEventTimeMs = Math.max(previous?.lastEventTimeMs ?? eventTimeMs, eventTimeMs);
+    }
+
+    this.entitlementEventMeta.set(resolvedUserId, {
+      lastEventTimeMs,
+      recentEventIds,
+    });
   }
 
   async getUsage(auth: AuthDto) {
@@ -98,16 +226,22 @@ export class BillingService {
 
     let state: 'ok' | 'warn' | 'critical' | 'blocked' = 'ok';
     if (limit && limit > 0) {
-      if (percent >= 100) state = 'blocked';
-      else if (percent >= 90) state = 'critical';
-      else if (percent >= 80) state = 'warn';
+      if (percent >= 100) {
+        state = 'blocked';
+      } else if (percent >= 90) {
+        state = 'critical';
+      } else if (percent >= 80) {
+        state = 'warn';
+      }
     }
+
+    const limitGb = limit == null ? null : (limit / (1024 ** 3)).toFixed(0);
 
     return {
       used_bytes: usage,
       limit_bytes: limit, // number | null
       used_gb: (usage / (1024 ** 3)).toFixed(2),
-      limit_gb: limit != null ? (limit / (1024 ** 3)).toFixed(0) : null,
+      limit_gb: limitGb,
       percent,
       state,
     };
@@ -123,16 +257,22 @@ export class BillingService {
 
     let state: 'ok' | 'warn' | 'critical' | 'blocked' = 'ok';
     if (limit && limit > 0) {
-      if (percent >= 100) state = 'blocked';
-      else if (percent >= 90) state = 'critical';
-      else if (percent >= 80) state = 'warn';
+      if (percent >= 100) {
+        state = 'blocked';
+      } else if (percent >= 90) {
+        state = 'critical';
+      } else if (percent >= 80) {
+        state = 'warn';
+      }
     }
+
+    const limitGb = limit == null ? null : (limit / (1024 ** 3)).toFixed(0);
 
     return {
       used_bytes: usage,
       limit_bytes: limit, // number | null
       used_gb: (usage / (1024 ** 3)).toFixed(2),
-      limit_gb: limit != null ? (limit / (1024 ** 3)).toFixed(0) : null,
+      limit_gb: limitGb,
       percent,
       state,
     };
@@ -146,7 +286,8 @@ export class BillingService {
 
     const { ...payloadWithoutSignature } = body;
 
-    const quotaSizeInBytes = this.computeQuotaBytes(body.storageLimitGb);
+    const resolvedStorageLimitGb = this.resolveStorageLimitGb(body);
+    const quotaSizeInBytes = this.computeQuotaBytes(resolvedStorageLimitGb);
     // NOTE: previous logic used body.userId directly.
     // await this.userAdmin.updateUserQuota(body.userId, quotaSizeInBytes);
 
@@ -158,6 +299,11 @@ export class BillingService {
     }
 
     const resolvedUserId = user.id;
+
+    if (this.shouldSkipEvent(resolvedUserId, body)) {
+      return { ok: true };
+    }
+
     await this.userAdmin.updateUserQuota(resolvedUserId, quotaSizeInBytes);
 
     const entitlement: EntitlementData = {
@@ -165,11 +311,22 @@ export class BillingService {
       // NOTE: ensure we store the Immich user id, not the external one.
       userId: resolvedUserId,
       userEmail: body.email,
+      storageLimitGb: resolvedStorageLimitGb,
     };
 
     // NOTE: previous logic stored by body.userId.
     // this.entitlements.set(body.userId, entitlement);
     this.entitlements.set(resolvedUserId, entitlement);
+
+    if (body.purchaseToken) {
+      this.purchaseTokenToUser.set(body.purchaseToken, {
+        userId: resolvedUserId,
+        userEmail: body.email,
+        productId: body.productId,
+      });
+    }
+
+    this.recordEventMeta(resolvedUserId, body);
 
     return { ok: true };
   }
