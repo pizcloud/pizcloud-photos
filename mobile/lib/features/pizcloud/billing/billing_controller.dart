@@ -9,6 +9,7 @@ class BillingController extends StateNotifier<BillingState> {
 
   final BillingRepository repo;
   final IapService iap;
+  bool _isRefreshing = false;
 
   Future<void> init() async {
     try {
@@ -69,13 +70,23 @@ class BillingController extends StateNotifier<BillingState> {
     }
   }
 
-  // OLD:
-  // Future<void> buy(ProductDetails p) => repo.purchase(p);
   Future<void> buy(ProductDetails p, {String? offerToken}) => repo.purchase(p, offerToken: offerToken);
   Future<void> refreshUsage() async {
-    final usage = await repo.loadUsage();
-    final referral = await repo.loadReferralSummary();
-    state = state.copy(usage: usage, referral: referral);
+    if (_isRefreshing) {
+      return;
+    }
+
+    _isRefreshing = true;
+    try {
+      final ent = await repo.loadEntitlement();
+      final usage = await repo.loadUsage();
+      final referral = await repo.loadReferralSummary();
+      state = state.copy(entitlement: ent, usage: usage, referral: referral);
+    } catch (e) {
+      state = state.copy(error: '$e');
+    } finally {
+      _isRefreshing = false;
+    }
   }
 
   Future<void> restore() => iap.restore();

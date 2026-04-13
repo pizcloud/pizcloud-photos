@@ -62,6 +62,98 @@ Color _bannerColor(String s, BuildContext context) {
   }
 }
 
+DateTime? _parseEntitlementExpiry(dynamic raw) {
+  if (raw is num) {
+    final ms = raw.toInt();
+    if (ms > 0) {
+      return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal();
+    }
+  }
+  if (raw is String) {
+    final ms = int.tryParse(raw);
+    if (ms != null && ms > 0) {
+      return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal();
+    }
+  }
+  return null;
+}
+
+String _formatShortDate(DateTime date) {
+  final y = date.year.toString().padLeft(4, '0');
+  final m = date.month.toString().padLeft(2, '0');
+  final d = date.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
+}
+
+Color _entitlementBannerColor(String status, BuildContext context) {
+  switch (status) {
+    case 'canceled_pending_expiry':
+      return const Color.fromARGB(255, 229, 121, 32);
+    case 'in_grace_period':
+      return const Color.fromARGB(255, 216, 112, 27);
+    case 'on_hold':
+    case 'paused':
+      return const Color.fromARGB(255, 185, 95, 21);
+    case 'expired':
+    case 'revoked':
+    case 'pending_purchase_canceled':
+      return Colors.red.shade300;
+    default:
+      return Theme.of(context).colorScheme.secondaryContainer;
+  }
+}
+
+String _entitlementStatusTitle(String status) {
+  switch (status) {
+    case 'canceled_pending_expiry':
+      return 'subscription.entitlement_title_canceled_pending_expiry'.tr();
+    case 'in_grace_period':
+      return 'subscription.entitlement_title_in_grace_period'.tr();
+    case 'on_hold':
+      return 'subscription.entitlement_title_on_hold'.tr();
+    case 'paused':
+      return 'subscription.entitlement_title_paused'.tr();
+    case 'expired':
+      return 'subscription.entitlement_title_expired'.tr();
+    case 'revoked':
+      return 'subscription.entitlement_title_revoked'.tr();
+    case 'pending_purchase_canceled':
+      return 'subscription.entitlement_title_pending_purchase_canceled'.tr();
+    case 'pending':
+      return 'subscription.entitlement_title_pending'.tr();
+    default:
+      return 'subscription.entitlement_title_default'.tr();
+  }
+}
+
+String _entitlementStatusMessage(String status, DateTime? expiresAt) {
+  switch (status) {
+    case 'canceled_pending_expiry':
+      if (expiresAt != null) {
+        return 'subscription.entitlement_message_canceled_pending_expiry_with_date'.tr(
+          namedArgs: {'date': _formatShortDate(expiresAt)},
+        );
+      }
+      return 'subscription.entitlement_message_canceled_pending_expiry'.tr();
+    case 'in_grace_period':
+      return 'subscription.entitlement_message_in_grace_period'.tr();
+    case 'on_hold':
+      return 'subscription.entitlement_message_on_hold'.tr();
+    case 'paused':
+      return 'subscription.entitlement_message_paused'.tr();
+    case 'expired':
+      return 'subscription.entitlement_message_expired'.tr();
+    case 'revoked':
+      return 'subscription.entitlement_message_revoked'.tr();
+    case 'pending_purchase_canceled':
+      return 'subscription.entitlement_message_pending_purchase_canceled'.tr();
+    case 'pending':
+      return 'subscription.entitlement_message_pending'.tr();
+    default:
+      return 'subscription.entitlement_message_default'.tr();
+  }
+}
+
 void _snack(BuildContext c, String msg) => ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));
 
 List<String> _featuresFor(String idOrTitle) {
@@ -380,10 +472,16 @@ class BillingPage extends HookConsumerWidget {
     final theme = Theme.of(context);
 
     final state = ref.watch(billingControllerProvider) as dynamic;
-    // final ctl = ref.read(billingControllerProvider.notifier);
+    final ctl = ref.read(billingControllerProvider.notifier);
 
+    final entitlement = state.entitlement as Map<String, dynamic>?;
     final usage = state.usage as Map<String, dynamic>?;
     final referral = state.referral as Map<String, dynamic>?;
+    final rawEntitlementStatus = entitlement?['entitlementStatus'];
+    final entitlementStatus = rawEntitlementStatus is String ? rawEntitlementStatus.trim().toLowerCase() : null;
+    final entitlementExpiry = _parseEntitlementExpiry(entitlement?['expiresAtMs']);
+    final showEntitlementBanner =
+        entitlementStatus != null && entitlementStatus.isNotEmpty && entitlementStatus != 'active';
 
     // Check if the user has a valid referral discount
     bool hasReferralDiscount = false;
@@ -530,6 +628,17 @@ class BillingPage extends HookConsumerWidget {
       return null;
     }, [period.value]);
 
+    useEffect(() {
+      Future.microtask(ctl.refreshUsage);
+      return null;
+    }, const []);
+
+    useOnAppLifecycleStateChange((_, state) {
+      if (state == AppLifecycleState.resumed) {
+        Future.microtask(ctl.refreshUsage);
+      }
+    });
+
     final showCta = selectedPlan.value != null;
 
     return PlatformScaffold(
@@ -580,7 +689,9 @@ class BillingPage extends HookConsumerWidget {
                             final plan = selectedPlan.value!;
                             if (plan.raw != null) {
                               // Real purchase
-                              ref.read(billingControllerProvider.notifier).buy(plan.raw!, offerToken: plan.offerToken);
+                              await ref
+                                  .read(billingControllerProvider.notifier)
+                                  .buy(plan.raw!, offerToken: plan.offerToken);
                             } else {
                               try {
                                 await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
@@ -609,6 +720,30 @@ class BillingPage extends HookConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 120), // extra bottom for CTA
           children: [
+            if (showEntitlementBanner) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _entitlementBannerColor('canceled_pending_expiry', context),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _entitlementStatusTitle(entitlementStatus),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _entitlementStatusMessage(entitlementStatus, entitlementExpiry),
+                      style: theme.textTheme.bodySmall?.copyWith(height: 1.25),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             if (usage != null) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -796,7 +931,6 @@ class BillingPage extends HookConsumerWidget {
               height: 44,
               child: ElevatedButton(
                 onPressed: () async {
-                  final entitlement = state.entitlement as Map<String, dynamic>?;
                   final activeProductId = entitlement?['productId'] as String?;
                   await _openManageSubscription(context, ref, productId: activeProductId);
                 },

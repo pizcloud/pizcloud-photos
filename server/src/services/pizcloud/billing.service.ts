@@ -288,10 +288,8 @@ export class BillingService {
 
     const resolvedStorageLimitGb = this.resolveStorageLimitGb(body);
     const quotaSizeInBytes = this.computeQuotaBytes(resolvedStorageLimitGb);
-    // NOTE: previous logic used body.userId directly.
     // await this.userAdmin.updateUserQuota(body.userId, quotaSizeInBytes);
 
-    // NOTE: new logic resolves the Immich user by email.
     const user = await this.userAdmin.getByEmail(body.email);
     if (!user) {
       this.logger.warn(`Entitlement webhook: user not found for email=${body.email}`);
@@ -308,14 +306,11 @@ export class BillingService {
 
     const entitlement: EntitlementData = {
       ...payloadWithoutSignature,
-      // NOTE: ensure we store the Immich user id, not the external one.
       userId: resolvedUserId,
       userEmail: body.email,
       storageLimitGb: resolvedStorageLimitGb,
     };
 
-    // NOTE: previous logic stored by body.userId.
-    // this.entitlements.set(body.userId, entitlement);
     this.entitlements.set(resolvedUserId, entitlement);
 
     if (body.purchaseToken) {

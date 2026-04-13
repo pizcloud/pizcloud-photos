@@ -190,6 +190,11 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
       return;
     }
 
+    if (_isBillingSubscriptionNotificationType(type)) {
+      await _openBillingFromPush();
+      return;
+    }
+
     if (type != 'album_invite') {
       return;
     }
@@ -200,6 +205,10 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
     }
 
     await _openAlbumFromPush(albumId);
+  }
+
+  bool _isBillingSubscriptionNotificationType(String type) {
+    return type.startsWith('billing_subscription_');
   }
 
   String? _extractAlbumIdFromNotification(Map<String, dynamic> data) {
@@ -249,6 +258,20 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
       } else {
         unawaited(appRouter.navigate(const TabControllerRoute(children: [AlbumsRoute()])));
       }
+    });
+  }
+
+  Future<void> _openBillingFromPush() async {
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      unawaited(ref.read(appRouterProvider).navigate(const BillingRoute()));
     });
   }
   // #pizcloud
