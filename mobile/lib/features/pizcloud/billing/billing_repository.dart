@@ -16,9 +16,8 @@ class BillingRepository {
 
   Future<Map<String, dynamic>?> loadReferralSummary() => api.getReferralSummary();
 
-  // OLD:
-  // Future<void> purchase(ProductDetails p) => iap.buy(p);
-  Future<void> purchase(ProductDetails p, {String? offerToken}) => iap.buy(p, offerToken: offerToken);
+  Future<void> purchase(ProductDetails p, {String? offerToken, String? activeProductId}) =>
+      iap.buy(p, offerToken: offerToken, activeProductId: activeProductId);
 
   Future<void> handlePurchase(PurchaseDetails p) async {
     if (p.status == PurchaseStatus.pending) return;

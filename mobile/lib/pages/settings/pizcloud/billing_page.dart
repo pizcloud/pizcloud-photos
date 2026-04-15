@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:auto_route/auto_route.dart';
@@ -7,6 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 // import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'dart:io';
+import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/features/pizcloud/billing/android_offer_utils.dart';
 // import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
 import 'package:immich_mobile/providers/pizcloud/billing.provider.dart';
@@ -17,7 +19,7 @@ import 'package:easy_localization/easy_localization.dart';
 /// ===============================================================
 ///                FAKE MODE (UI DEMO WITHOUT IAP)
 /// ===============================================================
-const bool kUseFakeProducts = true;
+const bool kUseFakeProducts = !kReleaseMode && AppConfig.enableBillingFakeProducts;
 
 class FakeProduct {
   final String id;
@@ -184,14 +186,48 @@ bool _isMostPopular(String idOrTitle) {
 }
 
 String _planShortTitle(String title, String id) {
-  final t = title.trim();
-  if (t.toLowerCase().contains('basic')) return 'Basic';
-  if (t.toLowerCase().contains('pro1')) return 'Pro1';
-  if (t.toLowerCase().contains('pro2')) return 'Pro2';
-  if (t.toLowerCase().contains('pro3')) return 'Pro3';
-  if (t.toLowerCase().contains('premium')) return 'Premium';
-  if (id.contains('2tb')) return 'Premium';
-  if (id.contains('100')) return 'Pro1';
+  final normalizedId = id.trim().toLowerCase();
+
+  const idToPlanName = <String, String>{
+    'storage_50gb_monthly': 'Basic',
+    'storage_50gb_yearly': 'Basic',
+    'storage_100g_monthly': 'Pro1',
+    'storage_100g_yearly': 'Pro1',
+    'storage_500gb_monthly': 'Pro2',
+    'storage_500gb_yearly': 'Pro2',
+    'storage_1tb_monthly': 'Pro3',
+    'storage_1tb_yearly': 'Pro3',
+    'storage_2tb_monthly': 'Premium',
+    'storage_2tb_yearly': 'Premium',
+  };
+
+  final planByExactId = idToPlanName[normalizedId];
+  if (planByExactId != null) return planByExactId;
+
+  final sizeGb = _planStorageGb(normalizedId);
+  if (sizeGb >= 2000) return 'Premium';
+  if (sizeGb >= 1000) return 'Pro3';
+  if (sizeGb >= 500) return 'Pro2';
+  if (sizeGb >= 100) return 'Pro1';
+
+  final t = title.trim().toLowerCase();
+
+  if (t.contains('premium') || t.contains('2tb') || t.contains('2 tb') || t.contains('2000')) {
+    return 'Premium';
+  }
+  if (t.contains('pro3') || t.contains('1tb') || t.contains('1 tb') || t.contains('1000')) {
+    return 'Pro3';
+  }
+  if (t.contains('pro2') || t.contains('500')) {
+    return 'Pro2';
+  }
+  if (t.contains('pro1') || t.contains('100')) {
+    return 'Pro1';
+  }
+  if (t.contains('basic') || t.contains('50')) {
+    return 'Basic';
+  }
+
   return 'Basic';
 }
 
@@ -211,6 +247,63 @@ bool _isLargePlan(String idOrTitleOrDesc) {
       s.contains('50gb') ||
       s.contains('100 g') ||
       s.contains('100g');
+}
+
+int _planStorageGb(String idOrTitle) {
+  final value = idOrTitle.toLowerCase();
+  if (value.contains('2tb')) return 2000;
+  if (value.contains('1tb')) return 1000;
+  if (value.contains('500')) return 500;
+  if (value.contains('200')) return 200;
+  if (value.contains('100')) return 100;
+  if (value.contains('50')) return 50;
+  return 0;
+}
+
+bool _isEntitlementActiveForPurchaseGuard(String? status) {
+  if (status == null || status.isEmpty) {
+    // Legacy payloads may omit status. If productId exists, treat as active.
+    return true;
+  }
+
+  switch (status) {
+    case 'expired':
+    case 'revoked':
+    case 'pending_purchase_canceled':
+      return false;
+    default:
+      return true;
+  }
+}
+
+String _ctaButtonLabel({
+  required PlanDisplay selectedPlan,
+  required String? activeProductId,
+  required bool hasActiveEntitlement,
+}) {
+  if (!hasActiveEntitlement || activeProductId == null || activeProductId.isEmpty) {
+    return 'subscription.buy_now'.tr();
+  }
+
+  final selectedSize = _planStorageGb(selectedPlan.id);
+  final activeSize = _planStorageGb(activeProductId);
+
+  if (selectedSize > activeSize) {
+    return 'subscription.cta_upgrade_now'.tr();
+  }
+
+  if (selectedSize < activeSize) {
+    return 'subscription.cta_downgrade_next_cycle'.tr();
+  }
+
+  final selectedMonthly = selectedPlan.isMonthly;
+  final activeMonthly = _looksMonthly(activeProductId);
+
+  if (selectedMonthly != activeMonthly) {
+    return 'subscription.cta_change_billing_cycle'.tr();
+  }
+
+  return 'subscription.buy_now'.tr();
 }
 
 String _androidOfferDisplayPrice(AndroidOfferInfo info) {
@@ -258,9 +351,16 @@ class _PlanCard extends StatelessWidget {
   final PlanDisplay data;
   final BillingPeriod period;
   final bool selected;
+  final bool disabled;
   final VoidCallback onSelect;
 
-  const _PlanCard({required this.data, required this.period, required this.selected, required this.onSelect});
+  const _PlanCard({
+    required this.data,
+    required this.period,
+    required this.selected,
+    this.disabled = false,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +388,7 @@ class _PlanCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: onSelect,
+        onTap: disabled ? null : onSelect,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
           child: Column(
@@ -438,18 +538,18 @@ class _PlanCard extends StatelessWidget {
                 height: 44,
                 child: data.highlighted
                     ? ElevatedButton(
-                        onPressed: onSelect,
+                        onPressed: disabled ? null : onSelect,
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('billing.select_plan').tr(),
+                        child: Text(disabled ? 'selected'.tr() : 'billing.select_plan'.tr()),
                       )
                     : OutlinedButton(
-                        onPressed: onSelect,
+                        onPressed: disabled ? null : onSelect,
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('billing.select_plan').tr(),
+                        child: Text(disabled ? 'selected'.tr() : 'billing.select_plan'.tr()),
                       ),
               ),
             ],
@@ -479,6 +579,12 @@ class BillingPage extends HookConsumerWidget {
     final referral = state.referral as Map<String, dynamic>?;
     final rawEntitlementStatus = entitlement?['entitlementStatus'];
     final entitlementStatus = rawEntitlementStatus is String ? rawEntitlementStatus.trim().toLowerCase() : null;
+    final rawActiveProductId = entitlement?['productId'];
+    final activeProductId = rawActiveProductId is String ? rawActiveProductId.trim() : null;
+    final hasActiveEntitlement =
+        activeProductId != null &&
+        activeProductId.isNotEmpty &&
+        _isEntitlementActiveForPurchaseGuard(entitlementStatus);
     final entitlementExpiry = _parseEntitlementExpiry(entitlement?['expiresAtMs']);
     final showEntitlementBanner =
         entitlementStatus != null && entitlementStatus.isNotEmpty && entitlementStatus != 'active';
@@ -505,6 +611,7 @@ class BillingPage extends HookConsumerWidget {
 
     // Selected plan (for sticky CTA)
     final selectedPlan = useState<PlanDisplay?>(null);
+    final isBuying = useState(false);
 
     // Real products if any
     final List<ProductDetails> realProducts = (state.products as List<ProductDetails>? ?? const []);
@@ -639,7 +746,20 @@ class BillingPage extends HookConsumerWidget {
       }
     });
 
-    final showCta = selectedPlan.value != null;
+    final selectedIsCurrentPlan =
+        selectedPlan.value != null && hasActiveEntitlement && activeProductId == selectedPlan.value!.id;
+    final currentProductIdForDisplay = activeProductId ?? '';
+
+    // final showCta = selectedPlan.value != null;
+    final showCta = selectedPlan.value != null && !selectedIsCurrentPlan;
+
+    final ctaButtonText = selectedPlan.value == null
+        ? 'subscription.buy_now'.tr()
+        : _ctaButtonLabel(
+            selectedPlan: selectedPlan.value!,
+            activeProductId: activeProductId,
+            hasActiveEntitlement: hasActiveEntitlement,
+          );
 
     return PlatformScaffold(
       appBar: PlatformAppBar(
@@ -685,29 +805,49 @@ class BillingPage extends HookConsumerWidget {
                       SizedBox(
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: () async {
-                            final plan = selectedPlan.value!;
-                            if (plan.raw != null) {
-                              // Real purchase
-                              await ref
-                                  .read(billingControllerProvider.notifier)
-                                  .buy(plan.raw!, offerToken: plan.offerToken);
-                            } else {
-                              try {
-                                await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
-                                _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
-                              } catch (e) {
-                                _snack(context, 'Fake buy failed: $e');
-                              }
+                          onPressed: isBuying.value
+                              ? null
+                              : () async {
+                                  final plan = selectedPlan.value;
+                                  if (plan == null) return;
 
-                              // Fake purchase
-                              // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
-                            }
-                          },
+                                  if (hasActiveEntitlement && activeProductId == plan.id) {
+                                    _snack(context, 'subscription.current_plan_already_active'.tr());
+                                    return;
+                                  }
+
+                                  isBuying.value = true;
+                                  try {
+                                    if (plan.raw != null) {
+                                      // Real purchase
+                                      await ref
+                                          .read(billingControllerProvider.notifier)
+                                          // .buy(plan.raw!, offerToken: plan.offerToken);
+                                          .buy(
+                                            plan.raw!,
+                                            offerToken: plan.offerToken,
+                                            activeProductId: activeProductId,
+                                          );
+                                    } else {
+                                      try {
+                                        await ref.read(billingControllerProvider.notifier).fakeBuy(plan.id);
+                                        _snack(context, 'Pretend buy (sent to server): ${plan.id} (${plan.price})');
+                                      } catch (e) {
+                                        _snack(context, 'Fake buy failed: $e');
+                                      }
+
+                                      // Fake purchase
+                                      // _snack(context, 'Pretend buy: ${plan.id} (${plan.price})');
+                                    }
+                                  } finally {
+                                    isBuying.value = false;
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text('subscription.buy_now').tr(),
+                          // child: const Text('subscription.buy_now').tr(),
+                          child: Text(isBuying.value ? 'please_wait'.tr() : ctaButtonText),
                         ),
                       ),
                     ],
@@ -780,6 +920,28 @@ class BillingPage extends HookConsumerWidget {
               ),
               const SizedBox(height: 16),
             ],
+            if (hasActiveEntitlement) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
+                ),
+                child: Text(
+                  'subscription.current_plan_banner'.tr(
+                    namedArgs: {
+                      'plan': _planShortTitle('', currentProductIdForDisplay),
+                      'period': _looksMonthly(currentProductIdForDisplay)
+                          ? 'subscription.period_monthly'.tr()
+                          : 'subscription.period_yearly'.tr(),
+                    },
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
 
             // Header icon + title + sub
             Column(
@@ -846,11 +1008,24 @@ class BillingPage extends HookConsumerWidget {
 
             // Plan cards
             for (final it in filtered)
-              _PlanCard(
-                data: it,
-                period: period.value,
-                selected: selectedPlan.value?.id == it.id,
-                onSelect: () => selectedPlan.value = it,
+              Builder(
+                builder: (_) {
+                  final isCurrentPlan = hasActiveEntitlement && activeProductId == it.id;
+                  return _PlanCard(
+                    data: it,
+                    period: period.value,
+                    // selected: selectedPlan.value?.id == it.id,
+                    selected: selectedPlan.value?.id == it.id || isCurrentPlan,
+                    disabled: isCurrentPlan,
+                    onSelect: () {
+                      if (isCurrentPlan) {
+                        _snack(context, 'subscription.current_plan_already_active'.tr());
+                        return;
+                      }
+                      selectedPlan.value = it;
+                    },
+                  );
+                },
               ),
 
             const SizedBox(height: 8),

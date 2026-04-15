@@ -15,6 +15,14 @@ class AppConfig {
     defaultValue: 'com.pizcloud.photos',
   );
 
+  /// Enables fake billing products for local testing.
+  /// Must be explicitly enabled via:
+  ///   --dart-define=ENABLE_BILLING_FAKE_PRODUCTS=true
+  static const bool enableBillingFakeProducts = bool.fromEnvironment(
+    'ENABLE_BILLING_FAKE_PRODUCTS',
+    defaultValue: false,
+  );
+
   static const double minReferralWithdrawAmount = 5.0;
 
   static const String serverClientId = '68363837894-ukp9akn9uujb481sgpubbt9nq8s9c843.apps.googleusercontent.com';

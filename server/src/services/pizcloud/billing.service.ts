@@ -190,6 +190,51 @@ export class BillingService {
     return false;
   }
 
+  private isCancellationLikeStatus(status?: EntitlementStatus): boolean {
+    if (status == null) {
+      return false;
+    }
+
+    return (
+      status === 'canceled_pending_expiry' ||
+      status === 'expired' ||
+      status === 'revoked' ||
+      status === 'pending_purchase_canceled'
+    );
+  }
+
+  private shouldSkipQuotaDowngradeFromReplacedToken(
+    resolvedUserId: string,
+    body: EntitlementWebhookBody,
+    resolvedStorageLimitGb: number,
+  ): boolean {
+    const current = this.entitlements.get(resolvedUserId);
+    if (current == null) {
+      return false;
+    }
+
+    const currentToken = current.purchaseToken?.trim();
+    const incomingToken = body.purchaseToken?.trim();
+    if (!currentToken || !incomingToken || currentToken === incomingToken) {
+      return false;
+    }
+
+    if (!this.isCancellationLikeStatus(body.entitlementStatus)) {
+      return false;
+    }
+
+    if (resolvedStorageLimitGb >= current.storageLimitGb) {
+      return false;
+    }
+
+    this.logger.warn(
+      `Entitlement webhook: skip quota downgrade from replaced token userId=${resolvedUserId}, ` +
+      `incomingToken=${incomingToken}, currentToken=${currentToken}, incomingStatus=${body.entitlementStatus}, ` +
+      `incomingLimitGb=${resolvedStorageLimitGb}, currentLimitGb=${current.storageLimitGb}`,
+    );
+    return true;
+  }
+
   private recordEventMeta(resolvedUserId: string, body: EntitlementWebhookBody): void {
     const previous = this.entitlementEventMeta.get(resolvedUserId);
     const previousIds = previous?.recentEventIds ?? [];
@@ -299,6 +344,11 @@ export class BillingService {
     const resolvedUserId = user.id;
 
     if (this.shouldSkipEvent(resolvedUserId, body)) {
+      return { ok: true };
+    }
+
+    if (this.shouldSkipQuotaDowngradeFromReplacedToken(resolvedUserId, body, resolvedStorageLimitGb)) {
+      this.recordEventMeta(resolvedUserId, body);
       return { ok: true };
     }
 
