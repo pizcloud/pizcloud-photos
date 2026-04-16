@@ -2315,6 +2315,7 @@
     "period_yearly": "Yearly",
     "pretend_buy": "Pretend buy: {id} ({price})",
     "pretend_restore": "Pretend restore purchases",
+    "purchase_locked_manage_subscription": "Your subscription is paused or on hold. Please manage your current subscription in Google Play before purchasing another plan.",
     "restore_purchases": "Restore Purchases",
     "save_20": "Save 17%",
     "summary": "Usage: {used} / {limit} GB ({percent}%)",

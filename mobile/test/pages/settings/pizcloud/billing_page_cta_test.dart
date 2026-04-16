@@ -67,6 +67,50 @@ void main() {
 
     expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsOneWidget);
   });
+
+  testWidgets('locks purchase actions when entitlement status is paused', (tester) async {
+    _setLargeTestSurface(tester);
+
+    final controller = _TestBillingController(
+      initialState: BillingState(
+        loading: false,
+        products: [
+          _product(id: 'storage_100g_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
+        ],
+        entitlement: {'productId': 'storage_500gb_monthly', 'entitlementStatus': 'paused'},
+      ),
+    );
+
+    await _pumpBillingPage(tester, controller);
+
+    expect(find.text('subscription.purchase_locked_manage_subscription'.tr()), findsOneWidget);
+    expect(find.text('billing.select_plan'.tr()), findsNothing);
+    expect(find.text('subscription.cta_upgrade_now'.tr()), findsNothing);
+    expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsNothing);
+  });
+
+  testWidgets('locks purchase actions when entitlement status is on_hold', (tester) async {
+    _setLargeTestSurface(tester);
+
+    final controller = _TestBillingController(
+      initialState: BillingState(
+        loading: false,
+        products: [
+          _product(id: 'storage_100g_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
+        ],
+        entitlement: {'productId': 'storage_500gb_monthly', 'entitlementStatus': 'on_hold'},
+      ),
+    );
+
+    await _pumpBillingPage(tester, controller);
+
+    expect(find.text('subscription.purchase_locked_manage_subscription'.tr()), findsOneWidget);
+    expect(find.text('billing.select_plan'.tr()), findsNothing);
+    expect(find.text('subscription.cta_upgrade_now'.tr()), findsNothing);
+    expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsNothing);
+  });
 }
 
 void _setLargeTestSurface(WidgetTester tester) {

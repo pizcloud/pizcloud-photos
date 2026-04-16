@@ -276,6 +276,20 @@ bool _isEntitlementActiveForPurchaseGuard(String? status) {
   }
 }
 
+bool _isPurchaseLockedByEntitlementStatus(String? status) {
+  if (status == null || status.isEmpty) {
+    return false;
+  }
+
+  switch (status) {
+    case 'paused':
+    case 'on_hold':
+      return true;
+    default:
+      return false;
+  }
+}
+
 String _ctaButtonLabel({
   required PlanDisplay selectedPlan,
   required String? activeProductId,
@@ -585,6 +599,7 @@ class BillingPage extends HookConsumerWidget {
         activeProductId != null &&
         activeProductId.isNotEmpty &&
         _isEntitlementActiveForPurchaseGuard(entitlementStatus);
+    final isPurchaseLockedByStatus = _isPurchaseLockedByEntitlementStatus(entitlementStatus);
     final entitlementExpiry = _parseEntitlementExpiry(entitlement?['expiresAtMs']);
     final showEntitlementBanner =
         entitlementStatus != null && entitlementStatus.isNotEmpty && entitlementStatus != 'active';
@@ -736,6 +751,13 @@ class BillingPage extends HookConsumerWidget {
     }, [period.value]);
 
     useEffect(() {
+      if (isPurchaseLockedByStatus) {
+        selectedPlan.value = null;
+      }
+      return null;
+    }, [isPurchaseLockedByStatus]);
+
+    useEffect(() {
       Future.microtask(ctl.refreshUsage);
       return null;
     }, const []);
@@ -751,7 +773,7 @@ class BillingPage extends HookConsumerWidget {
     final currentProductIdForDisplay = activeProductId ?? '';
 
     // final showCta = selectedPlan.value != null;
-    final showCta = selectedPlan.value != null && !selectedIsCurrentPlan;
+    final showCta = selectedPlan.value != null && !selectedIsCurrentPlan && !isPurchaseLockedByStatus;
 
     final ctaButtonText = selectedPlan.value == null
         ? 'subscription.buy_now'.tr()
@@ -810,6 +832,11 @@ class BillingPage extends HookConsumerWidget {
                               : () async {
                                   final plan = selectedPlan.value;
                                   if (plan == null) return;
+
+                                  if (isPurchaseLockedByStatus) {
+                                    _snack(context, 'subscription.purchase_locked_manage_subscription'.tr());
+                                    return;
+                                  }
 
                                   if (hasActiveEntitlement && activeProductId == plan.id) {
                                     _snack(context, 'subscription.current_plan_already_active'.tr());
@@ -880,6 +907,21 @@ class BillingPage extends HookConsumerWidget {
                       style: theme.textTheme.bodySmall?.copyWith(height: 1.25),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (isPurchaseLockedByStatus) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.shade300),
+                ),
+                child: Text(
+                  'subscription.purchase_locked_manage_subscription'.tr(),
+                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1016,8 +1058,13 @@ class BillingPage extends HookConsumerWidget {
                     period: period.value,
                     // selected: selectedPlan.value?.id == it.id,
                     selected: selectedPlan.value?.id == it.id || isCurrentPlan,
-                    disabled: isCurrentPlan,
+                    disabled: isCurrentPlan || isPurchaseLockedByStatus,
                     onSelect: () {
+                      if (isPurchaseLockedByStatus) {
+                        _snack(context, 'subscription.purchase_locked_manage_subscription'.tr());
+                        return;
+                      }
+
                       if (isCurrentPlan) {
                         _snack(context, 'subscription.current_plan_already_active'.tr());
                         return;

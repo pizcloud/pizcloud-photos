@@ -2142,6 +2142,7 @@
     "period_yearly": "Theo năm",
     "pretend_buy": "Giả lập mua: {id} ({price})",
     "pretend_restore": "Giả lập khôi phục gói",
+    "purchase_locked_manage_subscription": "Gói đăng ký của bạn đang tạm dừng hoặc tạm giữ. Vui lòng quản lý gói hiện tại trên Google Play trước khi mua gói khác.",
     "restore_purchases": "Khôi phục gói đã mua",
     "save_20": "TK 17%",
     "summary": "Đang dùng: {used} / {limit} GB ({percent}%)",
