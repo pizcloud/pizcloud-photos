@@ -335,6 +335,33 @@ bool _isPurchaseLockedByEntitlementStatus(String? status) {
   }
 }
 
+bool? _parseBooleanFlag(dynamic raw) {
+  if (raw is bool) {
+    return raw;
+  }
+  if (raw is num) {
+    return raw != 0;
+  }
+  if (raw is String) {
+    final normalized = raw.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return null;
+}
+
+bool _isPurchaseLocked({required String? entitlementStatus, required bool? purchaseLocked}) {
+  // Purchase lock from server has priority when present (e.g. pause_scheduled).
+  if (purchaseLocked == true) {
+    return true;
+  }
+  return _isPurchaseLockedByEntitlementStatus(entitlementStatus);
+}
+
 String _ctaButtonLabel({
   required PlanDisplay selectedPlan,
   required String? activeProductId,
@@ -639,12 +666,13 @@ class BillingPage extends HookConsumerWidget {
     final rawEntitlementStatus = entitlement?['entitlementStatus'];
     final entitlementStatus = rawEntitlementStatus is String ? rawEntitlementStatus.trim().toLowerCase() : null;
     final rawActiveProductId = entitlement?['productId'];
+    final purchaseLocked = _parseBooleanFlag(entitlement?['purchaseLocked']);
     final activeProductId = rawActiveProductId is String ? rawActiveProductId.trim() : null;
     final hasActiveEntitlement =
         activeProductId != null &&
         activeProductId.isNotEmpty &&
         _isEntitlementActiveForPurchaseGuard(entitlementStatus);
-    final isPurchaseLockedByStatus = _isPurchaseLockedByEntitlementStatus(entitlementStatus);
+    final isPurchaseLocked = _isPurchaseLocked(entitlementStatus: entitlementStatus, purchaseLocked: purchaseLocked);
     final entitlementExpiry = _parseEntitlementExpiry(entitlement?['expiresAtMs']);
     final showEntitlementBanner =
         entitlementStatus != null && entitlementStatus.isNotEmpty && entitlementStatus != 'active';
@@ -843,11 +871,11 @@ class BillingPage extends HookConsumerWidget {
     }, [period.value]);
 
     useEffect(() {
-      if (isPurchaseLockedByStatus) {
+      if (isPurchaseLocked) {
         selectedPlan.value = null;
       }
       return null;
-    }, [isPurchaseLockedByStatus]);
+    }, [isPurchaseLocked]);
 
     useEffect(() {
       // Controller init() already loaded referral summary. Avoid immediate duplicate summary call on first open.
@@ -866,7 +894,7 @@ class BillingPage extends HookConsumerWidget {
     final currentProductIdForDisplay = activeProductId ?? '';
 
     // final showCta = selectedPlan.value != null;
-    final showCta = selectedPlan.value != null && !selectedIsCurrentPlan && !isPurchaseLockedByStatus;
+    final showCta = selectedPlan.value != null && !selectedIsCurrentPlan && !isPurchaseLocked;
 
     final ctaButtonText = selectedPlan.value == null
         ? 'subscription.buy_now'.tr()
@@ -926,7 +954,7 @@ class BillingPage extends HookConsumerWidget {
                                   final plan = selectedPlan.value;
                                   if (plan == null) return;
 
-                                  if (isPurchaseLockedByStatus) {
+                                  if (isPurchaseLocked) {
                                     _snack(context, 'subscription.purchase_locked_manage_subscription'.tr());
                                     return;
                                   }
@@ -1004,7 +1032,7 @@ class BillingPage extends HookConsumerWidget {
               ),
               const SizedBox(height: 12),
             ],
-            if (isPurchaseLockedByStatus) ...[
+            if (isPurchaseLocked) ...[
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -1151,9 +1179,9 @@ class BillingPage extends HookConsumerWidget {
                     period: period.value,
                     // selected: selectedPlan.value?.id == it.id,
                     selected: selectedPlan.value?.id == it.id || isCurrentPlan,
-                    disabled: isCurrentPlan || isPurchaseLockedByStatus,
+                    disabled: isCurrentPlan || isPurchaseLocked,
                     onSelect: () {
-                      if (isPurchaseLockedByStatus) {
+                      if (isPurchaseLocked) {
                         _snack(context, 'subscription.purchase_locked_manage_subscription'.tr());
                         return;
                       }

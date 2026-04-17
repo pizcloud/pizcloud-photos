@@ -111,6 +111,33 @@ void main() {
     expect(find.text('subscription.cta_upgrade_now'.tr()), findsNothing);
     expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsNothing);
   });
+
+  testWidgets('locks purchase actions when purchaseLocked is true even if entitlement is active', (tester) async {
+    _setLargeTestSurface(tester);
+
+    final controller = _TestBillingController(
+      initialState: BillingState(
+        loading: false,
+        products: [
+          _product(id: 'storage_100gb_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
+        ],
+        entitlement: {
+          'productId': 'storage_500gb_monthly',
+          'entitlementStatus': 'active',
+          'purchaseLocked': true,
+          'purchaseLockReason': 'pause_scheduled',
+        },
+      ),
+    );
+
+    await _pumpBillingPage(tester, controller);
+
+    expect(find.text('subscription.purchase_locked_manage_subscription'.tr()), findsOneWidget);
+    expect(find.text('billing.select_plan'.tr()), findsNothing);
+    expect(find.text('subscription.cta_upgrade_now'.tr()), findsNothing);
+    expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsNothing);
+  });
 }
 
 void _setLargeTestSurface(WidgetTester tester) {

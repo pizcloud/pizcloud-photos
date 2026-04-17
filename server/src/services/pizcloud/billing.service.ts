@@ -41,6 +41,11 @@ export type EntitlementWebhookBody = {
   providerSubscriptionState?: string;
   purchaseToken?: string;
   linkedPurchaseToken?: string;
+  // Optional additive signal for purchase lock state (independent from quota/entitlement state).
+  purchaseLocked?: boolean;
+  purchaseLockReason?: 'pause_scheduled' | 'paused' | 'on_hold' | 'none';
+  purchaseLockObservedAtMs?: number;
+  purchaseLockEffectiveAtMs?: number;
 };
 
 type MlTier = 'free' | 'basic' | 'pro1' | 'pro2' | 'pro3' | 'premium';
@@ -77,6 +82,10 @@ type EntitlementData = {
   cancelReason?: 'user' | 'system' | 'developer' | 'replacement' | 'unknown';
   providerNotificationType?: number;
   providerSubscriptionState?: string;
+  purchaseLocked?: boolean;
+  purchaseLockReason?: 'pause_scheduled' | 'paused' | 'on_hold' | 'none';
+  purchaseLockObservedAtMs?: number;
+  purchaseLockEffectiveAtMs?: number;
 };
 
 const PRODUCT_MAP: Record<string, ProductInfo> = {

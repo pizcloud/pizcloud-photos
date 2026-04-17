@@ -48,6 +48,39 @@ bool _isMonthlyProduct(ProductDetails product) {
   return isM || (!isM && !isY);
 }
 
+String? _normalizeOfferId(String? offerId) {
+  final value = offerId?.trim().toLowerCase();
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  return value;
+}
+
+@visibleForTesting
+bool hasReferralOfferId(String? offerId) {
+  final normalized = _normalizeOfferId(offerId);
+  if (normalized == null) {
+    return false;
+  }
+  return normalized == _referralOfferBaseTag || _referralOfferCyclesTag.hasMatch(normalized);
+}
+
+@visibleForTesting
+int? parseReferralCyclesOfferId(String? offerId) {
+  final normalized = _normalizeOfferId(offerId);
+  if (normalized == null) {
+    return null;
+  }
+  final match = _referralOfferCyclesTag.firstMatch(normalized);
+  if (match != null && match.groupCount >= 1) {
+    final parsed = int.tryParse(match.group(1) ?? '');
+    if (parsed != null && parsed > 0) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
 @visibleForTesting
 bool hasReferralOfferTag(Iterable<String> offerTags) {
   for (final raw in offerTags) {
@@ -75,6 +108,40 @@ int? parseReferralCyclesTag(Iterable<String> offerTags) {
 }
 
 @visibleForTesting
+bool isReferralOfferDetails(SubscriptionOfferDetailsWrapper offer) {
+  // Prefer explicit offerId naming convention first.
+  if (hasReferralOfferId(offer.offerId)) {
+    return true;
+  }
+  // Backward-compatible fallback for old deployments that rely only on offer tags.
+  return hasReferralOfferTag(offer.offerTags);
+}
+
+@visibleForTesting
+bool isGenericReferralOfferDetails(SubscriptionOfferDetailsWrapper offer) {
+  final normalizedId = _normalizeOfferId(offer.offerId);
+  if (normalizedId == _referralOfferBaseTag) {
+    return true;
+  }
+  for (final raw in offer.offerTags) {
+    if (raw.trim().toLowerCase() == _referralOfferBaseTag) {
+      return true;
+    }
+  }
+  return false;
+}
+
+@visibleForTesting
+int? parseReferralCyclesOfferDetails(SubscriptionOfferDetailsWrapper offer) {
+  // Offer ID has priority because most Play Console setups use offerId naming.
+  final fromOfferId = parseReferralCyclesOfferId(offer.offerId);
+  if (fromOfferId != null) {
+    return fromOfferId;
+  }
+  return parseReferralCyclesTag(offer.offerTags);
+}
+
+@visibleForTesting
 SubscriptionOfferDetailsWrapper? selectReferralOfferForRemainingCycles(
   List<SubscriptionOfferDetailsWrapper> offers, {
   required int targetCycles,
@@ -87,7 +154,7 @@ SubscriptionOfferDetailsWrapper? selectReferralOfferForRemainingCycles(
   var nearestLowerCycles = -1;
 
   for (final offer in offers) {
-    final cycles = parseReferralCyclesTag(offer.offerTags);
+    final cycles = parseReferralCyclesOfferDetails(offer);
     if (cycles == null) {
       continue;
     }
@@ -104,9 +171,19 @@ SubscriptionOfferDetailsWrapper? selectReferralOfferForRemainingCycles(
 }
 
 @visibleForTesting
+SubscriptionOfferDetailsWrapper? selectGenericReferralOffer(List<SubscriptionOfferDetailsWrapper> offers) {
+  for (final offer in offers) {
+    if (isGenericReferralOfferDetails(offer)) {
+      return offer;
+    }
+  }
+  return null;
+}
+
+@visibleForTesting
 SubscriptionOfferDetailsWrapper? selectFirstReferralOffer(List<SubscriptionOfferDetailsWrapper> offers) {
   for (final offer in offers) {
-    if (hasReferralOfferTag(offer.offerTags)) {
+    if (isReferralOfferDetails(offer)) {
       return offer;
     }
   }
@@ -148,6 +225,7 @@ List<AndroidOfferInfo> extractAndroidOffers(
         //     break;
         //   }
         // }
+        offer ??= selectGenericReferralOffer(offers);
         offer ??= selectFirstReferralOffer(offers);
       }
 
@@ -164,9 +242,9 @@ List<AndroidOfferInfo> extractAndroidOffers(
       offerToken = gp.offerToken;
     }
 
-    final tags = offer?.offerTags ?? const <String>[];
+    final offerId = offer?.offerId;
     // `referral-30` is backward-compatible. New strategy uses `referral-30-cycles-N`.
-    final isReferral = hasReferralOfferTag(tags);
+    final isReferral = (offer != null && isReferralOfferDetails(offer)) || hasReferralOfferId(offerId);
 
     result.add(AndroidOfferInfo(product: gp, offer: offer, isReferralOffer: isReferral, offerToken: offerToken));
   }
