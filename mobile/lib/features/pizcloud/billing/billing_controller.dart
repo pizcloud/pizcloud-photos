@@ -73,7 +73,7 @@ class BillingController extends StateNotifier<BillingState> {
   // Future<void> buy(ProductDetails p, {String? offerToken}) => repo.purchase(p, offerToken: offerToken);
   Future<void> buy(ProductDetails p, {String? offerToken, String? activeProductId}) =>
       repo.purchase(p, offerToken: offerToken, activeProductId: activeProductId);
-  Future<void> refreshUsage() async {
+  Future<void> refreshUsage({bool includeReferral = true}) async {
     if (_isRefreshing) {
       return;
     }
@@ -82,7 +82,7 @@ class BillingController extends StateNotifier<BillingState> {
     try {
       final ent = await repo.loadEntitlement();
       final usage = await repo.loadUsage();
-      final referral = await repo.loadReferralSummary();
+      final referral = includeReferral ? await repo.loadReferralSummary() : state.referral;
       state = state.copy(entitlement: ent, usage: usage, referral: referral);
     } catch (e) {
       state = state.copy(error: '$e');

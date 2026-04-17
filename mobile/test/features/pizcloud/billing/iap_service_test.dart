@@ -10,7 +10,7 @@ void main() {
 
     test('returns withTimeProration for upgrade', () {
       final mode = iapService.resolveReplacementModeForChange(
-        oldProductId: 'storage_100g_monthly',
+        oldProductId: 'storage_100gb_monthly',
         newProductId: 'storage_500gb_monthly',
       );
 
@@ -20,7 +20,7 @@ void main() {
     test('returns deferred for downgrade', () {
       final mode = iapService.resolveReplacementModeForChange(
         oldProductId: 'storage_500gb_monthly',
-        newProductId: 'storage_100g_monthly',
+        newProductId: 'storage_100gb_monthly',
       );
 
       expect(mode, ReplacementMode.deferred);
@@ -28,8 +28,8 @@ void main() {
 
     test('returns deferred for same tier but cycle change', () {
       final mode = iapService.resolveReplacementModeForChange(
-        oldProductId: 'storage_100g_monthly',
-        newProductId: 'storage_100g_yearly',
+        oldProductId: 'storage_100gb_monthly',
+        newProductId: 'storage_100gb_yearly',
       );
 
       expect(mode, ReplacementMode.deferred);
@@ -52,19 +52,19 @@ void main() {
       final selected = iapService.selectOldSubscriptionCandidate(
         [
           _purchase(productId: 'storage_1tb_monthly', purchaseTimeMs: 2000, isAutoRenewing: true),
-          _purchase(productId: 'storage_100g_monthly', purchaseTimeMs: 1000, isAutoRenewing: false),
+          _purchase(productId: 'storage_100gb_monthly', purchaseTimeMs: 1000, isAutoRenewing: false),
         ],
         targetProductId: 'storage_500gb_monthly',
-        activeProductId: 'storage_100g_monthly',
+        activeProductId: 'storage_100gb_monthly',
       );
 
-      expect(selected?.productID, 'storage_100g_monthly');
+      expect(selected?.productID, 'storage_100gb_monthly');
     });
 
     test('prefers higher score before purchase time', () {
       final selected = iapService.selectOldSubscriptionCandidate([
         _purchase(
-          productId: 'storage_100g_monthly',
+          productId: 'storage_100gb_monthly',
           purchaseTimeMs: 1000,
           isAutoRenewing: true,
           hasPendingUpdate: false,
@@ -77,7 +77,7 @@ void main() {
 
     test('uses newest purchase time when scores are tied', () {
       final selected = iapService.selectOldSubscriptionCandidate([
-        _purchase(productId: 'storage_100g_monthly', purchaseTimeMs: 1000, isAutoRenewing: true),
+        _purchase(productId: 'storage_100gb_monthly', purchaseTimeMs: 1000, isAutoRenewing: true),
         _purchase(productId: 'storage_1tb_monthly', purchaseTimeMs: 1500, isAutoRenewing: true),
       ], targetProductId: 'storage_500gb_monthly');
 
@@ -89,15 +89,15 @@ void main() {
         _purchase(productId: 'storage_500gb_monthly', purchaseTimeMs: 3000, isAutoRenewing: true),
         _purchase(productId: 'random_sku', purchaseTimeMs: 2500, isAutoRenewing: true),
         _purchase(
-          productId: 'storage_100g_monthly',
+          productId: 'storage_100gb_monthly',
           purchaseTimeMs: 2000,
           status: PurchaseStatus.pending,
           isAutoRenewing: true,
         ),
-        _purchase(productId: 'storage_100g_yearly', purchaseTimeMs: 1000, isAutoRenewing: false),
+        _purchase(productId: 'storage_100gb_yearly', purchaseTimeMs: 1000, isAutoRenewing: false),
       ], targetProductId: 'storage_500gb_monthly');
 
-      expect(selected?.productID, 'storage_100g_yearly');
+      expect(selected?.productID, 'storage_100gb_yearly');
     });
 
     test('returns null when no valid candidate exists', () {
@@ -130,7 +130,7 @@ GooglePlayPurchaseDetails _purchase({
     isAcknowledged: true,
     purchaseState: _purchaseStateFromStatus(status),
     pendingPurchaseUpdate: hasPendingUpdate
-        ? const PendingPurchaseUpdateWrapper(purchaseToken: 'pending-token', products: ['storage_100g_monthly'])
+        ? const PendingPurchaseUpdateWrapper(purchaseToken: 'pending-token', products: ['storage_100gb_monthly'])
         : null,
   );
 

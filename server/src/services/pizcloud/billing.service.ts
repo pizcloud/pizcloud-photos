@@ -85,8 +85,8 @@ const PRODUCT_MAP: Record<string, ProductInfo> = {
   'storage_50gb_yearly': { planCode: '50GB', storageLimitGb: 50, mlTier: 'basic', seats: 1, shareEnabled: true, period: 'yearly' },
 
   // 100 GB
-  'storage_100g_monthly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro1', seats: 1, shareEnabled: true, period: 'monthly' },
-  'storage_100g_yearly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro1', seats: 1, shareEnabled: true, period: 'yearly' },
+  'storage_100gb_monthly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro1', seats: 1, shareEnabled: true, period: 'monthly' },
+  'storage_100gb_yearly': { planCode: '100G', storageLimitGb: 100, mlTier: 'pro1', seats: 1, shareEnabled: true, period: 'yearly' },
 
   // 500 GB
   'storage_500gb_monthly': { planCode: '500GB', storageLimitGb: 500, mlTier: 'pro2', seats: 1, shareEnabled: true, period: 'monthly' },

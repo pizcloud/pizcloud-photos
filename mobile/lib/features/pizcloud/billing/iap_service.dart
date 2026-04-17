@@ -14,8 +14,8 @@ class IapService {
   static const List<String> productIdOrder = [
     'storage_50gb_monthly',
     'storage_50gb_yearly',
-    'storage_100g_monthly',
-    'storage_100g_yearly',
+    'storage_100gb_monthly',
+    'storage_100gb_yearly',
     'storage_500gb_monthly',
     'storage_500gb_yearly',
     'storage_1tb_monthly',

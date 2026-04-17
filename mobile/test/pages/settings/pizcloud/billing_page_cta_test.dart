@@ -25,10 +25,10 @@ void main() {
       initialState: BillingState(
         loading: false,
         products: [
-          _product(id: 'storage_100g_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_100gb_monthly', title: 'Pro1', price: '\$0.4'),
           _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
         ],
-        entitlement: {'productId': 'storage_100g_monthly', 'entitlementStatus': 'active'},
+        entitlement: {'productId': 'storage_100gb_monthly', 'entitlementStatus': 'active'},
       ),
     );
 
@@ -50,7 +50,7 @@ void main() {
       initialState: BillingState(
         loading: false,
         products: [
-          _product(id: 'storage_100g_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_100gb_monthly', title: 'Pro1', price: '\$0.4'),
           _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
         ],
         entitlement: {'productId': 'storage_500gb_monthly', 'entitlementStatus': 'active'},
@@ -75,7 +75,7 @@ void main() {
       initialState: BillingState(
         loading: false,
         products: [
-          _product(id: 'storage_100g_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_100gb_monthly', title: 'Pro1', price: '\$0.4'),
           _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
         ],
         entitlement: {'productId': 'storage_500gb_monthly', 'entitlementStatus': 'paused'},
@@ -97,7 +97,7 @@ void main() {
       initialState: BillingState(
         loading: false,
         products: [
-          _product(id: 'storage_100g_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_100gb_monthly', title: 'Pro1', price: '\$0.4'),
           _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
         ],
         entitlement: {'productId': 'storage_500gb_monthly', 'entitlementStatus': 'on_hold'},
@@ -166,7 +166,7 @@ class _TestBillingController extends BillingController {
   Future<void> init() async {}
 
   @override
-  Future<void> refreshUsage() async {}
+  Future<void> refreshUsage({bool includeReferral = true}) async {}
 
   @override
   Future<void> buy(ProductDetails p, {String? offerToken, String? activeProductId}) async {}

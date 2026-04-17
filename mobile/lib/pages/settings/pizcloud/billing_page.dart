@@ -32,8 +32,8 @@ class FakeProduct {
 const List<FakeProduct> kFakeProducts = [
   FakeProduct('storage_50gb_monthly', 'Basic', '50 GB cloud storage billed monthly', '\$0.2'),
   FakeProduct('storage_50gb_yearly', 'Basic', '50 GB cloud storage billed yearly', '\$2,4'),
-  FakeProduct('storage_100g_monthly', 'Pro1', '100 GB cloud storage billed monthly', '\$0.4'),
-  FakeProduct('storage_100g_yearly', 'Pro1', '100 GB cloud storage billed yearly', '\$4.8'),
+  FakeProduct('storage_100gb_monthly', 'Pro1', '100 GB cloud storage billed monthly', '\$0.4'),
+  FakeProduct('storage_100gb_yearly', 'Pro1', '100 GB cloud storage billed yearly', '\$4.8'),
   FakeProduct('storage_500gb_monthly', 'Pro2', '500 GB cloud storage billed monthly', '\$5'),
   FakeProduct('storage_500gb_yearly', 'Pro2', '500 GB cloud storage billed yearly', '\$50'),
   FakeProduct('storage_1tb_monthly', 'Pro3', '1 TB cloud storage billed monthly', '\$10'),
@@ -85,6 +85,51 @@ String _formatShortDate(DateTime date) {
   final m = date.month.toString().padLeft(2, '0');
   final d = date.day.toString().padLeft(2, '0');
   return '$y-$m-$d';
+}
+
+int _remainingReferralCyclesUntil({
+  required DateTime nowUtc,
+  required DateTime discountEndUtc,
+  required int monthsPerCycle,
+}) {
+  if (monthsPerCycle <= 0 || !discountEndUtc.isAfter(nowUtc)) {
+    return 0;
+  }
+
+  // Keep a bounded loop to avoid any unexpected infinite edge case.
+  const maxCyclesSafety = 240;
+  var cycles = 0;
+  var cursor = nowUtc;
+
+  while (cycles < maxCyclesSafety && discountEndUtc.isAfter(cursor)) {
+    cycles += 1;
+    cursor = DateTime.utc(
+      cursor.year,
+      cursor.month + monthsPerCycle,
+      cursor.day,
+      cursor.hour,
+      cursor.minute,
+      cursor.second,
+      cursor.millisecond,
+      cursor.microsecond,
+    );
+  }
+
+  return cycles;
+}
+
+int? _safePositiveInt(dynamic input) {
+  if (input is num) {
+    final value = input.toInt();
+    return value >= 0 ? value : null;
+  }
+  if (input is String) {
+    final parsed = int.tryParse(input.trim());
+    if (parsed != null && parsed >= 0) {
+      return parsed;
+    }
+  }
+  return null;
 }
 
 Color _entitlementBannerColor(String status, BuildContext context) {
@@ -191,8 +236,8 @@ String _planShortTitle(String title, String id) {
   const idToPlanName = <String, String>{
     'storage_50gb_monthly': 'Basic',
     'storage_50gb_yearly': 'Basic',
-    'storage_100g_monthly': 'Pro1',
-    'storage_100g_yearly': 'Pro1',
+    'storage_100gb_monthly': 'Pro1',
+    'storage_100gb_yearly': 'Pro1',
     'storage_500gb_monthly': 'Pro2',
     'storage_500gb_yearly': 'Pro2',
     'storage_1tb_monthly': 'Pro3',
@@ -619,7 +664,46 @@ class BillingPage extends HookConsumerWidget {
       }
     }
 
+    final remainingDiscountCycles = referral?['remainingDiscountCycles'];
+    int? serverRemainingMonthlyCycles;
+    int? serverRemainingYearlyCycles;
+    if (remainingDiscountCycles is Map<String, dynamic>) {
+      serverRemainingMonthlyCycles = _safePositiveInt(remainingDiscountCycles['monthly']);
+      serverRemainingYearlyCycles = _safePositiveInt(remainingDiscountCycles['yearly']);
+    } else if (remainingDiscountCycles is Map) {
+      serverRemainingMonthlyCycles = _safePositiveInt(remainingDiscountCycles['monthly']);
+      serverRemainingYearlyCycles = _safePositiveInt(remainingDiscountCycles['yearly']);
+    }
+
+    final serverSaysReferralActive =
+        (serverRemainingMonthlyCycles != null && serverRemainingMonthlyCycles > 0) ||
+        (serverRemainingYearlyCycles != null && serverRemainingYearlyCycles > 0);
+
+    if (!hasReferralDiscount && serverSaysReferralActive) {
+      hasReferralDiscount = true;
+    }
+
     final bool referralStillValid = hasReferralDiscount;
+    int? referralRemainingMonthlyCycles = serverRemainingMonthlyCycles;
+    int? referralRemainingYearlyCycles = serverRemainingYearlyCycles;
+    if (referralStillValid &&
+        discountEndAt != null &&
+        (referralRemainingMonthlyCycles == null || referralRemainingYearlyCycles == null)) {
+      final nowUtc = DateTime.now().toUtc();
+      final discountEndUtc = discountEndAt.toUtc();
+
+      referralRemainingMonthlyCycles ??= _remainingReferralCyclesUntil(
+        nowUtc: nowUtc,
+        discountEndUtc: discountEndUtc,
+        monthsPerCycle: 1,
+      );
+
+      referralRemainingYearlyCycles ??= _remainingReferralCyclesUntil(
+        nowUtc: nowUtc,
+        discountEndUtc: discountEndUtc,
+        monthsPerCycle: 12,
+      );
+    }
 
     // Toggle Monthly / Yearly (default: Monthly)
     final period = useState(BillingPeriod.monthly);
@@ -656,7 +740,12 @@ class BillingPage extends HookConsumerWidget {
     } else {
       if (Platform.isAndroid) {
         // ANDROID: Use offer token, select the referral-30 offer if it is still valid
-        final androidOffers = extractAndroidOffers(realProducts, preferReferral: referralStillValid);
+        final androidOffers = extractAndroidOffers(
+          realProducts,
+          preferReferral: referralStillValid,
+          targetReferralCyclesMonthly: referralRemainingMonthlyCycles,
+          targetReferralCyclesYearly: referralRemainingYearlyCycles,
+        );
 
         final Map<String, AndroidOfferInfo> selectedByKey = {};
 
@@ -705,6 +794,9 @@ class BillingPage extends HookConsumerWidget {
               features: _featuresFor('${p.id} ${p.title} ${p.description}'),
               highlighted: _isMostPopular('${p.id} ${p.title}'),
               raw: p,
+              // referralDiscountApplied: referralStillValid && largePlan,
+              // Show discount hint when user is still in referral discount window.
+              // Actual purchase still depends on selected offerToken and Play eligibility.
               referralDiscountApplied: referralStillValid && largePlan,
               offerToken: entry.value.offerToken,
             ),
@@ -758,7 +850,8 @@ class BillingPage extends HookConsumerWidget {
     }, [isPurchaseLockedByStatus]);
 
     useEffect(() {
-      Future.microtask(ctl.refreshUsage);
+      // Controller init() already loaded referral summary. Avoid immediate duplicate summary call on first open.
+      Future.microtask(() => ctl.refreshUsage(includeReferral: false));
       return null;
     }, const []);
 
