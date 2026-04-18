@@ -1036,7 +1036,7 @@ class BillingPage extends HookConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade100,
+                  color: const Color.fromARGB(255, 223, 130, 53),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.orange.shade300),
                 ),
