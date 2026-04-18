@@ -13,24 +13,8 @@ class NotificationApiClient {
     required String platform, // "android" | "ios"
     String? appVersion,
     String? locale,
+    String? timeZone,
   }) async {
-    debugPrint('registerDevice-baseUrl: $baseUrl');
-    // Old http-based implementation (kept for reference)
-    // final res = await http.post(
-    //   Uri.parse('$baseUrl/notifications/devices'),
-    //   headers: {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json'},
-    //   body: jsonEncode({
-    //     'token': token,
-    //     'deviceId': deviceId,
-    //     'platform': platform,
-    //     if (appVersion != null) 'appVersion': appVersion,
-    //   }),
-    // );
-    // debugPrint('res.statusCode: ${res.statusCode}');
-    // if (res.statusCode != 201 && res.statusCode != 200) {
-    //   throw Exception('Failed to register device: ${res.statusCode} ${res.body}');
-    // }
-
     // New Dio-based implementation using PersistCookieJar (sid) + headers
     final client = await pizPersist.ApiPersistCookieJarService.instance(
       baseUrl: baseUrl,
@@ -38,6 +22,7 @@ class NotificationApiClient {
     );
     final normalizedLocale = locale?.trim();
     final effectiveLocale = (normalizedLocale == null || normalizedLocale.isEmpty) ? 'en' : normalizedLocale;
+    final normalizedTimeZone = timeZone?.trim();
 
     final res = await client.client.post<dynamic>(
       '/notifications/devices',
@@ -46,6 +31,7 @@ class NotificationApiClient {
         'deviceId': deviceId,
         'platform': platform,
         'locale': effectiveLocale,
+        if (normalizedTimeZone != null && normalizedTimeZone.isNotEmpty) 'timeZone': normalizedTimeZone,
         if (appVersion != null) 'appVersion': appVersion,
       },
     );

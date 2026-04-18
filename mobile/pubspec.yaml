@@ -98,6 +98,7 @@ dependencies:
   flutter_platform_widgets: ^10.0.1
   pizcloud_gallery:
     path: ../pizcloud-gallery
+  flutter_timezone: ^5.0.2
 
 dev_dependencies:
   auto_route_generator: ^9.0.0

@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   firebase_core
   flutter_secure_storage_windows
+  flutter_timezone
   flutter_udid
   geolocator_windows
   isar_community_flutter_libs

@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/intl.dart';
 
 import 'package:immich_mobile/features/pizcloud/notifications/notification_api_client.dart';
@@ -226,6 +227,7 @@ class PushNotificationService {
         deviceId: deviceId,
         platform: platform,
         locale: _resolveLocaleTag(locale),
+        timeZone: await _resolveTimeZoneTag(),
       );
     } catch (e) {
       rethrow;
@@ -238,6 +240,25 @@ class PushNotificationService {
       return 'en';
     }
     return raw.replaceAll('_', '-');
+  }
+
+  static Future<String> _resolveTimeZoneTag() async {
+    // Keep push registration platform-safe. If timezone cannot be resolved, fallback to UTC.
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return 'UTC';
+    }
+
+    try {
+      final resolved = await FlutterTimezone.getLocalTimezone();
+      final identifier = resolved.identifier.trim();
+      if (identifier.isNotEmpty) {
+        return identifier;
+      }
+    } catch (_) {
+      // Best-effort timezone sync; fallback below keeps existing registration flow unchanged.
+    }
+
+    return 'UTC';
   }
 
   static Future<void> syncDeviceLocale({String? locale}) async {
