@@ -354,6 +354,30 @@ bool? _parseBooleanFlag(dynamic raw) {
   return null;
 }
 
+String? _parseNormalizedString(dynamic raw) {
+  if (raw is String) {
+    final normalized = raw.trim().toLowerCase();
+    return normalized.isEmpty ? null : normalized;
+  }
+  return null;
+}
+
+String? _parsePaymentSyncState(dynamic raw) {
+  final normalized = _parseNormalizedString(raw);
+  if (normalized == 'awaiting_charge') {
+    return normalized;
+  }
+  return null;
+}
+
+bool _isAndroidPendingPlanSwitch({
+  required String? platform,
+  required String? entitlementStatus,
+  required String? paymentSyncState,
+}) {
+  return platform == 'android' && entitlementStatus == 'active' && paymentSyncState == 'awaiting_charge';
+}
+
 bool _isPurchaseLocked({required String? entitlementStatus, required bool? purchaseLocked}) {
   // Purchase lock from server has priority when present (e.g. pause_scheduled).
   if (purchaseLocked == true) {
@@ -665,6 +689,8 @@ class BillingPage extends HookConsumerWidget {
     final referral = state.referral as Map<String, dynamic>?;
     final rawEntitlementStatus = entitlement?['entitlementStatus'];
     final entitlementStatus = rawEntitlementStatus is String ? rawEntitlementStatus.trim().toLowerCase() : null;
+    final entitlementPlatform = _parseNormalizedString(entitlement?['platform']);
+    final paymentSyncState = _parsePaymentSyncState(entitlement?['paymentSyncState']);
     final rawActiveProductId = entitlement?['productId'];
     final purchaseLocked = _parseBooleanFlag(entitlement?['purchaseLocked']);
     final activeProductId = rawActiveProductId is String ? rawActiveProductId.trim() : null;
@@ -673,6 +699,16 @@ class BillingPage extends HookConsumerWidget {
         activeProductId.isNotEmpty &&
         _isEntitlementActiveForPurchaseGuard(entitlementStatus);
     final isPurchaseLocked = _isPurchaseLocked(entitlementStatus: entitlementStatus, purchaseLocked: purchaseLocked);
+    final isPendingPlanSwitch = _isAndroidPendingPlanSwitch(
+      platform: entitlementPlatform,
+      entitlementStatus: entitlementStatus,
+      paymentSyncState: paymentSyncState,
+    );
+    // OLD: purchase lock only considered paused/on_hold or explicit purchaseLocked flag.
+    final isPurchaseUiLocked = isPurchaseLocked || isPendingPlanSwitch;
+    final purchaseLockMessageKey = isPendingPlanSwitch
+        ? 'subscription.purchase_locked_pending_switch'
+        : 'subscription.purchase_locked_manage_subscription';
     final entitlementExpiry = _parseEntitlementExpiry(entitlement?['expiresAtMs']);
     final showEntitlementBanner =
         entitlementStatus != null && entitlementStatus.isNotEmpty && entitlementStatus != 'active';
@@ -871,11 +907,11 @@ class BillingPage extends HookConsumerWidget {
     }, [period.value]);
 
     useEffect(() {
-      if (isPurchaseLocked) {
+      if (isPurchaseUiLocked) {
         selectedPlan.value = null;
       }
       return null;
-    }, [isPurchaseLocked]);
+    }, [isPurchaseUiLocked]);
 
     useEffect(() {
       // Controller init() already loaded referral summary. Avoid immediate duplicate summary call on first open.
@@ -894,7 +930,7 @@ class BillingPage extends HookConsumerWidget {
     final currentProductIdForDisplay = activeProductId ?? '';
 
     // final showCta = selectedPlan.value != null;
-    final showCta = selectedPlan.value != null && !selectedIsCurrentPlan && !isPurchaseLocked;
+    final showCta = selectedPlan.value != null && !selectedIsCurrentPlan && !isPurchaseUiLocked;
 
     final ctaButtonText = selectedPlan.value == null
         ? 'subscription.buy_now'.tr()
@@ -954,8 +990,8 @@ class BillingPage extends HookConsumerWidget {
                                   final plan = selectedPlan.value;
                                   if (plan == null) return;
 
-                                  if (isPurchaseLocked) {
-                                    _snack(context, 'subscription.purchase_locked_manage_subscription'.tr());
+                                  if (isPurchaseUiLocked) {
+                                    _snack(context, purchaseLockMessageKey.tr());
                                     return;
                                   }
 
@@ -1032,7 +1068,7 @@ class BillingPage extends HookConsumerWidget {
               ),
               const SizedBox(height: 12),
             ],
-            if (isPurchaseLocked) ...[
+            if (isPurchaseUiLocked) ...[
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -1041,7 +1077,7 @@ class BillingPage extends HookConsumerWidget {
                   border: Border.all(color: Colors.orange.shade300),
                 ),
                 child: Text(
-                  'subscription.purchase_locked_manage_subscription'.tr(),
+                  purchaseLockMessageKey.tr(),
                   style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -1101,6 +1137,52 @@ class BillingPage extends HookConsumerWidget {
                     },
                   ),
                   style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (isPendingPlanSwitch && hasActiveEntitlement) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 255, 236, 206),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color.fromARGB(255, 236, 175, 83)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 236, 175, 83),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'subscription.pending_switch_badge'.tr(),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'subscription.pending_switch_message'.tr(
+                        namedArgs: {
+                          'plan': _planShortTitle('', currentProductIdForDisplay),
+                          'period': _looksMonthly(currentProductIdForDisplay)
+                              ? 'subscription.period_monthly'.tr()
+                              : 'subscription.period_yearly'.tr(),
+                        },
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, height: 1.3),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -1179,10 +1261,10 @@ class BillingPage extends HookConsumerWidget {
                     period: period.value,
                     // selected: selectedPlan.value?.id == it.id,
                     selected: selectedPlan.value?.id == it.id || isCurrentPlan,
-                    disabled: isCurrentPlan || isPurchaseLocked,
+                    disabled: isCurrentPlan || isPurchaseUiLocked,
                     onSelect: () {
-                      if (isPurchaseLocked) {
-                        _snack(context, 'subscription.purchase_locked_manage_subscription'.tr());
+                      if (isPurchaseUiLocked) {
+                        _snack(context, purchaseLockMessageKey.tr());
                         return;
                       }
 

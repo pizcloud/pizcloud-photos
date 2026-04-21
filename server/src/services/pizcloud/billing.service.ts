@@ -41,6 +41,7 @@ export type EntitlementWebhookBody = {
   providerSubscriptionState?: string;
   purchaseToken?: string;
   linkedPurchaseToken?: string;
+  paymentSyncState?: 'awaiting_charge';
   // Optional additive signal for purchase lock state (independent from quota/entitlement state).
   purchaseLocked?: boolean;
   purchaseLockReason?: 'pause_scheduled' | 'paused' | 'on_hold' | 'none';
@@ -82,6 +83,7 @@ type EntitlementData = {
   cancelReason?: 'user' | 'system' | 'developer' | 'replacement' | 'unknown';
   providerNotificationType?: number;
   providerSubscriptionState?: string;
+  paymentSyncState?: 'awaiting_charge';
   purchaseLocked?: boolean;
   purchaseLockReason?: 'pause_scheduled' | 'paused' | 'on_hold' | 'none';
   purchaseLockObservedAtMs?: number;
@@ -174,6 +176,21 @@ export class BillingService {
 
     const normalized = Math.floor(value);
     return normalized > 0 ? normalized : undefined;
+  }
+
+  private isAndroidAwaitingChargePendingSwitch(body: EntitlementWebhookBody): boolean {
+    const normalizedPlatform =
+      typeof body.platform === 'string' ? body.platform.trim().toLowerCase() : undefined;
+    const normalizedStatus =
+      typeof body.entitlementStatus === 'string'
+        ? body.entitlementStatus.trim().toLowerCase()
+        : undefined;
+
+    return (
+      normalizedPlatform === 'android' &&
+      normalizedStatus === 'active' &&
+      body.paymentSyncState === 'awaiting_charge'
+    );
   }
 
   private shouldSkipEvent(resolvedUserId: string, body: EntitlementWebhookBody): boolean {
@@ -351,6 +368,8 @@ export class BillingService {
     }
 
     const resolvedUserId = user.id;
+    const normalizedPaymentSyncState =
+      body.paymentSyncState === 'awaiting_charge' ? 'awaiting_charge' : undefined;
 
     if (this.shouldSkipEvent(resolvedUserId, body)) {
       return { ok: true };
@@ -361,26 +380,50 @@ export class BillingService {
       return { ok: true };
     }
 
-    await this.userAdmin.updateUserQuota(resolvedUserId, quotaSizeInBytes);
-
     const entitlement: EntitlementData = {
       ...payloadWithoutSignature,
       userId: resolvedUserId,
       userEmail: body.email,
       storageLimitGb: resolvedStorageLimitGb,
+      // Keep this optional and normalized to preserve backward compatibility.
+      paymentSyncState: normalizedPaymentSyncState,
     };
 
-    this.entitlements.set(resolvedUserId, entitlement);
+    const commitEntitlementSnapshot = (): void => {
+      this.entitlements.set(resolvedUserId, entitlement);
 
-    if (body.purchaseToken) {
-      this.purchaseTokenToUser.set(body.purchaseToken, {
-        userId: resolvedUserId,
-        userEmail: body.email,
-        productId: body.productId,
-      });
+      if (body.purchaseToken) {
+        this.purchaseTokenToUser.set(body.purchaseToken, {
+          userId: resolvedUserId,
+          userEmail: body.email,
+          productId: body.productId,
+        });
+      }
+
+      this.recordEventMeta(resolvedUserId, body);
+    };
+
+    const shouldDeferQuotaSync = this.isAndroidAwaitingChargePendingSwitch(body);
+    if (shouldDeferQuotaSync) {
+      this.logger.log(
+        `Entitlement webhook: defer quota sync for awaiting_charge userId=${resolvedUserId}, productId=${body.productId}`,
+      );
+      commitEntitlementSnapshot();
+      return { ok: true };
     }
 
-    this.recordEventMeta(resolvedUserId, body);
+    try {
+      await this.userAdmin.updateUserQuota(resolvedUserId, quotaSizeInBytes);
+    } catch (error) {
+      this.logger.error(
+        `Entitlement webhook: failed to sync quota userId=${resolvedUserId}, productId=${body.productId}, eventId=${body.eventId ?? '-'}, eventTimeMs=${body.eventTimeMs ?? '-'}`,
+        (error instanceof Error ? error.stack : String(error)) || String(error),
+      );
+      // Do not commit entitlement snapshot/meta on quota-sync failure to avoid temporary mismatch.
+      throw error;
+    }
+
+    commitEntitlementSnapshot();
 
     return { ok: true };
   }
