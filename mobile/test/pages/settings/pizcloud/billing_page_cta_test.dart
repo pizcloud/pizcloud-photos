@@ -139,7 +139,7 @@ void main() {
     expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsNothing);
   });
 
-  testWidgets('locks purchase actions when android entitlement is active + awaiting_charge', (tester) async {
+  testWidgets('locks purchase actions when android entitlement is pending + awaiting_charge', (tester) async {
     _setLargeTestSurface(tester);
 
     final controller = _TestBillingController(
@@ -152,7 +152,7 @@ void main() {
         entitlement: {
           'platform': 'android',
           'productId': 'storage_500gb_monthly',
-          'entitlementStatus': 'active',
+          'entitlementStatus': 'pending',
           'paymentSyncState': 'awaiting_charge',
         },
       ),
@@ -165,6 +165,31 @@ void main() {
     expect(find.text('billing.select_plan'.tr()), findsNothing);
     expect(find.text('subscription.cta_upgrade_now'.tr()), findsNothing);
     expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsNothing);
+  });
+
+  testWidgets('locks purchase actions when android entitlement is deferred + awaiting_charge', (tester) async {
+    _setLargeTestSurface(tester);
+
+    final controller = _TestBillingController(
+      initialState: BillingState(
+        loading: false,
+        products: [
+          _product(id: 'storage_100gb_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
+        ],
+        entitlement: {
+          'platform': 'android',
+          'productId': 'storage_500gb_monthly',
+          'entitlementStatus': 'deferred',
+          'paymentSyncState': 'awaiting_charge',
+        },
+      ),
+    );
+
+    await _pumpBillingPage(tester, controller);
+
+    expect(find.text('subscription.purchase_locked_pending_switch'.tr()), findsOneWidget);
+    expect(find.text('billing.select_plan'.tr()), findsNothing);
   });
 
   testWidgets('does not lock by pending-switch state on non-android platform', (tester) async {
@@ -212,7 +237,7 @@ void main() {
     expect(find.text('billing.select_plan'.tr()), findsOneWidget);
   });
 
-  testWidgets('clears pending-switch lock for cancel-like status before charge', (tester) async {
+  testWidgets('does not lock purchase actions for pending_purchase_canceled without awaiting_charge', (tester) async {
     _setLargeTestSurface(tester);
 
     final controller = _TestBillingController(
@@ -225,8 +250,7 @@ void main() {
         entitlement: {
           'platform': 'android',
           'productId': 'storage_500gb_monthly',
-          'entitlementStatus': 'revoked',
-          'paymentSyncState': 'awaiting_charge',
+          'entitlementStatus': 'pending_purchase_canceled',
         },
       ),
     );

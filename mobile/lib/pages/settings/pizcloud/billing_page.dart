@@ -370,12 +370,8 @@ String? _parsePaymentSyncState(dynamic raw) {
   return null;
 }
 
-bool _isAndroidPendingPlanSwitch({
-  required String? platform,
-  required String? entitlementStatus,
-  required String? paymentSyncState,
-}) {
-  return platform == 'android' && entitlementStatus == 'active' && paymentSyncState == 'awaiting_charge';
+bool _isAndroidPendingPlanSwitch({required String? platform, required String? paymentSyncState}) {
+  return platform == 'android' && paymentSyncState == 'awaiting_charge';
 }
 
 bool _isPurchaseLocked({required String? entitlementStatus, required bool? purchaseLocked}) {
@@ -701,7 +697,6 @@ class BillingPage extends HookConsumerWidget {
     final isPurchaseLocked = _isPurchaseLocked(entitlementStatus: entitlementStatus, purchaseLocked: purchaseLocked);
     final isPendingPlanSwitch = _isAndroidPendingPlanSwitch(
       platform: entitlementPlatform,
-      entitlementStatus: entitlementStatus,
       paymentSyncState: paymentSyncState,
     );
     // OLD: purchase lock only considered paused/on_hold or explicit purchaseLocked flag.
@@ -1145,7 +1140,7 @@ class BillingPage extends HookConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 255, 236, 206),
+                  color: const Color.fromARGB(255, 223, 130, 53),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color.fromARGB(255, 236, 175, 83)),
                 ),
@@ -1157,7 +1152,7 @@ class BillingPage extends HookConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 236, 175, 83),
+                            color: const Color.fromARGB(255, 239, 181, 93),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
