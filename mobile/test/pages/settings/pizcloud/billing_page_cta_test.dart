@@ -154,6 +154,8 @@ void main() {
           'productId': 'storage_500gb_monthly',
           'entitlementStatus': 'pending',
           'paymentSyncState': 'awaiting_charge',
+          'pendingProductId': 'storage_100gb_yearly',
+          'pendingPeriod': 'yearly',
         },
       ),
     );
@@ -162,6 +164,14 @@ void main() {
 
     expect(find.text('subscription.purchase_locked_pending_switch'.tr()), findsOneWidget);
     expect(find.text('subscription.pending_switch_badge'.tr()), findsOneWidget);
+    expect(
+      find.text(
+        'subscription.pending_switch_message'.tr(
+          namedArgs: {'plan': 'Pro1', 'period': 'subscription.period_yearly'.tr()},
+        ),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('billing.select_plan'.tr()), findsNothing);
     expect(find.text('subscription.cta_upgrade_now'.tr()), findsNothing);
     expect(find.text('subscription.cta_downgrade_next_cycle'.tr()), findsNothing);
@@ -190,6 +200,37 @@ void main() {
 
     expect(find.text('subscription.purchase_locked_pending_switch'.tr()), findsOneWidget);
     expect(find.text('billing.select_plan'.tr()), findsNothing);
+  });
+
+  testWidgets('pending-switch message falls back to current product when pending target is missing', (tester) async {
+    _setLargeTestSurface(tester);
+
+    final controller = _TestBillingController(
+      initialState: BillingState(
+        loading: false,
+        products: [
+          _product(id: 'storage_100gb_monthly', title: 'Pro1', price: '\$0.4'),
+          _product(id: 'storage_500gb_monthly', title: 'Pro2', price: '\$5'),
+        ],
+        entitlement: {
+          'platform': 'android',
+          'productId': 'storage_500gb_monthly',
+          'entitlementStatus': 'active',
+          'paymentSyncState': 'awaiting_charge',
+        },
+      ),
+    );
+
+    await _pumpBillingPage(tester, controller);
+
+    expect(
+      find.text(
+        'subscription.pending_switch_message'.tr(
+          namedArgs: {'plan': 'Pro2', 'period': 'subscription.period_monthly'.tr()},
+        ),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('does not lock by pending-switch state on non-android platform', (tester) async {

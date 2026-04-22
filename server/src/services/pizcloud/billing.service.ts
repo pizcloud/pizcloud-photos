@@ -1,53 +1,15 @@
 // server/src/services/billing.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { AuthDto } from 'src/dtos/auth.dto';
+import {
+  EntitlementPendingPeriod,
+  EntitlementStatus,
+  EntitlementWebhookDto,
+} from 'src/dtos/entitlement-webhook.dto';
 import { UserAdminService } from 'src/services/user-admin.service';
 
 export type Period = 'monthly' | 'yearly';
-
-export type EntitlementStatus =
-  | 'active'
-  | 'in_grace_period'
-  | 'on_hold'
-  | 'paused'
-  | 'canceled_pending_expiry'
-  | 'expired'
-  | 'revoked'
-  | 'pending'
-  | 'pending_purchase_canceled';
-
-export type EntitlementWebhookBody = {
-  userId: string;
-  email: string;
-  productId: string;
-  planCode: string;
-  storageLimitGb: number;
-  mlTier?: 'free' | 'basic' | 'pro1' | 'pro2' | 'pro3' | 'premium';
-  seats?: number;
-  shareEnabled?: boolean;
-  signature: string;       // HMAC-SHA256(JSON(payload_without_signature))
-
-  // Optional fields for normalized entitlement snapshots from external billing service.
-  schemaVersion?: 2;
-  eventId?: string;
-  eventTimeMs?: number;
-  source?: 'google_play_rtdn' | 'app_store_server_notification';
-  platform?: 'android' | 'ios';
-  entitlementStatus?: EntitlementStatus;
-  autoRenewEnabled?: boolean;
-  expiresAtMs?: number;
-  cancelReason?: 'user' | 'system' | 'developer' | 'replacement' | 'unknown';
-  providerNotificationType?: number;
-  providerSubscriptionState?: string;
-  purchaseToken?: string;
-  linkedPurchaseToken?: string;
-  paymentSyncState?: 'awaiting_charge';
-  // Optional additive signal for purchase lock state (independent from quota/entitlement state).
-  purchaseLocked?: boolean;
-  purchaseLockReason?: 'pause_scheduled' | 'paused' | 'on_hold' | 'none';
-  purchaseLockObservedAtMs?: number;
-  purchaseLockEffectiveAtMs?: number;
-};
+export type EntitlementWebhookBody = EntitlementWebhookDto;
 
 type MlTier = 'free' | 'basic' | 'pro1' | 'pro2' | 'pro3' | 'premium';
 
@@ -88,6 +50,8 @@ type EntitlementData = {
   purchaseLockReason?: 'pause_scheduled' | 'paused' | 'on_hold' | 'none';
   purchaseLockObservedAtMs?: number;
   purchaseLockEffectiveAtMs?: number;
+  pendingProductId?: string;
+  pendingPeriod?: EntitlementPendingPeriod;
 };
 
 const PRODUCT_MAP: Record<string, ProductInfo> = {
@@ -178,19 +142,61 @@ export class BillingService {
     return normalized > 0 ? normalized : undefined;
   }
 
-  private isAndroidAwaitingChargePendingSwitch(body: EntitlementWebhookBody): boolean {
-    const normalizedPlatform =
-      typeof body.platform === 'string' ? body.platform.trim().toLowerCase() : undefined;
-    const normalizedStatus =
-      typeof body.entitlementStatus === 'string'
-        ? body.entitlementStatus.trim().toLowerCase()
-        : undefined;
+  private parseNormalizedString(input?: string): string | undefined {
+    const normalized = input?.trim().toLowerCase();
+    return normalized || undefined;
+  }
 
-    return (
-      normalizedPlatform === 'android' &&
-      normalizedStatus === 'active' &&
-      body.paymentSyncState === 'awaiting_charge'
-    );
+  private parsePendingPeriod(input?: string): EntitlementPendingPeriod | undefined {
+    const normalized = this.parseNormalizedString(input);
+    if (normalized === 'monthly' || normalized === 'yearly') {
+      return normalized;
+    }
+    return undefined;
+  }
+
+  private inferPendingPeriodFromProductId(productId?: string): EntitlementPendingPeriod | undefined {
+    if (!productId) {
+      return undefined;
+    }
+
+    if (productId.endsWith('_monthly')) {
+      return 'monthly';
+    }
+
+    if (productId.endsWith('_yearly')) {
+      return 'yearly';
+    }
+
+    return undefined;
+  }
+
+  private normalizePendingSwitchTarget(
+    body: EntitlementWebhookBody,
+    shouldDeferQuotaSync: boolean,
+  ): { pendingProductId?: string; pendingPeriod?: EntitlementPendingPeriod } {
+    if (!shouldDeferQuotaSync) {
+      return {};
+    }
+
+    const pendingProductId = this.parseNormalizedString(body.pendingProductId);
+    if (!pendingProductId) {
+      return {};
+    }
+
+    const pendingPeriod =
+      this.parsePendingPeriod(body.pendingPeriod) ??
+      this.inferPendingPeriodFromProductId(pendingProductId);
+
+    return {
+      pendingProductId,
+      pendingPeriod,
+    };
+  }
+
+  private isAndroidAwaitingChargePendingSwitch(body: EntitlementWebhookBody): boolean {
+    const normalizedPlatform = this.parseNormalizedString(body.platform);
+    return normalizedPlatform === 'android' && body.paymentSyncState === 'awaiting_charge';
   }
 
   private shouldSkipEvent(resolvedUserId: string, body: EntitlementWebhookBody): boolean {
@@ -370,6 +376,8 @@ export class BillingService {
     const resolvedUserId = user.id;
     const normalizedPaymentSyncState =
       body.paymentSyncState === 'awaiting_charge' ? 'awaiting_charge' : undefined;
+    const shouldDeferQuotaSync = this.isAndroidAwaitingChargePendingSwitch(body);
+    const pendingSwitchTarget = this.normalizePendingSwitchTarget(body, shouldDeferQuotaSync);
 
     if (this.shouldSkipEvent(resolvedUserId, body)) {
       return { ok: true };
@@ -387,6 +395,9 @@ export class BillingService {
       storageLimitGb: resolvedStorageLimitGb,
       // Keep this optional and normalized to preserve backward compatibility.
       paymentSyncState: normalizedPaymentSyncState,
+      // Optional pending target fields for Android replacement-chain UI state.
+      pendingProductId: pendingSwitchTarget.pendingProductId,
+      pendingPeriod: pendingSwitchTarget.pendingPeriod,
     };
 
     const commitEntitlementSnapshot = (): void => {
@@ -403,7 +414,6 @@ export class BillingService {
       this.recordEventMeta(resolvedUserId, body);
     };
 
-    const shouldDeferQuotaSync = this.isAndroidAwaitingChargePendingSwitch(body);
     if (shouldDeferQuotaSync) {
       this.logger.log(
         `Entitlement webhook: defer quota sync for awaiting_charge userId=${resolvedUserId}, productId=${body.productId}`,

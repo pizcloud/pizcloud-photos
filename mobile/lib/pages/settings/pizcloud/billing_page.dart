@@ -370,6 +370,14 @@ String? _parsePaymentSyncState(dynamic raw) {
   return null;
 }
 
+String? _parsePendingPeriod(dynamic raw) {
+  final normalized = _parseNormalizedString(raw);
+  if (normalized == 'monthly' || normalized == 'yearly') {
+    return normalized;
+  }
+  return null;
+}
+
 bool _isAndroidPendingPlanSwitch({required String? platform, required String? paymentSyncState}) {
   return platform == 'android' && paymentSyncState == 'awaiting_charge';
 }
@@ -687,9 +695,16 @@ class BillingPage extends HookConsumerWidget {
     final entitlementStatus = rawEntitlementStatus is String ? rawEntitlementStatus.trim().toLowerCase() : null;
     final entitlementPlatform = _parseNormalizedString(entitlement?['platform']);
     final paymentSyncState = _parsePaymentSyncState(entitlement?['paymentSyncState']);
+    final pendingProductId = _parseNormalizedString(entitlement?['pendingProductId']);
+    final pendingPeriod = _parsePendingPeriod(entitlement?['pendingPeriod']);
     final rawActiveProductId = entitlement?['productId'];
     final purchaseLocked = _parseBooleanFlag(entitlement?['purchaseLocked']);
     final activeProductId = rawActiveProductId is String ? rawActiveProductId.trim() : null;
+    final hasPendingProductTarget = pendingProductId != null && pendingProductId.isNotEmpty;
+    final pendingProductIdForDisplay = hasPendingProductTarget ? pendingProductId : (activeProductId ?? '');
+    final pendingPeriodForDisplay = hasPendingProductTarget
+        ? (pendingPeriod ?? (_looksMonthly(pendingProductIdForDisplay) ? 'monthly' : 'yearly'))
+        : (_looksMonthly(pendingProductIdForDisplay) ? 'monthly' : 'yearly');
     final hasActiveEntitlement =
         activeProductId != null &&
         activeProductId.isNotEmpty &&
@@ -1169,8 +1184,8 @@ class BillingPage extends HookConsumerWidget {
                     Text(
                       'subscription.pending_switch_message'.tr(
                         namedArgs: {
-                          'plan': _planShortTitle('', currentProductIdForDisplay),
-                          'period': _looksMonthly(currentProductIdForDisplay)
+                          'plan': _planShortTitle('', pendingProductIdForDisplay),
+                          'period': pendingPeriodForDisplay == 'monthly'
                               ? 'subscription.period_monthly'.tr()
                               : 'subscription.period_yearly'.tr(),
                         },

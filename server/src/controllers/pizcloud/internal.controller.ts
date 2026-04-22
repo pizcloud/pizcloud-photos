@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { EntitlementWebhookDto } from 'src/dtos/entitlement-webhook.dto';
 import { InternalJwtGuard } from 'src/pizcloud/internal-auth/internal-jwt.guard';
-import { BillingService, EntitlementWebhookBody } from 'src/services/pizcloud/billing.service';
+import { BillingService } from 'src/services/pizcloud/billing.service';
 
 @UseGuards(InternalJwtGuard)
 @Controller('internal')
@@ -9,7 +10,7 @@ export class InternalController {
 
 
   @Post('entitlements/webhook')
-  entitlementsWebhook(@Body() body: EntitlementWebhookBody, @Req() req: any) {
+  entitlementsWebhook(@Body() body: EntitlementWebhookDto, @Req() req: any) {
     return this.billingService.handleEntitlementWebhook(body);
   }
 
