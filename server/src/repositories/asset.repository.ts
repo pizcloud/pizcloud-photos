@@ -34,6 +34,42 @@ import { globToSqlPattern } from 'src/utils/misc';
 
 export type AssetStats = Record<AssetType, number>;
 
+// pizcloud
+export interface InternalAssetCursor {
+  id: string;
+  updateId: string;
+  originalFileName: string;
+  deviceId: string;
+  deviceAssetId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  fileCreatedAt: Date;
+  fileModifiedAt: Date;
+  deletedAt: Date | null;
+  status: AssetStatus;
+  visibility: AssetVisibility;
+}
+
+export interface InternalAssetSyncSummary {
+  totalAssets: number;
+  activeAssets: number;
+  trashedAssets: number;
+  pendingHardDeleteAssets: number;
+  offlineAssets: number;
+  externalAssets: number;
+  activeImageAssets: number;
+  activeVideoAssets: number;
+  activeAudioAssets: number;
+  activeOtherAssets: number;
+  activeTimelineAssets: number;
+  activeArchiveAssets: number;
+  activeHiddenAssets: number;
+  activeLockedAssets: number;
+  latestByCreatedAt: InternalAssetCursor | null;
+  latestByUpdateId: InternalAssetCursor | null;
+}
+// #pizcloud
+
 interface AssetStatsOptions {
   isFavorite?: boolean;
   isTrashed?: boolean;
@@ -116,7 +152,7 @@ interface GetByIdsRelations {
 
 @Injectable()
 export class AssetRepository {
-  constructor(@InjectKysely() private db: Kysely<DB>) {}
+  constructor(@InjectKysely() private db: Kysely<DB>) { }
 
   async upsertExif(exif: Insertable<AssetExifTable>): Promise<void> {
     const value = { ...exif, assetId: asUuid(exif.assetId) };
@@ -537,6 +573,142 @@ export class AssetRepository {
       .where('deletedAt', isTrashed ? 'is not' : 'is', null)
       .executeTakeFirstOrThrow();
   }
+
+  // pizcloud
+  async getInternalSyncSummary(ownerId: string): Promise<InternalAssetSyncSummary> {
+    const latestColumns = [
+      'id',
+      'updateId',
+      'originalFileName',
+      'deviceId',
+      'deviceAssetId',
+      'createdAt',
+      'updatedAt',
+      'fileCreatedAt',
+      'fileModifiedAt',
+      'deletedAt',
+      'status',
+      'visibility',
+    ] as const;
+
+    const [aggregate, latestByCreatedAt, latestByUpdateId] = await Promise.all([
+      this.db
+        .selectFrom('asset')
+        .select((eb) => [
+          eb.fn.countAll<number>().as('totalAssets'),
+          eb.fn.countAll<number>().filterWhere('deletedAt', 'is', null).as('activeAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is not', null), eb('status', '=', AssetStatus.Trashed)]))
+            .as('trashedAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is not', null), eb('status', '=', AssetStatus.Deleted)]))
+            .as('pendingHardDeleteAssets'),
+          eb.fn.countAll<number>().filterWhere('isOffline', '=', true).as('offlineAssets'),
+          eb.fn.countAll<number>().filterWhere('isExternal', '=', true).as('externalAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('type', '=', AssetType.Image)]))
+            .as('activeImageAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('type', '=', AssetType.Video)]))
+            .as('activeVideoAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('type', '=', AssetType.Audio)]))
+            .as('activeAudioAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('type', '=', AssetType.Other)]))
+            .as('activeOtherAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('visibility', '=', AssetVisibility.Timeline)]))
+            .as('activeTimelineAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('visibility', '=', AssetVisibility.Archive)]))
+            .as('activeArchiveAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('visibility', '=', AssetVisibility.Hidden)]))
+            .as('activeHiddenAssets'),
+          eb.fn
+            .countAll<number>()
+            .filterWhere((eb) => eb.and([eb('deletedAt', 'is', null), eb('visibility', '=', AssetVisibility.Locked)]))
+            .as('activeLockedAssets'),
+        ])
+        .where('ownerId', '=', asUuid(ownerId))
+        .executeTakeFirstOrThrow(),
+      this.db
+        .selectFrom('asset')
+        .select(latestColumns)
+        .where('ownerId', '=', asUuid(ownerId))
+        .orderBy('createdAt', 'desc')
+        .orderBy('id', 'desc')
+        .executeTakeFirst(),
+      this.db
+        .selectFrom('asset')
+        .select(latestColumns)
+        .where('ownerId', '=', asUuid(ownerId))
+        .orderBy('updateId', 'desc')
+        .executeTakeFirst(),
+    ]);
+
+    return {
+      ...aggregate,
+      latestByCreatedAt: latestByCreatedAt ?? null,
+      latestByUpdateId: latestByUpdateId ?? null,
+    };
+  }
+
+  async countSyncAssetChangesAfter(ownerId: string, updateId: string) {
+    const [upserted, deleted] = await Promise.all([
+      this.db
+        .selectFrom('asset')
+        .select((eb) => eb.fn.countAll<number>().as('count'))
+        .where('ownerId', '=', asUuid(ownerId))
+        .where('updateId', '>', asUuid(updateId))
+        .executeTakeFirstOrThrow(),
+      this.db
+        .selectFrom('asset_audit')
+        .select((eb) => eb.fn.countAll<number>().as('count'))
+        .where('ownerId', '=', asUuid(ownerId))
+        .where('id', '>', asUuid(updateId))
+        .executeTakeFirstOrThrow(),
+    ]);
+
+    return { upsertedAssets: upserted.count, deletedAssets: deleted.count };
+  }
+
+  async getLatestOwnedAssetAtOrBeforeUpdateId(
+    ownerId: string,
+    updateId: string,
+  ): Promise<InternalAssetCursor | undefined> {
+    return this.db
+      .selectFrom('asset')
+      .select([
+        'id',
+        'updateId',
+        'originalFileName',
+        'deviceId',
+        'deviceAssetId',
+        'createdAt',
+        'updatedAt',
+        'fileCreatedAt',
+        'fileModifiedAt',
+        'deletedAt',
+        'status',
+        'visibility',
+      ])
+      .where('ownerId', '=', asUuid(ownerId))
+      .where('updateId', '<=', asUuid(updateId))
+      .orderBy('updateId', 'desc')
+      .executeTakeFirst();
+  }
+  // #pizcloud
 
   getRandom(userIds: string[], take: number) {
     return this.db

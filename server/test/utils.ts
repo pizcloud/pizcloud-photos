@@ -16,6 +16,7 @@ import { AuthGuard } from 'src/middleware/auth.guard';
 import { FileUploadInterceptor } from 'src/middleware/file-upload.interceptor';
 import { AccessRepository } from 'src/repositories/access.repository';
 import { ActivityRepository } from 'src/repositories/activity.repository';
+import { AlbumTransferRepository } from 'src/repositories/album-transfer.repository'; // pizcloud
 import { AlbumUserRepository } from 'src/repositories/album-user.repository';
 import { AlbumRepository } from 'src/repositories/album.repository';
 import { ApiKeyRepository } from 'src/repositories/api-key.repository';
@@ -159,7 +160,7 @@ const mockFn = (label: string, { strict }: { strict: boolean }) => {
 };
 
 export const mockBaseService = <T extends BaseService>(service: ClassConstructor<T>) => {
-  return automock(service, { args: [{ setContext: () => {} }], strict: false });
+  return automock(service, { args: [{ setContext: () => { } }], strict: false });
 };
 
 export const automock = <T>(
@@ -211,6 +212,7 @@ export type ServiceOverrides = {
   access: AccessRepository;
   activity: ActivityRepository;
   album: AlbumRepository;
+  albumTransfer: AlbumTransferRepository;
   albumUser: AlbumUserRepository;
   apiKey: ApiKeyRepository;
   app: AppRepository;
@@ -270,11 +272,11 @@ export type ServiceMocks = {
 
 type BaseServiceArgs = ConstructorParameters<typeof BaseService>;
 type Constructor<Type, Args extends Array<any>> = {
-  new (...deps: Args): Type;
+  new(...deps: Args): Type;
 };
 
 export const getMocks = () => {
-  const loggerMock = { setContext: () => {} };
+  const loggerMock = { setContext: () => { } };
   const configMock = { getEnv: () => ({}) };
 
   const mocks: ServiceMocks = {
@@ -287,6 +289,7 @@ export const getMocks = () => {
     activity: automock(ActivityRepository),
     audit: automock(AuditRepository),
     album: automock(AlbumRepository, { strict: false }),
+    albumTransfer: automock(AlbumTransferRepository, { strict: false }),
     albumUser: automock(AlbumUserRepository),
     asset: newAssetRepositoryMock(),
     assetJob: automock(AssetJobRepository),
@@ -302,7 +305,7 @@ export const getMocks = () => {
     apiKey: automock(ApiKeyRepository),
     library: automock(LibraryRepository, { strict: false }),
     machineLearning: automock(MachineLearningRepository, { args: [loggerMock], strict: false }),
-    map: automock(MapRepository, { args: [undefined, undefined, { setContext: () => {} }] }),
+    map: automock(MapRepository, { args: [undefined, undefined, { setContext: () => { } }] }),
     media: newMediaRepositoryMock(),
     memory: automock(MemoryRepository),
     metadata: newMetadataRepositoryMock(),
@@ -352,6 +355,7 @@ export const newTestService = <T extends BaseService>(
     overrides.access || (mocks.access as IAccessRepository as AccessRepository),
     overrides.activity || (mocks.activity as As<ActivityRepository>),
     overrides.album || (mocks.album as As<AlbumRepository>),
+    overrides.albumTransfer || (mocks.albumTransfer as As<AlbumTransferRepository>),
     overrides.albumUser || (mocks.albumUser as As<AlbumUserRepository>),
     overrides.apiKey || (mocks.apiKey as As<ApiKeyRepository>),
     overrides.app || (mocks.app as As<AppRepository>),

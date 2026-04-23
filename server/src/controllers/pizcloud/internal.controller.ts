@@ -2,12 +2,15 @@ import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/comm
 import { EntitlementWebhookDto } from 'src/dtos/entitlement-webhook.dto';
 import { InternalJwtGuard } from 'src/pizcloud/internal-auth/internal-jwt.guard';
 import { BillingService } from 'src/services/pizcloud/billing.service';
+import { InternalUserSyncService } from 'src/services/pizcloud/internal-user-sync.service';
 
 @UseGuards(InternalJwtGuard)
 @Controller('internal')
 export class InternalController {
-  constructor(private readonly billingService: BillingService,) { }
-
+  constructor(
+    private readonly billingService: BillingService,
+    private readonly internalUserSyncService: InternalUserSyncService,
+  ) {}
 
   @Post('entitlements/webhook')
   entitlementsWebhook(@Body() body: EntitlementWebhookDto, @Req() req: any) {
@@ -17,6 +20,11 @@ export class InternalController {
   @Get('user-usage')
   async usage(@Query('email') email: string) {
     return this.billingService.getUsageByUserEmail(email);
+  }
+
+  @Get('user-sync-overview')
+  async userSyncOverview(@Query('email') email?: string, @Query('userId') userId?: string) {
+    return this.internalUserSyncService.getUserSyncOverview({ email, userId });
   }
 
   @Post('test-webhook')

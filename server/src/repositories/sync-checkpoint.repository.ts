@@ -5,10 +5,11 @@ import { DummyValue, GenerateSql } from 'src/decorators';
 import { SyncEntityType } from 'src/enum';
 import { DB } from 'src/schema';
 import { SessionSyncCheckpointTable } from 'src/schema/tables/sync-checkpoint.table';
+import { anyUuid } from 'src/utils/database'; // pizcloud
 
 @Injectable()
 export class SyncCheckpointRepository {
-  constructor(@InjectKysely() private db: Kysely<DB>) {}
+  constructor(@InjectKysely() private db: Kysely<DB>) { }
 
   @GenerateSql({ params: [DummyValue.UUID] })
   getAll(sessionId: string) {
@@ -18,6 +19,20 @@ export class SyncCheckpointRepository {
       .where('sessionId', '=', sessionId)
       .execute();
   }
+
+  // pizcloud
+  async getBySessionIds(sessionIds: string[]) {
+    if (sessionIds.length === 0) {
+      return [];
+    }
+
+    return this.db
+      .selectFrom('session_sync_checkpoint')
+      .select(['sessionId', 'type', 'ack', 'updatedAt'])
+      .where('sessionId', '=', anyUuid(sessionIds))
+      .execute();
+  }
+  // #pizcloud
 
   upsertAll(items: Insertable<SessionSyncCheckpointTable>[]) {
     return this.db
