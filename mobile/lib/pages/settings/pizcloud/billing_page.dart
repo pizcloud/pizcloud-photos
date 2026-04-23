@@ -13,6 +13,7 @@ import 'package:immich_mobile/features/pizcloud/billing/android_offer_utils.dart
 // import 'package:immich_mobile/features/pizcloud/billing/billing_controller.dart';
 import 'package:immich_mobile/providers/pizcloud/billing.provider.dart';
 import 'package:immich_mobile/features/pizcloud/billing/iap_service.dart';
+import 'package:immich_mobile/pages/settings/pizcloud/payment_history_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -1361,6 +1362,20 @@ class BillingPage extends HookConsumerWidget {
             //     child: Text('subscription.restore_purchases'.tr()),
             //   ),
             // ),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(platformPageRoute(context: context, builder: (_) => const PaymentHistoryPage()));
+                },
+                style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: Text('payment_history.title'.tr()),
+              ),
+            ),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               height: 44,
