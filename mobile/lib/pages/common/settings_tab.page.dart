@@ -23,6 +23,7 @@ import 'package:immich_mobile/providers/user.provider.dart';
 // import 'package:immich_mobile/providers/websocket.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/pages/common/instructions.page.dart';
+import 'package:immich_mobile/pages/settings/pizcloud/payment_history_page.dart';
 import 'package:immich_mobile/utils/bytes_units.dart';
 import 'package:immich_mobile/widgets/common/app_bar_dialog/app_bar_profile_info.dart';
 // import 'package:immich_mobile/widgets/common/confirm_dialog.dart';
@@ -247,6 +248,16 @@ class SettingsTabPage extends HookConsumerWidget {
       );
     }
 
+    Widget buildPaymentHistoryButton() {
+      return buildActionButton(
+        context.platformIcon(material: Icons.receipt_long_outlined, cupertino: CupertinoIcons.doc_text),
+        "payment_history.title",
+        subtitle: "settings_quick_payment_history_subtitle",
+        () =>
+            Navigator.of(context).push(platformPageRoute(context: context, builder: (_) => const PaymentHistoryPage())),
+      );
+    }
+
     // Future<void> removeServerCookies() async {
     //   await accountApiService.logout();
     // }
@@ -431,6 +442,7 @@ class SettingsTabPage extends HookConsumerWidget {
                 buildActionSectionTitle("settings_quick_account_section"),
                 buildReferralProgramButton(), // pizcloud
                 buildDiscountCodeButton(), // pizcloud
+                buildPaymentHistoryButton(), // pizcloud
                 buildManageAccountButton(), // pizcloud
                 buildActionSectionTitle("settings_quick_system_section"),
                 if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud
