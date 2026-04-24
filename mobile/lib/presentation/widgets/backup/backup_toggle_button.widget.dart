@@ -2,13 +2,16 @@ import 'dart:async'; // pizcloud
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/domain/models/album/local_album.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/theme_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/providers/app_settings.provider.dart';
+import 'package:immich_mobile/providers/backup/backup_album.provider.dart';
 import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/platform.provider.dart'; // pizcloud
 import 'package:immich_mobile/services/app_settings.service.dart';
+import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart';
 
 class BackupToggleButton extends ConsumerStatefulWidget {
   final VoidCallback onStart;
@@ -55,6 +58,26 @@ class BackupToggleButtonState extends ConsumerState<BackupToggleButton> with Sin
     setState(() {
       _isEnabled = value;
     });
+
+    // pizcloud: backup observability telemetry (best-effort, non-blocking)
+    final selectedAlbumCount = ref
+        .read(backupAlbumProvider)
+        .where((album) => album.backupSelection == BackupSelection.selected)
+        .length;
+    final backupState = ref.read(driftBackupProvider);
+    unawaited(
+      BackupObservabilityService.upsertDeviceState(
+        reason: 'toggle_changed',
+        backupEnabled: value,
+        selectedAlbumCount: selectedAlbumCount,
+        latestKnownCounts: BackupObservabilityCounts(
+          total: backupState.totalCount,
+          remainder: backupState.remainderCount,
+          processing: backupState.processingCount,
+        ),
+      ),
+    );
+    // #pizcloud
 
     if (value) {
       widget.onStart.call();

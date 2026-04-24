@@ -18,6 +18,7 @@ import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/platform.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
+import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart'; // pizcloud
 import 'package:immich_mobile/widgets/backup/drift_album_info_list_tile.dart';
 import 'package:immich_mobile/widgets/common/search_field.dart';
 import 'package:logging/logging.dart';
@@ -120,6 +121,25 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
 
           final isBackupEnabled = ref.read(appSettingsServiceProvider).getSetting(AppSettingsEnum.enableBackup);
           await ref.read(driftBackupProvider.notifier).getBackupStatus(user.id);
+          // pizcloud: backup observability telemetry (best-effort, non-blocking)
+          final albums = ref.read(backupAlbumProvider);
+          final selectedAlbumCount = albums.where((album) => album.backupSelection == BackupSelection.selected).length;
+          final excludedAlbumCount = albums.where((album) => album.backupSelection == BackupSelection.excluded).length;
+          final backupState = ref.read(driftBackupProvider);
+          unawaited(
+            BackupObservabilityService.upsertDeviceState(
+              reason: 'album_selection_changed',
+              selectedAlbumCount: selectedAlbumCount,
+              excludedAlbumCount: excludedAlbumCount,
+              latestKnownCounts: BackupObservabilityCounts(
+                total: backupState.totalCount,
+                remainder: backupState.remainderCount,
+                processing: backupState.processingCount,
+              ),
+            ),
+          );
+          // #pizcloud
+
           final currentTotalAssetCount = ref.read(driftBackupProvider.select((p) => p.totalCount));
           final totalChanged = currentTotalAssetCount != _initialTotalAssetCount;
           final backupNotifier = ref.read(driftBackupProvider.notifier);
@@ -148,10 +168,7 @@ class _DriftBackupAlbumSelectionPageState extends ConsumerState<DriftBackupAlbum
       },
       child: PlatformScaffold(
         appBar: PlatformAppBar(
-          leading: IconButton(
-            onPressed: () async => await context.maybePop(),
-            icon: Icon(context.platformIcons.back),
-          ),
+          leading: IconButton(onPressed: () async => await context.maybePop(), icon: Icon(context.platformIcons.back)),
           title: _isSearchMode
               ? SearchField(
                   hintText: 'search_albums'.t(context: context),

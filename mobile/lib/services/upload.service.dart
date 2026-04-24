@@ -22,6 +22,7 @@ import 'package:immich_mobile/repositories/asset_media.repository.dart';
 import 'package:immich_mobile/repositories/upload.repository.dart';
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
+import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart';
 import 'package:immich_mobile/services/pizcloud/backup_success_api.service.dart'; // pizcloud
 import 'package:immich_mobile/utils/debug_print.dart';
 import 'package:logging/logging.dart';
@@ -108,6 +109,15 @@ class UploadService {
   // pizcloud: Handle quota exceeded (HTTP 409)
   Future<void> _handleQuotaExceeded(TaskStatusUpdate update) async {
     _logger.severe('Upload blocked: quota exceeded (HTTP 409). Pausing backup queue.');
+    unawaited(
+      BackupObservabilityService.reportQuotaExceeded(
+        detail: {
+          'taskId': update.task.taskId,
+          'group': update.task.group,
+          'responseStatusCode': update.responseStatusCode,
+        },
+      ),
+    ); // pizcloud telemetry (best-effort)
 
     shouldAbortQueuingTasks = true;
 
@@ -315,6 +325,7 @@ class UploadService {
   Future<void> _reportBackupSuccess({required String source}) async {
     try {
       final timestamp = await BackupSuccessApiService.markBackupSuccess();
+      await BackupObservabilityService.reportBackupSuccess(); // pizcloud telemetry (best-effort)
       _hasReportedBackupSuccessInRun = true;
       _logger.info(
         'Reported backup success from $source${timestamp == null ? '' : ' at ${timestamp.toIso8601String()}'}',

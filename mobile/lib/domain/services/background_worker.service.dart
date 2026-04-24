@@ -26,6 +26,7 @@ import 'package:immich_mobile/repositories/file_media.repository.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/services/auth.service.dart';
 import 'package:immich_mobile/services/localization.service.dart';
+import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart'; // pizcloud
 import 'package:immich_mobile/services/upload.service.dart';
 import 'package:immich_mobile/utils/bootstrap.dart';
 import 'package:immich_mobile/utils/debug_print.dart';
@@ -163,6 +164,9 @@ class BackgroundWorkerBgService extends BackgroundWorkerFlutterApi {
     try {
       if (!await _syncAssets(hashTimeout: Duration(minutes: _isBackupEnabled ? 3 : 6))) {
         _logger.warning("Remote sync did not complete successfully, skipping backup");
+        if (_isBackupEnabled) {
+          unawaited(BackupObservabilityService.reportSyncRemoteFailed(trigger: 'background_worker')); // pizcloud
+        } // pizcloud
         return;
       }
       await _handleBackup();
@@ -183,6 +187,9 @@ class BackgroundWorkerBgService extends BackgroundWorkerFlutterApi {
       final timeout = isRefresh ? const Duration(seconds: 5) : Duration(minutes: _isBackupEnabled ? 3 : 6);
       if (!await _syncAssets(hashTimeout: timeout)) {
         _logger.warning("Remote sync did not complete successfully, skipping backup");
+        if (_isBackupEnabled) {
+          unawaited(BackupObservabilityService.reportSyncRemoteFailed(trigger: 'background_worker')); // pizcloud
+        } // pizcloud
         return;
       }
 
@@ -276,6 +283,28 @@ class BackgroundWorkerBgService extends BackgroundWorkerFlutterApi {
           _logger.warning("No current user found. Skipping backup from background");
           return;
         }
+
+        // pizcloud: backup observability run start (best-effort, non-blocking)
+        final uploadService = _ref?.read(uploadServiceProvider);
+        if (!_isCleanedUp) {
+          unawaited(() async {
+            final preRunCountsRaw = uploadService == null ? null : await uploadService.getBackupCounts(currentUser.id);
+            if (_isCleanedUp) {
+              return;
+            }
+            await BackupObservabilityService.startRun(
+              trigger: 'background_worker',
+              preRunCounts: preRunCountsRaw == null
+                  ? null
+                  : BackupObservabilityCounts(
+                      total: preRunCountsRaw.total,
+                      remainder: preRunCountsRaw.remainder,
+                      processing: preRunCountsRaw.processing,
+                    ),
+            );
+          }());
+        }
+        // #pizcloud
 
         if (Platform.isIOS) {
           return _ref?.read(driftBackupProvider.notifier).handleBackupResume(currentUser.id);

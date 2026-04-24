@@ -23,6 +23,7 @@ import 'package:immich_mobile/providers/infrastructure/platform.provider.dart'; 
 import 'package:immich_mobile/providers/sync_status.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/routing/router.dart';
+import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart';
 import 'package:immich_mobile/widgets/backup/backup_info_card.dart';
 import 'package:logging/logging.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -108,6 +109,20 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
         return;
       }
 
+      // pizcloud: backup observability run start (best-effort, non-blocking)
+      final initialBackupState = ref.read(driftBackupProvider);
+      unawaited(
+        BackupObservabilityService.startRun(
+          trigger: 'manual_foreground',
+          preRunCounts: BackupObservabilityCounts(
+            total: initialBackupState.totalCount,
+            remainder: initialBackupState.remainderCount,
+            processing: initialBackupState.processingCount,
+          ),
+        ),
+      );
+      // #pizcloud
+
       if (syncSuccess == null) {
         ref.read(driftBackupProvider.notifier).updateSyncing(true);
         syncSuccess = await backupSyncManager.syncRemote();
@@ -118,6 +133,7 @@ class _DriftBackupPageState extends ConsumerState<DriftBackupPage> {
 
       if (syncSuccess == false) {
         Logger("DriftBackupPage").warning("Remote sync did not complete successfully, skipping backup");
+        unawaited(BackupObservabilityService.reportSyncRemoteFailed(trigger: 'manual_foreground')); // pizcloud
         return;
       }
       await backupNotifier.startBackup(currentUser.id);

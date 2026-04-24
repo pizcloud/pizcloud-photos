@@ -4,14 +4,17 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:immich_mobile/domain/models/album/local_album.model.dart'; // pizcloud
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
 import 'package:immich_mobile/providers/app_settings.provider.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
+import 'package:immich_mobile/providers/backup/backup_album.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/user.provider.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
+import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart'; // pizcloud
 import 'package:immich_mobile/widgets/settings/backup_settings/drift_backup_settings.dart';
 import 'package:logging/logging.dart';
 
@@ -46,6 +49,25 @@ class DriftBackupOptionsPage extends ConsumerWidget {
           }
 
           await ref.read(driftBackupProvider.notifier).getBackupStatus(currentUser.id);
+          // pizcloud: backup observability telemetry (best-effort, non-blocking)
+          final selectedAlbumCount = ref
+              .read(backupAlbumProvider)
+              .where((album) => album.backupSelection == BackupSelection.selected)
+              .length;
+          final backupState = ref.read(driftBackupProvider);
+          unawaited(
+            BackupObservabilityService.upsertDeviceState(
+              reason: 'network_policy_changed',
+              selectedAlbumCount: selectedAlbumCount,
+              latestKnownCounts: BackupObservabilityCounts(
+                total: backupState.totalCount,
+                remainder: backupState.remainderCount,
+                processing: backupState.processingCount,
+              ),
+            ),
+          );
+          // #pizcloud
+
           final isBackupEnabled = ref.read(appSettingsServiceProvider).getSetting(AppSettingsEnum.enableBackup);
           if (!isBackupEnabled) {
             return;
