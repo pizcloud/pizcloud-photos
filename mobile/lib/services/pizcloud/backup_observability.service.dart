@@ -231,6 +231,21 @@ class BackupObservabilityService {
     await upsertDeviceState(reason: 'backup_success', latestKnownCounts: postRunCounts, force: true);
   }
 
+  static Future<void> reportAppResume({
+    int? selectedAlbumCount,
+    int? excludedAlbumCount,
+    BackupObservabilityCounts? latestKnownCounts,
+    bool? backupEnabled,
+  }) async {
+    await upsertDeviceState(
+      reason: 'app_resume',
+      selectedAlbumCount: selectedAlbumCount,
+      excludedAlbumCount: excludedAlbumCount,
+      latestKnownCounts: latestKnownCounts,
+      backupEnabled: backupEnabled,
+    );
+  }
+
   static Map<String, dynamic> _buildNetworkPolicy() => {
     'useCellularForUploadPhotos': _appSettingsService.getSetting(AppSettingsEnum.useCellularForUploadPhotos),
     'useCellularForUploadVideos': _appSettingsService.getSetting(AppSettingsEnum.useCellularForUploadVideos),

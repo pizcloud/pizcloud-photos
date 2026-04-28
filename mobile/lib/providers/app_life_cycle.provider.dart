@@ -23,8 +23,9 @@ import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/websocket.provider.dart';
-import 'package:immich_mobile/services/app_settings.service.dart';
+import 'package:immich_mobile/services/app_settings.service.dart'; // pizcloud
 import 'package:immich_mobile/services/background.service.dart';
+import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart'; // pizcloud
 import 'package:immich_mobile/services/pizcloud/photos_api_url_refresher.service.dart'; //pizcloud
 import 'package:isar/isar.dart';
 import 'package:logging/logging.dart';
@@ -88,8 +89,14 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
   }
 
   Future<void> _performResume() async {
-    // no need to resume because app was never really paused
-    if (!_wasPaused) return;
+    // pizcloud
+    if (!_wasPaused) {
+      if (_ref.read(authProvider).isAuthenticated) {
+        unawaited(_gatherAndReportAppResumeState());
+      }
+      return;
+    }
+    // #pizcloud
     _wasPaused = false;
 
     final isAuthenticated = _ref.read(authProvider).isAuthenticated;
@@ -163,7 +170,53 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
 
       _ref.invalidate(memoryFutureProvider);
     }
+
+    if (isAuthenticated) {
+      unawaited(_gatherAndReportAppResumeState());
+    } // pizcloud
   }
+
+  // pizcloud
+  Future<void> _gatherAndReportAppResumeState() async {
+    try {
+      final appSettingsService = _ref.read(appSettingsServiceProvider);
+      final isBackupEnabled = appSettingsService.getSetting(AppSettingsEnum.enableBackup);
+
+      // Try to gather asset counts from backup state - best effort only
+      BackupObservabilityCounts? latestKnownCounts;
+      try {
+        if (isBackupEnabled) {
+          final backupState = _ref.read(backupProvider);
+
+          // Calculate asset counts from backup state
+          final totalAssets = backupState.allUniqueAssets.length;
+          final uploadedAssets = backupState.allAssetsInDatabase.length;
+          final remainderAssets = totalAssets - uploadedAssets;
+
+          // Only send counts if we have meaningful data
+          if (totalAssets > 0) {
+            latestKnownCounts = BackupObservabilityCounts(
+              total: totalAssets,
+              remainder: remainderAssets > 0 ? remainderAssets : 0,
+              processing: 0,
+            );
+          }
+        }
+      } catch (e, stackTrace) {
+        _log.fine("Failed to gather asset counts for app resume telemetry", e, stackTrace);
+        // Continue without asset counts - telemetry is best-effort
+      }
+
+      await BackupObservabilityService.reportAppResume(
+        latestKnownCounts: latestKnownCounts,
+        backupEnabled: isBackupEnabled,
+      );
+    } catch (e, stackTrace) {
+      _log.fine("Error gathering app resume telemetry state", e, stackTrace);
+      // Silently fail - telemetry should never affect app functionality
+    }
+  }
+  // #pizcloud
 
   Future<void> _safeRun(Future<void> action, String debugName) async {
     if (!_shouldContinueOperation()) {
