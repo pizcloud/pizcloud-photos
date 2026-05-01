@@ -4,6 +4,7 @@ import { UploadState } from '$lib/models/upload-asset';
 import { uploadAssetsStore } from '$lib/stores/upload';
 import { user } from '$lib/stores/user.store';
 import { uploadRequest } from '$lib/utils';
+import { getUploadBaseUrl } from '$lib/utils/api-base';
 import { addAssetsToAlbum } from '$lib/utils/asset-utils';
 import { ExecutorQueue } from '$lib/utils/executor-queue';
 import { asQueryString } from '$lib/utils/shared-links';
@@ -12,7 +13,7 @@ import {
   AssetMediaStatus,
   AssetVisibility,
   checkBulkUpload,
-  getBaseUrl,
+  // getBaseUrl,
   type AssetMediaResponseDto,
 } from '@immich/sdk';
 // import { getBaseUrl } from '$lib/pizcloud'; // pizcloud
@@ -179,7 +180,8 @@ async function fileUploader({
 
       uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_uploading') });
       const response = await uploadRequest<AssetMediaResponseDto>({
-        url: getBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
+        // url: getBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
+        url: getUploadBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
         data: formData,
         onUploadProgress: (event) => uploadAssetsStore.updateProgress(deviceAssetId, event.loaded, event.total),
       });

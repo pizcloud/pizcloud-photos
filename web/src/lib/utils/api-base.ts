@@ -7,6 +7,7 @@ type Fetch = typeof fetch;
 const DEFAULT_API_BASE_URL = '/api';
 const API_BASE_URL_STORAGE_KEY = 'pizcloud.apiBaseUrl';
 const PIZCLOUD_API_STORAGE_KEY = 'pizcloud.pizcloudApi';
+const UPLOAD_API_BASE_URL_STORAGE_KEY = 'pizcloud.uploadApiBaseUrl';
 const API_SERVICE_STORAGE_KEY = 'pizcloud.apiServiceName';
 const API_REFRESH_INTERVAL_MS = 3 * 60 * 1000;
 
@@ -19,6 +20,7 @@ const getDefaultOrigin = () => {
 
 const apiBaseUrlStore = writable<string>(DEFAULT_API_BASE_URL);
 const pizcloudApiStore = writable<string>('');
+const uploadApiBaseUrlStore = writable<string>('');
 const apiOriginStoreInternal = writable<string>(getDefaultOrigin());
 
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
@@ -44,6 +46,15 @@ const normalizePizcloudApiUrl = (rawUrl: string) => {
     return '';
   }
   return trimmed.replace(/\/+$/, '');
+};
+
+const normalizeUploadApiBaseUrl = (rawUrl: string) => {
+  const trimmed = rawUrl.trim();
+  if (!trimmed) {
+    return '';
+  }
+  const noTrailing = trimmed.replace(/\/+$/, '');
+  return noTrailing.endsWith('/api') ? noTrailing : `${noTrailing}/api`;
 };
 
 const toOrigin = (baseUrl: string) => {
@@ -86,6 +97,20 @@ const readCachedPizcloudApiBaseUrl = () => {
   return localStorage.getItem(PIZCLOUD_API_STORAGE_KEY) || '';
 };
 
+const cacheUploadApiBaseUrl = (baseUrl: string) => {
+  if (!isBrowser()) {
+    return;
+  }
+  localStorage.setItem(UPLOAD_API_BASE_URL_STORAGE_KEY, baseUrl);
+};
+
+const readCachedUploadApiBaseUrl = () => {
+  if (!isBrowser()) {
+    return '';
+  }
+  return localStorage.getItem(UPLOAD_API_BASE_URL_STORAGE_KEY) || '';
+};
+
 const readCachedServiceName = () => {
   if (!isBrowser()) {
     return '';
@@ -120,6 +145,15 @@ const applyPizcloudApiBaseUrl = (baseUrl: string) => {
   cachePizcloudApiBaseUrl(normalized);
 };
 
+const applyUploadApiBaseUrl = (baseUrl: string) => {
+  const normalized = normalizeUploadApiBaseUrl(baseUrl);
+  if (!normalized) {
+    return;
+  }
+  uploadApiBaseUrlStore.set(normalized);
+  cacheUploadApiBaseUrl(normalized);
+};
+
 const resolveServiceName = (url: URL) => {
   const paramServiceName = url.searchParams.get('service') || '';
   return paramServiceName || PUBLIC_DEFAULT_SERVICE_NAME || readCachedServiceName();
@@ -131,9 +165,10 @@ const requestServiceHealth = async (serviceName: string, fetchFn: Fetch) => {
   if (!response.ok) {
     throw new Error(`Account health check failed (${response.status})`);
   }
-  const data = (await response.json()) as { photoApi?: string; pizcloudApi?: string };
+  const data = (await response.json()) as { photoApi?: string; uploadApi?: string; pizcloudApi?: string };
   return {
     photoApi: data.photoApi || '',
+    uploadApi: data.uploadApi || '',
     pizcloudApi: data.pizcloudApi || '',
   };
 };
@@ -145,11 +180,17 @@ const refreshApiBaseUrl = async (serviceName: string, fetchFn: Fetch) => {
 
   refreshInFlight = (async () => {
     try {
-      const { photoApi, pizcloudApi } = await requestServiceHealth(serviceName, fetchFn);
+      const { photoApi, uploadApi, pizcloudApi } = await requestServiceHealth(serviceName, fetchFn);
       if (photoApi) {
         const normalized = normalizeApiBaseUrl(photoApi);
         if (normalized !== get(apiBaseUrlStore)) {
           applyApiBaseUrl(normalized, serviceName);
+        }
+      }
+      if (uploadApi) {
+        const normalized = normalizeUploadApiBaseUrl(uploadApi);
+        if (normalized !== get(uploadApiBaseUrlStore)) {
+          applyUploadApiBaseUrl(normalized);
         }
       }
       if (pizcloudApi) {
@@ -193,6 +234,10 @@ export const initApiBaseUrl = async ({ fetch: fetchFn, url }: { fetch: Fetch; ur
   if (cachedPizcloudApi) {
     applyPizcloudApiBaseUrl(cachedPizcloudApi);
   }
+  const cachedUploadApi = readCachedUploadApiBaseUrl();
+  if (cachedUploadApi) {
+    applyUploadApiBaseUrl(cachedUploadApi);
+  }
 
   const serviceName = resolveServiceName(url);
   if (!serviceName) {
@@ -210,3 +255,5 @@ export const getApiOrigin = () => get(apiOriginStoreInternal);
 export const apiOriginStore = apiOriginStoreInternal;
 
 export const getPizcloudApiBaseUrl = () => get(pizcloudApiStore);
+
+export const getUploadBaseUrl = () => get(uploadApiBaseUrlStore) || get(apiBaseUrlStore);

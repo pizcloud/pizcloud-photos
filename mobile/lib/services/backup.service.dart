@@ -23,6 +23,7 @@ import 'package:immich_mobile/repositories/file_media.repository.dart';
 import 'package:immich_mobile/services/album.service.dart';
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
+import 'package:immich_mobile/services/pizcloud/upload_endpoint.service.dart'; // pizcloud
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
 import 'package:path/path.dart' as p;
@@ -252,7 +253,8 @@ class BackupService {
     final bool isIgnoreIcloudAssets = _appSetting.getSetting(AppSettingsEnum.ignoreIcloudAssets);
     final shouldSyncAlbums = _appSetting.getSetting(AppSettingsEnum.syncAlbums);
     final String deviceId = Store.get(StoreKey.deviceId);
-    final String savedEndpoint = Store.get(StoreKey.serverEndpoint);
+    // final String savedEndpoint = Store.get(StoreKey.serverEndpoint);
+    final String uploadEndpoint = getUploadEndpoint(); // pizcloud
     final List<String> duplicatedAssetIds = [];
     bool anyErrors = false;
 
@@ -323,7 +325,7 @@ class BackupService {
 
           final baseRequest = MultipartRequest(
             'POST',
-            Uri.parse('$savedEndpoint/assets'),
+            Uri.parse('$uploadEndpoint/assets'),
             onProgress: ((bytes, totalBytes) => onProgress(bytes, totalBytes)),
           );
 

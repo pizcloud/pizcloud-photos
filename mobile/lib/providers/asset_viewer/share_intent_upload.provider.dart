@@ -9,6 +9,7 @@ import 'package:immich_mobile/extensions/string_extensions.dart';
 import 'package:immich_mobile/models/upload/share_intent_attachment.model.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/services/api.service.dart';
+import 'package:immich_mobile/services/pizcloud/upload_endpoint.service.dart'; // pizcloud
 import 'package:immich_mobile/services/share_intent_service.dart';
 import 'package:immich_mobile/services/upload.service.dart';
 import 'package:path/path.dart';
@@ -108,8 +109,9 @@ class ShareIntentUploadStateNotifier extends StateNotifier<List<ShareIntentAttac
   }
 
   Future<UploadTask> _buildUploadTask(String id, File file, {Map<String, String>? fields}) async {
-    final serverEndpoint = Store.get(StoreKey.serverEndpoint);
-    final url = Uri.parse('$serverEndpoint/assets').toString();
+    // final serverEndpoint = Store.get(StoreKey.serverEndpoint);
+    final uploadEndpoint = getUploadEndpoint(); // pizcloud
+    final url = Uri.parse('$uploadEndpoint/assets').toString();
     final headers = ApiService.getRequestHeaders();
     final deviceId = Store.get(StoreKey.deviceId);
 

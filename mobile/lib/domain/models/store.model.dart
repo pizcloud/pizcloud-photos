@@ -102,7 +102,10 @@ enum StoreKey<T> {
 
   // pizcloud first-login walkthrough flags
   firstLoginWalkthroughPending<bool>._(1014),
-  firstLoginWalkthroughCompleted<bool>._(1015);
+  firstLoginWalkthroughCompleted<bool>._(1015),
+
+  // pizcloud upload API base URL (used for large file uploads; falls back to serverEndpoint)
+  uploadEndpoint<String>._(1016);
 
   const StoreKey._(this.id);
   final int id;

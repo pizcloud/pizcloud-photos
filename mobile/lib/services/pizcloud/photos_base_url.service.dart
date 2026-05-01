@@ -8,14 +8,16 @@ import 'account_api.service.dart';
 
 class PhotosApiUrlResponse {
   final String photoApi;
+  final String uploadApi;
   final String pizcloudApi;
   final String? cluster;
 
-  PhotosApiUrlResponse({required this.photoApi, required this.pizcloudApi, this.cluster});
+  PhotosApiUrlResponse({required this.photoApi, required this.uploadApi, required this.pizcloudApi, this.cluster});
 
   factory PhotosApiUrlResponse.fromJson(Map<String, dynamic> json) {
     return PhotosApiUrlResponse(
       photoApi: (json['photoApi'] as String?) ?? '',
+      uploadApi: (json['uploadApi'] as String?) ?? '',
       pizcloudApi: (json['pizcloudApi'] as String?) ?? '',
       cluster: json['cluster'] as String?,
     );
@@ -59,6 +61,7 @@ class PhotosBaseUrlService {
 
       final parsed = PhotosApiUrlResponse.fromJson(data);
       final url = _normalizeBaseUrl(parsed.photoApi);
+      final uploadUrl = _normalizeBaseUrl(parsed.uploadApi);
       final pizcloudUrl = _normalizeBaseUrl(parsed.pizcloudApi);
 
       if (url.isEmpty) {
@@ -67,11 +70,13 @@ class PhotosBaseUrlService {
       }
 
       final apiUrl = _ensureApiPath(url);
+      final uploadApiUrl = uploadUrl.isNotEmpty ? _ensureApiPath(uploadUrl) : apiUrl;
       if (apiUrl.isEmpty) {
         debugPrint('Empty apiUrl after normalization');
         return false;
       }
       await Store.put(StoreKey.pizcloudPhotosApiUrl, apiUrl);
+      await Store.put(StoreKey.uploadEndpoint, uploadApiUrl);
       await Store.put(StoreKey.serverUrl, url);
       if (pizcloudUrl.isNotEmpty) {
         await Store.put(StoreKey.pizcloudApiUrl, pizcloudUrl);
@@ -141,6 +146,10 @@ class PhotosBaseUrlService {
           if (endpoint != apiUrl) {
             await Store.put(StoreKey.serverEndpoint, apiUrl);
           }
+          final uploadEndpoint = Store.tryGet(StoreKey.uploadEndpoint);
+          if (uploadEndpoint == null || uploadEndpoint.isEmpty) {
+            await Store.put(StoreKey.uploadEndpoint, apiUrl);
+          }
           return true;
         }
         // Small retry window for the store cache to update
@@ -156,6 +165,10 @@ class PhotosBaseUrlService {
     final endpoint = Store.tryGet(StoreKey.serverEndpoint);
     if (endpoint == null || endpoint.isEmpty) {
       await Store.put(StoreKey.serverEndpoint, apiUrl);
+    }
+    final uploadEndpoint = Store.tryGet(StoreKey.uploadEndpoint);
+    if (uploadEndpoint == null || uploadEndpoint.isEmpty) {
+      await Store.put(StoreKey.uploadEndpoint, apiUrl);
     }
     return true;
   }

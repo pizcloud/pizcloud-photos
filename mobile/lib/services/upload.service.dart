@@ -24,6 +24,7 @@ import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart';
 import 'package:immich_mobile/services/pizcloud/backup_success_api.service.dart'; // pizcloud
+import 'package:immich_mobile/services/pizcloud/upload_endpoint.service.dart'; // pizcloud
 import 'package:immich_mobile/utils/debug_print.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
@@ -515,8 +516,9 @@ class UploadService {
     bool? isFavorite,
     bool requiresWiFi = true,
   }) async {
-    final serverEndpoint = Store.get(StoreKey.serverEndpoint);
-    final url = Uri.parse('$serverEndpoint/assets').toString();
+    // final serverEndpoint = Store.get(StoreKey.serverEndpoint);
+    final uploadEndpoint = getUploadEndpoint(); // pizcloud
+    final url = Uri.parse('$uploadEndpoint/assets').toString(); // pizcloud
     final headers = ApiService.getRequestHeaders();
     final deviceId = Store.get(StoreKey.deviceId);
     final (baseDirectory, directory, filename) = await Task.split(filePath: file.path);

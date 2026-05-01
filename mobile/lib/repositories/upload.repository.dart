@@ -5,8 +5,7 @@ import 'package:background_downloader/background_downloader.dart';
 import 'package:cancellation_token_http/http.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
-import 'package:immich_mobile/domain/models/store.model.dart';
-import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/services/pizcloud/upload_endpoint.service.dart';
 import 'package:logging/logging.dart';
 import 'package:immich_mobile/utils/debug_print.dart';
 
@@ -150,7 +149,8 @@ class UploadRepository {
   // Return true if at least one asset was uploaded successfully in this batch.
   Future<bool> backupWithDartClient(Iterable<UploadTaskWithFile> tasks, CancellationToken cancelToken) async {
     final httpClient = Client();
-    final String savedEndpoint = Store.get(StoreKey.serverEndpoint);
+    // final String savedEndpoint = Store.get(StoreKey.serverEndpoint);
+    final String uploadEndpoint = getUploadEndpoint(); // pizcloud
 
     Logger logger = Logger('UploadRepository');
     bool hasSuccessfulUpload = false;
@@ -171,7 +171,7 @@ class UploadRepository {
             filename: candidate.task.filename,
           );
 
-          final baseRequest = MultipartRequest('POST', Uri.parse('$savedEndpoint/assets'));
+          final baseRequest = MultipartRequest('POST', Uri.parse('$uploadEndpoint/assets')); // pizcloud
 
           baseRequest.headers.addAll(candidate.task.headers);
           baseRequest.fields.addAll(candidate.task.fields);
