@@ -222,6 +222,8 @@ extension _GridCellStateRender on _GridCellState {
     final Color selectedAccent = palette.brightness == Brightness.dark
         ? const Color(0xFF8AB4FF)
         : const Color(0xFF2563EB); // new
+    final double safeViewScale = _resolveSafeViewScale(); // new
+    final double inverseViewScale = 1.0 / safeViewScale; // new
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -267,11 +269,22 @@ extension _GridCellStateRender on _GridCellState {
             ),
           ),
         if (storageIndicatorState != null)
+          // old
+          // Positioned(
+          //   right: 4,
+          //   // Keep distance when the video duration chip is present.
+          //   bottom: media.isVideo ? 24 : 4,
+          //   child: _buildStorageIndicatorIcon(storageIndicatorState, palette),
+          // ),
           Positioned(
-            right: 4,
+            right: 4 * inverseViewScale,
             // Keep distance when the video duration chip is present.
-            bottom: media.isVideo ? 24 : 4,
-            child: _buildStorageIndicatorIcon(storageIndicatorState, palette),
+            bottom: (media.isVideo ? 24 : 4) * inverseViewScale,
+            child: Transform.scale(
+              scale: inverseViewScale,
+              alignment: Alignment.bottomRight,
+              child: _buildStorageIndicatorIcon(storageIndicatorState, palette),
+            ),
           ),
         // #new
         if (media.isVideo)
@@ -312,6 +325,15 @@ extension _GridCellStateRender on _GridCellState {
         ),
       ],
     );
+  }
+
+  double _resolveSafeViewScale() {
+    final double scale = widget.viewScale;
+    if (scale.isNaN || scale.isInfinite || scale <= 0) {
+      return 1.0;
+    }
+    // Grid minScale is 1; clamp defensively to avoid enlarging the icon.
+    return scale < 1.0 ? 1.0 : scale;
   }
   // #new
 

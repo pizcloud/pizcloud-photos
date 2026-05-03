@@ -113,6 +113,7 @@ class GridVisibleCellsBuilder {
               child: GridCell(
                 data: cell,
                 size: grid.cellSize,
+                viewScale: renderScale, // new
                 bytesCache: bytesCache,
                 onTap:
                     cell.dataIndex == null ||
@@ -174,6 +175,7 @@ class GridVisibleCellsBuilder {
             child: ReuseGridCell(
               notifier: notifier,
               size: grid.cellSize,
+              viewScale: renderScale, // new
               bytesCache: bytesCache,
               onDataIndexTap: onDataIndexTap,
               onDataIndexLongPress: onDataIndexLongPress, // new

@@ -7,6 +7,7 @@ import 'media_hero_tag.dart';
 class ReuseGridCell extends StatelessWidget {
   final ValueNotifier<CellData> notifier;
   final double size;
+  final double viewScale; // new
   final LruBytesCache bytesCache;
   final void Function(int dataIndex, String? thumbUrl, String heroTag)?
   onDataIndexTap;
@@ -16,6 +17,7 @@ class ReuseGridCell extends StatelessWidget {
     super.key,
     required this.notifier,
     required this.size,
+    this.viewScale = 1.0, // new
     required this.bytesCache,
     this.onDataIndexTap,
     this.onDataIndexLongPress, // new
@@ -29,6 +31,7 @@ class ReuseGridCell extends StatelessWidget {
         return GridCell(
           data: data,
           size: size,
+          viewScale: viewScale,
           bytesCache: bytesCache,
           onTap:
               data.dataIndex == null ||

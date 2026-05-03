@@ -25,6 +25,7 @@ part 'cell/grid_cell_resolver.dart';
 class GridCell extends StatefulWidget {
   final CellData data;
   final double size;
+  final double viewScale; // new
   final LruBytesCache bytesCache;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress; // new
@@ -35,6 +36,7 @@ class GridCell extends StatefulWidget {
     super.key,
     required this.data,
     required this.size,
+    this.viewScale = 1.0, // new
     required this.bytesCache,
     this.onTap,
     this.onLongPress, // new
