@@ -444,6 +444,21 @@ class _ViewerPageState extends State<ViewerPage> {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
+  String _resolveTopBarTitle({
+    required MediaItem item,
+    required String fallbackTitle,
+  }) {
+    final DateTime? sourceDate = item.createdAt ?? item.addedAt;
+    if (sourceDate == null) {
+      return fallbackTitle;
+    }
+    final DateTime localDate = sourceDate.toLocal();
+    final MaterialLocalizations localizations = MaterialLocalizations.of(
+      context,
+    );
+    return localizations.formatMediumDate(localDate);
+  }
+
   // new
   List<BoxShadow> _overlayChipShadows(
     ViewerAppearancePalette palette, {
@@ -1043,6 +1058,52 @@ class _ViewerPageState extends State<ViewerPage> {
   }
 
   // new
+  Widget _buildTopOverlayTitleChip({
+    required BuildContext context,
+    required ViewerAppearancePalette palette,
+    required String title,
+  }) {
+    final String normalizedTitle = title.trim();
+    final String resolvedTitle = normalizedTitle.isEmpty
+        ? '--'
+        : normalizedTitle;
+    final double maxChipWidth = MediaQuery.sizeOf(context).width * 0.56;
+    final double clampedMaxChipWidth = maxChipWidth
+        .clamp(156.0, 320.0)
+        .toDouble();
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: clampedMaxChipWidth),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: _overlayButtonBackgroundColor(palette),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: palette.overlayChipBorder.withValues(alpha: 0.55),
+          ),
+          boxShadow: _overlayChipShadows(palette, strong: true),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            resolvedTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: palette.overlayControlForeground,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              shadows: <Shadow>[
+                Shadow(color: palette.overlayChipStrongShadow, blurRadius: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // new
   Widget _buildTopOverlayIconButton({
     required ViewerAppearancePalette palette,
     required IconData icon,
@@ -1159,7 +1220,13 @@ class _ViewerPageState extends State<ViewerPage> {
         ? _videoControllersByItemId[item.id]
         : null;
     final int humanIndex = _controller.currentIndex + 1;
-    final String title = '$humanIndex / ${_controller.totalCount}';
+    // Old behavior displayed index/total in the top-center title.
+    // final String title = '$humanIndex / ${_controller.totalCount}';
+    final String fallbackTitle = '$humanIndex / ${_controller.totalCount}';
+    final String title = _resolveTopBarTitle(
+      item: item,
+      fallbackTitle: fallbackTitle,
+    );
 
     return ValueListenableBuilder<double>(
       valueListenable: _currentViewerScale,
@@ -1366,46 +1433,79 @@ class _ViewerPageState extends State<ViewerPage> {
                                 width: double.infinity,
                                 height: _viewerTopBarHeight,
                                 child: NavigationToolbar(
-                                  leading: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: _buildTopOverlayIconButton(
-                                      palette: palette,
-                                      icon: Icons.arrow_back,
-                                      onPressed: _dismissViewerFromZoom,
-                                    ),
+                                  // Old behavior wrapped leading/trailing controls with Align widgets.
+                                  // In NavigationToolbar that can over-expand horizontally and leave
+                                  // no effective slot for the middle widget.
+                                  // leading: Align(
+                                  //   alignment: Alignment.centerLeft,
+                                  //   child: _buildTopOverlayIconButton(
+                                  //     palette: palette,
+                                  //     icon: Icons.arrow_back,
+                                  //     onPressed: _dismissViewerFromZoom,
+                                  //   ),
+                                  // ),
+                                  leading: _buildTopOverlayIconButton(
+                                    palette: palette,
+                                    icon: Icons.arrow_back,
+                                    onPressed: _dismissViewerFromZoom,
                                   ),
-                                  middle: Text(
-                                    title,
-                                    style: TextStyle(
-                                      color: palette.overlayControlForeground,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      shadows: <Shadow>[
-                                        Shadow(
-                                          color:
-                                              palette.overlayChipStrongShadow,
-                                          blurRadius: 10,
-                                        ),
-                                      ],
-                                    ),
+                                  // middle: Align(
+                                  //   alignment: Alignment.center,
+                                  //   child: _buildTopOverlayTitleChip(
+                                  //     context: context,
+                                  //     palette: palette,
+                                  //     title: title,
+                                  //   ),
+                                  // ),
+                                  middle: _buildTopOverlayTitleChip(
+                                    context: context,
+                                    palette: palette,
+                                    title: title,
                                   ),
-                                  trailing: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: ViewerActionMenu(
-                                      actions: _actions,
-                                      item: item,
-                                      onSelected: _onActionSelected,
-                                      iconColor:
-                                          palette.overlayControlForeground,
-                                      iconBackgroundColor:
-                                          _overlayButtonBackgroundColor(
-                                            palette,
-                                          ),
-                                      iconBorderColor: palette.overlayChipBorder
-                                          .withValues(alpha: 0.30),
-                                      iconShadowColor:
-                                          palette.overlayChipStrongShadow,
-                                    ),
+                                  // Old behavior:
+                                  // middle: Text(
+                                  //   title,
+                                  //   style: TextStyle(
+                                  //     color: palette.overlayControlForeground,
+                                  //     fontSize: 14,
+                                  //     fontWeight: FontWeight.w700,
+                                  //     shadows: <Shadow>[
+                                  //       Shadow(
+                                  //         color: palette.overlayChipStrongShadow,
+                                  //         blurRadius: 10,
+                                  //       ),
+                                  //     ],
+                                  //   ),
+                                  // ),
+                                  // trailing: Align(
+                                  //   alignment: Alignment.centerRight,
+                                  //   child: ViewerActionMenu(
+                                  //     actions: _actions,
+                                  //     item: item,
+                                  //     onSelected: _onActionSelected,
+                                  //     iconColor:
+                                  //         palette.overlayControlForeground,
+                                  //     iconBackgroundColor:
+                                  //         _overlayButtonBackgroundColor(
+                                  //           palette,
+                                  //         ),
+                                  //     iconBorderColor: palette.overlayChipBorder
+                                  //         .withValues(alpha: 0.30),
+                                  //     iconShadowColor:
+                                  //         palette.overlayChipStrongShadow,
+                                  //   ),
+                                  // ),
+                                  trailing: ViewerActionMenu(
+                                    actions: _actions,
+                                    item: item,
+                                    onSelected: _onActionSelected,
+                                    iconColor: palette.overlayControlForeground,
+                                    iconBackgroundColor:
+                                        _overlayButtonBackgroundColor(palette),
+                                    iconBorderColor: palette.overlayChipBorder
+                                        .withValues(alpha: 0.30),
+                                    iconShadowColor:
+                                        palette.overlayChipStrongShadow,
                                   ),
                                   centerMiddle: true,
                                 ),
