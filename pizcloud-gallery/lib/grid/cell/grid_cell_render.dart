@@ -243,28 +243,64 @@ extension _GridCellStateRender on _GridCellState {
             ),
           ),
         if (isSelected)
+          // old
+          // Positioned(
+          //   right: 6,
+          //   top: 6,
+          //   child: DecoratedBox(
+          //     decoration: BoxDecoration(
+          //       shape: BoxShape.circle,
+          //       color: selectedAccent,
+          //       border: Border.all(
+          //         color: Colors.white.withValues(alpha: 0.9),
+          //         width: 1.1,
+          //       ),
+          //       boxShadow: const <BoxShadow>[
+          //         BoxShadow(
+          //           blurRadius: 6.0,
+          //           color: Color.fromRGBO(0, 0, 0, 0.45),
+          //           offset: Offset(0.0, 0.0),
+          //         ),
+          //       ],
+          //     ),
+          //     child: const Padding(
+          //       padding: EdgeInsets.all(2.2),
+          //       child: Icon(Icons.check_rounded, size: 14, color: Colors.white),
+          //     ),
+          //   ),
+          // ),
           Positioned(
-            right: 6,
-            top: 6,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: selectedAccent,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  width: 1.1,
-                ),
-                boxShadow: const <BoxShadow>[
-                  BoxShadow(
-                    blurRadius: 6.0,
-                    color: Color.fromRGBO(0, 0, 0, 0.45),
-                    offset: Offset(0.0, 0.0),
+            // Compensate parent InteractiveViewer scale so selected check icon
+            // keeps fixed screen size and inset while zooming.
+            right: 6 * inverseViewScale,
+            top: 6 * inverseViewScale,
+            child: Transform.scale(
+              scale: inverseViewScale,
+              alignment: Alignment.topRight,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selectedAccent,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    width: 1.1,
                   ),
-                ],
-              ),
-              child: const Padding(
-                padding: EdgeInsets.all(2.2),
-                child: Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                  boxShadow: const <BoxShadow>[
+                    BoxShadow(
+                      blurRadius: 6.0,
+                      color: Color.fromRGBO(0, 0, 0, 0.45),
+                      offset: Offset(0.0, 0.0),
+                    ),
+                  ],
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(2.2),
+                  child: Icon(
+                    Icons.check_rounded,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
