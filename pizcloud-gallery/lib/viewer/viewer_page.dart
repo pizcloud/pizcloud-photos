@@ -61,7 +61,9 @@ class _ViewerPageState extends State<ViewerPage> {
   static const double _viewerTopBarHeight = 48.0;
   static const double _viewerBottomSafeMinimum = 4.0;
   static const double _viewerBottomActionBarHeight = 64.0;
+  // ignore: unused_field
   static const double _viewerMediaTopGap = 8.0;
+  // ignore: unused_field
   static const double _viewerMediaBottomGap = 8.0;
   static const double _viewerVideoControlsReserveHeight = 80.0;
   static const Duration _viewerViewportInsetAnimationDuration = Duration(
@@ -476,9 +478,11 @@ class _ViewerPageState extends State<ViewerPage> {
   }
 
   Color _overlayButtonBackgroundColor(ViewerAppearancePalette palette) {
-    // Viewer background is now black in both light/dark appearance modes.
-    // Use a stronger iOS-like translucent gray so chip backgrounds are always visible.
-    return const Color(0xE62C2C2E);
+    // Current black-background behavior:
+    // return const Color(0xE62C2C2E);
+    // Restore source-like behavior: follow appearance palette.
+    return palette.overlayChipBackground;
+    // return const Color.fromARGB(230, 171, 171, 177);
   }
 
   Widget _buildOverlayIconChipButton({
@@ -495,9 +499,9 @@ class _ViewerPageState extends State<ViewerPage> {
         color: _overlayButtonBackgroundColor(palette),
         shape: BoxShape.circle,
         border: Border.all(
-          color: palette.overlayChipBorder.withValues(alpha: 0.55),
+          color: palette.overlayChipBorder.withValues(alpha: 0.30),
         ),
-        boxShadow: _overlayChipShadows(palette, strong: strongShadow),
+        // boxShadow: _overlayChipShadows(palette, strong: strongShadow),
       ),
       child: SizedBox(
         width: buttonSize,
@@ -986,6 +990,7 @@ class _ViewerPageState extends State<ViewerPage> {
     }
   }
 
+  // ignore: unused_element
   Future<void> _showQuickActionsSheet({
     required bool canUploadCurrentItem,
     required bool canEditCurrentItem,
@@ -1080,7 +1085,7 @@ class _ViewerPageState extends State<ViewerPage> {
           border: Border.all(
             color: palette.overlayChipBorder.withValues(alpha: 0.55),
           ),
-          boxShadow: _overlayChipShadows(palette, strong: true),
+          // boxShadow: _overlayChipShadows(palette, strong: true),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1153,34 +1158,40 @@ class _ViewerPageState extends State<ViewerPage> {
     required bool showBottomBar,
     required bool reserveVideoControlsSpace,
   }) {
-    // Old behavior rendered media edge-to-edge behind bars.
-    // Reserve a center viewport so very tall photos don't visually collide with top/bottom controls.
-    if (!showTopBar && !showBottomBar) {
+    // Current behavior reserved a center viewport for media:
+    // if (!showTopBar && !showBottomBar) {
+    //   return EdgeInsets.zero;
+    // }
+    //
+    // double topInset = 0;
+    // if (showTopBar) {
+    //   topInset =
+    //       mediaQuery.padding.top +
+    //       _viewerTopBarTopPadding +
+    //       _viewerTopBarHeight +
+    //       _viewerMediaTopGap;
+    // }
+    //
+    // double bottomInset = 0;
+    // if (showBottomBar) {
+    //   bottomInset =
+    //       mediaQuery.padding.bottom +
+    //       _viewerBottomSafeMinimum +
+    //       _viewerBottomActionBarHeight +
+    //       _viewerMediaBottomGap;
+    //   if (reserveVideoControlsSpace) {
+    //     bottomInset += _viewerVideoControlsReserveHeight;
+    //   }
+    // }
+    //
+    // return EdgeInsets.only(top: topInset, bottom: bottomInset);
+
+    // Restore transparent top/bottom bar feel: let bars overlay directly on media.
+    // Keep optional reserve space only for external video controls.
+    if (!showBottomBar || !reserveVideoControlsSpace) {
       return EdgeInsets.zero;
     }
-
-    double topInset = 0;
-    if (showTopBar) {
-      topInset =
-          mediaQuery.padding.top +
-          _viewerTopBarTopPadding +
-          _viewerTopBarHeight +
-          _viewerMediaTopGap;
-    }
-
-    double bottomInset = 0;
-    if (showBottomBar) {
-      bottomInset =
-          mediaQuery.padding.bottom +
-          _viewerBottomSafeMinimum +
-          _viewerBottomActionBarHeight +
-          _viewerMediaBottomGap;
-      if (reserveVideoControlsSpace) {
-        bottomInset += _viewerVideoControlsReserveHeight;
-      }
-    }
-
-    return EdgeInsets.only(top: topInset, bottom: bottomInset);
+    return EdgeInsets.only(bottom: _viewerVideoControlsReserveHeight);
   }
 
   @override
@@ -1213,8 +1224,9 @@ class _ViewerPageState extends State<ViewerPage> {
     final bool canAddToAlbumCurrentItem =
         widget.session.onAddToAlbumRequested != null &&
         _canAddToAlbumItem(item);
-    final ViewerQuickActionsTexts quickActionsTexts =
-        widget.session.quickActionsTexts;
+    // Old quick-actions floating button used this local text bundle.
+    // final ViewerQuickActionsTexts quickActionsTexts =
+    //     widget.session.quickActionsTexts;
     // #new
     final VideoPlayerController? currentVideoController = item.isVideo
         ? _videoControllersByItemId[item.id]
@@ -1236,8 +1248,10 @@ class _ViewerPageState extends State<ViewerPage> {
             _isDismissingFromZoom || _isCurrentPageUnderlayReveal;
         final bool showTopBar = !revealUnderlay && !_isFullscreen;
         final bool showBottomBar = !revealUnderlay && !_isFullscreen;
-        // Old behavior used palette-dependent background in non-fullscreen mode.
-        final Color backdropBaseColor = Colors.black;
+        // Current black-background behavior:
+        // final Color backdropBaseColor = Colors.black;
+        // Restore source-like behavior: follow appearance palette.
+        final Color backdropBaseColor = palette.overlayBackdropBase;
         return ValueListenableBuilder<double>(
           valueListenable: _dismissDragProgress,
           builder: (context, dismissDragProgress, _) {
@@ -1271,7 +1285,11 @@ class _ViewerPageState extends State<ViewerPage> {
               child: MediaQuery(
                 data: viewerMediaQuery,
                 child: Material(
-                  color: revealUnderlay ? Colors.transparent : Colors.black,
+                  // Current black-background behavior:
+                  // color: revealUnderlay ? Colors.transparent : Colors.black,
+                  color: revealUnderlay
+                      ? Colors.transparent
+                      : palette.overlayBackdropBase,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -1552,96 +1570,96 @@ class _ViewerPageState extends State<ViewerPage> {
                                             MainAxisAlignment.center,
                                         // Old behavior rendered multiple fixed buttons directly in the bar.
                                         // Keep previous implementation as reference for quick rollback/debug.
-                                        // children: [
-                                        //   _buildBottomActionButton(
-                                        //     palette: palette,
-                                        //     icon: Icons.share_outlined,
-                                        //     label: 'Share',
-                                        //     isBusy: _isSharingCurrentItem,
-                                        //     busyLabel: 'Sharing...',
-                                        //     onPressed:
-                                        //         _isAnyBottomActionInProgress
-                                        //         ? null
-                                        //         : _onSharePressed,
-                                        //   ),
-                                        //   if (canUploadCurrentItem)
-                                        //     _buildBottomActionButton(
-                                        //       palette: palette,
-                                        //       icon: Icons.backup_outlined,
-                                        //       label: 'Upload',
-                                        //       isBusy: _isUploadingCurrentItem,
-                                        //       busyLabel: 'Uploading...',
-                                        //       onPressed:
-                                        //           _isAnyBottomActionInProgress
-                                        //           ? null
-                                        //           : _onUploadPressed,
-                                        //     ),
-                                        //   if (canEditCurrentItem)
-                                        //     _buildBottomActionButton(
-                                        //       palette: palette,
-                                        //       icon: Icons.edit_square,
-                                        //       label: 'Edit',
-                                        //       isBusy: _isEditingCurrentItem,
-                                        //       busyLabel: 'Opening...',
-                                        //       onPressed:
-                                        //           _isAnyBottomActionInProgress
-                                        //           ? null
-                                        //           : _onEditPressed,
-                                        //     ),
-                                        //   if (canAddToAlbumCurrentItem)
-                                        //     _buildBottomActionButton(
-                                        //       palette: palette,
-                                        //       icon: Icons.playlist_add_outlined,
-                                        //       label: 'Add',
-                                        //       isBusy: _isAddingCurrentItem,
-                                        //       busyLabel: 'Adding...',
-                                        //       onPressed:
-                                        //           _isAnyBottomActionInProgress
-                                        //           ? null
-                                        //           : _onAddToAlbumPressed,
-                                        //     ),
-                                        //   if (canDeleteCurrentItem)
-                                        //     _buildBottomActionButton(
-                                        //       palette: palette,
-                                        //       icon:
-                                        //           Icons.delete_outline_rounded,
-                                        //       label: 'Delete',
-                                        //       isBusy: _isDeletingCurrentItem,
-                                        //       busyLabel: 'Deleting...',
-                                        //       onPressed:
-                                        //           _isAnyBottomActionInProgress
-                                        //           ? null
-                                        //           : _onDeletePressed,
-                                        //     ),
-                                        // ],
                                         children: [
                                           _buildBottomActionButton(
                                             palette: palette,
-                                            icon: Icons.bolt_rounded,
-                                            label: quickActionsTexts
-                                                .quickActionsButtonLabel,
-                                            isBusy: false,
-                                            busyLabel: quickActionsTexts
-                                                .quickActionsButtonLabel,
+                                            icon: Icons.share_outlined,
+                                            label: 'Share',
+                                            isBusy: _isSharingCurrentItem,
+                                            busyLabel: 'Sharing...',
                                             onPressed:
                                                 _isAnyBottomActionInProgress
                                                 ? null
-                                                : () {
-                                                    unawaited(
-                                                      _showQuickActionsSheet(
-                                                        canUploadCurrentItem:
-                                                            canUploadCurrentItem,
-                                                        canEditCurrentItem:
-                                                            canEditCurrentItem,
-                                                        canAddToAlbumCurrentItem:
-                                                            canAddToAlbumCurrentItem,
-                                                        canDeleteCurrentItem:
-                                                            canDeleteCurrentItem,
-                                                      ),
-                                                    );
-                                                  },
+                                                : _onSharePressed,
                                           ),
+                                          if (canUploadCurrentItem)
+                                            _buildBottomActionButton(
+                                              palette: palette,
+                                              icon: Icons.backup_outlined,
+                                              label: 'Upload',
+                                              isBusy: _isUploadingCurrentItem,
+                                              busyLabel: 'Uploading...',
+                                              onPressed:
+                                                  _isAnyBottomActionInProgress
+                                                  ? null
+                                                  : _onUploadPressed,
+                                            ),
+                                          if (canEditCurrentItem)
+                                            _buildBottomActionButton(
+                                              palette: palette,
+                                              icon: Icons.edit_square,
+                                              label: 'Edit',
+                                              isBusy: _isEditingCurrentItem,
+                                              busyLabel: 'Opening...',
+                                              onPressed:
+                                                  _isAnyBottomActionInProgress
+                                                  ? null
+                                                  : _onEditPressed,
+                                            ),
+                                          if (canAddToAlbumCurrentItem)
+                                            _buildBottomActionButton(
+                                              palette: palette,
+                                              icon: Icons.playlist_add_outlined,
+                                              label: 'Add',
+                                              isBusy: _isAddingCurrentItem,
+                                              busyLabel: 'Adding...',
+                                              onPressed:
+                                                  _isAnyBottomActionInProgress
+                                                  ? null
+                                                  : _onAddToAlbumPressed,
+                                            ),
+                                          if (canDeleteCurrentItem)
+                                            _buildBottomActionButton(
+                                              palette: palette,
+                                              icon:
+                                                  Icons.delete_outline_rounded,
+                                              label: 'Delete',
+                                              isBusy: _isDeletingCurrentItem,
+                                              busyLabel: 'Deleting...',
+                                              onPressed:
+                                                  _isAnyBottomActionInProgress
+                                                  ? null
+                                                  : _onDeletePressed,
+                                            ),
                                         ],
+                                        // children: [
+                                        //   _buildBottomActionButton(
+                                        //     palette: palette,
+                                        //     icon: Icons.bolt_rounded,
+                                        //     label: quickActionsTexts
+                                        //         .quickActionsButtonLabel,
+                                        //     isBusy: false,
+                                        //     busyLabel: quickActionsTexts
+                                        //         .quickActionsButtonLabel,
+                                        //     onPressed:
+                                        //         _isAnyBottomActionInProgress
+                                        //         ? null
+                                        //         : () {
+                                        //             unawaited(
+                                        //               _showQuickActionsSheet(
+                                        //                 canUploadCurrentItem:
+                                        //                     canUploadCurrentItem,
+                                        //                 canEditCurrentItem:
+                                        //                     canEditCurrentItem,
+                                        //                 canAddToAlbumCurrentItem:
+                                        //                     canAddToAlbumCurrentItem,
+                                        //                 canDeleteCurrentItem:
+                                        //                     canDeleteCurrentItem,
+                                        //               ),
+                                        //             );
+                                        //           },
+                                        //   ),
+                                        // ],
                                       ),
                                     ),
                                   ),

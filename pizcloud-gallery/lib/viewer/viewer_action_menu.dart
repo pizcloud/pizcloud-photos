@@ -53,15 +53,15 @@ class ViewerActionMenu extends StatelessWidget {
                   border: iconBorderColor == null
                       ? null
                       : Border.all(color: iconBorderColor!),
-                  boxShadow: iconShadowColor == null
-                      ? null
-                      : <BoxShadow>[
-                          BoxShadow(
-                            color: iconShadowColor!,
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
+                  // boxShadow: iconShadowColor == null
+                  //     ? null
+                  //     : <BoxShadow>[
+                  //         BoxShadow(
+                  //           color: iconShadowColor!,
+                  //           blurRadius: 16,
+                  //           offset: const Offset(0, 6),
+                  //         ),
+                  //       ],
                   // #new
                 ),
           child: Center(
