@@ -36,6 +36,7 @@ import 'package:pizcloud_gallery/viewer/viewer_action.dart'; // new
 import 'package:pizcloud_gallery/viewer/viewer_page.dart';
 import 'package:pizcloud_gallery/viewer/viewer_cache_manager.dart';
 import 'package:pizcloud_gallery/viewer/viewer_session.dart';
+import 'package:pizcloud_gallery/viewer/viewer_quick_actions_texts.dart'; // new
 
 class PizGallery extends StatefulWidget {
   final PizGallerySource source;
@@ -55,6 +56,7 @@ class PizGallery extends StatefulWidget {
   final bool Function(MediaItem item)? canEditItem;
   final bool Function(MediaItem item)? canUploadItem;
   final bool Function(MediaItem item)? canAddToAlbumItem;
+  final ViewerQuickActionsTexts viewerQuickActionsTexts;
   final bool showDateOverlay;
   final GridDateOverlayTextBuilder? dateOverlayTextBuilder;
   final GallerySortFilterMenuTexts sortFilterMenuTexts;
@@ -96,6 +98,7 @@ class PizGallery extends StatefulWidget {
     this.canEditItem,
     this.canUploadItem,
     this.canAddToAlbumItem,
+    this.viewerQuickActionsTexts = const ViewerQuickActionsTexts.defaults(),
     this.showDateOverlay = false,
     this.dateOverlayTextBuilder,
     this.sortFilterMenuTexts = const GallerySortFilterMenuTexts.defaults(),
@@ -1988,6 +1991,7 @@ class _PizGalleryState extends State<PizGallery> with TickerProviderStateMixin {
           canEditItem: widget.canEditItem,
           canUploadItem: widget.canUploadItem,
           canAddToAlbumItem: widget.canAddToAlbumItem,
+          quickActionsTexts: widget.viewerQuickActionsTexts,
           // #new
         ),
       );

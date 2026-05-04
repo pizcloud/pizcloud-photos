@@ -34,63 +34,19 @@ class DeleteLocalOnlyDialog extends StatelessWidget {
 
     return PlatformAlertDialog(
       title: const Text("delete_dialog_title").tr(),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("delete_dialog_alert_local_non_backed_up").tr(),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: PlatformElevatedButton(
-              onPressed: () => context.pop(),
-              material: (_, __) => MaterialElevatedButtonData(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colorScheme.surfaceDim,
-                  foregroundColor: context.primaryColor,
-                ),
-              ),
-              child: const Text("cancel", style: TextStyle(fontWeight: FontWeight.bold)).tr(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: PlatformElevatedButton(
-              onPressed: onDeleteBackedUpOnly,
-              material: (_, __) => MaterialElevatedButtonData(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colorScheme.errorContainer,
-                  foregroundColor: context.colorScheme.onErrorContainer,
-                ),
-              ),
-              child: const Text(
-                "delete_local_dialog_ok_backed_up_only",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ).tr(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: PlatformElevatedButton(
-              onPressed: onForceDelete,
-              material: (_, __) => MaterialElevatedButtonData(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[400],
-                  foregroundColor: Colors.white,
-                ),
-              ),
-              cupertino: (_, __) => CupertinoElevatedButtonData(
-                color: Colors.red[400],
-              ),
-              child: const Text("delete_local_dialog_ok_force", style: TextStyle(fontWeight: FontWeight.bold)).tr(),
-            ),
-          ),
-        ],
-      ),
+      content: const Text("delete_dialog_alert_local_non_backed_up").tr(),
+      actions: <Widget>[
+        PlatformDialogAction(onPressed: () => context.pop(), child: const Text("cancel").tr()),
+        PlatformDialogAction(
+          onPressed: onDeleteBackedUpOnly,
+          child: const Text("delete_local_dialog_ok_backed_up_only").tr(),
+        ),
+        PlatformDialogAction(
+          onPressed: onForceDelete,
+          cupertino: (_, __) => CupertinoDialogActionData(isDestructiveAction: true),
+          child: Text("delete_local_dialog_ok_force", style: TextStyle(color: context.colorScheme.error)).tr(),
+        ),
+      ],
       material: (_, __) => MaterialAlertDialogData(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
       ),

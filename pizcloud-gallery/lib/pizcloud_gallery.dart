@@ -9,5 +9,6 @@ export 'grid/storage_indicator.dart';
 export 'grid/sources/local_device_media_uri.dart';
 export 'viewer/viewer_action.dart';
 export 'viewer/viewer_route_names.dart';
+export 'viewer/viewer_quick_actions_texts.dart';
 
 // #new

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pizcloud_gallery/grid/media_item.dart';
 
 import 'viewer_action.dart'; // new
+import 'viewer_quick_actions_texts.dart'; // new
 
 typedef ViewerDeleteCallback = FutureOr<void> Function(MediaItem item);
 typedef ViewerShareCallback = FutureOr<void> Function(MediaItem item);
@@ -38,6 +39,7 @@ class ViewerSession {
     this.canEditItem,
     this.canUploadItem,
     this.canAddToAlbumItem,
+    this.quickActionsTexts = const ViewerQuickActionsTexts.defaults(),
     // #new
   });
 
@@ -60,6 +62,7 @@ class ViewerSession {
   final ViewerCanEditItemCallback? canEditItem;
   final ViewerCanUploadItemCallback? canUploadItem;
   final ViewerCanAddToAlbumItemCallback? canAddToAlbumItem;
+  final ViewerQuickActionsTexts quickActionsTexts;
   // #new
 
   bool get isEmpty => items.isEmpty;

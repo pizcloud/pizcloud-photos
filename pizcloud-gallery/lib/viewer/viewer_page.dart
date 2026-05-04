@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pizcloud_gallery/grid/media_hero_tag.dart';
@@ -15,6 +16,7 @@ import 'viewer_image_loader.dart';
 import 'viewer_prefetcher.dart';
 import 'viewer_route_names.dart'; // new
 import 'viewer_session.dart';
+import 'viewer_quick_actions_texts.dart'; // new
 import 'widgets/viewer_zoomable.dart';
 
 class ViewerPage extends StatefulWidget {
@@ -950,6 +952,77 @@ class _ViewerPageState extends State<ViewerPage> {
     }
   }
 
+  Future<void> _showQuickActionsSheet({
+    required bool canUploadCurrentItem,
+    required bool canEditCurrentItem,
+    required bool canAddToAlbumCurrentItem,
+    required bool canDeleteCurrentItem,
+  }) async {
+    if (!mounted || _isAnyBottomActionInProgress) {
+      return;
+    }
+    final ViewerQuickActionsTexts texts = widget.session.quickActionsTexts;
+    final String? rawMessage = texts.quickActionsSheetMessage?.trim();
+    final String? sheetMessage = rawMessage == null || rawMessage.isEmpty
+        ? null
+        : rawMessage;
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (sheetContext) {
+        return CupertinoActionSheet(
+          title: Text(texts.quickActionsSheetTitle),
+          message: sheetMessage == null ? null : Text(sheetMessage),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.of(sheetContext).pop();
+                unawaited(_onSharePressed());
+              },
+              child: Text(texts.shareLabel),
+            ),
+            if (canUploadCurrentItem)
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  unawaited(_onUploadPressed());
+                },
+                child: Text(texts.uploadLabel),
+              ),
+            if (canEditCurrentItem)
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  unawaited(_onEditPressed());
+                },
+                child: Text(texts.editLabel),
+              ),
+            if (canAddToAlbumCurrentItem)
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  unawaited(_onAddToAlbumPressed());
+                },
+                child: Text(texts.addToAlbumLabel),
+              ),
+            if (canDeleteCurrentItem)
+              CupertinoActionSheetAction(
+                isDestructiveAction: true,
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  unawaited(_onDeletePressed());
+                },
+                child: Text(texts.deleteLabel),
+              ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop(),
+            child: Text(texts.cancelLabel),
+          ),
+        );
+      },
+    );
+  }
+
   // new
   Widget _buildTopOverlayIconButton({
     required ViewerAppearancePalette palette,
@@ -983,16 +1056,16 @@ class _ViewerPageState extends State<ViewerPage> {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            // color: palette.overlayChipBackground,
+            color: palette.overlayChipBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: palette.overlayChipBorder),
-            boxShadow: _overlayChipShadows(palette),
+            // border: Border.all(color: palette.overlayChipBorder),
+            // boxShadow: _overlayChipShadows(palette),
           ),
           child: TextButton(
             onPressed: onPressed,
             style: TextButton.styleFrom(
-              minimumSize: const Size(0, 64),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              minimumSize: const Size(0, 52),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -1000,7 +1073,7 @@ class _ViewerPageState extends State<ViewerPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 24, color: actionColor),
+                Icon(icon, size: 28, color: actionColor),
                 const SizedBox(height: 2),
                 Text(
                   isBusy ? busyLabel : label,
@@ -1009,7 +1082,7 @@ class _ViewerPageState extends State<ViewerPage> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: actionColor,
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     shadows: <Shadow>[
                       Shadow(
@@ -1059,6 +1132,8 @@ class _ViewerPageState extends State<ViewerPage> {
     final bool canAddToAlbumCurrentItem =
         widget.session.onAddToAlbumRequested != null &&
         _canAddToAlbumItem(item);
+    final ViewerQuickActionsTexts quickActionsTexts =
+        widget.session.quickActionsTexts;
     // #new
     final VideoPlayerController? currentVideoController = item.isVideo
         ? _videoControllersByItemId[item.id]
@@ -1317,13 +1392,16 @@ class _ViewerPageState extends State<ViewerPage> {
                                   onHorizontalDragEnd: (_) {},
                                   child: SizedBox(
                                     height: 84,
+                                    width: 150,
                                     child: Padding(
                                       // Old behavior used a full-width bottom scrim panel.
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 4,
                                       ),
                                       child: Row(
-                                        // Old behavior rendered only Share + Delete fixed buttons.
+                                        // Old behavior rendered multiple fixed buttons directly in the bar.
+                                        // Keep previous implementation as reference for quick rollback/debug.
+                                        /*
                                         children: [
                                           _buildBottomActionButton(
                                             palette: palette,
@@ -1385,6 +1463,35 @@ class _ViewerPageState extends State<ViewerPage> {
                                                   ? null
                                                   : _onDeletePressed,
                                             ),
+                                        ],
+                                        */
+                                        children: [
+                                          _buildBottomActionButton(
+                                            palette: palette,
+                                            icon: Icons.bolt_rounded,
+                                            label: quickActionsTexts
+                                                .quickActionsButtonLabel,
+                                            isBusy: false,
+                                            busyLabel: quickActionsTexts
+                                                .quickActionsButtonLabel,
+                                            onPressed:
+                                                _isAnyBottomActionInProgress
+                                                ? null
+                                                : () {
+                                                    unawaited(
+                                                      _showQuickActionsSheet(
+                                                        canUploadCurrentItem:
+                                                            canUploadCurrentItem,
+                                                        canEditCurrentItem:
+                                                            canEditCurrentItem,
+                                                        canAddToAlbumCurrentItem:
+                                                            canAddToAlbumCurrentItem,
+                                                        canDeleteCurrentItem:
+                                                            canDeleteCurrentItem,
+                                                      ),
+                                                    );
+                                                  },
+                                          ),
                                         ],
                                       ),
                                     ),
