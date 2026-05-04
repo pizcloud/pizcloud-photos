@@ -37,33 +37,42 @@ class ViewerActionMenu extends StatelessWidget {
 
     return PopupMenuButton<ViewerAction>(
       tooltip: 'Image menu',
+      padding: EdgeInsets.zero,
       // new
-      icon: Container(
-        // Old behavior rendered a bare icon with no background shape.
-        decoration: iconBackgroundColor == null
-            ? null
-            : BoxDecoration(
-                color: iconBackgroundColor,
-                shape: BoxShape.circle,
-                // new
-                border: iconBorderColor == null
-                    ? null
-                    : Border.all(color: iconBorderColor!),
-                boxShadow: iconShadowColor == null
-                    ? null
-                    : <BoxShadow>[
-                        BoxShadow(
-                          color: iconShadowColor!,
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                // #new
+      icon: SizedBox(
+        width: 40,
+        height: 40,
+        child: DecoratedBox(
+          // Old behavior rendered a bare icon with no background shape.
+          decoration: iconBackgroundColor == null
+              ? const BoxDecoration(shape: BoxShape.circle)
+              : BoxDecoration(
+                  color: iconBackgroundColor,
+                  shape: BoxShape.circle,
+                  // new
+                  border: iconBorderColor == null
+                      ? null
+                      : Border.all(color: iconBorderColor!),
+                  boxShadow: iconShadowColor == null
+                      ? null
+                      : <BoxShadow>[
+                          BoxShadow(
+                            color: iconShadowColor!,
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                  // #new
+                ),
+          child: Center(
+            child: Transform.translate(
+              offset: const Offset(0, -1),
+              child: Icon(
+                Icons.more_horiz_rounded,
+                color: iconColor ?? palette.appBarForeground,
               ),
-        padding: const EdgeInsets.all(6),
-        child: Icon(
-          Icons.more_horiz_rounded,
-          color: iconColor ?? palette.appBarForeground,
+            ),
+          ),
         ),
       ),
       // #new

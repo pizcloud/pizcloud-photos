@@ -57,6 +57,16 @@ class _ViewerPageState extends State<ViewerPage> {
   static const double _viewerMinScale = 0.3;
   static const double _viewerMaxScale = 4.0;
   static const double _pageGapBase = 30.0;
+  static const double _viewerTopBarTopPadding = 4.0;
+  static const double _viewerTopBarHeight = 48.0;
+  static const double _viewerBottomSafeMinimum = 4.0;
+  static const double _viewerBottomActionBarHeight = 64.0;
+  static const double _viewerMediaTopGap = 8.0;
+  static const double _viewerMediaBottomGap = 8.0;
+  static const double _viewerVideoControlsReserveHeight = 80.0;
+  static const Duration _viewerViewportInsetAnimationDuration = Duration(
+    milliseconds: 180,
+  );
   static const bool _debugControlBarBorder = false;
   static bool _persistedVideoMuted = false;
 
@@ -450,20 +460,29 @@ class _ViewerPageState extends State<ViewerPage> {
     ];
   }
 
+  Color _overlayButtonBackgroundColor(ViewerAppearancePalette palette) {
+    // Viewer background is now black in both light/dark appearance modes.
+    // Use a stronger iOS-like translucent gray so chip backgrounds are always visible.
+    return const Color(0xE62C2C2E);
+  }
+
   Widget _buildOverlayIconChipButton({
     required ViewerAppearancePalette palette,
     required IconData icon,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
+    Color? iconColor,
     double iconSize = 22,
     double buttonSize = 40,
     bool strongShadow = false,
   }) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: palette.overlayChipBackground,
+        color: _overlayButtonBackgroundColor(palette),
         shape: BoxShape.circle,
-        // border: Border.all(color: palette.overlayChipBorder),
-        // boxShadow: _overlayChipShadows(palette, strong: strongShadow),
+        border: Border.all(
+          color: palette.overlayChipBorder.withValues(alpha: 0.55),
+        ),
+        boxShadow: _overlayChipShadows(palette, strong: strongShadow),
       ),
       child: SizedBox(
         width: buttonSize,
@@ -474,7 +493,7 @@ class _ViewerPageState extends State<ViewerPage> {
           onPressed: onPressed,
           icon: Icon(
             icon,
-            color: palette.overlayControlForeground,
+            color: iconColor ?? palette.overlayControlForeground,
             size: iconSize,
           ),
         ),
@@ -1051,56 +1070,57 @@ class _ViewerPageState extends State<ViewerPage> {
         ? palette.overlayControlDisabledForeground
         : palette.overlayControlForeground;
     return Expanded(
-      // new
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: palette.overlayChipBackground,
-            borderRadius: BorderRadius.circular(16),
-            // border: Border.all(color: palette.overlayChipBorder),
-            // boxShadow: _overlayChipShadows(palette),
-          ),
-          child: TextButton(
-            onPressed: onPressed,
-            style: TextButton.styleFrom(
-              minimumSize: const Size(0, 52),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 28, color: actionColor),
-                const SizedBox(height: 2),
-                Text(
-                  isBusy ? busyLabel : label,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: actionColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    shadows: <Shadow>[
-                      Shadow(
-                        color: palette.overlayChipStrongShadow,
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+      child: Align(
+        alignment: Alignment.center,
+        child: _buildOverlayIconChipButton(
+          palette: palette,
+          icon: icon,
+          iconColor: actionColor,
+          onPressed: onPressed,
+          iconSize: 28,
+          buttonSize: 52,
+          strongShadow: true,
         ),
       ),
-      // #new
     );
   }
   // #new
+
+  EdgeInsets _resolveViewerMediaViewportInsets({
+    required MediaQueryData mediaQuery,
+    required bool showTopBar,
+    required bool showBottomBar,
+    required bool reserveVideoControlsSpace,
+  }) {
+    // Old behavior rendered media edge-to-edge behind bars.
+    // Reserve a center viewport so very tall photos don't visually collide with top/bottom controls.
+    if (!showTopBar && !showBottomBar) {
+      return EdgeInsets.zero;
+    }
+
+    double topInset = 0;
+    if (showTopBar) {
+      topInset =
+          mediaQuery.padding.top +
+          _viewerTopBarTopPadding +
+          _viewerTopBarHeight +
+          _viewerMediaTopGap;
+    }
+
+    double bottomInset = 0;
+    if (showBottomBar) {
+      bottomInset =
+          mediaQuery.padding.bottom +
+          _viewerBottomSafeMinimum +
+          _viewerBottomActionBarHeight +
+          _viewerMediaBottomGap;
+      if (reserveVideoControlsSpace) {
+        bottomInset += _viewerVideoControlsReserveHeight;
+      }
+    }
+
+    return EdgeInsets.only(top: topInset, bottom: bottomInset);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1149,9 +1169,8 @@ class _ViewerPageState extends State<ViewerPage> {
             _isDismissingFromZoom || _isCurrentPageUnderlayReveal;
         final bool showTopBar = !revealUnderlay && !_isFullscreen;
         final bool showBottomBar = !revealUnderlay && !_isFullscreen;
-        final Color backdropBaseColor = _isFullscreen
-            ? Colors.black
-            : palette.overlayBackdropBase;
+        // Old behavior used palette-dependent background in non-fullscreen mode.
+        final Color backdropBaseColor = Colors.black;
         return ValueListenableBuilder<double>(
           valueListenable: _dismissDragProgress,
           builder: (context, dismissDragProgress, _) {
@@ -1168,6 +1187,14 @@ class _ViewerPageState extends State<ViewerPage> {
                     viewInsets: EdgeInsets.zero,
                   )
                 : mediaQuery;
+            final EdgeInsets viewerMediaViewportInsets =
+                _resolveViewerMediaViewportInsets(
+                  mediaQuery: viewerMediaQuery,
+                  showTopBar: showTopBar,
+                  showBottomBar: showBottomBar,
+                  reserveVideoControlsSpace:
+                      showBottomBar && currentVideoController != null,
+                );
             return PopScope<void>(
               canPop: _isDismissingFromZoom,
               onPopInvokedWithResult: (didPop, result) {
@@ -1177,11 +1204,7 @@ class _ViewerPageState extends State<ViewerPage> {
               child: MediaQuery(
                 data: viewerMediaQuery,
                 child: Material(
-                  color: revealUnderlay
-                      ? Colors.transparent
-                      : (_isFullscreen
-                            ? Colors.black
-                            : palette.scaffoldBackground),
+                  color: revealUnderlay ? Colors.transparent : Colors.black,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -1190,125 +1213,139 @@ class _ViewerPageState extends State<ViewerPage> {
                           alpha: backdropOpacity,
                         ),
                       ),
-                      NotificationListener<ScrollNotification>(
-                        onNotification: _handlePageScrollNotification,
-                        child: PageView.builder(
-                          controller: _controller.pageController,
-                          physics: _isCurrentPageGestureLocked
-                              ? const NeverScrollableScrollPhysics()
-                              : const ViewerPageScrollPhysics(),
-                          itemCount: _controller.totalCount,
-                          onPageChanged: _handlePageChanged,
-                          itemBuilder: (context, index) {
-                            final MediaItem pageItem = _controller.items[index];
-                            final bool startWithHighQuality =
-                                index == widget.session.clampedInitialIndex &&
-                                widget.session.initialOriginalReady;
-                            final String? initialThumbUrl =
-                                index == widget.session.clampedInitialIndex
-                                ? widget.session.initialThumbUrl
-                                : null; // new
-                            final initialThumbBytes =
-                                index == widget.session.clampedInitialIndex
-                                ? widget.session.initialThumbBytes
-                                : null; // new
-                            final bool isCurrentPage =
-                                index == _controller.currentIndex;
-                            final String heroTag = mediaViewerHeroTag(
-                              pageItem.id,
-                            );
-                            final double mediaAspectRatio =
-                                _resolveMediaAspectRatio(pageItem);
-                            final Widget imageChild = ViewerImageLoader(
-                              item: pageItem,
-                              viewerIndex: index,
-                              isActive: isCurrentPage,
-                              onSurfaceTap: _toggleFullscreen,
-                              startWithHighQuality: startWithHighQuality,
-                              initialThumbUrl: initialThumbUrl, // new
-                              initialThumbBytes: initialThumbBytes, // new
-                              useTransparentBackground:
-                                  isCurrentPage && revealUnderlay,
-                              useBlackBackground: _isFullscreen,
-                              videoControlsBottomInset: 12,
-                              videoControlsEnabled: false,
-                              onVideoControllerChanged: (controller) {
-                                _handleVideoControllerChanged(
-                                  pageItem.id,
-                                  controller,
-                                );
-                              },
-                            );
-                            return SafeArea(
-                              top: false,
-                              bottom: false,
-                              child: AnimatedBuilder(
-                                animation: _controller.pageController,
-                                child: ViewerZoomable(
-                                  key: ValueKey<String>(
-                                    'viewer_zoom_${pageItem.id}',
-                                  ),
-                                  heroTag: heroTag,
-                                  mediaAspectRatio: mediaAspectRatio,
-                                  enabled: true,
-                                  minScale: _viewerMinScale,
-                                  maxScale: _viewerMaxScale,
-                                  onTransformStateChanged: (isTransformed) {
-                                    _handleTransformStateChanged(
-                                      index,
-                                      isTransformed,
-                                    );
-                                  },
-                                  onGestureLockChanged: (isLocked) {
-                                    _handleGestureLockChanged(index, isLocked);
-                                  },
-                                  onUnderlayRevealChanged: (reveal) {
-                                    _handleUnderlayRevealChanged(index, reveal);
-                                  },
-                                  onScaleChanged: (currentScale) {
-                                    _handleScaleChanged(index, currentScale);
-                                  },
-                                  onDismissDragProgressChanged: (progress) {
-                                    _handleDismissDragProgressChanged(
-                                      index,
-                                      progress,
-                                    );
-                                  },
-                                  onDismissScaleProgressChanged: (progress) {
-                                    _handleDismissScaleProgressChanged(
-                                      index,
-                                      progress,
-                                    );
-                                  },
-                                  onSingleTap: _toggleFullscreen,
-                                  onDismissRequested: _dismissViewerFromZoom,
-                                  child: imageChild,
-                                ),
-                                builder: (context, child) {
-                                  double currentPage = _controller.currentIndex
-                                      .toDouble();
-                                  final PageController pageController =
-                                      _controller.pageController;
-                                  if (pageController.hasClients) {
-                                    final double? livePage =
-                                        pageController.page;
-                                    if (livePage != null && livePage.isFinite) {
-                                      currentPage = livePage;
-                                    }
-                                  }
-                                  final double dx = _resolvePageTranslationX(
-                                    pageIndex: index,
-                                    currentPage: currentPage,
-                                    gap: pageGap,
-                                  );
-                                  return Transform.translate(
-                                    offset: Offset(dx, 0),
-                                    child: child,
+                      AnimatedPadding(
+                        duration: _viewerViewportInsetAnimationDuration,
+                        curve: Curves.easeOutCubic,
+                        padding: viewerMediaViewportInsets,
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: _handlePageScrollNotification,
+                          child: PageView.builder(
+                            controller: _controller.pageController,
+                            physics: _isCurrentPageGestureLocked
+                                ? const NeverScrollableScrollPhysics()
+                                : const ViewerPageScrollPhysics(),
+                            itemCount: _controller.totalCount,
+                            onPageChanged: _handlePageChanged,
+                            itemBuilder: (context, index) {
+                              final MediaItem pageItem =
+                                  _controller.items[index];
+                              final bool startWithHighQuality =
+                                  index == widget.session.clampedInitialIndex &&
+                                  widget.session.initialOriginalReady;
+                              final String? initialThumbUrl =
+                                  index == widget.session.clampedInitialIndex
+                                  ? widget.session.initialThumbUrl
+                                  : null; // new
+                              final initialThumbBytes =
+                                  index == widget.session.clampedInitialIndex
+                                  ? widget.session.initialThumbBytes
+                                  : null; // new
+                              final bool isCurrentPage =
+                                  index == _controller.currentIndex;
+                              final String heroTag = mediaViewerHeroTag(
+                                pageItem.id,
+                              );
+                              final double mediaAspectRatio =
+                                  _resolveMediaAspectRatio(pageItem);
+                              final Widget imageChild = ViewerImageLoader(
+                                item: pageItem,
+                                viewerIndex: index,
+                                isActive: isCurrentPage,
+                                onSurfaceTap: _toggleFullscreen,
+                                startWithHighQuality: startWithHighQuality,
+                                initialThumbUrl: initialThumbUrl, // new
+                                initialThumbBytes: initialThumbBytes, // new
+                                useTransparentBackground:
+                                    isCurrentPage && revealUnderlay,
+                                useBlackBackground: _isFullscreen,
+                                videoControlsBottomInset: 12,
+                                videoControlsEnabled: false,
+                                onVideoControllerChanged: (controller) {
+                                  _handleVideoControllerChanged(
+                                    pageItem.id,
+                                    controller,
                                   );
                                 },
-                              ),
-                            );
-                          },
+                              );
+                              return SafeArea(
+                                top: false,
+                                bottom: false,
+                                child: AnimatedBuilder(
+                                  animation: _controller.pageController,
+                                  child: ViewerZoomable(
+                                    key: ValueKey<String>(
+                                      'viewer_zoom_${pageItem.id}',
+                                    ),
+                                    heroTag: heroTag,
+                                    mediaAspectRatio: mediaAspectRatio,
+                                    enabled: true,
+                                    minScale: _viewerMinScale,
+                                    maxScale: _viewerMaxScale,
+                                    onTransformStateChanged: (isTransformed) {
+                                      _handleTransformStateChanged(
+                                        index,
+                                        isTransformed,
+                                      );
+                                    },
+                                    onGestureLockChanged: (isLocked) {
+                                      _handleGestureLockChanged(
+                                        index,
+                                        isLocked,
+                                      );
+                                    },
+                                    onUnderlayRevealChanged: (reveal) {
+                                      _handleUnderlayRevealChanged(
+                                        index,
+                                        reveal,
+                                      );
+                                    },
+                                    onScaleChanged: (currentScale) {
+                                      _handleScaleChanged(index, currentScale);
+                                    },
+                                    onDismissDragProgressChanged: (progress) {
+                                      _handleDismissDragProgressChanged(
+                                        index,
+                                        progress,
+                                      );
+                                    },
+                                    onDismissScaleProgressChanged: (progress) {
+                                      _handleDismissScaleProgressChanged(
+                                        index,
+                                        progress,
+                                      );
+                                    },
+                                    onSingleTap: _toggleFullscreen,
+                                    onDismissRequested: _dismissViewerFromZoom,
+                                    child: imageChild,
+                                  ),
+                                  builder: (context, child) {
+                                    double currentPage = _controller
+                                        .currentIndex
+                                        .toDouble();
+                                    final PageController pageController =
+                                        _controller.pageController;
+                                    if (pageController.hasClients) {
+                                      final double? livePage =
+                                          pageController.page;
+                                      if (livePage != null &&
+                                          livePage.isFinite) {
+                                        currentPage = livePage;
+                                      }
+                                    }
+                                    final double dx = _resolvePageTranslationX(
+                                      pageIndex: index,
+                                      currentPage: currentPage,
+                                      gap: pageGap,
+                                    );
+                                    return Transform.translate(
+                                      offset: Offset(dx, 0),
+                                      child: child,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       if (showTopBar)
@@ -1319,10 +1356,15 @@ class _ViewerPageState extends State<ViewerPage> {
                             bottom: false,
                             child: Padding(
                               // Old behavior used a full-width gradient scrim as top bar background.
-                              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                _viewerTopBarTopPadding,
+                                12,
+                                0,
+                              ),
                               child: SizedBox(
                                 width: double.infinity,
-                                height: kToolbarHeight,
+                                height: _viewerTopBarHeight,
                                 child: NavigationToolbar(
                                   leading: Align(
                                     alignment: Alignment.centerLeft,
@@ -1356,11 +1398,13 @@ class _ViewerPageState extends State<ViewerPage> {
                                       iconColor:
                                           palette.overlayControlForeground,
                                       iconBackgroundColor:
-                                          palette.overlayChipBackground,
-                                      // iconBorderColor:
-                                      //     palette.overlayChipBorder,
-                                      // iconShadowColor:
-                                      //     palette.overlayChipStrongShadow,
+                                          _overlayButtonBackgroundColor(
+                                            palette,
+                                          ),
+                                      iconBorderColor: palette.overlayChipBorder
+                                          .withValues(alpha: 0.30),
+                                      iconShadowColor:
+                                          palette.overlayChipStrongShadow,
                                     ),
                                   ),
                                   centerMiddle: true,
@@ -1376,7 +1420,12 @@ class _ViewerPageState extends State<ViewerPage> {
                           alignment: Alignment.bottomCenter,
                           child: SafeArea(
                             top: false,
-                            minimum: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                            minimum: EdgeInsets.fromLTRB(
+                              8,
+                              0,
+                              8,
+                              _viewerBottomSafeMinimum,
+                            ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1391,80 +1440,80 @@ class _ViewerPageState extends State<ViewerPage> {
                                   onHorizontalDragUpdate: (_) {},
                                   onHorizontalDragEnd: (_) {},
                                   child: SizedBox(
-                                    height: 84,
-                                    width: 150,
+                                    height: _viewerBottomActionBarHeight,
+                                    // width: 150,
                                     child: Padding(
                                       // Old behavior used a full-width bottom scrim panel.
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 4,
                                       ),
                                       child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         // Old behavior rendered multiple fixed buttons directly in the bar.
                                         // Keep previous implementation as reference for quick rollback/debug.
-                                        /*
-                                        children: [
-                                          _buildBottomActionButton(
-                                            palette: palette,
-                                            icon: Icons.share_outlined,
-                                            label: 'Share',
-                                            isBusy: _isSharingCurrentItem,
-                                            busyLabel: 'Sharing...',
-                                            onPressed:
-                                                _isAnyBottomActionInProgress
-                                                ? null
-                                                : _onSharePressed,
-                                          ),
-                                          if (canUploadCurrentItem)
-                                            _buildBottomActionButton(
-                                              palette: palette,
-                                              icon: Icons.backup_outlined,
-                                              label: 'Upload',
-                                              isBusy: _isUploadingCurrentItem,
-                                              busyLabel: 'Uploading...',
-                                              onPressed:
-                                                  _isAnyBottomActionInProgress
-                                                  ? null
-                                                  : _onUploadPressed,
-                                            ),
-                                          if (canEditCurrentItem)
-                                            _buildBottomActionButton(
-                                              palette: palette,
-                                              icon: Icons.edit_square,
-                                              label: 'Edit',
-                                              isBusy: _isEditingCurrentItem,
-                                              busyLabel: 'Opening...',
-                                              onPressed:
-                                                  _isAnyBottomActionInProgress
-                                                  ? null
-                                                  : _onEditPressed,
-                                            ),
-                                          if (canAddToAlbumCurrentItem)
-                                            _buildBottomActionButton(
-                                              palette: palette,
-                                              icon: Icons.playlist_add_outlined,
-                                              label: 'Add',
-                                              isBusy: _isAddingCurrentItem,
-                                              busyLabel: 'Adding...',
-                                              onPressed:
-                                                  _isAnyBottomActionInProgress
-                                                  ? null
-                                                  : _onAddToAlbumPressed,
-                                            ),
-                                          if (canDeleteCurrentItem)
-                                            _buildBottomActionButton(
-                                              palette: palette,
-                                              icon:
-                                                  Icons.delete_outline_rounded,
-                                              label: 'Delete',
-                                              isBusy: _isDeletingCurrentItem,
-                                              busyLabel: 'Deleting...',
-                                              onPressed:
-                                                  _isAnyBottomActionInProgress
-                                                  ? null
-                                                  : _onDeletePressed,
-                                            ),
-                                        ],
-                                        */
+                                        // children: [
+                                        //   _buildBottomActionButton(
+                                        //     palette: palette,
+                                        //     icon: Icons.share_outlined,
+                                        //     label: 'Share',
+                                        //     isBusy: _isSharingCurrentItem,
+                                        //     busyLabel: 'Sharing...',
+                                        //     onPressed:
+                                        //         _isAnyBottomActionInProgress
+                                        //         ? null
+                                        //         : _onSharePressed,
+                                        //   ),
+                                        //   if (canUploadCurrentItem)
+                                        //     _buildBottomActionButton(
+                                        //       palette: palette,
+                                        //       icon: Icons.backup_outlined,
+                                        //       label: 'Upload',
+                                        //       isBusy: _isUploadingCurrentItem,
+                                        //       busyLabel: 'Uploading...',
+                                        //       onPressed:
+                                        //           _isAnyBottomActionInProgress
+                                        //           ? null
+                                        //           : _onUploadPressed,
+                                        //     ),
+                                        //   if (canEditCurrentItem)
+                                        //     _buildBottomActionButton(
+                                        //       palette: palette,
+                                        //       icon: Icons.edit_square,
+                                        //       label: 'Edit',
+                                        //       isBusy: _isEditingCurrentItem,
+                                        //       busyLabel: 'Opening...',
+                                        //       onPressed:
+                                        //           _isAnyBottomActionInProgress
+                                        //           ? null
+                                        //           : _onEditPressed,
+                                        //     ),
+                                        //   if (canAddToAlbumCurrentItem)
+                                        //     _buildBottomActionButton(
+                                        //       palette: palette,
+                                        //       icon: Icons.playlist_add_outlined,
+                                        //       label: 'Add',
+                                        //       isBusy: _isAddingCurrentItem,
+                                        //       busyLabel: 'Adding...',
+                                        //       onPressed:
+                                        //           _isAnyBottomActionInProgress
+                                        //           ? null
+                                        //           : _onAddToAlbumPressed,
+                                        //     ),
+                                        //   if (canDeleteCurrentItem)
+                                        //     _buildBottomActionButton(
+                                        //       palette: palette,
+                                        //       icon:
+                                        //           Icons.delete_outline_rounded,
+                                        //       label: 'Delete',
+                                        //       isBusy: _isDeletingCurrentItem,
+                                        //       busyLabel: 'Deleting...',
+                                        //       onPressed:
+                                        //           _isAnyBottomActionInProgress
+                                        //           ? null
+                                        //           : _onDeletePressed,
+                                        //     ),
+                                        // ],
                                         children: [
                                           _buildBottomActionButton(
                                             palette: palette,
