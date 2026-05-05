@@ -95,7 +95,7 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (widget.startWithHighQuality) {
+    if (widget.startWithHighQuality || widget.item.isVideo) {
       return;
     }
     _startLoadPipeline();
@@ -120,7 +120,15 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
     if (widget.item.isVideo &&
         oldWidget.isActive != widget.isActive &&
         _videoReady) {
-      _syncVideoPlaybackWithActivity();
+      // new
+      // _syncVideoPlaybackWithActivity();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !widget.item.isVideo || !_videoReady) {
+          return;
+        }
+        _syncVideoPlaybackWithActivity();
+      });
+      // #new
     }
     if (oldWidget.item.id != widget.item.id) {
       _localAssetFutureId = null;
@@ -149,6 +157,9 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   }
 
   void _ensureLowQualityRequested() {
+    if (widget.item.isVideo) {
+      return;
+    } // new
     final String? lowQualityUrl = _resolveLowQualityUrl();
     if (!_isNetworkUrl(lowQualityUrl)) {
       _onLowQualityGateOpened();
@@ -201,6 +212,9 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   }
 
   void _ensureHighQualityRequested() {
+    if (widget.item.isVideo) {
+      return;
+    } // new
     final String highQualityUrl = widget.item.originalUrl;
     if (!_isNetworkUrl(highQualityUrl)) return;
     if (_originalCached) return;
@@ -786,6 +800,9 @@ class _ViewerImageLoaderState extends State<ViewerImageLoader> {
   // #new
 
   void _startLoadPipeline() {
+    if (widget.item.isVideo) {
+      return;
+    } // new
     // Reverted behavior (requested):
     // - Keep low-quality gate first to avoid competing with high-quality fetch
     //   on weak/limited networks.
