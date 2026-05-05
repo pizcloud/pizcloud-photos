@@ -5,12 +5,14 @@
   import DownloadPanel from '$lib/components/asset-viewer/download-panel.svelte';
   import ErrorLayout from '$lib/components/layouts/ErrorLayout.svelte';
   import AppleHeader from '$lib/components/shared-components/apple-header.svelte';
+  import InterruptedUploadPanel from '$lib/components/shared-components/interrupted-upload-panel.svelte';
   import NavigationLoadingBar from '$lib/components/shared-components/navigation-loading-bar.svelte';
   import UploadPanel from '$lib/components/shared-components/upload-panel.svelte';
   import { AppRoute } from '$lib/constants';
   import { eventManager } from '$lib/managers/event-manager.svelte';
   import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
   import ServerRestartingModal from '$lib/modals/ServerRestartingModal.svelte';
+  import { interruptedUploadsStore } from '$lib/stores/interrupted-upload';
   import { user } from '$lib/stores/user.store';
   import {
     closeWebsocketConnection,
@@ -48,6 +50,7 @@
   let { children }: Props = $props();
 
   let showNavigationLoadingBar = $state(false);
+  let interruptedSyncUserId = $state<string | null>(null); // pizcloud
 
   const getMyImmichLink = () => {
     return new URL(page.url.pathname + page.url.search, 'https://photos.pizcloud.com');
@@ -58,6 +61,25 @@
     element?.remove();
     // if the browser theme changes, changes the Immich theme too
   });
+
+  // pizcloud
+  $effect(() => {
+    const userId = $user?.id;
+
+    if (!userId) {
+      interruptedSyncUserId = null;
+      interruptedUploadsStore.reset();
+      return;
+    }
+
+    if (interruptedSyncUserId === userId) {
+      return;
+    }
+
+    interruptedSyncUserId = userId;
+    void interruptedUploadsStore.syncFromLocalCache();
+  });
+  // #pizcloud
 
   eventManager.emit('AppInit');
 
@@ -184,3 +206,4 @@
 
 <DownloadPanel />
 <UploadPanel />
+<InterruptedUploadPanel /> // pizcloud

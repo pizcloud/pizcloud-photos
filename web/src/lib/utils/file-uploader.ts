@@ -111,6 +111,23 @@ type UploadSessionActive = {
   totalChunks: number;
   uploadedChunks: number[];
 };
+
+type ResumableSessionCacheEntry = {
+  sessionId: string;
+  deviceAssetId: string;
+  fileName: string;
+  fileSize: number;
+  lastModified: number;
+  albumId?: string;
+  isLockedAssets?: boolean;
+  updatedAt: number;
+};
+
+type ResumableSessionCacheValue = string | ResumableSessionCacheEntry;
+type ResumableSessionCache = Record<string, ResumableSessionCacheValue>;
+
+export type InterruptedUploadSessionEntry = ResumableSessionCacheEntry & { cacheKey: string };
+export type InterruptedUploadSessionStatus = UploadSessionStatusResponseDto;
 // #pizcloud
 
 type FileUploadParam = { multiple?: boolean; albumId?: string };
@@ -187,20 +204,20 @@ function getResumableUploadCacheKey(asset: File, deviceAssetId: string) {
   return `${deviceAssetId}:${asset.size}:${asset.lastModified}`;
 }
 
-function readResumableSessionCache(): Record<string, string> {
+function readResumableSessionCache(): ResumableSessionCache {
   try {
     const value = globalThis.localStorage?.getItem(RESUMABLE_SESSION_STORAGE_KEY);
     if (!value) {
       return {};
     }
     const parsed = JSON.parse(value) as unknown;
-    return typeof parsed === 'object' && parsed ? (parsed as Record<string, string>) : {};
+    return typeof parsed === 'object' && parsed ? (parsed as ResumableSessionCache) : {};
   } catch {
     return {};
   }
 }
 
-function writeResumableSessionCache(cache: Record<string, string>) {
+function writeResumableSessionCache(cache: ResumableSessionCache) {
   try {
     globalThis.localStorage?.setItem(RESUMABLE_SESSION_STORAGE_KEY, JSON.stringify(cache));
   } catch {
@@ -208,17 +225,18 @@ function writeResumableSessionCache(cache: Record<string, string>) {
   }
 }
 
-function setResumableSessionId(cacheKey: string, sessionId: string) {
+function setResumableSessionEntry(cacheKey: string, entry: ResumableSessionCacheEntry) {
   const cache = readResumableSessionCache();
-  cache[cacheKey] = sessionId;
+  cache[cacheKey] = entry;
   writeResumableSessionCache(cache);
 }
 
 function getResumableSessionId(cacheKey: string): string | undefined {
-  return readResumableSessionCache()[cacheKey];
+  const value = readResumableSessionCache()[cacheKey];
+  return typeof value === 'string' ? value : value?.sessionId;
 }
 
-function removeResumableSessionId(cacheKey: string) {
+function removeResumableSessionCacheEntry(cacheKey: string) {
   const cache = readResumableSessionCache();
   if (!(cacheKey in cache)) {
     return;
@@ -252,6 +270,98 @@ async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
 
   return body as T;
 }
+
+function setResumableSessionFromFile({
+  cacheKey,
+  sessionId,
+  file,
+  deviceAssetId,
+  albumId,
+  isLockedAssets,
+}: {
+  cacheKey: string;
+  sessionId: string;
+  file: File;
+  deviceAssetId: string;
+  albumId?: string;
+  isLockedAssets?: boolean;
+}) {
+  setResumableSessionEntry(cacheKey, {
+    sessionId,
+    deviceAssetId,
+    fileName: file.name,
+    fileSize: file.size,
+    lastModified: file.lastModified,
+    albumId,
+    isLockedAssets,
+    updatedAt: Date.now(),
+  });
+}
+
+export function listInterruptedUploadSessionEntries(): InterruptedUploadSessionEntry[] {
+  const cache = readResumableSessionCache();
+  const entries: InterruptedUploadSessionEntry[] = [];
+
+  for (const [cacheKey, value] of Object.entries(cache)) {
+    if (typeof value === 'string') {
+      continue;
+    }
+    entries.push({ cacheKey, ...value });
+  }
+
+  // Legacy (kept for reference): `return entries.toSorted((a, b) => b.updatedAt - a.updatedAt);`
+  return entries.slice().sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+export function removeInterruptedUploadSessionEntry(cacheKey: string) {
+  removeResumableSessionCacheEntry(cacheKey);
+}
+
+export async function getInterruptedUploadSessionStatus(sessionId: string): Promise<InterruptedUploadSessionStatus> {
+  const queryParams = asQueryString(authManager.params);
+  const statusUrl = `${getBaseUrl()}/assets/upload-sessions/${sessionId}${queryParams ? `?${queryParams}` : ''}`;
+  return await requestJson<UploadSessionStatusResponseDto>(statusUrl, { method: 'GET' });
+}
+
+export async function cancelInterruptedUploadSession(sessionId: string): Promise<void> {
+  const queryParams = asQueryString(authManager.params);
+  const cancelUrl = `${getBaseUrl()}/assets/upload-sessions/${sessionId}${queryParams ? `?${queryParams}` : ''}`;
+  try {
+    await requestJson<unknown>(cancelUrl, { method: 'DELETE' });
+  } catch (error) {
+    const status = (error as { status?: number } | undefined)?.status;
+    if (status !== 404) {
+      throw error;
+    }
+  }
+}
+
+export async function resumeInterruptedUploadSession({
+  entry,
+  file,
+}: {
+  entry: InterruptedUploadSessionEntry;
+  file: File;
+}): Promise<string[]> {
+  if (file.name !== entry.fileName || file.size !== entry.fileSize || file.lastModified !== entry.lastModified) {
+    throw new Error('Selected file does not match interrupted upload');
+  }
+
+  setResumableSessionFromFile({
+    cacheKey: entry.cacheKey,
+    sessionId: entry.sessionId,
+    file,
+    deviceAssetId: entry.deviceAssetId,
+    albumId: entry.albumId,
+    isLockedAssets: entry.isLockedAssets,
+  });
+
+  return await fileUploadHandler({
+    files: [file],
+    albumId: entry.albumId,
+    isLockedAssets: entry.isLockedAssets ?? false,
+  });
+}
 // #pizcloud
 
 type FileUploaderParams = {
@@ -268,11 +378,13 @@ async function createOrResumeUploadSession({
   checksum,
   deviceAssetId,
   isLockedAssets,
+  albumId,
 }: {
   assetFile: File;
   checksum: string;
   deviceAssetId: string;
   isLockedAssets: boolean;
+  albumId?: string;
 }): Promise<
   | { type: 'duplicate'; data: { id: string; status: AssetMediaStatus.Duplicate; isTrashed?: boolean } }
   | { type: 'active'; session: UploadSessionActive; cacheKey: string }
@@ -287,6 +399,14 @@ async function createOrResumeUploadSession({
   if (cachedSessionId) {
     try {
       const session = await requestJson<UploadSessionStatusResponseDto>(statusUrl(cachedSessionId), { method: 'GET' });
+      setResumableSessionFromFile({
+        cacheKey,
+        sessionId: session.id,
+        file: assetFile,
+        deviceAssetId,
+        albumId,
+        isLockedAssets,
+      });
       return {
         type: 'active',
         cacheKey,
@@ -298,7 +418,7 @@ async function createOrResumeUploadSession({
         },
       };
     } catch {
-      removeResumableSessionId(cacheKey);
+      removeResumableSessionCacheEntry(cacheKey);
     }
   }
 
@@ -326,7 +446,7 @@ async function createOrResumeUploadSession({
   });
 
   if (session.status === 'duplicate' && session.assetId) {
-    removeResumableSessionId(cacheKey);
+    removeResumableSessionCacheEntry(cacheKey);
     return {
       type: 'duplicate',
       data: {
@@ -341,7 +461,14 @@ async function createOrResumeUploadSession({
     throw new Error('Invalid upload session response');
   }
 
-  setResumableSessionId(cacheKey, session.id);
+  setResumableSessionFromFile({
+    cacheKey,
+    sessionId: session.id,
+    file: assetFile,
+    deviceAssetId,
+    albumId,
+    isLockedAssets,
+  });
   return {
     type: 'active',
     cacheKey,
@@ -359,13 +486,21 @@ async function uploadAssetResumable({
   checksum,
   deviceAssetId,
   isLockedAssets,
+  albumId,
 }: {
   assetFile: File;
   checksum: string;
   deviceAssetId: string;
   isLockedAssets: boolean;
+  albumId?: string;
 }): Promise<{ id: string; status: AssetMediaStatus; isTrashed?: boolean }> {
-  const sessionResult = await createOrResumeUploadSession({ assetFile, checksum, deviceAssetId, isLockedAssets });
+  const sessionResult = await createOrResumeUploadSession({
+    assetFile,
+    checksum,
+    deviceAssetId,
+    isLockedAssets,
+    albumId,
+  });
   if (sessionResult.type === 'duplicate') {
     return sessionResult.data;
   }
@@ -405,7 +540,7 @@ async function uploadAssetResumable({
 
   const completeUrl = `${baseUrl}/assets/upload-sessions/${session.id}/complete${queryParams ? `?${queryParams}` : ''}`;
   const response = await requestJson<AssetMediaResponseDto>(completeUrl, { method: 'POST' });
-  removeResumableSessionId(cacheKey);
+  removeResumableSessionCacheEntry(cacheKey);
   return response;
 }
 // #pizcloud
@@ -486,6 +621,7 @@ async function fileUploader({
             checksum,
             deviceAssetId,
             isLockedAssets,
+            albumId,
           });
         } catch (error) {
           if (!(error instanceof HttpRequestError) || ![404, 405, 501].includes(error.status)) {
