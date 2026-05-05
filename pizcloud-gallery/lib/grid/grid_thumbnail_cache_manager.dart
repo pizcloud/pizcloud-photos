@@ -19,7 +19,7 @@ class GridThumbnailCacheManager extends CacheManager {
           _cacheKey,
           stalePeriod: const Duration(days: 14),
           maxNrOfCacheObjects: 3000,
-          repo: JsonCacheInfoRepository(databaseName: _cacheKey),
+          // repo: JsonCacheInfoRepository(databaseName: _cacheKey), // new
         ),
       );
 

@@ -20,7 +20,7 @@ class ViewerCacheManager extends CacheManager with ImageCacheManager {
           _cacheKey,
           stalePeriod: const Duration(days: 30),
           maxNrOfCacheObjects: 1200,
-          repo: JsonCacheInfoRepository(databaseName: _cacheKey),
+          // repo: JsonCacheInfoRepository(databaseName: _cacheKey), // new
           fileService: ViewerDioFileService(),
         ),
       );

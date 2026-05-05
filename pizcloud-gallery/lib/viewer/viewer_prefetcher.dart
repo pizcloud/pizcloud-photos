@@ -266,6 +266,10 @@ class ViewerPrefetcher {
     int? originalHeight,
   }) async {
     if (!context.mounted) return;
+    // no explicit video playback guard here
+    if (_isVideoPlaybackUrl(url)) {
+      return;
+    } // new
     final ViewerCacheManager cache = ViewerCacheManager.instance;
     if (indexHint != null) {
       ViewerCacheManager.registerDebugIndex(url, indexHint);
@@ -309,12 +313,36 @@ class ViewerPrefetcher {
   }
 
   String? _networkImageUrl(MediaItem item) {
+    // final String url = item.originalUrl;
+    // if (url.startsWith('http://') || url.startsWith('https://')) {
+    //   return url;
+    // }
+    // return null;
+    if (item.isVideo) {
+      return null;
+    } // new
     final String url = item.originalUrl;
+    if (_isVideoPlaybackUrl(url)) {
+      return null;
+    } // new
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     return null;
   }
+
+  // new
+  bool _isVideoPlaybackUrl(String url) {
+    if (url.isEmpty) {
+      return false;
+    }
+    final Uri? uri = Uri.tryParse(url);
+    if (uri == null) {
+      return false;
+    }
+    return uri.path.contains('/video/playback');
+  }
+  // #new
 
   int _resolveDecodeWidth({required int decodeWidth, int? originalWidth}) {
     if (originalWidth == null || originalWidth <= 0) {
