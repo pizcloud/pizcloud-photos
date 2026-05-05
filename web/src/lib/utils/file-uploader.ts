@@ -15,6 +15,7 @@ import {
   getBaseUrl,
   type AssetMediaResponseDto,
 } from '@immich/sdk';
+import { createSHA1 } from 'hash-wasm'; // pizcloud
 // import { getBaseUrl } from '$lib/pizcloud'; // pizcloud
 
 import { tick } from 'svelte';
@@ -44,6 +45,28 @@ export const addDummyItems = () => {
 // addDummyItems();
 
 export const uploadExecutionQueue = new ExecutorQueue({ concurrency: 2 });
+// pizcloud
+const HASH_CHUNK_SIZE = 8 * 1024 * 1024; // 8 MiB
+const HASH_YIELD_INTERVAL_CHUNKS = 16;
+
+async function calculateSha1Checksum(file: Blob): Promise<string> {
+  const sha1 = await createSHA1();
+  sha1.init();
+
+  for (let offset = 0, chunkIndex = 0; offset < file.size; offset += HASH_CHUNK_SIZE, chunkIndex++) {
+    const chunk = file.slice(offset, offset + HASH_CHUNK_SIZE);
+    const bytes = await chunk.arrayBuffer();
+    sha1.update(new Uint8Array(bytes));
+
+    // Yield periodically so large file hashing does not monopolize the UI thread.
+    if ((chunkIndex + 1) % HASH_YIELD_INTERVAL_CHUNKS === 0) {
+      await Promise.resolve();
+    }
+  }
+
+  return sha1.digest('hex');
+}
+// #pizcloud
 
 type FileUploadParam = { multiple?: boolean; albumId?: string };
 
@@ -149,15 +172,20 @@ async function fileUploader({
     }
 
     let responseData: { id: string; status: AssetMediaStatus; isTrashed?: boolean } | undefined;
-    if (crypto?.subtle?.digest && !authManager.isSharedLink) {
+    // pizcloud - Legacy gate (kept for reference): `crypto?.subtle?.digest && !authManager.isSharedLink`
+    if (!authManager.isSharedLink) {
       uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_hashing') });
       await tick();
       try {
-        const bytes = await assetFile.arrayBuffer();
-        const hash = await crypto.subtle.digest('SHA-1', bytes);
-        const checksum = Array.from(new Uint8Array(hash))
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join('');
+        // pizcloud
+        // const bytes = await assetFile.arrayBuffer();
+        // const hash = await crypto.subtle.digest('SHA-1', bytes);
+        // const checksum = Array.from(new Uint8Array(hash))
+        //   .map((b) => b.toString(16).padStart(2, '0'))
+        //   .join('');
+
+        const checksum = await calculateSha1Checksum(assetFile);
+        // #pizcloud
 
         const {
           results: [checkUploadResult],
