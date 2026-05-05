@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { plainToInstance, Transform, Type } from 'class-transformer';
-import { ArrayNotEmpty, IsArray, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsInt, IsNotEmpty, IsString, Min, ValidateNested } from 'class-validator';
 import { AssetMetadataUpsertItemDto } from 'src/dtos/asset.dto';
 import { AssetVisibility } from 'src/enum';
 import { Optional, ValidateBoolean, ValidateDate, ValidateEnum, ValidateUUID } from 'src/validation';
@@ -84,7 +84,43 @@ export class AssetMediaCreateDto extends AssetMediaBase {
   [UploadFieldName.SIDECAR_DATA]?: any;
 }
 
-export class AssetMediaReplaceDto extends AssetMediaBase {}
+export class AssetMediaReplaceDto extends AssetMediaBase { }
+
+// pizcloud
+export class AssetUploadSessionCreateDto extends AssetMediaCreateDto {
+  @IsString()
+  @IsNotEmpty()
+  fileName!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  fileSize!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  chunkSize!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  totalChunks!: number;
+
+  /** base64 or hex encoded sha1 hash */
+  @Optional()
+  @IsString()
+  @IsNotEmpty()
+  checksum?: string;
+}
+
+export class AssetUploadSessionChunkParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  chunkIndex!: number;
+}
+// #pizcloud
 
 export class AssetBulkUploadCheckItem {
   @IsString()

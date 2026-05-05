@@ -3,6 +3,7 @@ import { AssetMediaStatus } from 'src/dtos/asset-media-response.dto';
 import { AssetMetadataKey } from 'src/enum';
 import { LoggingRepository } from 'src/repositories/logging.repository';
 import { AssetMediaService } from 'src/services/asset-media.service';
+import { AssetUploadSessionService } from 'src/services/asset-upload-session.service';
 import request from 'supertest';
 import { factory } from 'test/small.factory';
 import { automock, ControllerContext, controllerSetup, mockBaseService } from 'test/utils';
@@ -30,18 +31,29 @@ describe(AssetMediaController.name, () => {
   const assetData = Buffer.from('123');
   const filename = 'example.png';
   const service = mockBaseService(AssetMediaService);
+  const uploadSessionService = automock(AssetUploadSessionService);
 
   beforeAll(async () => {
     ctx = await controllerSetup(AssetMediaController, [
       { provide: LoggingRepository, useValue: automock(LoggingRepository, { strict: false }) },
       { provide: AssetMediaService, useValue: service },
+      { provide: AssetUploadSessionService, useValue: uploadSessionService },
     ]);
     return () => ctx.close();
   });
 
   beforeEach(() => {
     service.resetAllMocks();
+    uploadSessionService.resetAllMocks();
     service.uploadAsset.mockResolvedValue({ status: AssetMediaStatus.DUPLICATE, id: factory.uuid() });
+    uploadSessionService.create.mockResolvedValue({
+      status: 'active',
+      id: factory.uuid(),
+      chunkSize: 8_388_608,
+      totalChunks: 1,
+      uploadedChunks: [],
+    });
+    uploadSessionService.uploadChunk.mockResolvedValue({ id: factory.uuid(), chunkIndex: 0, uploadedChunks: [0] });
 
     ctx.reset();
   });
@@ -174,6 +186,39 @@ describe(AssetMediaController.name, () => {
         await request(ctx.getHttpServer()).get(`/assets/${factory.uuid()}/thumbnail`);
         expect(ctx.authenticate).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('Resumable upload routes', () => {
+    it('should create upload session', async () => {
+      const body = {
+        deviceAssetId: 'example-image',
+        deviceId: 'WEB',
+        fileCreatedAt: new Date().toISOString(),
+        fileModifiedAt: new Date().toISOString(),
+        isFavorite: false,
+        duration: '0:00:00.000000',
+        fileName: 'example.webm',
+        fileSize: 10,
+        chunkSize: 10,
+        totalChunks: 1,
+        checksum: 'a94a8fe5ccb19ba61c4c0873d391e987982fbbd3',
+      };
+
+      const { status } = await request(ctx.getHttpServer()).post('/assets/upload-sessions').send(body);
+      expect(status).toBe(201);
+      expect(uploadSessionService.create).toHaveBeenCalled();
+    });
+
+    it('should upload chunk', async () => {
+      const sessionId = factory.uuid();
+      const { status } = await request(ctx.getHttpServer())
+        .put(`/assets/upload-sessions/${sessionId}/chunks/0`)
+        .set('Content-Type', 'application/octet-stream')
+        .send(Buffer.from('1234567890'));
+
+      expect(status).toBe(200);
+      expect(uploadSessionService.uploadChunk).toHaveBeenCalled();
     });
   });
 });

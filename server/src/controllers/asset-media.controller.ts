@@ -1,12 +1,15 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Next,
   Param,
   ParseFilePipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -22,6 +25,11 @@ import {
   AssetBulkUploadCheckResponseDto,
   AssetMediaResponseDto,
   AssetMediaStatus,
+  AssetUploadSessionChunkResponseDto,
+  AssetUploadSessionCreateResponseDto,
+  AssetUploadSessionDeleteResponseDto,
+  AssetUploadSessionStatus,
+  AssetUploadSessionStatusResponseDto,
   CheckExistingAssetsResponseDto,
 } from 'src/dtos/asset-media-response.dto';
 import {
@@ -30,6 +38,7 @@ import {
   AssetMediaOptionsDto,
   AssetMediaReplaceDto,
   AssetMediaSize,
+  AssetUploadSessionCreateDto,
   CheckExistingAssetsDto,
   UploadFieldName,
 } from 'src/dtos/asset-media.dto';
@@ -40,6 +49,7 @@ import { Auth, Authenticated, FileResponse } from 'src/middleware/auth.guard';
 import { FileUploadInterceptor, getFiles } from 'src/middleware/file-upload.interceptor';
 import { LoggingRepository } from 'src/repositories/logging.repository';
 import { AssetMediaService } from 'src/services/asset-media.service';
+import { AssetUploadSessionService } from 'src/services/asset-upload-session.service'; // pizcloud
 import { UploadFiles } from 'src/types';
 import { ImmichFileResponse, sendFile } from 'src/utils/file';
 import { FileNotEmptyValidator, UUIDParamDto } from 'src/validation';
@@ -50,6 +60,7 @@ export class AssetMediaController {
   constructor(
     private logger: LoggingRepository,
     private service: AssetMediaService,
+    private uploadSessionService: AssetUploadSessionService,
   ) { }
 
   @Post()
@@ -82,6 +93,88 @@ export class AssetMediaController {
 
     return responseDto;
   }
+
+  // pizcloud
+  @Post('upload-sessions')
+  @Authenticated({ permission: Permission.AssetUpload, sharedLink: true })
+  @Endpoint({
+    summary: 'Create upload session',
+    description: 'Create a resumable upload session for chunked file uploads.',
+    history: new HistoryBuilder().added('v1'),
+  })
+  async createUploadSession(
+    @Auth() auth: AuthDto,
+    @Body() dto: AssetUploadSessionCreateDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AssetUploadSessionCreateResponseDto> {
+    const responseDto = await this.uploadSessionService.create(auth, dto);
+    if (responseDto.status === AssetUploadSessionStatus.DUPLICATE) {
+      res.status(HttpStatus.OK);
+    }
+
+    return responseDto;
+  }
+
+  @Get('upload-sessions/:id')
+  @Authenticated({ permission: Permission.AssetUpload, sharedLink: true })
+  @Endpoint({
+    summary: 'Get upload session',
+    description: 'Get the upload progress for a resumable upload session.',
+    history: new HistoryBuilder().added('v1'),
+  })
+  async getUploadSession(
+    @Auth() auth: AuthDto,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<AssetUploadSessionStatusResponseDto> {
+    return await this.uploadSessionService.getStatus(auth, id);
+  }
+
+  @Put('upload-sessions/:id/chunks/:chunkIndex')
+  @Authenticated({ permission: Permission.AssetUpload, sharedLink: true })
+  @ApiConsumes('application/octet-stream')
+  @Endpoint({
+    summary: 'Upload chunk',
+    description: 'Upload a single chunk for a resumable upload session.',
+    history: new HistoryBuilder().added('v1'),
+  })
+  @HttpCode(HttpStatus.OK)
+  async uploadAssetChunk(
+    @Auth() auth: AuthDto,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('chunkIndex', ParseIntPipe) chunkIndex: number,
+    @Req() req: Request,
+  ): Promise<AssetUploadSessionChunkResponseDto> {
+    return await this.uploadSessionService.uploadChunk(auth, id, chunkIndex, req);
+  }
+
+  @Post('upload-sessions/:id/complete')
+  @Authenticated({ permission: Permission.AssetUpload, sharedLink: true })
+  @Endpoint({
+    summary: 'Complete upload session',
+    description: 'Complete a resumable upload session and create the final asset.',
+    history: new HistoryBuilder().added('v1'),
+  })
+  async completeUploadSession(
+    @Auth() auth: AuthDto,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<AssetMediaResponseDto> {
+    return await this.uploadSessionService.complete(auth, id);
+  }
+
+  @Delete('upload-sessions/:id')
+  @Authenticated({ permission: Permission.AssetUpload, sharedLink: true })
+  @Endpoint({
+    summary: 'Delete upload session',
+    description: 'Cancel and delete a resumable upload session.',
+    history: new HistoryBuilder().added('v1'),
+  })
+  async deleteUploadSession(
+    @Auth() auth: AuthDto,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<AssetUploadSessionDeleteResponseDto> {
+    return await this.uploadSessionService.delete(auth, id);
+  }
+  // #pizcloud
 
   @Get(':id/original')
   @FileResponse()

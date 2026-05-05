@@ -48,6 +48,9 @@ export const uploadExecutionQueue = new ExecutorQueue({ concurrency: 2 });
 // pizcloud
 const HASH_CHUNK_SIZE = 8 * 1024 * 1024; // 8 MiB
 const HASH_YIELD_INTERVAL_CHUNKS = 16;
+const RESUMABLE_UPLOAD_CHUNK_SIZE = 8 * 1024 * 1024; // 8 MiB
+const RESUMABLE_UPLOAD_MIN_FILE_SIZE = 128 * 1024 * 1024; // 128 MiB
+const RESUMABLE_SESSION_STORAGE_KEY = 'pizcloud-resumable-upload-sessions-v1';
 
 async function calculateSha1Checksum(file: Blob): Promise<string> {
   const sha1 = await createSHA1();
@@ -66,6 +69,48 @@ async function calculateSha1Checksum(file: Blob): Promise<string> {
 
   return sha1.digest('hex');
 }
+
+class HttpRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly details?: unknown,
+  ) {
+    super(message);
+  }
+}
+
+type UploadSessionCreateResponseDto = {
+  status: 'active' | 'duplicate';
+  id?: string;
+  assetId?: string;
+  isTrashed?: boolean;
+  chunkSize?: number;
+  totalChunks?: number;
+  uploadedChunks?: number[];
+};
+
+type UploadSessionStatusResponseDto = {
+  status: 'active' | 'completed';
+  id: string;
+  chunkSize: number;
+  totalChunks: number;
+  fileSize: number;
+  uploadedChunks: number[];
+};
+
+type UploadSessionChunkResponseDto = {
+  id: string;
+  chunkIndex: number;
+  uploadedChunks: number[];
+};
+
+type UploadSessionActive = {
+  id: string;
+  chunkSize: number;
+  totalChunks: number;
+  uploadedChunks: number[];
+};
 // #pizcloud
 
 type FileUploadParam = { multiple?: boolean; albumId?: string };
@@ -133,6 +178,82 @@ function getDeviceAssetId(asset: File) {
   return 'web' + '-' + asset.name + '-' + asset.lastModified;
 }
 
+// pizcloud
+function shouldUseResumableUpload(asset: File) {
+  return asset.size >= RESUMABLE_UPLOAD_MIN_FILE_SIZE;
+}
+
+function getResumableUploadCacheKey(asset: File, deviceAssetId: string) {
+  return `${deviceAssetId}:${asset.size}:${asset.lastModified}`;
+}
+
+function readResumableSessionCache(): Record<string, string> {
+  try {
+    const value = globalThis.localStorage?.getItem(RESUMABLE_SESSION_STORAGE_KEY);
+    if (!value) {
+      return {};
+    }
+    const parsed = JSON.parse(value) as unknown;
+    return typeof parsed === 'object' && parsed ? (parsed as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeResumableSessionCache(cache: Record<string, string>) {
+  try {
+    globalThis.localStorage?.setItem(RESUMABLE_SESSION_STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    // Ignore storage failures; resumable still works within the current runtime.
+  }
+}
+
+function setResumableSessionId(cacheKey: string, sessionId: string) {
+  const cache = readResumableSessionCache();
+  cache[cacheKey] = sessionId;
+  writeResumableSessionCache(cache);
+}
+
+function getResumableSessionId(cacheKey: string): string | undefined {
+  return readResumableSessionCache()[cacheKey];
+}
+
+function removeResumableSessionId(cacheKey: string) {
+  const cache = readResumableSessionCache();
+  if (!(cacheKey in cache)) {
+    return;
+  }
+  delete cache[cacheKey];
+  writeResumableSessionCache(cache);
+}
+
+async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...init,
+    credentials: 'include',
+  });
+
+  const text = await response.text();
+  let body: unknown = {};
+  if (text) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      body = { message: text };
+    }
+  }
+  if (!response.ok) {
+    const message =
+      typeof body === 'object' && body && 'message' in body && typeof body.message === 'string'
+        ? body.message
+        : response.statusText || 'Request failed';
+    throw new HttpRequestError(message, response.status, body);
+  }
+
+  return body as T;
+}
+// #pizcloud
+
 type FileUploaderParams = {
   assetFile: File;
   albumId?: string;
@@ -140,6 +261,154 @@ type FileUploaderParams = {
   isLockedAssets?: boolean;
   deviceAssetId: string;
 };
+
+// pizcloud
+async function createOrResumeUploadSession({
+  assetFile,
+  checksum,
+  deviceAssetId,
+  isLockedAssets,
+}: {
+  assetFile: File;
+  checksum: string;
+  deviceAssetId: string;
+  isLockedAssets: boolean;
+}): Promise<
+  | { type: 'duplicate'; data: { id: string; status: AssetMediaStatus.Duplicate; isTrashed?: boolean } }
+  | { type: 'active'; session: UploadSessionActive; cacheKey: string }
+> {
+  const queryParams = asQueryString(authManager.params);
+  const baseUrl = getBaseUrl();
+  const cacheKey = getResumableUploadCacheKey(assetFile, deviceAssetId);
+  const cachedSessionId = getResumableSessionId(cacheKey);
+  const statusUrl = (sessionId: string) =>
+    `${baseUrl}/assets/upload-sessions/${sessionId}${queryParams ? `?${queryParams}` : ''}`;
+
+  if (cachedSessionId) {
+    try {
+      const session = await requestJson<UploadSessionStatusResponseDto>(statusUrl(cachedSessionId), { method: 'GET' });
+      return {
+        type: 'active',
+        cacheKey,
+        session: {
+          id: session.id,
+          chunkSize: session.chunkSize,
+          totalChunks: session.totalChunks,
+          uploadedChunks: session.uploadedChunks,
+        },
+      };
+    } catch {
+      removeResumableSessionId(cacheKey);
+    }
+  }
+
+  const totalChunks = Math.ceil(assetFile.size / RESUMABLE_UPLOAD_CHUNK_SIZE);
+  const payload = {
+    deviceAssetId,
+    deviceId: 'WEB',
+    fileCreatedAt: new Date(assetFile.lastModified).toISOString(),
+    fileModifiedAt: new Date(assetFile.lastModified).toISOString(),
+    isFavorite: false,
+    duration: '0:00:00.000000',
+    visibility: isLockedAssets ? AssetVisibility.Locked : undefined,
+    fileName: assetFile.name,
+    fileSize: assetFile.size,
+    chunkSize: RESUMABLE_UPLOAD_CHUNK_SIZE,
+    totalChunks,
+    checksum,
+  };
+
+  const createUrl = `${baseUrl}/assets/upload-sessions${queryParams ? `?${queryParams}` : ''}`;
+  const session = await requestJson<UploadSessionCreateResponseDto>(createUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (session.status === 'duplicate' && session.assetId) {
+    removeResumableSessionId(cacheKey);
+    return {
+      type: 'duplicate',
+      data: {
+        id: session.assetId,
+        status: AssetMediaStatus.Duplicate,
+        isTrashed: session.isTrashed,
+      },
+    };
+  }
+
+  if (!session.id || !session.chunkSize || !session.totalChunks || !session.uploadedChunks) {
+    throw new Error('Invalid upload session response');
+  }
+
+  setResumableSessionId(cacheKey, session.id);
+  return {
+    type: 'active',
+    cacheKey,
+    session: {
+      id: session.id,
+      chunkSize: session.chunkSize,
+      totalChunks: session.totalChunks,
+      uploadedChunks: session.uploadedChunks,
+    },
+  };
+}
+
+async function uploadAssetResumable({
+  assetFile,
+  checksum,
+  deviceAssetId,
+  isLockedAssets,
+}: {
+  assetFile: File;
+  checksum: string;
+  deviceAssetId: string;
+  isLockedAssets: boolean;
+}): Promise<{ id: string; status: AssetMediaStatus; isTrashed?: boolean }> {
+  const sessionResult = await createOrResumeUploadSession({ assetFile, checksum, deviceAssetId, isLockedAssets });
+  if (sessionResult.type === 'duplicate') {
+    return sessionResult.data;
+  }
+
+  const { session, cacheKey } = sessionResult;
+  const queryParams = asQueryString(authManager.params);
+  const baseUrl = getBaseUrl();
+  const uploadedChunks = new Set(session.uploadedChunks);
+
+  const updateProgress = () => {
+    const uploadedBytes = Math.min(assetFile.size, uploadedChunks.size * session.chunkSize);
+    uploadAssetsStore.updateProgress(deviceAssetId, uploadedBytes, assetFile.size);
+  };
+
+  updateProgress();
+
+  for (let chunkIndex = 0; chunkIndex < session.totalChunks; chunkIndex++) {
+    if (uploadedChunks.has(chunkIndex)) {
+      continue;
+    }
+
+    const offset = chunkIndex * session.chunkSize;
+    const chunk = assetFile.slice(offset, offset + session.chunkSize);
+    const chunkUrl = `${baseUrl}/assets/upload-sessions/${session.id}/chunks/${chunkIndex}${queryParams ? `?${queryParams}` : ''}`;
+
+    const chunkResponse = await requestJson<UploadSessionChunkResponseDto>(chunkUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: chunk,
+    });
+    uploadedChunks.clear();
+    for (const uploadedChunk of chunkResponse.uploadedChunks) {
+      uploadedChunks.add(uploadedChunk);
+    }
+    updateProgress();
+  }
+
+  const completeUrl = `${baseUrl}/assets/upload-sessions/${session.id}/complete${queryParams ? `?${queryParams}` : ''}`;
+  const response = await requestJson<AssetMediaResponseDto>(completeUrl, { method: 'POST' });
+  removeResumableSessionId(cacheKey);
+  return response;
+}
+// #pizcloud
 
 // TODO: should probably use the @api SDK
 async function fileUploader({
@@ -171,6 +440,7 @@ async function fileUploader({
       formData.append('visibility', AssetVisibility.Locked);
     }
 
+    let calculatedChecksum: string | undefined; // #pizcloud
     let responseData: { id: string; status: AssetMediaStatus; isTrashed?: boolean } | undefined;
     // pizcloud - Legacy gate (kept for reference): `crypto?.subtle?.digest && !authManager.isSharedLink`
     if (!authManager.isSharedLink) {
@@ -184,12 +454,14 @@ async function fileUploader({
         //   .map((b) => b.toString(16).padStart(2, '0'))
         //   .join('');
 
-        const checksum = await calculateSha1Checksum(assetFile);
+        calculatedChecksum = await calculateSha1Checksum(assetFile);
         // #pizcloud
 
         const {
           results: [checkUploadResult],
-        } = await checkBulkUpload({ assetBulkUploadCheckDto: { assets: [{ id: assetFile.name, checksum }] } });
+        } = await checkBulkUpload({
+          assetBulkUploadCheckDto: { assets: [{ id: assetFile.name, checksum: calculatedChecksum }] },
+        });
         if (checkUploadResult.action === Action.Reject && checkUploadResult.assetId) {
           responseData = {
             status: AssetMediaStatus.Duplicate,
@@ -203,20 +475,41 @@ async function fileUploader({
     }
 
     if (!responseData) {
-      const queryParams = asQueryString(authManager.params);
-
       uploadAssetsStore.updateItem(deviceAssetId, { message: $t('asset_uploading') });
-      const response = await uploadRequest<AssetMediaResponseDto>({
-        url: getBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
-        data: formData,
-        onUploadProgress: (event) => uploadAssetsStore.updateProgress(deviceAssetId, event.loaded, event.total),
-      });
 
-      if (![200, 201].includes(response.status)) {
-        throw new Error($t('errors.unable_to_upload_file'));
+      // pizcloud
+      if (shouldUseResumableUpload(assetFile)) {
+        try {
+          const checksum = calculatedChecksum ?? (await calculateSha1Checksum(assetFile));
+          responseData = await uploadAssetResumable({
+            assetFile,
+            checksum,
+            deviceAssetId,
+            isLockedAssets,
+          });
+        } catch (error) {
+          if (!(error instanceof HttpRequestError) || ![404, 405, 501].includes(error.status)) {
+            throw error;
+          }
+          console.warn('Resumable upload endpoint unavailable, fallback to multipart upload');
+        }
       }
 
-      responseData = response.data;
+      if (!responseData) {
+        const queryParams = asQueryString(authManager.params);
+        const response = await uploadRequest<AssetMediaResponseDto>({
+          url: getBaseUrl() + '/assets' + (queryParams ? `?${queryParams}` : ''),
+          data: formData,
+          onUploadProgress: (event) => uploadAssetsStore.updateProgress(deviceAssetId, event.loaded, event.total),
+        });
+
+        if (![200, 201].includes(response.status)) {
+          throw new Error($t('errors.unable_to_upload_file'));
+        }
+
+        responseData = response.data;
+      }
+      // #pizcloud
     }
 
     if (responseData.status === AssetMediaStatus.Duplicate) {
