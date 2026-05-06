@@ -102,7 +102,10 @@ enum StoreKey<T> {
 
   // pizcloud first-login walkthrough flags
   firstLoginWalkthroughPending<bool>._(1014),
-  firstLoginWalkthroughCompleted<bool>._(1015);
+  firstLoginWalkthroughCompleted<bool>._(1015),
+
+  // pizcloud resumable upload sessions cache (JSON string)
+  resumableUploadSessions<String>._(1016);
 
   const StoreKey._(this.id);
   final int id;

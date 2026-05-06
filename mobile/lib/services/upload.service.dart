@@ -77,12 +77,25 @@ class UploadService {
   bool shouldAbortQueuingTasks = false;
   bool _hasReportedBackupSuccessInRun = false; // pizcloud
   bool _isReportingBackupSuccess = false; // pizcloud
+  final Set<CancellationToken> _managedDirectUploadTokens = <CancellationToken>{}; // pizcloud
 
   void _onTaskProgressCallback(TaskProgressUpdate update) {
     if (!_taskProgressController.isClosed) {
       _taskProgressController.add(update);
     }
   }
+
+  // pizcloud
+  CancellationToken _registerManagedDirectUploadToken() {
+    final token = CancellationToken();
+    _managedDirectUploadTokens.add(token);
+    return token;
+  }
+
+  void _unregisterManagedDirectUploadToken(CancellationToken token) {
+    _managedDirectUploadTokens.remove(token);
+  }
+  // #pizcloud
 
   void _onUploadCallback(TaskStatusUpdate update) {
     if (!_taskStatusController.isClosed) {
@@ -100,6 +113,13 @@ class UploadService {
   }
 
   void dispose() {
+    // pizcloud
+    for (final token in _managedDirectUploadTokens.toList()) {
+      token.cancel();
+    }
+    _managedDirectUploadTokens.clear();
+    // #pizcloud
+
     _taskStatusController.close();
     _taskProgressController.close();
 
@@ -154,21 +174,41 @@ class UploadService {
 
   Future<void> manualBackup(List<LocalAsset> localAssets) async {
     await _storageRepository.clearCache();
-    List<UploadTask> tasks = [];
-    for (final asset in localAssets) {
-      final task = await getUploadTask(
-        asset,
-        group: kManualUploadGroup,
-        priority: 1, // High priority after upload motion photo part
-      );
-      if (task != null) {
-        tasks.add(task);
-      }
-    }
+    // pizcloud
+    // Legacy behavior (kept for reference): build one UploadTask list via getUploadTask(...) then enqueue all.
+    final managedToken = _registerManagedDirectUploadToken();
+    try {
+      final queuedTasks = <UploadTask>[];
+      final directTasks = <UploadTaskWithFile>[];
 
-    if (tasks.isNotEmpty) {
-      await enqueueTasks(tasks);
+      for (final asset in localAssets) {
+        final taskWithFile = await _getUploadTaskWithFile(
+          asset,
+          group: kManualUploadGroup,
+          priority: 1, // High priority after upload motion photo part
+        );
+        if (taskWithFile == null) {
+          continue;
+        }
+
+        if (_shouldUseResumableUpload(taskWithFile)) {
+          directTasks.add(taskWithFile);
+        } else {
+          queuedTasks.add(taskWithFile.task);
+        }
+      }
+
+      if (queuedTasks.isNotEmpty) {
+        await enqueueTasks(queuedTasks);
+      }
+
+      if (directTasks.isNotEmpty) {
+        await _uploadRepository.backupWithDartClient(directTasks, managedToken);
+      }
+    } finally {
+      _unregisterManagedDirectUploadToken(managedToken);
     }
+    // #pizcloud
   }
 
   /// Find backup candidates
@@ -179,35 +219,61 @@ class UploadService {
 
     shouldAbortQueuingTasks = false;
     _resetBackupSuccessReportState(); // pizcloud
+    // pizcloud
+    // Legacy behavior (kept for reference): enqueue all backup candidates via background_downloader only.
+    final managedToken = _registerManagedDirectUploadToken();
 
-    final candidates = await _backupRepository.getCandidates(userId);
-    if (candidates.isEmpty) {
-      return;
-    }
-
-    const batchSize = 100;
-    int count = 0;
-    for (int i = 0; i < candidates.length; i += batchSize) {
-      if (shouldAbortQueuingTasks) {
-        break;
+    try {
+      final candidates = await _backupRepository.getCandidates(userId);
+      if (candidates.isEmpty) {
+        return;
       }
 
-      final batch = candidates.skip(i).take(batchSize).toList();
-      List<UploadTask> tasks = [];
-      for (final asset in batch) {
-        final task = await getUploadTask(asset);
-        if (task != null) {
-          tasks.add(task);
+      const batchSize = 100;
+      int count = 0;
+      for (int i = 0; i < candidates.length; i += batchSize) {
+        if (shouldAbortQueuingTasks || managedToken.isCancelled) {
+          break;
+        }
+
+        final batch = candidates.skip(i).take(batchSize).toList();
+        final queuedTasks = <UploadTask>[];
+        final directTasks = <UploadTaskWithFile>[];
+
+        for (final asset in batch) {
+          final taskWithFile = await _getUploadTaskWithFile(asset);
+          if (taskWithFile == null) {
+            continue;
+          }
+
+          if (_shouldUseResumableUpload(taskWithFile)) {
+            directTasks.add(taskWithFile);
+          } else {
+            queuedTasks.add(taskWithFile.task);
+          }
+        }
+
+        if (queuedTasks.isNotEmpty && !shouldAbortQueuingTasks && !managedToken.isCancelled) {
+          count += queuedTasks.length;
+          await enqueueTasks(queuedTasks);
+
+          onEnqueueTasks(EnqueueStatus(enqueueCount: count, totalCount: candidates.length));
+        }
+
+        if (directTasks.isNotEmpty && !shouldAbortQueuingTasks && !managedToken.isCancelled) {
+          count += directTasks.length;
+          onEnqueueTasks(EnqueueStatus(enqueueCount: count, totalCount: candidates.length));
+
+          final hasSuccessfulUpload = await _uploadRepository.backupWithDartClient(directTasks, managedToken);
+          if (hasSuccessfulUpload) {
+            _tryReportBackupSuccessOnce(source: 'foreground_http_client');
+          }
         }
       }
-
-      if (tasks.isNotEmpty && !shouldAbortQueuingTasks) {
-        count += tasks.length;
-        await enqueueTasks(tasks);
-
-        onEnqueueTasks(EnqueueStatus(enqueueCount: count, totalCount: candidates.length));
-      }
+    } finally {
+      _unregisterManagedDirectUploadToken(managedToken);
     }
+    // #pizcloud
   }
 
   Future<void> startBackupWithHttpClient(String userId, bool hasWifi, CancellationToken token) async {
@@ -236,20 +302,17 @@ class UploadService {
           continue;
         }
 
-        final task = await _getUploadTaskWithFile(asset);
+        final task = await _getUploadTaskWithFile(asset, group: kBackupGroup);
         if (task != null) {
           tasks.add(task);
         }
       }
 
       if (tasks.isNotEmpty && !shouldAbortQueuingTasks) {
-        // pizcloud
-        // await _uploadRepository.backupWithDartClient(tasks, token);
         final hasSuccessfulUpload = await _uploadRepository.backupWithDartClient(tasks, token);
         if (hasSuccessfulUpload) {
           _tryReportBackupSuccessOnce(source: 'android_http_client');
         }
-        // #pizcloud
       }
     }
   }
@@ -259,6 +322,9 @@ class UploadService {
   /// Return the number of left over tasks in the queue
   Future<int> cancelBackup() async {
     shouldAbortQueuingTasks = true;
+    for (final token in _managedDirectUploadTokens.toList()) {
+      token.cancel();
+    } // pizcloud
 
     await _storageRepository.clearCache();
     await _uploadRepository.reset(kBackupGroup);
@@ -369,18 +435,31 @@ class UploadService {
     }
   }
 
-  Future<UploadTaskWithFile?> _getUploadTaskWithFile(LocalAsset asset) async {
+  // pizcloud
+  Future<UploadTaskWithFile?> _getUploadTaskWithFile(
+    LocalAsset asset, {
+    String group = kBackupGroup,
+    int? priority,
+  }) async {
     final entity = await _storageRepository.getAssetEntityForAsset(asset);
     if (entity == null) {
       return null;
     }
 
-    final file = await _storageRepository.getFileForAsset(asset.id);
+    File? file;
+
+    if (entity.isLivePhoto) {
+      file = await _storageRepository.getMotionFileForAsset(asset);
+    } else {
+      file = await _storageRepository.getFileForAsset(asset.id);
+    }
+
     if (file == null) {
       return null;
     }
 
-    final originalFileName = entity.isLivePhoto ? p.setExtension(asset.name, p.extension(file.path)) : asset.name;
+    final fileName = await _assetMediaRepository.getOriginalFilename(asset.id) ?? asset.name;
+    final originalFileName = entity.isLivePhoto ? p.setExtension(fileName, p.extension(file.path)) : fileName;
 
     String metadata = UploadTaskMetadata(
       localAssetId: asset.id,
@@ -388,8 +467,19 @@ class UploadService {
       livePhotoVideoId: '',
     ).toJson();
 
+    final requiresWiFi = _shouldRequireWiFi(asset);
+    final resolvedFileSize = await file.length();
+
     return UploadTaskWithFile(
       file: file,
+      deviceAssetId: asset.id,
+      createdAt: asset.createdAt,
+      modifiedAt: asset.updatedAt,
+      originalFileName: originalFileName,
+      isFavorite: asset.isFavorite,
+      isLivePhoto: entity.isLivePhoto,
+      checksum: asset.checksum,
+      fileSize: resolvedFileSize,
       task: await buildUploadTask(
         file,
         createdAt: asset.createdAt,
@@ -397,13 +487,15 @@ class UploadService {
         originalFileName: originalFileName,
         deviceAssetId: asset.id,
         metadata: metadata,
-        group: "group",
-        priority: 0,
+        // Legacy hardcoded group (kept for reference): group: "group",
+        group: group,
+        priority: priority,
         isFavorite: asset.isFavorite,
-        requiresWiFi: false,
+        requiresWiFi: requiresWiFi,
       ),
     );
   }
+  // #pizcloud
 
   @visibleForTesting
   Future<UploadTask?> getUploadTask(LocalAsset asset, {String group = kBackupGroup, int? priority}) async {
@@ -489,6 +581,10 @@ class UploadService {
       requiresWiFi: requiresWiFi,
     );
   }
+
+  bool _shouldUseResumableUpload(UploadTaskWithFile taskWithFile) {
+    return !taskWithFile.isLivePhoto && taskWithFile.resolvedFileSize >= kResumableUploadMinFileSize;
+  } // pizcloud
 
   bool _shouldRequireWiFi(LocalAsset asset) {
     bool requiresWiFi = true;

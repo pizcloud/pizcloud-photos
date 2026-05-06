@@ -48,6 +48,10 @@ const List<(String, String)> kWidgetNames = [
 const double kUploadStatusFailed = -1.0;
 const double kUploadStatusCanceled = -2.0;
 
+// pizcloud - resumable upload
+const int kResumableUploadChunkSize = 8 * 1024 * 1024; // 8 MiB
+const int kResumableUploadMinFileSize = 128 * 1024 * 1024; // 128 MiB
+
 const int kMinMonthsToEnableScrubberSnap = 12;
 
 const String keyPizCloudAppStoreLink = "https://apps.apple.com/app/pizcloud/6758025299";
