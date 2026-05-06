@@ -9,6 +9,7 @@ import 'package:immich_mobile/domain/services/store.service.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/infrastructure/repositories/db.repository.dart';
 import 'package:immich_mobile/infrastructure/repositories/store.repository.dart';
+import 'package:immich_mobile/platform/connectivity_api.g.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/services/upload.service.dart';
 import 'package:mocktail/mocktail.dart';
@@ -19,6 +20,8 @@ import '../infrastructure/repository.mock.dart';
 import '../repository.mocks.dart';
 import '../mocks/asset_entity.mock.dart';
 
+class MockConnectivityApi extends Mock implements ConnectivityApi {}
+
 void main() {
   late UploadService sut;
   late MockUploadRepository mockUploadRepository;
@@ -27,6 +30,7 @@ void main() {
   late MockDriftLocalAssetRepository mockLocalAssetRepository;
   late MockAppSettingsService mockAppSettingsService;
   late MockAssetMediaRepository mockAssetMediaRepository;
+  late MockConnectivityApi mockConnectivityApi;
   late Drift db;
 
   setUpAll(() async {
@@ -51,6 +55,7 @@ void main() {
     mockLocalAssetRepository = MockDriftLocalAssetRepository();
     mockAppSettingsService = MockAppSettingsService();
     mockAssetMediaRepository = MockAssetMediaRepository();
+    mockConnectivityApi = MockConnectivityApi();
 
     when(() => mockAppSettingsService.getSetting(AppSettingsEnum.useCellularForUploadVideos)).thenReturn(false);
     when(() => mockAppSettingsService.getSetting(AppSettingsEnum.useCellularForUploadPhotos)).thenReturn(false);
@@ -62,6 +67,7 @@ void main() {
       mockLocalAssetRepository,
       mockAppSettingsService,
       mockAssetMediaRepository,
+      mockConnectivityApi,
     );
 
     mockUploadRepository.onUploadStatus = (_) {};

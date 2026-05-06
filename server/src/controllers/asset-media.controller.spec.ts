@@ -1,5 +1,5 @@
 import { AssetMediaController } from 'src/controllers/asset-media.controller';
-import { AssetMediaStatus } from 'src/dtos/asset-media-response.dto';
+import { AssetMediaStatus, AssetUploadSessionStatus } from 'src/dtos/asset-media-response.dto';
 import { AssetMetadataKey } from 'src/enum';
 import { LoggingRepository } from 'src/repositories/logging.repository';
 import { AssetMediaService } from 'src/services/asset-media.service';
@@ -47,7 +47,7 @@ describe(AssetMediaController.name, () => {
     uploadSessionService.resetAllMocks();
     service.uploadAsset.mockResolvedValue({ status: AssetMediaStatus.DUPLICATE, id: factory.uuid() });
     uploadSessionService.create.mockResolvedValue({
-      status: 'active',
+      status: AssetUploadSessionStatus.ACTIVE,
       id: factory.uuid(),
       chunkSize: 8_388_608,
       totalChunks: 1,
