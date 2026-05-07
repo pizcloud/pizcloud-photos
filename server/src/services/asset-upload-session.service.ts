@@ -68,7 +68,8 @@ export class AssetUploadSessionService {
 
   async create(auth: AuthDto, dto: AssetUploadSessionCreateDto): Promise<AssetUploadSessionCreateResponseDto> {
     this.validateChunkLayout(dto.fileSize, dto.chunkSize, dto.totalChunks);
-    this.requireQuota(auth, dto.fileSize);
+    // Legacy behavior (kept for reference): `this.requireQuota(auth, dto.fileSize);`
+    await this.requireQuotaWithReserved(auth, dto.fileSize); // pizcloud
 
     const checksum = this.normalizeChecksum(dto.checksum);
     const duplicate = await this.assetMediaService.getUploadAssetIdByChecksum(auth, checksum);
@@ -302,6 +303,10 @@ export class AssetUploadSessionService {
     return join(StorageCore.getFolderLocation(StorageFolder.Upload, userId), this.sessionRootFolder, id);
   }
 
+  private getSessionRootPath(userId: string) {
+    return join(StorageCore.getFolderLocation(StorageFolder.Upload, userId), this.sessionRootFolder);
+  } // pizcloud
+
   private getSessionChunkDirPath(userId: string, id: string) {
     return join(this.getSessionDirPath(userId, id), 'chunks');
   }
@@ -533,6 +538,76 @@ export class AssetUploadSessionService {
       throw new BadRequestException('Quota has been exceeded!');
     }
   }
+  // pizcloud
+  private async requireQuotaWithReserved(auth: AuthDto, requestedSize: number) {
+    if (auth.user.quotaSizeInBytes === null) {
+      return;
+    }
+
+    const reservedResumableBytes = await this.getReservedResumableBytes(auth.user.id);
+    const projectedUsage = auth.user.quotaUsageInBytes + reservedResumableBytes + requestedSize;
+    if (auth.user.quotaSizeInBytes < projectedUsage) {
+      throw new BadRequestException('Quota has been exceeded!');
+    }
+  }
+
+  private async getReservedResumableBytes(userId: string): Promise<number> {
+    const sessionRootPath = this.getSessionRootPath(userId);
+    if (!this.storageRepository.existsSync(sessionRootPath)) {
+      return 0;
+    }
+
+    let sessionFolders: string[];
+    try {
+      sessionFolders = await this.storageRepository.readdir(sessionRootPath);
+    } catch (error) {
+      this.logger.warn(`Failed to read resumable session root for quota reservation user=${userId}: ${error}`);
+      return 0;
+    }
+
+    let totalReservedBytes = 0;
+    for (const sessionId of sessionFolders) {
+      const sessionDirPath = join(sessionRootPath, sessionId);
+      let sessionDirStat;
+      try {
+        sessionDirStat = await this.storageRepository.stat(sessionDirPath);
+      } catch {
+        continue;
+      }
+
+      if (!sessionDirStat.isDirectory()) {
+        continue;
+      }
+
+      const manifestPath = this.getSessionManifestPath(userId, sessionId);
+      if (!this.storageRepository.existsSync(manifestPath)) {
+        continue;
+      }
+
+      try {
+        const rawManifest = await this.storageRepository.readTextFile(manifestPath);
+        const manifest = JSON.parse(rawManifest) as Partial<AssetUploadSessionManifest>;
+        if (manifest.id !== sessionId || manifest.userId !== userId) {
+          continue;
+        }
+        const reservedFileSize = manifest.fileSize;
+        if (
+          typeof reservedFileSize !== 'number' ||
+          !Number.isInteger(reservedFileSize) ||
+          reservedFileSize < 1
+        ) {
+          continue;
+        }
+
+        totalReservedBytes += reservedFileSize;
+      } catch (error) {
+        this.logger.debug(`Skip invalid upload session manifest during quota reservation session=${sessionId}: ${error}`);
+      }
+    }
+
+    return totalReservedBytes;
+  }
+  // #pizcloud
 
   private async shouldDeleteExpiredSessionDirectory({
     now,
