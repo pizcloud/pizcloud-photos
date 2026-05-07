@@ -227,6 +227,40 @@ class ResumableUploadRepository {
     return _removeSessionCacheEntry(cacheKey);
   }
 
+  bool hasPendingSessions() {
+    return pendingSessionCount() > 0;
+  }
+
+  Set<String> pendingSessionCacheKeys() {
+    final cache = _readSessionCache();
+    if (cache.isEmpty) {
+      return const <String>{};
+    }
+
+    final keys = <String>{};
+    for (final entry in cache.entries) {
+      if (entry.value.sessionId.isNotEmpty) {
+        keys.add(entry.key);
+      }
+    }
+    return keys;
+  }
+
+  int pendingSessionCount() {
+    final cache = _readSessionCache();
+    if (cache.isEmpty) {
+      return 0;
+    }
+
+    var count = 0;
+    for (final entry in cache.values) {
+      if (entry.sessionId.isNotEmpty) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   Future<_JsonResponse> _requestJson({
     required Client httpClient,
     required String method,

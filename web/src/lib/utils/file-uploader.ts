@@ -417,8 +417,13 @@ async function createOrResumeUploadSession({
           uploadedChunks: session.uploadedChunks,
         },
       };
-    } catch {
-      removeResumableSessionCacheEntry(cacheKey);
+    } catch (error) {
+      if (error instanceof HttpRequestError && error.status === 404) {
+        removeResumableSessionCacheEntry(cacheKey);
+      }
+      if (!(error instanceof HttpRequestError) || error.status !== 404) {
+        throw error;
+      }
     }
   }
 

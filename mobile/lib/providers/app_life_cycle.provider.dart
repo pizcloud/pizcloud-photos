@@ -23,6 +23,7 @@ import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/tab.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/album_transfer.provider.dart'; // pizcloud
 import 'package:immich_mobile/providers/websocket.provider.dart';
+import 'package:immich_mobile/repositories/resumable_upload.repository.dart'; // pizcloud
 import 'package:immich_mobile/services/app_settings.service.dart'; // pizcloud
 import 'package:immich_mobile/services/background.service.dart';
 import 'package:immich_mobile/services/pizcloud/backup_observability.service.dart'; // pizcloud
@@ -41,12 +42,21 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
   // Add operation coordination
   Completer<void>? _resumeOperation;
   Completer<void>? _pauseOperation;
+  Timer? _interruptedUploadRetryTimer; // pizcloud: periodic retry for interrupted resumable uploads
+  bool _isInterruptedUploadRetryInFlight = false; // pizcloud: guard to avoid overlapping retries
 
   final _log = Logger("AppLifeCycleNotifier");
 
   AppLifeCycleNotifier(this._ref)
     : _photosApiUrlRefresher = PhotosApiUrlRefresher(_ref), // pizcloud
-      super(AppLifeCycleEnum.active);
+      super(AppLifeCycleEnum.active) {
+    // pizcloud: start best-effort interrupted upload retry ticker on cold start.
+    try {
+      _startInterruptedUploadRetryTicker();
+    } catch (error, stackTrace) {
+      _log.fine("Failed to start interrupted upload retry ticker on init", error, stackTrace);
+    }
+  }
 
   AppLifeCycleEnum getAppState() {
     return state;
@@ -54,6 +64,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
 
   void handleAppResume() async {
     state = AppLifeCycleEnum.resumed;
+    _startInterruptedUploadRetryTicker(); // pizcloud: best-effort periodic retry while app is active
 
     // pizcloud: keep Photos API URL refreshed while the app is active.
     if (_ref.read(authProvider).isAuthenticated) {
@@ -216,6 +227,75 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
       // Silently fail - telemetry should never affect app functionality
     }
   }
+
+  void _startInterruptedUploadRetryTicker() {
+    _stopInterruptedUploadRetryTicker();
+    if (!Store.isBetaTimelineEnabled) {
+      return;
+    }
+
+    final retryDelay = _resolveInterruptedUploadRetryDelay();
+    _interruptedUploadRetryTimer = Timer.periodic(retryDelay, (_) {
+      unawaited(_retryInterruptedUploadsIfNeeded(trigger: 'ticker'));
+    });
+
+    // Trigger one immediate best-effort retry on app resume instead of waiting for the first tick.
+    unawaited(_retryInterruptedUploadsIfNeeded(trigger: 'resume'));
+  }
+
+  Duration _resolveInterruptedUploadRetryDelay() {
+    final configuredSeconds = _ref.read(appSettingsServiceProvider).getSetting(AppSettingsEnum.backupTriggerDelay);
+    final normalizedSeconds = configuredSeconds > 0
+        ? configuredSeconds
+        : AppSettingsEnum.backupTriggerDelay.defaultValue;
+    return Duration(seconds: normalizedSeconds);
+  }
+
+  Future<void> _retryInterruptedUploadsIfNeeded({required String trigger}) async {
+    if (_isInterruptedUploadRetryInFlight || !Store.isBetaTimelineEnabled) {
+      return;
+    }
+
+    if (![AppLifeCycleEnum.resumed, AppLifeCycleEnum.active].contains(state)) {
+      return;
+    }
+
+    final appSettingsService = _ref.read(appSettingsServiceProvider);
+    if (!appSettingsService.getSetting(AppSettingsEnum.enableBackup)) {
+      return;
+    }
+
+    final currentUser = Store.tryGet(StoreKey.currentUser);
+    if (currentUser == null) {
+      return;
+    }
+
+    final backupState = _ref.read(driftBackupProvider);
+    if (backupState.isCanceling) {
+      return;
+    }
+
+    final resumableUploadRepository = _ref.read(resumableUploadRepositoryProvider);
+    final pendingSessionCount = resumableUploadRepository.pendingSessionCount();
+    if (pendingSessionCount <= 0) {
+      return;
+    }
+
+    _isInterruptedUploadRetryInFlight = true;
+    try {
+      _log.fine("Auto-retrying $pendingSessionCount interrupted upload session(s) from $trigger");
+      await _ref.read(driftBackupProvider.notifier).handleBackupResume(currentUser.id);
+    } catch (error, stackTrace) {
+      _log.warning("Failed auto-retrying interrupted uploads from $trigger", error, stackTrace);
+    } finally {
+      _isInterruptedUploadRetryInFlight = false;
+    }
+  }
+
+  void _stopInterruptedUploadRetryTicker() {
+    _interruptedUploadRetryTimer?.cancel();
+    _interruptedUploadRetryTimer = null;
+  }
   // #pizcloud
 
   Future<void> _safeRun(Future<void> action, String debugName) async {
@@ -306,6 +386,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
     state = AppLifeCycleEnum.paused;
     _wasPaused = true;
     _photosApiUrlRefresher.stop(); // pizcloud: stop periodic refresh when app is backgrounded.
+    _stopInterruptedUploadRetryTicker(); // pizcloud: stop retry ticker while app is not active
 
     // Prevent overlapping pause operations
     if (_pauseOperation != null && !_pauseOperation!.isCompleted) {
@@ -355,6 +436,7 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
   Future<void> handleAppDetached() async {
     state = AppLifeCycleEnum.detached;
     _photosApiUrlRefresher.stop(); // pizcloud: stop periodic refresh when app is detached.
+    _stopInterruptedUploadRetryTicker(); // pizcloud: stop retry ticker while app is detached
 
     if (Store.isBetaTimelineEnabled) {
       unawaited(_ref.read(backgroundWorkerLockServiceProvider).unlock());
@@ -385,12 +467,14 @@ class AppLifeCycleNotifier extends StateNotifier<AppLifeCycleEnum> {
 
   void handleAppHidden() {
     state = AppLifeCycleEnum.hidden;
+    _stopInterruptedUploadRetryTicker(); // pizcloud: stop retry ticker while app is hidden
     // do not stop/clean up anything on inactivity: issued on every orientation change
   }
 
   // pizcloud
   @override
   void dispose() {
+    _stopInterruptedUploadRetryTicker(); // pizcloud
     _photosApiUrlRefresher.stop();
     super.dispose();
   }

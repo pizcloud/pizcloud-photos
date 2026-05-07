@@ -14,6 +14,7 @@ import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/gallery_permission.provider.dart';
 import 'package:immich_mobile/providers/server_info.provider.dart';
 import 'package:immich_mobile/providers/websocket.provider.dart';
+import 'package:immich_mobile/repositories/resumable_upload.repository.dart'; // pizcloud
 import 'package:immich_mobile/routing/router.dart';
 import 'package:logging/logging.dart';
 
@@ -171,6 +172,7 @@ class SplashScreenPageState extends ConsumerState<SplashScreenPage> {
         return;
       }
 
+      final resumableUploadRepository = ref.read(resumableUploadRepositoryProvider); // pizcloud
       bool syncSuccess = false;
       await Future.wait([
         backgroundManager.syncLocal(full: true),
@@ -178,7 +180,13 @@ class SplashScreenPageState extends ConsumerState<SplashScreenPage> {
       ]);
 
       await backgroundManager.hashAssets();
-      if (syncSuccess) {
+      // pizcloud
+      final hasInterruptedResumableSessions = resumableUploadRepository.hasPendingSessions();
+      if (syncSuccess || hasInterruptedResumableSessions) {
+        if (!syncSuccess && hasInterruptedResumableSessions) {
+          log.info("Retrying interrupted resumable uploads despite syncRemote failure");
+        }
+        // #pizcloud
         await _resumeBackup(driftBackupNotifier);
       }
 

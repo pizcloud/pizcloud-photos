@@ -424,7 +424,12 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
     }
 
     _logger.info("Tasks to resume: ${tasks.length}");
-    return _uploadService.resumeBackup();
+    await _uploadService.resumeBackup(); // pizcloud
+
+    if (_uploadService.hasPendingResumableSessions()) {
+      _logger.info("Detected interrupted resumable sessions. Retrying direct resumable uploads.");
+      await _uploadService.retryInterruptedResumableUploads(userId);
+    } // pizcloud
   }
 
   @override

@@ -153,6 +153,16 @@ class UploadRepository {
     return FileDownloader().start();
   }
 
+  // pizcloud
+  bool hasPendingResumableSessions() {
+    return _resumableUploadRepository.hasPendingSessions();
+  }
+
+  Set<String> getPendingResumableSessionCacheKeys() {
+    return _resumableUploadRepository.pendingSessionCacheKeys();
+  }
+  // #pizcloud
+
   Future<void> getUploadInfo() async {
     final [enqueuedTasks, runningTasks, canceledTasks, waitingTasks, pausedTasks] = await Future.wait([
       FileDownloader().database.allRecordsWithStatus(TaskStatus.enqueued, group: kBackupGroup),
@@ -535,4 +545,5 @@ class _UploadExecutionResult {
     }
   }
 }
+
 // #pizcloud

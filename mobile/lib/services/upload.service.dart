@@ -369,6 +369,91 @@ class UploadService {
     return _uploadRepository.start();
   }
 
+  // pizcloud
+  bool hasPendingResumableSessions() {
+    return _uploadRepository.hasPendingResumableSessions();
+  }
+
+  Future<void> retryInterruptedResumableUploads(String userId) async {
+    if (!_uploadRepository.hasPendingResumableSessions()) {
+      return;
+    }
+
+    await _storageRepository.clearCache();
+
+    shouldAbortQueuingTasks = false;
+    _resetBackupSuccessReportState();
+    final managedToken = _registerManagedDirectUploadToken();
+
+    try {
+      final candidates = await _backupRepository.getCandidates(userId);
+      if (candidates.isEmpty) {
+        return;
+      }
+
+      const batchSize = 100;
+      for (int i = 0; i < candidates.length; i += batchSize) {
+        if (shouldAbortQueuingTasks || managedToken.isCancelled) {
+          break;
+        }
+
+        // Stop scanning candidates once all interrupted resumable sessions are completed.
+        if (!_uploadRepository.hasPendingResumableSessions()) {
+          break;
+        }
+
+        final pendingResumableCacheKeys = _uploadRepository.getPendingResumableSessionCacheKeys();
+        if (pendingResumableCacheKeys.isEmpty) {
+          break;
+        }
+
+        final batch = candidates.skip(i).take(batchSize).toList();
+        final directTasks = <UploadTaskWithFile>[];
+        bool? hasUnmeteredNetworkForDirect;
+
+        for (final asset in batch) {
+          if (shouldAbortQueuingTasks || managedToken.isCancelled) {
+            break;
+          }
+
+          final taskWithFile = await _getUploadTaskWithFile(asset);
+          if (taskWithFile == null || !_shouldUseResumableUpload(taskWithFile)) {
+            continue;
+          }
+
+          final cacheKey = _buildResumableUploadCacheKey(taskWithFile);
+          // Legacy behavior (kept for reference): this path retried all resumable-sized candidates
+          // whenever there was at least one pending resumable session.
+          if (!pendingResumableCacheKeys.contains(cacheKey)) {
+            continue;
+          }
+
+          if (taskWithFile.task.requiresWiFi) {
+            hasUnmeteredNetworkForDirect ??= await _hasUnmeteredConnectionForDirectUpload();
+            if (!hasUnmeteredNetworkForDirect) {
+              _logger.fine('Skip direct resumable retry for ${taskWithFile.deviceAssetId} because WiFi is required');
+              continue;
+            }
+          }
+
+          directTasks.add(taskWithFile);
+        }
+
+        if (directTasks.isEmpty || shouldAbortQueuingTasks || managedToken.isCancelled) {
+          continue;
+        }
+
+        final hasSuccessfulUpload = await _uploadRepository.backupWithDartClient(directTasks, managedToken);
+        if (hasSuccessfulUpload) {
+          _tryReportBackupSuccessOnce(source: 'foreground_http_client_resumable_retry');
+        }
+      }
+    } finally {
+      _unregisterManagedDirectUploadToken(managedToken);
+    }
+  }
+  // #pizcloud
+
   void _handleTaskStatusUpdate(TaskStatusUpdate update) async {
     switch (update.status) {
       case TaskStatus.complete:
@@ -614,6 +699,11 @@ class UploadService {
 
   bool _shouldUseResumableUpload(UploadTaskWithFile taskWithFile) {
     return !taskWithFile.isLivePhoto && taskWithFile.resolvedFileSize >= kResumableUploadMinFileSize;
+  } // pizcloud
+
+  String _buildResumableUploadCacheKey(UploadTaskWithFile taskWithFile) {
+    final modifiedAt = taskWithFile.task.fields['fileModifiedAt'] ?? taskWithFile.modifiedAt.toUtc().toIso8601String();
+    return '${taskWithFile.deviceAssetId}:${taskWithFile.resolvedFileSize}:$modifiedAt';
   } // pizcloud
 
   bool _shouldRequireWiFi(LocalAsset asset) {
