@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import { Request } from 'express';
 import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
@@ -49,6 +50,9 @@ interface AssetUploadSessionManifest {
   uploadedChunks: number[];
   asset: PersistedAssetMediaCreate;
 }
+
+const RESUMABLE_SESSION_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours
+const RESUMABLE_SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 @Injectable()
 export class AssetUploadSessionService {
@@ -203,6 +207,95 @@ export class AssetUploadSessionService {
     await this.getSession(auth.user.id, id);
     await this.storageRepository.unlinkDir(this.getSessionDirPath(auth.user.id, id), { recursive: true, force: true });
     return { status: AssetUploadSessionStatus.DELETED, id };
+  }
+
+  @Interval(RESUMABLE_SESSION_CLEANUP_INTERVAL_MS)
+  async cleanupExpiredSessions() {
+    const uploadRoot = StorageCore.getBaseFolder(StorageFolder.Upload);
+    const now = Date.now();
+    let scanned = 0;
+    let deleted = 0;
+    let skipped = 0;
+
+    let userFolders: string[];
+    try {
+      userFolders = await this.storageRepository.readdir(uploadRoot);
+    } catch (error: any) {
+      if (error?.code === 'ENOENT') {
+        return;
+      }
+      this.logger.warn(`Failed to scan upload root for resumable cleanup: ${error}`);
+      return;
+    }
+
+    for (const userFolderName of userFolders) {
+      const userFolderPath = join(uploadRoot, userFolderName);
+      let userFolderStat;
+      try {
+        userFolderStat = await this.storageRepository.stat(userFolderPath);
+      } catch {
+        continue;
+      }
+
+      if (!userFolderStat.isDirectory()) {
+        continue;
+      }
+
+      const resumableRoot = join(userFolderPath, this.sessionRootFolder);
+      if (!this.storageRepository.existsSync(resumableRoot)) {
+        continue;
+      }
+
+      let sessionFolders: string[];
+      try {
+        sessionFolders = await this.storageRepository.readdir(resumableRoot);
+      } catch (error: any) {
+        this.logger.warn(`Failed to read resumable sessions for user ${userFolderName}: ${error}`);
+        continue;
+      }
+
+      for (const sessionFolderName of sessionFolders) {
+        const sessionDirPath = join(resumableRoot, sessionFolderName);
+        let sessionDirStat;
+        try {
+          sessionDirStat = await this.storageRepository.stat(sessionDirPath);
+        } catch {
+          continue;
+        }
+
+        if (!sessionDirStat.isDirectory()) {
+          continue;
+        }
+
+        scanned++;
+
+        const shouldDelete = await this.shouldDeleteExpiredSessionDirectory({
+          now,
+          userId: userFolderName,
+          sessionId: sessionFolderName,
+          sessionDirMtimeMs: sessionDirStat.mtimeMs,
+        });
+
+        if (!shouldDelete) {
+          continue;
+        }
+
+        try {
+          await this.storageRepository.unlinkDir(sessionDirPath, { recursive: true, force: true });
+          deleted++;
+        } catch (error: any) {
+          skipped++;
+          this.logger.warn(`Failed to delete expired upload session ${sessionFolderName}: ${error}`);
+        }
+      }
+    }
+
+    // Keep cleanup logs low-noise while still observable when work is done.
+    if (deleted > 0 || skipped > 0) {
+      this.logger.log(`Resumable session cleanup summary: scanned=${scanned}, deleted=${deleted}, skipped=${skipped}`);
+    } else {
+      this.logger.debug(`Resumable session cleanup summary: scanned=${scanned}, deleted=0, skipped=0`);
+    }
   }
 
   private getSessionDirPath(userId: string, id: string) {
@@ -439,5 +532,43 @@ export class AssetUploadSessionService {
     if (auth.user.quotaSizeInBytes !== null && auth.user.quotaSizeInBytes < auth.user.quotaUsageInBytes + size) {
       throw new BadRequestException('Quota has been exceeded!');
     }
+  }
+
+  private async shouldDeleteExpiredSessionDirectory({
+    now,
+    userId,
+    sessionId,
+    sessionDirMtimeMs,
+  }: {
+    now: number;
+    userId: string;
+    sessionId: string;
+    sessionDirMtimeMs: number;
+  }) {
+    const manifestPath = this.getSessionManifestPath(userId, sessionId);
+    const fallbackAgeMs = now - sessionDirMtimeMs;
+
+    if (!this.storageRepository.existsSync(manifestPath)) {
+      return fallbackAgeMs > RESUMABLE_SESSION_TTL_MS;
+    }
+
+    try {
+      const rawManifest = await this.storageRepository.readTextFile(manifestPath);
+      const parsed = JSON.parse(rawManifest) as Partial<AssetUploadSessionManifest>;
+      const manifestUpdatedAt = this.parseManifestUpdatedAt(parsed.updatedAt);
+      const ageMs = manifestUpdatedAt === null ? fallbackAgeMs : now - manifestUpdatedAt;
+      return ageMs > RESUMABLE_SESSION_TTL_MS;
+    } catch {
+      return fallbackAgeMs > RESUMABLE_SESSION_TTL_MS;
+    }
+  }
+
+  private parseManifestUpdatedAt(updatedAt?: string): number | null {
+    if (!updatedAt) {
+      return null;
+    }
+
+    const parsed = Date.parse(updatedAt);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 }

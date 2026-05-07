@@ -31,7 +31,10 @@ describe(AssetMediaController.name, () => {
   const assetData = Buffer.from('123');
   const filename = 'example.png';
   const service = mockBaseService(AssetMediaService);
-  const uploadSessionService = automock(AssetUploadSessionService);
+  const uploadSessionService = automock(AssetUploadSessionService, {
+    args: [{ setContext: () => {} } as any, {} as any, {} as any],
+    strict: false,
+  });
 
   beforeAll(async () => {
     ctx = await controllerSetup(AssetMediaController, [
