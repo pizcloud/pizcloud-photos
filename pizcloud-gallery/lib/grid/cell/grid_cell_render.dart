@@ -324,10 +324,19 @@ extension _GridCellStateRender on _GridCellState {
           ),
         // #new
         if (media.isVideo)
+          // Positioned(
+          //   right: 4,
+          //   bottom: 4,
+          //   child: _buildVideoMetaChip(media, palette),
+          // ),
           Positioned(
-            right: 4,
-            bottom: 4,
-            child: _buildVideoMetaChip(media, palette),
+            right: 4 * inverseViewScale,
+            bottom: 4 * inverseViewScale,
+            child: Transform.scale(
+              scale: inverseViewScale,
+              alignment: Alignment.bottomRight,
+              child: _buildVideoMetaChip(media, palette),
+            ),
           ),
         if (GridCell._showIndexBadge)
           Positioned(
