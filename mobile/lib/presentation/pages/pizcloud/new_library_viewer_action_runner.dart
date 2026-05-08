@@ -12,6 +12,7 @@ import 'package:immich_mobile/domain/models/asset/base_asset.model.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/extensions/string_extensions.dart';
 import 'package:immich_mobile/extensions/translate_extensions.dart';
+import 'package:immich_mobile/infrastructure/repositories/storage.repository.dart';
 import 'package:immich_mobile/presentation/widgets/album/album_selector.widget.dart';
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/base_bottom_sheet.widget.dart';
 import 'package:immich_mobile/presentation/widgets/images/image_provider.dart';
@@ -168,6 +169,20 @@ class NewLibraryViewerActionRunner {
   }
 
   Future<bool> uploadMany(List<MediaItem> items, BuildContext context) async {
+    final NewLibraryUploadPlan? plan = await buildUploadPlan(items, context: context);
+    if (plan == null) {
+      return false;
+    }
+
+    // final ActionResult result = await _runWithTimelineSelection(
+    //   resolved.map((entry) => entry.asset),
+    //   () => _ref.read(actionProvider.notifier).upload(ActionSource.timeline),
+    // );
+    // New behavior keeps upload scope local to resolved assets and avoids global timeline multi-select coupling.
+    return uploadLocalAssets(plan.localAssets, context);
+  }
+
+  Future<NewLibraryUploadPlan?> buildUploadPlan(List<MediaItem> items, {required BuildContext context}) async {
     final List<_ResolvedAsset> resolved = await _resolveMany(
       items,
       context: context,
@@ -175,24 +190,42 @@ class NewLibraryViewerActionRunner {
     );
     if (resolved.isEmpty) {
       _showInfo(context, 'Upload is only available for local-only items.');
+      return null;
+    }
+
+    final List<LocalAsset> localAssets = resolved
+        .map((entry) => entry.asset)
+        .whereType<LocalAsset>()
+        .toList(growable: false);
+    if (localAssets.isEmpty) {
+      _showInfo(context, 'Upload is only available for local-only items.');
+      return null;
+    }
+
+    final int resumableCandidateCount = await _countResumableUploadCandidates(localAssets);
+
+    return NewLibraryUploadPlan(localAssets: localAssets, resumableCandidateCount: resumableCandidateCount);
+  }
+
+  Future<bool> uploadLocalAssets(List<LocalAsset> localAssets, BuildContext context) async {
+    if (localAssets.isEmpty) {
+      _showInfo(context, 'Upload is only available for local-only items.');
       return false;
     }
 
-    final ActionResult result = await _runWithTimelineSelection(
-      resolved.map((entry) => entry.asset),
-      () => _ref.read(actionProvider.notifier).upload(ActionSource.timeline),
-    );
-    if (!result.success) {
-      _showError(context, _resolveUploadActionErrorMessage(context, result.error));
+    try {
+      // Update - Old behavior executed upload through ActionNotifier.upload(ActionSource.timeline).
+      // This path calls the same uploadService.manualBackup(localAssets) without relying on global selection state.
+      await _ref.read(uploadServiceProvider).manualBackup(localAssets);
+    } catch (error) {
+      _showError(context, _resolveUploadActionErrorMessage(context, error.toString()));
       return false;
     }
 
     _showSuccess(context, 'Upload started');
 
-    for (final BaseAsset asset in resolved.map((entry) => entry.asset)) {
-      if (asset is LocalAsset) {
-        unawaited(_watchManualUploadForbiddenError(context: context, localAssetId: asset.id));
-      }
+    for (final LocalAsset asset in localAssets) {
+      unawaited(_watchManualUploadForbiddenError(context: context, localAssetId: asset.id));
     }
 
     return true;
@@ -655,6 +688,36 @@ class NewLibraryViewerActionRunner {
     return 'hash:${asset.hashCode}';
   }
 
+  Future<int> _countResumableUploadCandidates(List<LocalAsset> assets) async {
+    int resumableCount = 0;
+    for (final LocalAsset asset in assets) {
+      if (await _isResumableUploadCandidate(asset)) {
+        resumableCount += 1;
+      }
+    }
+    return resumableCount;
+  }
+
+  Future<bool> _isResumableUploadCandidate(LocalAsset asset) async {
+    try {
+      final storageRepository = const StorageRepository();
+      final entity = await storageRepository.getAssetEntityForAsset(asset);
+      if (entity == null || entity.isLivePhoto) {
+        return false;
+      }
+
+      final file = await storageRepository.getFileForAsset(asset.id);
+      if (file == null) {
+        return false;
+      }
+
+      final int fileSize = await file.length();
+      return fileSize >= kResumableUploadMinFileSize;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<T> _runWithTimelineSelection<T>(Iterable<BaseAsset> assets, Future<T> Function() action) async {
     final Set<BaseAsset> selection = assets.toSet();
     final MultiSelectNotifier multiSelect = _ref.read(multiSelectProvider.notifier);
@@ -974,4 +1037,13 @@ class _UserVisibleActionError implements Exception {
 
   @override
   String toString() => message;
+}
+
+class NewLibraryUploadPlan {
+  const NewLibraryUploadPlan({required this.localAssets, required this.resumableCandidateCount});
+
+  final List<LocalAsset> localAssets;
+  final int resumableCandidateCount;
+
+  bool get hasResumableCandidates => resumableCandidateCount > 0;
 }

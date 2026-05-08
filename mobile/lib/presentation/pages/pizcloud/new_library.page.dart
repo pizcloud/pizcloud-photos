@@ -20,6 +20,7 @@ import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/setting.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/timeline.provider.dart';
 import 'package:immich_mobile/providers/pizcloud/new_library.provider.dart';
+import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/widgets/common/drag_sheet.dart';
 import 'package:immich_mobile/widgets/common/immich_sliver_app_bar.dart';
 // import 'package:intl/intl.dart';
@@ -41,6 +42,12 @@ class NewLibraryPage extends HookConsumerWidget {
     final ValueNotifier<List<MediaItem>> selectedItemsState = useState<List<MediaItem>>(const <MediaItem>[]);
     final ValueNotifier<int> clearSelectionSignal = useState<int>(0);
     final ValueNotifier<bool> isActionProcessing = useState<bool>(false);
+    final ValueNotifier<bool> isUploadDispatching = useState<bool>(false);
+    final ValueNotifier<bool> isUploadQueueRunning = useState<bool>(false);
+    final ObjectRef<List<_PendingUploadSession>> pendingUploadSessionQueueRef = useRef<List<_PendingUploadSession>>(
+      <_PendingUploadSession>[],
+    );
+    final ObjectRef<int> uploadSessionIdSeedRef = useRef<int>(0);
     final NewLibraryLocateRequest? pendingLocateRequest = ref.watch(newLibraryLocateRequestProvider);
     final AsyncValue<bool> needsUploadedAtRepair = ref.watch(newLibraryNeedsUploadedAtRepairProvider);
     final repairAttemptedRef = useRef(false);
@@ -51,10 +58,65 @@ class NewLibraryPage extends HookConsumerWidget {
       runner: runner,
     );
 
+    void showUploadQueuedSnackBar({required int itemCount}) {
+      if (!context.mounted) {
+        return;
+      }
+      final ColorScheme colorScheme = Theme.of(context).colorScheme;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('upload_action_prompt'.tr(namedArgs: {'count': itemCount.toString()})),
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'view_details'.tr(),
+            textColor: colorScheme.primary,
+            onPressed: () {
+              if (!context.mounted) {
+                return;
+              }
+              context.pushRoute(const DriftUploadDetailRoute());
+            },
+          ),
+        ),
+      );
+    }
+
+    Future<void> drainUploadSessionQueue() async {
+      if (isUploadQueueRunning.value) {
+        return;
+      }
+      isUploadQueueRunning.value = true;
+      try {
+        while (pendingUploadSessionQueueRef.value.isNotEmpty) {
+          if (!context.mounted) {
+            pendingUploadSessionQueueRef.value.clear();
+            return;
+          }
+          final _PendingUploadSession session = pendingUploadSessionQueueRef.value.removeAt(0);
+          await runner.uploadLocalAssets(session.localAssets, context);
+        }
+      } finally {
+        if (context.mounted) {
+          isUploadQueueRunning.value = false;
+        }
+      }
+    }
+
     Future<void> runSelectionAction(Future<bool> Function() action) async {
       if (isActionProcessing.value) {
         return;
       }
+      // Old behavior blocked non-upload actions while upload queue was running.
+      // if (isUploadQueueRunning.value) {
+      //   showQueueBusySnackBar();
+      //   return;
+      // }
+      // Old behavior also blocked other actions while upload dispatching.
+      // if (isUploadDispatching.value) {
+      //   return;
+      // }
       isActionProcessing.value = true;
       try {
         final bool shouldClearSelection = await action();
@@ -73,7 +135,7 @@ class NewLibraryPage extends HookConsumerWidget {
     }
 
     Future<void> runUploadSelectionAction() async {
-      if (isActionProcessing.value) {
+      if (isActionProcessing.value || isUploadDispatching.value) {
         return;
       }
 
@@ -82,17 +144,41 @@ class NewLibraryPage extends HookConsumerWidget {
         return;
       }
 
-      isActionProcessing.value = true;
-
-      // await runSelectionAction(() => runner.uploadMany(selectedItems, context));
-      clearSelectionSignal.value += 1;
-      selectedItemsState.value = const <MediaItem>[];
+      isUploadDispatching.value = true;
 
       try {
-        await runner.uploadMany(capturedSelectedItems, context);
+        // await runSelectionAction(() => runner.uploadMany(selectedItems, context));
+        // Current behavior:
+        // 1) close current selection immediately
+        // 2) resolve upload plan
+        // 3a) small-file-only plan -> dispatch immediately
+        // 3b) resumable candidate exists -> enqueue session and drain sequentially
+        clearSelectionSignal.value += 1;
+        selectedItemsState.value = const <MediaItem>[];
+
+        final NewLibraryUploadPlan? plan = await runner.buildUploadPlan(capturedSelectedItems, context: context);
+        if (plan == null) {
+          return;
+        }
+
+        if (!plan.hasResumableCandidates) {
+          await runner.uploadLocalAssets(plan.localAssets, context);
+          return;
+        }
+
+        final _PendingUploadSession session = _PendingUploadSession(
+          id: ++uploadSessionIdSeedRef.value,
+          localAssets: plan.localAssets,
+          enqueuedAt: DateTime.now(),
+        );
+        pendingUploadSessionQueueRef.value.add(session);
+
+        showUploadQueuedSnackBar(itemCount: session.localAssets.length);
+
+        unawaited(drainUploadSessionQueue());
       } finally {
         if (context.mounted) {
-          isActionProcessing.value = false;
+          isUploadDispatching.value = false;
         }
       }
     }
@@ -253,7 +339,11 @@ class NewLibraryPage extends HookConsumerWidget {
               Positioned.fill(child: gallery),
               if (selectedItems.isNotEmpty)
                 _NewLibraryActionBar(
-                  isProcessing: isActionProcessing.value,
+                  // isProcessing: isActionProcessing.value,
+                  // disableNonUploadActions: isActionProcessing.value || isUploadQueueRunning.value,
+                  disableNonUploadActions: isActionProcessing.value,
+                  disableUploadAction: isActionProcessing.value || isUploadDispatching.value,
+                  disableCloseAction: isActionProcessing.value,
                   visibility: selectionVisibility,
                   selectedCount: selectedItems.length,
                   onClose: () {
@@ -326,7 +416,9 @@ class _SelectionActionVisibility {
 
 class _NewLibraryActionBar extends StatelessWidget {
   const _NewLibraryActionBar({
-    required this.isProcessing,
+    required this.disableNonUploadActions,
+    required this.disableUploadAction,
+    required this.disableCloseAction,
     required this.visibility,
     required this.selectedCount,
     required this.onClose,
@@ -338,7 +430,9 @@ class _NewLibraryActionBar extends StatelessWidget {
     required this.onDeleteLocal,
   });
 
-  final bool isProcessing;
+  final bool disableNonUploadActions;
+  final bool disableUploadAction;
+  final bool disableCloseAction;
   final _SelectionActionVisibility visibility;
   final int selectedCount;
   final VoidCallback onClose;
@@ -360,36 +454,40 @@ class _NewLibraryActionBar extends StatelessWidget {
     final Color overlayBorderColor = colorScheme.outlineVariant.withValues(alpha: isDarkMode ? 0.38 : 0.26);
 
     final List<Widget> buttons = <Widget>[
-      ControlBoxButton(iconData: Icons.share_rounded, label: 'share'.tr(), onPressed: isProcessing ? null : onShare),
+      ControlBoxButton(
+        iconData: Icons.share_rounded,
+        label: 'share'.tr(),
+        onPressed: disableNonUploadActions ? null : onShare,
+      ),
       if (visibility.showAddToAlbum)
         ControlBoxButton(
           iconData: Icons.photo_album_outlined,
           label: 'add_to_album'.tr(),
-          onPressed: isProcessing ? null : onAddToAlbum,
+          onPressed: disableNonUploadActions ? null : onAddToAlbum,
         ),
       if (visibility.showUpload)
         ControlBoxButton(
           iconData: Icons.backup_outlined,
           label: 'upload'.tr(),
-          onPressed: isProcessing ? null : onUpload,
+          onPressed: disableUploadAction ? null : onUpload,
         ),
       if (visibility.showDownload)
         ControlBoxButton(
           iconData: Icons.download_rounded,
           label: 'download'.tr(),
-          onPressed: isProcessing ? null : onDownload,
+          onPressed: disableNonUploadActions ? null : onDownload,
         ),
       if (visibility.showDelete)
         ControlBoxButton(
           iconData: Icons.delete_sweep_outlined,
           label: 'delete'.tr(),
-          onPressed: isProcessing ? null : onDelete,
+          onPressed: disableNonUploadActions ? null : onDelete,
         ),
       if (visibility.showDeleteLocal)
         ControlBoxButton(
           iconData: Icons.no_cell_outlined,
           label: 'control_bottom_app_bar_delete_from_local'.tr(),
-          onPressed: isProcessing ? null : onDeleteLocal,
+          onPressed: disableNonUploadActions ? null : onDeleteLocal,
         ),
     ];
 
@@ -447,7 +545,7 @@ class _NewLibraryActionBar extends StatelessWidget {
                       const Spacer(),
                       IconButton(
                         tooltip: 'close'.tr(),
-                        onPressed: isProcessing ? null : onClose,
+                        onPressed: disableCloseAction ? null : onClose,
                         constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                         padding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
@@ -471,4 +569,12 @@ class _NewLibraryActionBar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PendingUploadSession {
+  const _PendingUploadSession({required this.id, required this.localAssets, required this.enqueuedAt});
+
+  final int id;
+  final List<LocalAsset> localAssets;
+  final DateTime enqueuedAt;
 }
