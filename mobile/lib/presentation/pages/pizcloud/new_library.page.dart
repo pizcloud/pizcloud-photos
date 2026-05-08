@@ -72,6 +72,31 @@ class NewLibraryPage extends HookConsumerWidget {
       }
     }
 
+    Future<void> runUploadSelectionAction() async {
+      if (isActionProcessing.value) {
+        return;
+      }
+
+      final List<MediaItem> capturedSelectedItems = List<MediaItem>.unmodifiable(selectedItems);
+      if (capturedSelectedItems.isEmpty) {
+        return;
+      }
+
+      isActionProcessing.value = true;
+
+      // await runSelectionAction(() => runner.uploadMany(selectedItems, context));
+      clearSelectionSignal.value += 1;
+      selectedItemsState.value = const <MediaItem>[];
+
+      try {
+        await runner.uploadMany(capturedSelectedItems, context);
+      } finally {
+        if (context.mounted) {
+          isActionProcessing.value = false;
+        }
+      }
+    }
+
     void syncSelectedItemsFromGallery(List<MediaItem> items) {
       final List<MediaItem> nextItems = List<MediaItem>.unmodifiable(items);
 
@@ -218,7 +243,8 @@ class NewLibraryPage extends HookConsumerWidget {
       // return SizedBox.expand(child: PizGallery(...));
       physics: const NeverScrollableScrollPhysics(),
       slivers: [
-        const ImmichSliverAppBar(floating: false, pinned: true, snap: false),
+        // const ImmichSliverAppBar(floating: false, pinned: true, snap: false),
+        const ImmichSliverAppBar(floating: false, pinned: true, snap: false, hideWhenGlobalMultiSelectEnabled: false),
         const SliverToBoxAdapter(child: SizedBox(height: 8)),
         SliverFillRemaining(
           hasScrollBody: true,
@@ -236,7 +262,8 @@ class NewLibraryPage extends HookConsumerWidget {
                   },
                   onShare: () => runSelectionAction(() => runner.shareMany(selectedItems, context)),
                   onAddToAlbum: () => runSelectionAction(() => runner.addToAlbumMany(selectedItems, context)),
-                  onUpload: () => runSelectionAction(() => runner.uploadMany(selectedItems, context)),
+                  // onUpload: () => runSelectionAction(() => runner.uploadMany(selectedItems, context)),
+                  onUpload: runUploadSelectionAction,
                   onDownload: () => runSelectionAction(() => runner.downloadMany(selectedItems, context)),
                   onDelete: () => runSelectionAction(() => runner.deleteMany(selectedItems, context)),
                   onDeleteLocal: () => runSelectionAction(() => runner.deleteLocalMany(selectedItems, context)),

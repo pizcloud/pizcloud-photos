@@ -28,6 +28,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
   final bool floating;
   final bool pinned;
   final bool snap;
+  final bool hideWhenGlobalMultiSelectEnabled; // pizcloud
   final Widget? title;
   final double? expandedHeight;
 
@@ -38,6 +39,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
     this.floating = true,
     this.pinned = false,
     this.snap = true,
+    this.hideWhenGlobalMultiSelectEnabled = true, // pizcloud
     this.title,
     this.expandedHeight,
   });
@@ -47,6 +49,7 @@ class ImmichSliverAppBar extends ConsumerWidget {
     final isCasting = ref.watch(castProvider.select((c) => c.isCasting));
     final isReadonlyModeEnabled = ref.watch(readonlyModeProvider);
     final isMultiSelectEnabled = ref.watch(multiSelectProvider.select((s) => s.isEnabled));
+    final bool shouldHideForGlobalMultiSelect = hideWhenGlobalMultiSelectEnabled && isMultiSelectEnabled; // pizcloud
     final materialActions = <Widget>[
       if (isCasting && !isReadonlyModeEnabled)
         Padding(
@@ -98,7 +101,8 @@ class ImmichSliverAppBar extends ConsumerWidget {
 
     return SliverAnimatedOpacity(
       duration: Durations.medium1,
-      opacity: isMultiSelectEnabled ? 0 : 1,
+      // opacity: isMultiSelectEnabled ? 0 : 1, // pizcloud
+      opacity: shouldHideForGlobalMultiSelect ? 0 : 1, // pizcloud
       // iOS: use Material SliverAppBar to avoid large-title spacing and keep layout consistent.
       sliver: isCupertino(context)
           ? SliverAppBar(
