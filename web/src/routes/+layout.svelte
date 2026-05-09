@@ -206,4 +206,4 @@
 
 <DownloadPanel />
 <UploadPanel />
-<InterruptedUploadPanel /> // pizcloud
+<InterruptedUploadPanel />
