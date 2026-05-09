@@ -192,6 +192,84 @@ class DriftManualFailedUploadItem {
   }
 }
 
+// pizcloud
+const String kManualUploadInterruptedErrorCode = 'manual_upload_interrupted';
+
+class DriftManualPendingUploadItem {
+  final String taskId;
+  final String filename;
+  final int? fileSize;
+  final DateTime queuedAt;
+
+  const DriftManualPendingUploadItem({
+    required this.taskId,
+    required this.filename,
+    required this.fileSize,
+    required this.queuedAt,
+  });
+
+  DriftManualPendingUploadItem copyWith({String? taskId, String? filename, int? fileSize, DateTime? queuedAt}) {
+    return DriftManualPendingUploadItem(
+      taskId: taskId ?? this.taskId,
+      filename: filename ?? this.filename,
+      fileSize: fileSize ?? this.fileSize,
+      queuedAt: queuedAt ?? this.queuedAt,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'taskId': taskId,
+      'filename': filename,
+      'fileSize': fileSize,
+      'queuedAtMs': queuedAt.millisecondsSinceEpoch,
+    };
+  }
+
+  factory DriftManualPendingUploadItem.fromMap(Map<String, dynamic> map) {
+    final dynamic queuedAtRaw = map['queuedAtMs'];
+    final int? queuedAtMs = queuedAtRaw is int
+        ? queuedAtRaw
+        : queuedAtRaw is num
+        ? queuedAtRaw.toInt()
+        : queuedAtRaw is String
+        ? int.tryParse(queuedAtRaw)
+        : null;
+    final dynamic fileSizeRaw = map['fileSize'];
+    final int? parsedFileSize = fileSizeRaw is int
+        ? fileSizeRaw
+        : fileSizeRaw is num
+        ? fileSizeRaw.toInt()
+        : fileSizeRaw is String
+        ? int.tryParse(fileSizeRaw)
+        : null;
+
+    return DriftManualPendingUploadItem(
+      taskId: (map['taskId'] as String?) ?? '',
+      filename: (map['filename'] as String?) ?? '',
+      fileSize: parsedFileSize,
+      queuedAt: queuedAtMs != null ? DateTime.fromMillisecondsSinceEpoch(queuedAtMs) : DateTime.now(),
+    );
+  }
+
+  @override
+  String toString() {
+    return 'DriftManualPendingUploadItem(taskId: $taskId, filename: $filename, fileSize: $fileSize, queuedAt: $queuedAt)';
+  }
+
+  @override
+  bool operator ==(covariant DriftManualPendingUploadItem other) {
+    if (identical(this, other)) return true;
+    return other.taskId == taskId &&
+        other.filename == filename &&
+        other.fileSize == fileSize &&
+        other.queuedAt == queuedAt;
+  }
+
+  @override
+  int get hashCode => taskId.hashCode ^ filename.hashCode ^ fileSize.hashCode ^ queuedAt.hashCode;
+}
+
 enum ManualFailedUploadRetryResult { started, itemNotFound, alreadyInProgress, localAssetMissing, startFailed }
 // #pizcloud
 
@@ -212,6 +290,7 @@ class DriftBackupState {
 
   final Map<String, DriftUploadStatus> uploadItems;
   final Map<String, DriftManualFailedUploadItem> manualFailedUploadItems; // pizcloud
+  final Map<String, DriftManualPendingUploadItem> manualPendingUploadItems; // pizcloud
 
   const DriftBackupState({
     required this.totalCount,
@@ -224,6 +303,7 @@ class DriftBackupState {
     required this.isSyncing,
     required this.uploadItems,
     required this.manualFailedUploadItems, // pizcloud
+    required this.manualPendingUploadItems, // pizcloud
     this.error = BackupError.none,
   });
 
@@ -238,6 +318,7 @@ class DriftBackupState {
     bool? isSyncing,
     Map<String, DriftUploadStatus>? uploadItems,
     Map<String, DriftManualFailedUploadItem>? manualFailedUploadItems, // pizcloud
+    Map<String, DriftManualPendingUploadItem>? manualPendingUploadItems, // pizcloud
     BackupError? error,
   }) {
     return DriftBackupState(
@@ -251,13 +332,14 @@ class DriftBackupState {
       isSyncing: isSyncing ?? this.isSyncing,
       uploadItems: uploadItems ?? this.uploadItems,
       manualFailedUploadItems: manualFailedUploadItems ?? this.manualFailedUploadItems, // pizcloud
+      manualPendingUploadItems: manualPendingUploadItems ?? this.manualPendingUploadItems, // pizcloud
       error: error ?? this.error,
     );
   }
 
   @override
   String toString() {
-    return 'DriftBackupState(totalCount: $totalCount, backupCount: $backupCount, remainderCount: $remainderCount, processingCount: $processingCount, enqueueCount: $enqueueCount, enqueueTotalCount: $enqueueTotalCount, isCanceling: $isCanceling, isSyncing: $isSyncing, uploadItems: $uploadItems, manualFailedUploadItems: $manualFailedUploadItems, error: $error)';
+    return 'DriftBackupState(totalCount: $totalCount, backupCount: $backupCount, remainderCount: $remainderCount, processingCount: $processingCount, enqueueCount: $enqueueCount, enqueueTotalCount: $enqueueTotalCount, isCanceling: $isCanceling, isSyncing: $isSyncing, uploadItems: $uploadItems, manualFailedUploadItems: $manualFailedUploadItems, manualPendingUploadItems: $manualPendingUploadItems, error: $error)';
   }
 
   @override
@@ -275,6 +357,7 @@ class DriftBackupState {
         other.isSyncing == isSyncing &&
         mapEquals(other.uploadItems, uploadItems) &&
         mapEquals(other.manualFailedUploadItems, manualFailedUploadItems) &&
+        mapEquals(other.manualPendingUploadItems, manualPendingUploadItems) &&
         other.error == error;
   }
 
@@ -290,6 +373,7 @@ class DriftBackupState {
         isSyncing.hashCode ^
         uploadItems.hashCode ^
         manualFailedUploadItems.hashCode ^
+        manualPendingUploadItems.hashCode ^
         error.hashCode;
   }
 }
@@ -312,6 +396,7 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
           isSyncing: false,
           uploadItems: {},
           manualFailedUploadItems: {}, // pizcloud
+          manualPendingUploadItems: {}, // pizcloud
           error: BackupError.none,
         ),
       ) {
@@ -320,6 +405,8 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
       _uploadService.taskProgressStream.listen(_handleTaskProgressUpdate);
     }
     _hydrateManualFailedUploadItems(); // pizcloud
+    _hydrateManualPendingUploadItems(); // pizcloud
+    unawaited(Future<void>.delayed(const Duration(seconds: 1), () => reconcileManualPendingUploads())); // pizcloud
   }
 
   final UploadService _uploadService;
@@ -327,6 +414,7 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
   StreamSubscription<TaskStatusUpdate>? _statusSubscription;
   StreamSubscription<TaskProgressUpdate>? _progressSubscription;
   Future<void>? _resumeBackupInFlight; // pizcloud: single-flight guard for resume backup
+  Future<void>? _manualPendingReconcileInFlight; // pizcloud: single-flight guard for pending-manual reconciliation
   final Set<String> _manualRetryInFlight = <String>{}; // pizcloud
   final _logger = Logger("DriftBackupNotifier");
 
@@ -346,6 +434,14 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
       return;
     }
     state = state.copyWith(manualFailedUploadItems: persisted);
+  }
+
+  void _hydrateManualPendingUploadItems() {
+    final persisted = _readPersistedManualPendingUploadItems();
+    if (persisted.isEmpty) {
+      return;
+    }
+    state = state.copyWith(manualPendingUploadItems: persisted);
   }
 
   Map<String, DriftManualFailedUploadItem> _readPersistedManualFailedUploadItems() {
@@ -380,6 +476,38 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
     }
   }
 
+  Map<String, DriftManualPendingUploadItem> _readPersistedManualPendingUploadItems() {
+    final raw = Store.tryGet(StoreKey.manualUploadPendingItems);
+    if (raw == null || raw.isEmpty) {
+      return <String, DriftManualPendingUploadItem>{};
+    }
+
+    try {
+      final dynamic decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        return <String, DriftManualPendingUploadItem>{};
+      }
+
+      final output = <String, DriftManualPendingUploadItem>{};
+      for (final entry in decoded.entries) {
+        final key = entry.key.toString();
+        final dynamic value = entry.value;
+        if (value is Map<String, dynamic>) {
+          output[key] = DriftManualPendingUploadItem.fromMap(value);
+          continue;
+        }
+        if (value is Map) {
+          output[key] = DriftManualPendingUploadItem.fromMap(
+            value.map((entryKey, entryValue) => MapEntry(entryKey.toString(), entryValue)),
+          );
+        }
+      }
+      return output;
+    } catch (_) {
+      return <String, DriftManualPendingUploadItem>{};
+    }
+  }
+
   Future<void> _persistManualFailedUploadItems(Map<String, DriftManualFailedUploadItem> items) async {
     if (items.isEmpty) {
       await Store.delete(StoreKey.manualUploadFailedItems);
@@ -388,6 +516,16 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
 
     final serialized = items.map((key, value) => MapEntry(key, value.toMap()));
     await Store.put(StoreKey.manualUploadFailedItems, jsonEncode(serialized));
+  }
+
+  Future<void> _persistManualPendingUploadItems(Map<String, DriftManualPendingUploadItem> items) async {
+    if (items.isEmpty) {
+      await Store.delete(StoreKey.manualUploadPendingItems);
+      return;
+    }
+
+    final serialized = items.map((key, value) => MapEntry(key, value.toMap()));
+    await Store.put(StoreKey.manualUploadPendingItems, jsonEncode(serialized));
   }
 
   void _upsertManualFailedUploadItem(DriftManualFailedUploadItem item) {
@@ -403,6 +541,111 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
     final updatedItems = Map<String, DriftManualFailedUploadItem>.from(state.manualFailedUploadItems)..remove(taskId);
     state = state.copyWith(manualFailedUploadItems: updatedItems);
     unawaited(_persistManualFailedUploadItems(updatedItems));
+  }
+
+  void _removeManualPendingUploadItem(String taskId) {
+    if (!state.manualPendingUploadItems.containsKey(taskId)) {
+      return;
+    }
+    final updatedItems = Map<String, DriftManualPendingUploadItem>.from(state.manualPendingUploadItems)..remove(taskId);
+    state = state.copyWith(manualPendingUploadItems: updatedItems);
+    unawaited(_persistManualPendingUploadItems(updatedItems));
+  }
+
+  Future<void> stageManualPendingUploads(List<LocalAsset> localAssets) async {
+    if (localAssets.isEmpty) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final updatedItems = <String, DriftManualPendingUploadItem>{...state.manualPendingUploadItems};
+    for (final asset in localAssets) {
+      // Old behavior did not persist manual-upload pending intent before dispatch.
+      updatedItems[asset.id] = DriftManualPendingUploadItem(
+        taskId: asset.id,
+        filename: asset.name,
+        fileSize: null,
+        queuedAt: now,
+      );
+    }
+
+    state = state.copyWith(manualPendingUploadItems: updatedItems);
+    try {
+      await _persistManualPendingUploadItems(updatedItems);
+    } catch (error, stackTrace) {
+      _logger.warning('Unable to persist pending manual upload items', error, stackTrace);
+    }
+  }
+
+  Future<void> reconcileManualPendingUploads() {
+    final runningReconcile = _manualPendingReconcileInFlight;
+    if (runningReconcile != null) {
+      return runningReconcile;
+    }
+
+    final startedReconcile = Future<void>.sync(_reconcileManualPendingUploadsInternal);
+    _manualPendingReconcileInFlight = startedReconcile;
+    return startedReconcile.whenComplete(() {
+      if (identical(_manualPendingReconcileInFlight, startedReconcile)) {
+        _manualPendingReconcileInFlight = null;
+      }
+    });
+  }
+
+  Future<void> _reconcileManualPendingUploadsInternal() async {
+    final pendingItems = state.manualPendingUploadItems;
+    if (pendingItems.isEmpty) {
+      return;
+    }
+
+    try {
+      final activeTasks = await _uploadService.getActiveTasks(kManualUploadGroup);
+      final activeTaskIds = activeTasks.map((task) => task.taskId).toSet();
+
+      final retainedPendingItems = <String, DriftManualPendingUploadItem>{};
+      final updatedFailedItems = <String, DriftManualFailedUploadItem>{...state.manualFailedUploadItems};
+
+      bool hasPendingChanged = false;
+      bool hasFailedChanged = false;
+
+      for (final entry in pendingItems.entries) {
+        final taskId = entry.key;
+        final pendingItem = entry.value;
+
+        if (activeTaskIds.contains(taskId)) {
+          retainedPendingItems[taskId] = pendingItem;
+          continue;
+        }
+
+        hasPendingChanged = true;
+        if (!updatedFailedItems.containsKey(taskId)) {
+          updatedFailedItems[taskId] = DriftManualFailedUploadItem(
+            taskId: taskId,
+            filename: pendingItem.filename,
+            error: kManualUploadInterruptedErrorCode,
+            fileSize: pendingItem.fileSize,
+            failedAt: DateTime.now(),
+          );
+          hasFailedChanged = true;
+        }
+      }
+
+      if (!hasPendingChanged && !hasFailedChanged) {
+        return;
+      }
+
+      state = state.copyWith(
+        manualPendingUploadItems: retainedPendingItems,
+        manualFailedUploadItems: updatedFailedItems,
+      );
+
+      await _persistManualPendingUploadItems(retainedPendingItems);
+      if (hasFailedChanged) {
+        await _persistManualFailedUploadItems(updatedFailedItems);
+      }
+    } catch (error, stackTrace) {
+      _logger.warning('Unable to reconcile pending manual upload items', error, stackTrace);
+    }
   }
 
   String? _resolveTaskError(TaskStatusUpdate update) {
@@ -431,6 +674,7 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
     switch (update.status) {
       case TaskStatus.complete:
         if (update.task.group == kManualUploadGroup) {
+          _removeManualPendingUploadItem(taskId); // pizcloud
           _removeManualFailedUploadItem(taskId);
         } // pizcloud
 
@@ -457,6 +701,7 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
         final currentItem = state.uploadItems[taskId];
         // pizcloud
         if (update.task.group == kManualUploadGroup) {
+          _removeManualPendingUploadItem(taskId); // pizcloud
           final failedItem = DriftManualFailedUploadItem(
             taskId: taskId,
             filename: currentItem?.filename ?? update.task.displayName,
@@ -487,6 +732,9 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
         break;
 
       case TaskStatus.canceled:
+        if (update.task.group == kManualUploadGroup) {
+          _removeManualPendingUploadItem(taskId);
+        } // pizcloud
         _removeUploadItem(update.task.taskId);
         break;
 
@@ -521,10 +769,12 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
 
       // Old behavior had no retry action for a persisted failed list.
       // New behavior removes the failed row immediately once retry is dispatched.
+      await stageManualPendingUploads([localAsset]); // pizcloud
       _removeManualFailedUploadItem(taskId);
       await _uploadService.manualBackup([localAsset]);
       return ManualFailedUploadRetryResult.started;
     } catch (error) {
+      _removeManualPendingUploadItem(taskId); // pizcloud
       _upsertManualFailedUploadItem(failedItem.copyWith(error: error.toString(), failedAt: DateTime.now()));
       return ManualFailedUploadRetryResult.startFailed;
     } finally {
@@ -544,6 +794,9 @@ class DriftBackupNotifier extends StateNotifier<DriftBackupState> {
 
     // pizcloud - old behavior only removed canceled rows and could re-add failed rows from progress stream.
     if (progress == kUploadStatusCanceled || progress == kUploadStatusFailed) {
+      if (update.task.group == kManualUploadGroup) {
+        _removeManualPendingUploadItem(taskId);
+      } // pizcloud
       _removeUploadItem(taskId);
       return;
     }

@@ -1320,6 +1320,7 @@
   "manage_your_api_keys": "Quản lý các khóa API của bạn",
   "manage_your_devices": "Quản lý các thiết bị đã đăng nhập của bạn",
   "manage_your_oauth_connection": "Quản lý kết nối OAuth của bạn",
+  "manual_upload_interrupted_error": "Tải lên đã bị gián đoạn trước khi hoàn tất. Vui lòng thử lại.",
   "map": "Bản đồ",
   "map_assets_in_bounds": "{count} ảnh",
   "map_cannot_get_user_location": "Không thể xác định vị trí của bạn",

@@ -108,7 +108,10 @@ enum StoreKey<T> {
   resumableUploadSessions<String>._(1016),
 
   // pizcloud manual upload failed items cache (JSON string)
-  manualUploadFailedItems<String>._(1017);
+  manualUploadFailedItems<String>._(1017),
+
+  // pizcloud manual upload pending items cache (JSON string)
+  manualUploadPendingItems<String>._(1018);
 
   const StoreKey._(this.id);
   final int id;

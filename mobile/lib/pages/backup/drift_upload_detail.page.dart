@@ -162,7 +162,7 @@ class DriftUploadDetailPage extends ConsumerWidget {
             ),
             if (item.error != null && item.error!.isNotEmpty)
               Text(
-                item.error!,
+                _resolveManualFailedErrorText(context, item.error!), // pizcloud
                 style: context.textTheme.bodySmall?.copyWith(
                   color: context.colorScheme.onErrorContainer.withValues(alpha: 0.8),
                 ),
@@ -217,6 +217,13 @@ class DriftUploadDetailPage extends ConsumerWidget {
     };
 
     messenger.showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 3)));
+  }
+
+  String _resolveManualFailedErrorText(BuildContext context, String rawError) {
+    if (rawError == kManualUploadInterruptedErrorCode) {
+      return 'manual_upload_interrupted_error'.t(context: context);
+    }
+    return rawError;
   }
   // #pizcloud
 

@@ -16,6 +16,7 @@ import 'package:immich_mobile/infrastructure/repositories/storage.repository.dar
 import 'package:immich_mobile/presentation/widgets/album/album_selector.widget.dart';
 import 'package:immich_mobile/presentation/widgets/bottom_sheet/base_bottom_sheet.widget.dart';
 import 'package:immich_mobile/presentation/widgets/images/image_provider.dart';
+import 'package:immich_mobile/providers/backup/drift_backup.provider.dart';
 import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/action.provider.dart';
 import 'package:immich_mobile/providers/infrastructure/asset_viewer/current_asset.provider.dart';
@@ -213,11 +214,15 @@ class NewLibraryViewerActionRunner {
       return false;
     }
 
+    final driftBackupNotifier = _ref.read(driftBackupProvider.notifier); // pizcloud
+    await driftBackupNotifier.stageManualPendingUploads(localAssets); // pizcloud
+
     try {
       // Update - Old behavior executed upload through ActionNotifier.upload(ActionSource.timeline).
       // This path calls the same uploadService.manualBackup(localAssets) without relying on global selection state.
       await _ref.read(uploadServiceProvider).manualBackup(localAssets);
     } catch (error) {
+      await driftBackupNotifier.reconcileManualPendingUploads(); // pizcloud
       _showError(context, _resolveUploadActionErrorMessage(context, error.toString()));
       return false;
     }
