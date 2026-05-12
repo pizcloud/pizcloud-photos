@@ -164,6 +164,18 @@ export class UserRepository {
       .executeTakeFirst();
   }
 
+  // pizcloud: keep legacy getByOAuthId behavior above untouched, add dedicated lookup including soft-deleted users.
+  @GenerateSql({ params: [DummyValue.STRING] })
+  getByOAuthIdWithDeleted(oauthId: string) {
+    return this.db
+      .selectFrom('user')
+      .select(columns.userAdmin)
+      .select(withMetadata)
+      .where('user.oauthId', '=', oauthId)
+      .executeTakeFirst();
+  }
+  // #pizcloud
+
   @GenerateSql({ params: [DateTime.now().minus({ years: 1 })] })
   getDeletedAfter(target: DateTime) {
     return this.db.selectFrom('user').select(['id']).where('user.deletedAt', '<', target.toJSDate()).execute();

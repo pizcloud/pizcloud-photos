@@ -26,6 +26,7 @@ import { OcrService } from 'src/services/ocr.service';
 import { PartnerService } from 'src/services/partner.service';
 import { PersonService } from 'src/services/person.service';
 import { BillingService } from 'src/services/pizcloud/billing.service'; // pizcloud
+import { InternalUserDeleteService } from 'src/services/pizcloud/internal-user-delete.service'; // pizcloud
 import { InternalUserSyncService } from 'src/services/pizcloud/internal-user-sync.service'; // pizcloud
 import { PluginService } from 'src/services/plugin.service';
 import { QueueService } from 'src/services/queue.service';
@@ -103,6 +104,7 @@ export const services = [
   ViewService,
   WorkflowService,
   BillingService, // pizcloud
+  InternalUserDeleteService, // pizcloud
   InternalUserSyncService, // pizcloud
   SsoService, // pizcloud
 ];
