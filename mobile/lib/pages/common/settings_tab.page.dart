@@ -258,6 +258,15 @@ class SettingsTabPage extends HookConsumerWidget {
       );
     }
 
+    Widget buildSupportTicketsButton() {
+      return buildActionButton(
+        context.platformIcon(material: Icons.support_agent_rounded, cupertino: CupertinoIcons.chat_bubble_2),
+        "support_ticket.title",
+        subtitle: "settings_quick_support_subtitle",
+        () => context.pushRoute(const SupportTicketsRoute()),
+      );
+    }
+
     // Future<void> removeServerCookies() async {
     //   await accountApiService.logout();
     // }
@@ -443,6 +452,7 @@ class SettingsTabPage extends HookConsumerWidget {
                 buildReferralProgramButton(), // pizcloud
                 buildDiscountCodeButton(), // pizcloud
                 buildPaymentHistoryButton(), // pizcloud
+                buildSupportTicketsButton(), // pizcloud
                 buildManageAccountButton(), // pizcloud
                 buildActionSectionTitle("settings_quick_system_section"),
                 if (kDebugMode || kProfileMode) buildAppLogButton(), // pizcloud

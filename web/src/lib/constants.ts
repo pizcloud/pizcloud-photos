@@ -68,6 +68,7 @@ export enum AppRoute {
   AUTH_USER_REGISTER = '/auth/pizcloud/user-register', //pizcloud
   REFERRAL_PROGRAM = '/pizcloud/referral', //pizcloud
   DISCOUNT_CODE_ROUTE = '/pizcloud/discount-code', //pizcloud
+  SUPPORT_TICKETS_ROUTE = '/pizcloud/support', //pizcloud
 }
 
 export enum ProjectionType {

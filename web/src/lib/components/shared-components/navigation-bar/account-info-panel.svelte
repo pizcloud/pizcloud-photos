@@ -8,7 +8,7 @@
   import { userInteraction } from '$lib/stores/user.svelte';
   import { getAboutInfo, type ServerAboutResponseDto } from '@immich/sdk';
   import { Button, Icon, IconButton, modalManager } from '@immich/ui';
-  import { mdiAccountCash, mdiAccountCog, mdiCog, mdiGift, mdiLogout, mdiPencil, mdiWrench } from '@mdi/js';
+  import { mdiAccountCash, mdiAccountCog, mdiCog, mdiFaceAgent, mdiGift, mdiLogout, mdiPencil, mdiWrench } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
@@ -91,6 +91,20 @@
         <div class="flex place-content-center place-items-center text-center gap-2 px-2">
           <Icon icon={mdiAccountCash} size="18" aria-hidden />
           {$t('referral.discount_code')}
+        </div>
+      </Button>
+      <Button
+        href={AppRoute.SUPPORT_TICKETS_ROUTE}
+        onclick={onClose}
+        size="small"
+        color="secondary"
+        variant="ghost"
+        shape="round"
+        class="border dark:border-immich-dark-gray dark:bg-gray-500 dark:hover:bg-immich-dark-primary/50 hover:bg-immich-primary/10 dark:text-white"
+      >
+        <div class="flex place-content-center place-items-center text-center gap-2 px-2">
+          <Icon icon={mdiFaceAgent} size="18" aria-hidden />
+          {$t('support_ticket.title')}
         </div>
       </Button>
       <!-- #pizcloud -->
