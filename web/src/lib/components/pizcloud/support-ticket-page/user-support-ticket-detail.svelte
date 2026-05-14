@@ -27,7 +27,7 @@
   let detail = $state<SupportTicketDetail | null>(null);
 
   let replyMessage = $state('');
-  let replyAttachments = $state<File[]>([]);
+  let replyAttachments = $state.raw<File[]>([]);
 
   const isClosed = $derived(detail?.ticket.status === 'closed');
 
@@ -179,10 +179,11 @@
 
     actionLoading = true;
     try {
+      const attachmentPayload = $state.snapshot(replyAttachments);
       detail = await replySupportTicket({
         ticketId: detail.ticket.id,
         message: normalizedMessage,
-        attachments: replyAttachments,
+        attachments: attachmentPayload,
       });
       replyMessage = '';
       replyAttachments = [];
@@ -311,6 +312,7 @@
             {/if}
           </button>
         </div>
+        <small class="support-ticket-detail__reply-limit">{$t('support_ticket.attachment_limit')}</small>
 
         {#if replyAttachments.length > 0}
           <ul class="support-ticket-detail__reply-attachments">
@@ -329,27 +331,38 @@
 
 <style>
   .support-ticket-detail {
+    --std-bg: var(--immich-bg-elevated, #ffffff);
+    --std-bg-soft: var(--immich-bg-subtle, #f8fafc);
+    --std-bg-muted: var(--immich-bg-muted, #f1f5f9);
+    --std-border: var(--immich-border-subtle, #e2e8f0);
+    --std-text: var(--immich-fg, inherit);
+    --std-text-muted: var(--immich-fg-muted, #64748b);
+    --std-accent: var(--immich-accent, #2563eb);
+    --std-accent-strong: var(--immich-accent-strong, #1d4ed8);
+    --std-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
     display: grid;
-    gap: 1rem;
-    padding-block: 1.25rem 2rem;
+    gap: 1.1rem;
+    padding-block: 1.3rem 2.2rem;
   }
 
   .support-ticket-detail__back-row button {
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--std-border);
     border-radius: 999px;
-    background: transparent;
-    color: inherit;
-    padding: 0.3rem 0.75rem;
+    background: var(--std-bg-soft);
+    color: var(--std-text);
+    padding: 0.36rem 0.8rem;
     cursor: pointer;
+    font-weight: 520;
   }
 
   .support-ticket-detail__header-card,
   .support-ticket-detail__messages-card,
   .support-ticket-detail__reply-card {
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
+    border: 1px solid var(--std-border);
     border-radius: 1rem;
-    padding: 1rem;
-    background: var(--immich-bg-subtle, #fff);
+    padding: 1.05rem;
+    background: var(--std-bg);
+    box-shadow: var(--std-shadow);
   }
 
   .support-ticket-detail__header-row {
@@ -361,7 +374,8 @@
 
   .support-ticket-detail__header-row h1 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.42rem;
+    color: var(--std-text);
   }
 
   .support-ticket-detail__meta {
@@ -373,7 +387,8 @@
 
   .support-ticket-detail__meta span {
     border-radius: 999px;
-    background: var(--immich-bg-muted, #f3f4f6);
+    background: var(--std-bg-muted);
+    color: var(--std-text-muted);
     font-size: 0.74rem;
     padding: 0.2rem 0.55rem;
   }
@@ -387,16 +402,22 @@
   }
 
   .support-ticket-detail__updated-row small {
-    color: var(--immich-fg-subtle, #6b7280);
+    color: var(--std-text-muted);
   }
 
   .support-ticket-detail__updated-row button {
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--std-border);
     border-radius: 999px;
-    background: transparent;
-    color: inherit;
-    padding: 0.35rem 0.8rem;
+    background: var(--std-bg-soft);
+    color: var(--std-text);
+    padding: 0.38rem 0.82rem;
     cursor: pointer;
+    font-weight: 520;
+    transition: background-color 0.15s ease;
+  }
+
+  .support-ticket-detail__updated-row button:hover:not(:disabled) {
+    background: var(--std-bg-muted);
   }
 
   .support-ticket-detail__updated-row button:disabled {
@@ -413,14 +434,15 @@
   }
 
   .support-ticket-detail__messages-card li {
-    border: 1px solid var(--immich-border-subtle, #e5e7eb);
+    border: 1px solid var(--std-border);
     border-radius: 0.75rem;
-    padding: 0.7rem;
-    background: var(--immich-bg-muted, #f8fafc);
+    padding: 0.78rem;
+    background: var(--std-bg-soft);
   }
 
   .support-ticket-detail__messages-card li.item--user {
-    background: #dbeafe;
+    background: rgba(37, 99, 235, 0.12);
+    border-color: rgba(37, 99, 235, 0.25);
   }
 
   .message-head {
@@ -431,12 +453,14 @@
   }
 
   .message-head small {
-    color: var(--immich-fg-subtle, #6b7280);
+    color: var(--std-text-muted);
   }
 
   .support-ticket-detail__messages-card p {
     margin: 0.45rem 0 0;
     white-space: pre-wrap;
+    color: var(--std-text);
+    line-height: 1.38;
   }
 
   .message-attachments {
@@ -455,6 +479,7 @@
     justify-content: space-between;
     align-items: center;
     font-size: 0.82rem;
+    color: var(--std-text-muted);
   }
 
   .support-ticket-detail__reply-card {
@@ -466,16 +491,27 @@
     display: grid;
     gap: 0.35rem;
     font-size: 0.85rem;
+    color: var(--std-text-muted);
+    font-weight: 520;
   }
 
   .support-ticket-detail__reply-card textarea {
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--std-border);
     border-radius: 0.7rem;
-    background: transparent;
-    color: inherit;
+    background: var(--std-bg-soft);
+    color: var(--std-text);
     padding: 0.6rem 0.7rem;
     font: inherit;
     resize: vertical;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .support-ticket-detail__reply-card textarea:focus {
+    outline: none;
+    border-color: var(--std-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
   }
 
   .support-ticket-detail__reply-actions {
@@ -489,20 +525,41 @@
   }
 
   .support-ticket-detail__reply-actions .attach {
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--std-border);
     border-radius: 999px;
-    padding: 0.35rem 0.75rem;
+    padding: 0.38rem 0.76rem;
     cursor: pointer;
+    background: var(--std-bg-soft);
+    color: var(--std-text);
+    font-size: 0.84rem;
+    font-weight: 540;
+    transition: background-color 0.15s ease;
+  }
+
+  .support-ticket-detail__reply-actions .attach:hover {
+    background: var(--std-bg-muted);
   }
 
   .support-ticket-detail__reply-actions .primary {
     margin-inline-start: auto;
     border: 0;
     border-radius: 999px;
-    background: var(--immich-primary, #2563eb);
+    background: var(--std-accent);
     color: #fff;
     padding: 0.42rem 0.95rem;
     cursor: pointer;
+    font-weight: 560;
+    transition:
+      background-color 0.15s ease,
+      transform 0.05s ease;
+  }
+
+  .support-ticket-detail__reply-actions .primary:hover:not(:disabled) {
+    background: var(--std-accent-strong);
+  }
+
+  .support-ticket-detail__reply-actions .primary:active {
+    transform: translateY(1px);
   }
 
   .support-ticket-detail__reply-actions .primary:disabled {
@@ -522,32 +579,40 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid var(--immich-border-subtle, #e5e7eb);
+    border: 1px solid var(--std-border);
     border-radius: 0.55rem;
     padding: 0.35rem 0.55rem;
+    background: var(--std-bg-soft);
   }
 
   .support-ticket-detail__reply-attachments button {
     border: 0;
     background: transparent;
-    color: inherit;
+    color: var(--std-text);
     cursor: pointer;
     font-size: 1rem;
   }
 
+  .support-ticket-detail__reply-limit {
+    color: var(--std-text-muted);
+    font-size: 0.78rem;
+    margin-top: -0.2rem;
+  }
+
   .support-ticket-detail__state {
-    border: 1px dashed var(--immich-border-subtle, #d1d5db);
+    border: 1px dashed var(--std-border);
     border-radius: 0.75rem;
     padding: 1rem;
-    color: var(--immich-fg-subtle, #6b7280);
+    color: var(--std-text-muted);
+    background: var(--std-bg-soft);
   }
 
   .support-ticket-detail__state button {
     margin-top: 0.5rem;
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--std-border);
     border-radius: 999px;
-    background: transparent;
-    color: inherit;
+    background: var(--std-bg-muted);
+    color: var(--std-text);
     padding: 0.35rem 0.75rem;
     cursor: pointer;
   }
@@ -561,27 +626,50 @@
   }
 
   .status--open {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: rgba(59, 130, 246, 0.18);
+    color: #2563eb;
   }
 
   .status--in_progress {
-    background: #dbeafe;
+    background: rgba(30, 64, 175, 0.18);
     color: #1e40af;
   }
 
   .status--waiting_user {
-    background: #fef3c7;
+    background: rgba(245, 158, 11, 0.2);
     color: #92400e;
   }
 
   .status--resolved {
-    background: #dcfce7;
+    background: rgba(34, 197, 94, 0.2);
     color: #166534;
   }
 
   .status--closed {
-    background: #e5e7eb;
-    color: #374151;
+    background: rgba(148, 163, 184, 0.2);
+    color: #475569;
+  }
+
+  @media (max-width: 720px) {
+    .support-ticket-detail {
+      gap: 0.95rem;
+      padding-block: 1rem 1.9rem;
+    }
+
+    .support-ticket-detail__header-card,
+    .support-ticket-detail__messages-card,
+    .support-ticket-detail__reply-card {
+      padding: 0.9rem;
+    }
+
+    .support-ticket-detail__header-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .support-ticket-detail__updated-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>

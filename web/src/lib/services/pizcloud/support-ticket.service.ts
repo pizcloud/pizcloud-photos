@@ -85,10 +85,23 @@ type GetSupportTicketsInput = {
   status?: 'all' | SupportTicketStatus;
 };
 
+type SupportTicketRequestInit = RequestInit & {
+  requestId?: string;
+  includeRequestIdHeader?: boolean;
+};
+
 const normalizeBaseUrl = () => {
   const healthBaseUrl = getPizcloudApiBaseUrl();
   const fallbackBaseUrl = (PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
   return (healthBaseUrl || fallbackBaseUrl).replace(/\/+$/, '');
+};
+
+const createRequestId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `st-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => {
@@ -256,19 +269,47 @@ const parseErrorBody = async (res: Response) => {
   return { message: text };
 };
 
-const request = async (path: string, init?: RequestInit): Promise<Response> => {
+const isLikelyBrowserNetworkError = (error: unknown) => {
+  return error instanceof TypeError;
+};
+
+const request = async (path: string, init?: SupportTicketRequestInit): Promise<Response> => {
+  const { requestId, includeRequestIdHeader = false, ...requestInit } = init || {};
   const baseUrl = normalizeBaseUrl();
   if (!baseUrl) {
     throw new SupportTicketApiError('Missing pizcloud server url', 0);
   }
 
-  return fetch(`${baseUrl}${path}`, {
-    credentials: 'include',
-    ...init,
-  });
+  const resolvedRequestId = requestId || createRequestId();
+  const buildHeaders = (withRequestId: boolean) => {
+    const headers = new Headers(requestInit.headers);
+    if (withRequestId && !headers.has('x-request-id')) {
+      headers.set('x-request-id', resolvedRequestId);
+    }
+    return headers;
+  };
+
+  const doFetch = (withRequestId: boolean) => {
+    return fetch(`${baseUrl}${path}`, {
+      credentials: 'include',
+      ...requestInit,
+      headers: buildHeaders(withRequestId),
+    });
+  };
+
+  try {
+    return await doFetch(includeRequestIdHeader);
+  } catch (error) {
+    if (includeRequestIdHeader && isLikelyBrowserNetworkError(error)) {
+      // Fallback for environments where CORS preflight doesn't allow `x-request-id` yet.
+      return doFetch(false);
+    }
+
+    throw error;
+  }
 };
 
-const requestJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
+const requestJson = async <T>(path: string, init?: SupportTicketRequestInit): Promise<T> => {
   const response = await request(path, init);
   if (!response.ok) {
     const parsedError = await parseErrorBody(response);
@@ -371,12 +412,14 @@ export const createSupportTicket = async (input: CreateSupportTicketInput): Prom
   form.append('message', message);
   form.append('meta', JSON.stringify(buildClientMeta()));
 
-  for (const file of input.attachments || []) {
-    form.append('attachments', file);
+  for (const file of Array.from(input.attachments || [])) {
+    form.append('attachments', file, file.name);
   }
 
   const payload = await requestJson<Record<string, unknown>>('/support/tickets', {
     method: 'POST',
+    includeRequestIdHeader: true,
+    headers: { accept: 'application/json' },
     body: form,
   });
 
@@ -407,14 +450,16 @@ export const replySupportTicket = async (input: ReplySupportTicketInput): Promis
   form.append('message', message);
   form.append('meta', JSON.stringify(buildClientMeta()));
 
-  for (const file of input.attachments || []) {
-    form.append('attachments', file);
+  for (const file of Array.from(input.attachments || [])) {
+    form.append('attachments', file, file.name);
   }
 
   const payload = await requestJson<Record<string, unknown>>(
     `/support/tickets/${encodeURIComponent(normalizedTicketId)}/messages`,
     {
       method: 'POST',
+      includeRequestIdHeader: true,
+      headers: { accept: 'application/json' },
       body: form,
     },
   );
@@ -440,6 +485,7 @@ export const updateSupportTicketStatus = async (
 
   await requestJson<unknown>(`/support/tickets/${encodeURIComponent(normalizedTicketId)}/status`, {
     method: 'PATCH',
+    includeRequestIdHeader: true,
     headers: {
       'content-type': 'application/json',
       accept: 'application/json',

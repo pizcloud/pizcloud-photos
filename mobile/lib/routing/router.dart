@@ -78,6 +78,9 @@ import 'package:immich_mobile/pages/search/person_result.page.dart';
 import 'package:immich_mobile/pages/search/recently_taken.page.dart';
 import 'package:immich_mobile/pages/search/search.page.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_payout_method_page.dart';
+import 'package:immich_mobile/pages/settings/pizcloud/support_ticket_create_page.dart';
+import 'package:immich_mobile/pages/settings/pizcloud/support_ticket_detail_page.dart';
+import 'package:immich_mobile/pages/settings/pizcloud/support_tickets_page.dart';
 import 'package:immich_mobile/pages/settings/pizcloud/referral_withdrawals_page.dart';
 import 'package:immich_mobile/pages/settings/sync_status.page.dart';
 import 'package:immich_mobile/pages/share_intent/share_intent.page.dart';
@@ -375,6 +378,9 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: SignupRoute.page),
     AutoRoute(page: ReferralRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: DiscountCodeRoute.page, guards: [_authGuard, _duplicateGuard]),
+    AutoRoute(page: SupportTicketsRoute.page, guards: [_authGuard, _duplicateGuard]),
+    AutoRoute(page: SupportTicketDetailRoute.page, guards: [_authGuard, _duplicateGuard]),
+    AutoRoute(page: SupportTicketCreateRoute.page, guards: [_authGuard, _duplicateGuard]),
     AutoRoute(page: DriftUserEmailSelectionRoute.page, guards: [_authGuard, _duplicateGuard]),
     // #pizcloud
 

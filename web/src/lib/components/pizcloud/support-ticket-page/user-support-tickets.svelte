@@ -29,7 +29,7 @@
   let category = $state<SupportTicketCategory>('bug');
   let priority = $state<SupportTicketPriority>('normal');
   let message = $state('');
-  let attachments = $state<File[]>([]);
+  let attachments = $state.raw<File[]>([]);
   let submitting = $state(false);
 
   const categoryOptions: SupportTicketCategory[] = ['bug', 'billing', 'account', 'feature', 'other'];
@@ -250,12 +250,13 @@
 
     submitting = true;
     try {
+      const attachmentPayload = $state.snapshot(attachments);
       const detail = await createSupportTicket({
         subject: normalizedSubject,
         category,
         priority,
         message: normalizedMessage,
-        attachments,
+        attachments: attachmentPayload,
       });
 
       toastManager.success($t('support_ticket.create_success'));
@@ -421,33 +422,46 @@
 
 <style>
   .support-ticket {
+    --st-bg: var(--immich-bg-elevated, #ffffff);
+    --st-bg-soft: var(--immich-bg-subtle, #f8fafc);
+    --st-bg-muted: var(--immich-bg-muted, #f1f5f9);
+    --st-border: var(--immich-border-subtle, #e2e8f0);
+    --st-text: var(--immich-fg, inherit);
+    --st-text-muted: var(--immich-fg-muted, #64748b);
+    --st-accent: var(--immich-accent, #2563eb);
+    --st-accent-strong: var(--immich-accent-strong, #1d4ed8);
+    --st-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
     display: grid;
-    gap: 1rem;
-    padding-block: 1.25rem 2rem;
+    gap: 1.2rem;
+    padding-block: 1.35rem 2.25rem;
   }
 
   .support-ticket__header h1 {
-    font-size: 1.5rem;
+    font-size: 1.65rem;
+    font-weight: 650;
+    color: var(--st-text);
     margin: 0;
   }
 
   .support-ticket__composer,
   .support-ticket__list-card {
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
+    border: 1px solid var(--st-border);
     border-radius: 1rem;
-    padding: 1rem;
-    background: var(--immich-bg-subtle, #fff);
+    padding: 1.1rem;
+    background: var(--st-bg);
+    box-shadow: var(--st-shadow);
   }
 
   .support-ticket__composer h2 {
     margin: 0 0 0.25rem;
-    font-size: 1.1rem;
+    font-size: 1.18rem;
+    font-weight: 620;
   }
 
   .support-ticket__composer p {
     margin: 0 0 1rem;
-    color: var(--immich-fg-subtle, #6b7280);
-    font-size: 0.9rem;
+    color: var(--st-text-muted);
+    font-size: 0.92rem;
   }
 
   .support-ticket__field-grid {
@@ -459,19 +473,32 @@
 
   label {
     display: grid;
-    gap: 0.3rem;
-    font-size: 0.85rem;
+    gap: 0.38rem;
+    font-size: 0.84rem;
+    color: var(--st-text-muted);
+    font-weight: 520;
   }
 
   input,
   select,
   textarea {
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--st-border);
     border-radius: 0.65rem;
-    padding: 0.6rem 0.7rem;
-    background: transparent;
-    color: inherit;
+    padding: 0.64rem 0.72rem;
+    background: var(--st-bg-soft);
+    color: var(--st-text);
     font: inherit;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--st-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
   }
 
   textarea {
@@ -491,14 +518,23 @@
 
   .support-ticket__attach-button {
     display: inline-flex;
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--st-border);
     border-radius: 999px;
-    padding: 0.4rem 0.8rem;
+    padding: 0.42rem 0.85rem;
     cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 540;
+    color: var(--st-text);
+    background: var(--st-bg-soft);
+    transition: background-color 0.15s ease;
+  }
+
+  .support-ticket__attach-button:hover {
+    background: var(--st-bg-muted);
   }
 
   .support-ticket__attach-row small {
-    color: var(--immich-fg-subtle, #6b7280);
+    color: var(--st-text-muted);
   }
 
   .support-ticket__attachments {
@@ -513,9 +549,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid var(--immich-border-subtle, #e5e7eb);
+    border: 1px solid var(--st-border);
     border-radius: 0.6rem;
     padding: 0.45rem 0.6rem;
+    background: var(--st-bg-soft);
   }
 
   .support-ticket__attachments strong {
@@ -524,7 +561,7 @@
 
   .support-ticket__attachments small {
     display: block;
-    color: var(--immich-fg-subtle, #6b7280);
+    color: var(--st-text-muted);
   }
 
   .support-ticket__attachments button {
@@ -544,10 +581,22 @@
   .support-ticket__primary {
     border: 0;
     border-radius: 999px;
-    padding: 0.55rem 1rem;
-    background: var(--immich-primary, #2563eb);
+    padding: 0.58rem 1.05rem;
+    background: var(--st-accent);
     color: #fff;
     cursor: pointer;
+    font-weight: 560;
+    transition:
+      background-color 0.15s ease,
+      transform 0.05s ease;
+  }
+
+  .support-ticket__primary:hover {
+    background: var(--st-accent-strong);
+  }
+
+  .support-ticket__primary:active {
+    transform: translateY(1px);
   }
 
   .support-ticket__primary:disabled {
@@ -563,16 +612,23 @@
   }
 
   .support-ticket__filters button {
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--st-border);
     border-radius: 999px;
-    padding: 0.35rem 0.75rem;
-    background: transparent;
+    padding: 0.37rem 0.78rem;
+    background: var(--st-bg-soft);
     cursor: pointer;
-    color: inherit;
+    color: var(--st-text);
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .support-ticket__filters button:hover:not(.active) {
+    background: var(--st-bg-muted);
   }
 
   .support-ticket__filters button.active {
-    background: var(--immich-primary, #2563eb);
+    background: var(--st-accent);
     color: #fff;
     border-color: transparent;
   }
@@ -587,11 +643,22 @@
 
   .support-ticket__list li a {
     display: block;
-    border: 1px solid var(--immich-border-subtle, #e5e7eb);
+    border: 1px solid var(--st-border);
     border-radius: 0.8rem;
-    padding: 0.8rem;
-    color: inherit;
+    padding: 0.85rem;
+    color: var(--st-text);
     text-decoration: none;
+    background: var(--st-bg-soft);
+    transition:
+      transform 0.09s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .support-ticket__list li a:hover {
+    transform: translateY(-1px);
+    border-color: rgba(37, 99, 235, 0.45);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
   }
 
   .support-ticket__ticket-head {
@@ -614,16 +681,18 @@
   }
 
   .support-ticket__ticket-meta span {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     border-radius: 999px;
-    background: var(--immich-bg-muted, #f3f4f6);
+    background: var(--st-bg-muted);
     padding: 0.2rem 0.55rem;
+    color: var(--st-text-muted);
   }
 
   .support-ticket__list p {
     margin: 0.6rem 0 0;
-    color: var(--immich-fg-subtle, #6b7280);
+    color: var(--st-text-muted);
     font-size: 0.88rem;
+    line-height: 1.35;
   }
 
   .support-ticket__ticket-foot {
@@ -635,12 +704,12 @@
   }
 
   .support-ticket__ticket-foot small {
-    color: var(--immich-fg-subtle, #6b7280);
+    color: var(--st-text-muted);
   }
 
   .support-ticket__unread {
     border-radius: 999px;
-    background: var(--immich-primary, #2563eb);
+    background: var(--st-accent);
     color: white;
     font-size: 0.72rem;
     padding: 0.2rem 0.5rem;
@@ -655,45 +724,46 @@
   }
 
   .status--open {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: rgba(59, 130, 246, 0.18);
+    color: #2563eb;
   }
 
   .status--in_progress {
-    background: #dbeafe;
+    background: rgba(30, 64, 175, 0.18);
     color: #1e40af;
   }
 
   .status--waiting_user {
-    background: #fef3c7;
+    background: rgba(245, 158, 11, 0.2);
     color: #92400e;
   }
 
   .status--resolved {
-    background: #dcfce7;
+    background: rgba(34, 197, 94, 0.2);
     color: #166534;
   }
 
   .status--closed {
-    background: #e5e7eb;
-    color: #374151;
+    background: rgba(148, 163, 184, 0.2);
+    color: #475569;
   }
 
   .support-ticket__empty {
-    border: 1px dashed var(--immich-border-subtle, #d1d5db);
+    border: 1px dashed var(--st-border);
     border-radius: 0.75rem;
-    padding: 1rem;
-    color: var(--immich-fg-subtle, #6b7280);
+    padding: 1.1rem;
+    color: var(--st-text-muted);
+    background: var(--st-bg-soft);
   }
 
   .support-ticket__empty button {
     margin-top: 0.5rem;
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--st-border);
     border-radius: 999px;
-    background: transparent;
+    background: var(--st-bg-muted);
     padding: 0.35rem 0.75rem;
     cursor: pointer;
-    color: inherit;
+    color: var(--st-text);
   }
 
   .support-ticket__load-more {
@@ -703,16 +773,32 @@
   }
 
   .support-ticket__load-more button {
-    border: 1px solid var(--immich-border-subtle, #d1d5db);
+    border: 1px solid var(--st-border);
     border-radius: 999px;
-    background: transparent;
+    background: var(--st-bg-soft);
     padding: 0.4rem 1rem;
     cursor: pointer;
-    color: inherit;
+    color: var(--st-text);
   }
 
   .support-ticket__load-more button:disabled {
     cursor: not-allowed;
     opacity: 0.65;
+  }
+
+  @media (max-width: 720px) {
+    .support-ticket {
+      gap: 1rem;
+      padding-block: 1rem 2rem;
+    }
+
+    .support-ticket__composer,
+    .support-ticket__list-card {
+      padding: 0.9rem;
+    }
+
+    .support-ticket__header h1 {
+      font-size: 1.45rem;
+    }
   }
 </style>

@@ -1629,6 +1629,38 @@ class DriftRecentlyTakenRoute extends PageRouteInfo<void> {
   );
 }
 
+// /// generated route for
+// /// [DriftReviewDuplicatesPage]
+// class DriftReviewDuplicatesRoute extends PageRouteInfo<void> {
+//   const DriftReviewDuplicatesRoute({List<PageRouteInfo>? children})
+//     : super(DriftReviewDuplicatesRoute.name, initialChildren: children);
+
+//   static const String name = 'DriftReviewDuplicatesRoute';
+
+//   static PageInfo page = PageInfo(
+//     name,
+//     builder: (data) {
+//       return const DriftReviewDuplicatesPage();
+//     },
+//   );
+// }
+
+// /// generated route for
+// /// [DriftReviewLargeFilesPage]
+// class DriftReviewLargeFilesRoute extends PageRouteInfo<void> {
+//   const DriftReviewLargeFilesRoute({List<PageRouteInfo>? children})
+//     : super(DriftReviewLargeFilesRoute.name, initialChildren: children);
+
+//   static const String name = 'DriftReviewLargeFilesRoute';
+
+//   static PageInfo page = PageInfo(
+//     name,
+//     builder: (data) {
+//       return const DriftReviewLargeFilesPage();
+//     },
+//   );
+// }
+
 /// generated route for
 /// [DriftSearchPage]
 class DriftSearchRoute extends PageRouteInfo<void> {
@@ -2444,6 +2476,22 @@ class PartnerRoute extends PageRouteInfo<void> {
   );
 }
 
+// /// generated route for
+// /// [PaymentHistoryPage]
+// class PaymentHistoryRoute extends PageRouteInfo<void> {
+//   const PaymentHistoryRoute({List<PageRouteInfo>? children})
+//     : super(PaymentHistoryRoute.name, initialChildren: children);
+
+//   static const String name = 'PaymentHistoryRoute';
+
+//   static PageInfo page = PageInfo(
+//     name,
+//     builder: (data) {
+//       return const PaymentHistoryPage();
+//     },
+//   );
+// }
+
 /// generated route for
 /// [PeopleCollectionPage]
 class PeopleCollectionRoute extends PageRouteInfo<void> {
@@ -3073,6 +3121,76 @@ class SplashScreenRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const SplashScreenPage();
+    },
+  );
+}
+
+/// generated route for
+/// [SupportTicketCreatePage]
+class SupportTicketCreateRoute extends PageRouteInfo<void> {
+  const SupportTicketCreateRoute({List<PageRouteInfo>? children})
+    : super(SupportTicketCreateRoute.name, initialChildren: children);
+
+  static const String name = 'SupportTicketCreateRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SupportTicketCreatePage();
+    },
+  );
+}
+
+/// generated route for
+/// [SupportTicketDetailPage]
+class SupportTicketDetailRoute
+    extends PageRouteInfo<SupportTicketDetailRouteArgs> {
+  SupportTicketDetailRoute({
+    Key? key,
+    required String ticketId,
+    List<PageRouteInfo>? children,
+  }) : super(
+         SupportTicketDetailRoute.name,
+         args: SupportTicketDetailRouteArgs(key: key, ticketId: ticketId),
+         initialChildren: children,
+       );
+
+  static const String name = 'SupportTicketDetailRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<SupportTicketDetailRouteArgs>();
+      return SupportTicketDetailPage(key: args.key, ticketId: args.ticketId);
+    },
+  );
+}
+
+class SupportTicketDetailRouteArgs {
+  const SupportTicketDetailRouteArgs({this.key, required this.ticketId});
+
+  final Key? key;
+
+  final String ticketId;
+
+  @override
+  String toString() {
+    return 'SupportTicketDetailRouteArgs{key: $key, ticketId: $ticketId}';
+  }
+}
+
+/// generated route for
+/// [SupportTicketsPage]
+class SupportTicketsRoute extends PageRouteInfo<void> {
+  const SupportTicketsRoute({List<PageRouteInfo>? children})
+    : super(SupportTicketsRoute.name, initialChildren: children);
+
+  static const String name = 'SupportTicketsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SupportTicketsPage();
     },
   );
 }
