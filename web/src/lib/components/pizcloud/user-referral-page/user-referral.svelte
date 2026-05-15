@@ -849,7 +849,7 @@
   .referral__subtitle {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__code-card {
@@ -858,8 +858,8 @@
     gap: 1rem;
     padding: 1.25rem 1.5rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-elevated, #ffffff);
   }
 
   .referral__code-header {
@@ -871,7 +871,7 @@
   .referral__code-label {
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__code-body {
@@ -885,8 +885,8 @@
   .referral__code-box {
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
-    background: var(--immich-bg-subtle, #f8fafc);
-    border: 1px dashed var(--immich-border-subtle, #cbd5f5);
+    background: var(--pizcloud-bg-subtle, #f8fafc);
+    border: 1px dashed var(--pizcloud-border-subtle, #cbd5f5);
     min-width: 200px;
   }
 
@@ -923,19 +923,19 @@
   }
 
   .referral__btn--primary {
-    background: var(--immich-accent, #2563eb);
+    background: var(--pizcloud-accent, #2563eb);
     color: #ffffff;
-    border-color: var(--immich-accent, #2563eb);
+    border-color: var(--pizcloud-accent, #2563eb);
   }
 
   .referral__btn--primary:hover {
-    background: var(--immich-accent-strong, #1d4ed8);
+    background: var(--pizcloud-accent-strong, #1d4ed8);
   }
 
   .referral__btn--outline {
     background: transparent;
-    color: var(--immich-accent, #2563eb);
-    border-color: var(--immich-accent, #2563eb);
+    color: var(--pizcloud-accent, #2563eb);
+    border-color: var(--pizcloud-accent, #2563eb);
   }
 
   .referral__btn--outline:hover {
@@ -967,13 +967,13 @@
     gap: 0.25rem;
     padding: 1rem 1.25rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-elevated, #ffffff);
   }
 
   .referral__stat-label {
     font-size: 0.85rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__stat-value {
@@ -987,8 +987,8 @@
     gap: 0.75rem;
     padding: 1.5rem 1.75rem;
     border-radius: 0.75rem;
-    border: 1px dashed var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-subtle, #f8fafc);
+    border: 1px dashed var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-subtle, #f8fafc);
   }
 
   .referral__empty-title {
@@ -1000,7 +1000,7 @@
   .referral__empty-text {
     margin: 0 0 0.5rem 0;
     font-size: 0.95rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__table-section {
@@ -1018,8 +1018,8 @@
   .referral__table-wrapper {
     overflow-x: auto;
     border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-elevated, #ffffff);
   }
 
   .referral__table {
@@ -1029,19 +1029,19 @@
   }
 
   .referral__table thead {
-    background: var(--immich-bg-subtle, #f8fafc);
+    background: var(--pizcloud-bg-subtle, #f8fafc);
   }
 
   .referral__table th,
   .referral__table td {
     padding: 0.75rem 1rem;
     text-align: left;
-    border-bottom: 1px solid var(--immich-border-subtle, #e2e8f0);
+    border-bottom: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
   }
 
   .referral__table th {
     font-weight: 500;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
     white-space: nowrap;
   }
 
@@ -1059,8 +1059,8 @@
   .referral__referrer-card {
     padding: 1.1rem 1.25rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-elevated, #ffffff);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -1083,7 +1083,7 @@
 
   .referral__referrer-hint {
     font-size: 0.8rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__referrer-body {
@@ -1101,7 +1101,7 @@
     display: flex;
     gap: 0.25rem;
     font-size: 0.85rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__referrer-code-value {
@@ -1111,7 +1111,7 @@
 
   .referral__referrer-discount {
     font-size: 0.85rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__referrer-input-row {
@@ -1126,8 +1126,8 @@
     min-width: 0;
     padding: 0.5rem 0.75rem;
     border-radius: 999px;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-subtle, #f8fafc);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-subtle, #f8fafc);
     font-size: 0.9rem;
     outline: none;
   }
@@ -1140,7 +1140,7 @@
   }
 
   .referral__input:focus {
-    border-color: var(--immich-accent, #2563eb);
+    border-color: var(--pizcloud-accent, #2563eb);
     box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
   } */
 
@@ -1183,7 +1183,7 @@
 
   /* dark mode styles */
   :global(.dark) .referral {
-    color: rgb(var(--immich-dark-fg, 229 231 235));
+    color: rgb(var(--pizcloud-dark-fg, 229 231 235));
   }
 
   :global(.dark) .referral__code-card,
@@ -1192,16 +1192,16 @@
   :global(.dark) .referral__table-wrapper,
   :global(.dark) .referral__withdraw,
   :global(.dark) .referral-modal {
-    background: rgb(var(--immich-dark-gray, 33 33 33));
+    background: rgb(var(--pizcloud-dark-gray, 33 33 33));
     border-color: rgba(148, 163, 184, 0.2);
   }
 
   :global(.dark) .referral__code-box,
   :global(.dark) .referral__table thead,
   :global(.dark) .referral-modal__input {
-    background: rgb(var(--immich-dark-bg, 10 10 10));
+    background: rgb(var(--pizcloud-dark-bg, 10 10 10));
     border-color: rgba(148, 163, 184, 0.25);
-    color: rgb(var(--immich-dark-fg, 229 231 235));
+    color: rgb(var(--pizcloud-dark-fg, 229 231 235));
   }
 
   :global(.dark) .referral__subtitle,
@@ -1221,9 +1221,9 @@
   }
 
   :global(.dark) .referral__btn--primary {
-    background: rgb(var(--immich-dark-primary, 172 203 250));
-    color: rgb(var(--immich-dark-bg, 10 10 10));
-    border-color: rgb(var(--immich-dark-primary, 172 203 250));
+    background: rgb(var(--pizcloud-dark-primary, 172 203 250));
+    color: rgb(var(--pizcloud-dark-bg, 10 10 10));
+    border-color: rgb(var(--pizcloud-dark-primary, 172 203 250));
   }
 
   :global(.dark) .referral__btn--primary:hover {
@@ -1231,8 +1231,8 @@
   }
 
   :global(.dark) .referral__btn--outline {
-    color: rgb(var(--immich-dark-primary, 172 203 250));
-    border-color: rgb(var(--immich-dark-primary, 172 203 250));
+    color: rgb(var(--pizcloud-dark-primary, 172 203 250));
+    border-color: rgb(var(--pizcloud-dark-primary, 172 203 250));
   }
 
   :global(.dark) .referral__btn--outline:hover {
@@ -1241,7 +1241,7 @@
 
   :global(.dark) .referral__withdraw-history-link,
   :global(.dark) .referral-modal__payout-link {
-    color: rgb(var(--immich-dark-primary, 172 203 250));
+    color: rgb(var(--pizcloud-dark-primary, 172 203 250));
   }
 
   :global(.dark) .referral-modal-backdrop {
@@ -1256,15 +1256,15 @@
 
   .referral__stat-hint {
     font-size: 0.8rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   /* Withdraw section */
   .referral__withdraw {
     padding: 1.25rem 1.5rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-elevated, #ffffff);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -1287,7 +1287,7 @@
   .referral__withdraw-text {
     margin: 0.25rem 0 0;
     font-size: 0.9rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral__withdraw-actions {
@@ -1310,7 +1310,7 @@
 
   .referral__withdraw-history-link {
     font-size: 0.85rem;
-    color: var(--immich-accent, #2563eb);
+    color: var(--pizcloud-accent, #2563eb);
     text-decoration: underline;
     cursor: pointer;
   }
@@ -1330,7 +1330,7 @@
     width: min(420px, 100% - 2rem);
     border-radius: 0.75rem;
     padding: 1.25rem 1.5rem 1rem;
-    background: var(--immich-bg-elevated, #ffffff);
+    background: var(--pizcloud-bg-elevated, #ffffff);
     box-shadow:
       0 10px 25px rgba(15, 23, 42, 0.12),
       0 0 0 1px rgba(148, 163, 184, 0.2);
@@ -1354,7 +1354,7 @@
   .referral-modal__text {
     margin: 0;
     font-size: 0.9rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral-modal__balance {
@@ -1370,14 +1370,14 @@
 
   .referral-modal__payout-text {
     margin: 0;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral-modal__payout-link {
     display: inline-block;
     margin-top: 0.25rem;
     font-size: 0.85rem;
-    color: var(--immich-accent, #2563eb);
+    color: var(--pizcloud-accent, #2563eb);
     text-decoration: underline;
   }
 
@@ -1391,14 +1391,14 @@
   .referral-modal__input {
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-subtle, #f8fafc);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-subtle, #f8fafc);
     font-size: 0.9rem;
     outline: none;
   }
 
   .referral-modal__input:focus {
-    border-color: var(--immich-accent, #2563eb);
+    border-color: var(--pizcloud-accent, #2563eb);
     box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
   }
 

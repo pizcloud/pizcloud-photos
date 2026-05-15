@@ -304,7 +304,7 @@
     gap: 0.35rem;
     font-size: 0.85rem;
     text-decoration: none;
-    color: var(--immich-accent, #2563eb);
+    color: var(--pizcloud-accent, #2563eb);
   }
 
   .referral-history__back-link:hover {
@@ -336,17 +336,17 @@
 
   .referral-history__chip {
     border-radius: 999px;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-subtle, #f8fafc);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-subtle, #f8fafc);
     padding: 0.35rem 0.9rem;
     font-size: 0.85rem;
     cursor: pointer;
   }
 
   .referral-history__chip--active {
-    border-color: var(--immich-accent, #2563eb);
+    border-color: var(--pizcloud-accent, #2563eb);
     background: rgba(37, 99, 235, 0.08);
-    color: var(--immich-accent, #2563eb);
+    color: var(--pizcloud-accent, #2563eb);
   }
 
   .referral-history__loading,
@@ -366,8 +366,8 @@
   .referral-history__item {
     padding: 0.9rem 1rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--immich-border-subtle, #e2e8f0);
-    background: var(--immich-bg-elevated, #ffffff);
+    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
+    background: var(--pizcloud-bg-elevated, #ffffff);
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
@@ -390,7 +390,7 @@
     flex-direction: column;
     gap: 0.1rem;
     font-size: 0.8rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral-history__status-block {
@@ -435,12 +435,12 @@
 
   .referral-history__method {
     font-size: 0.75rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral-history__note {
     font-size: 0.8rem;
-    color: var(--immich-fg-muted, #64748b);
+    color: var(--pizcloud-fg-muted, #64748b);
   }
 
   .referral-history__note--admin {
@@ -460,11 +460,11 @@
 
   .referral-history__btn {
     border-radius: 999px;
-    border: 1px solid var(--immich-accent, #2563eb);
+    border: 1px solid var(--pizcloud-accent, #2563eb);
     padding: 0.45rem 1.1rem;
     font-size: 0.9rem;
     background: transparent;
-    color: var(--immich-accent, #2563eb);
+    color: var(--pizcloud-accent, #2563eb);
     cursor: pointer;
   }
 
@@ -478,7 +478,7 @@
     height: 24px;
     border-radius: 999px;
     border: 3px solid #e2e8f0;
-    border-top-color: var(--immich-accent, #2563eb);
+    border-top-color: var(--pizcloud-accent, #2563eb);
     animation: spin 0.75s linear infinite;
   }
 

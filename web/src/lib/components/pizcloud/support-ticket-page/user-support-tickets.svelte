@@ -422,14 +422,14 @@
 
 <style>
   .support-ticket {
-    --st-bg: var(--immich-bg-elevated, #ffffff);
-    --st-bg-soft: var(--immich-bg-subtle, #f8fafc);
-    --st-bg-muted: var(--immich-bg-muted, #f1f5f9);
-    --st-border: var(--immich-border-subtle, #e2e8f0);
-    --st-text: var(--immich-fg, inherit);
-    --st-text-muted: var(--immich-fg-muted, #64748b);
-    --st-accent: var(--immich-accent, #2563eb);
-    --st-accent-strong: var(--immich-accent-strong, #1d4ed8);
+    --st-bg: var(--pizcloud-bg-elevated, #ffffff);
+    --st-bg-soft: var(--pizcloud-bg-subtle, #f8fafc);
+    --st-bg-muted: var(--pizcloud-bg-muted, #f1f5f9);
+    --st-border: var(--pizcloud-border-subtle, #e2e8f0);
+    --st-text: var(--pizcloud-fg, inherit);
+    --st-text-muted: var(--pizcloud-fg-muted, #64748b);
+    --st-accent: var(--pizcloud-accent, #2563eb);
+    --st-accent-strong: var(--pizcloud-accent-strong, #1d4ed8);
     --st-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
     display: grid;
     gap: 1.2rem;
@@ -784,6 +784,55 @@
   .support-ticket__load-more button:disabled {
     cursor: not-allowed;
     opacity: 0.65;
+  }
+
+  :global(.dark) .support-ticket {
+    --st-bg: var(--pizcloud-dark-surface, rgb(33 33 33));
+    --st-bg-soft: var(--pizcloud-dark-bg, rgb(10 10 10));
+    --st-bg-muted: var(--pizcloud-dark-muted, rgba(148, 163, 184, 0.12));
+    --st-border: var(--pizcloud-dark-border, rgba(148, 163, 184, 0.2));
+    --st-text: var(--pizcloud-dark-fg, rgb(229 231 235));
+    --st-text-muted: var(--pizcloud-dark-fg-muted, rgba(229, 231, 235, 0.7));
+    --st-accent: var(--pizcloud-dark-primary, rgb(172 203 250));
+    --st-accent-strong: var(--pizcloud-dark-primary-strong, rgba(172, 203, 250, 0.9));
+    --st-shadow: var(--pizcloud-dark-shadow, 0 10px 22px rgba(0, 0, 0, 0.42));
+    color: var(--st-text);
+  }
+
+  :global(.dark) .support-ticket .support-ticket__primary,
+  :global(.dark) .support-ticket .support-ticket__filters button.active,
+  :global(.dark) .support-ticket .support-ticket__unread {
+    color: var(--pizcloud-dark-bg, rgb(10 10 10));
+  }
+
+  :global(.dark) .support-ticket .support-ticket__list li a:hover {
+    border-color: rgba(172, 203, 250, 0.6);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  :global(.dark) .support-ticket .status--open {
+    background: rgba(172, 203, 250, 0.2);
+    color: rgb(172 203 250);
+  }
+
+  :global(.dark) .support-ticket .status--in_progress {
+    background: rgba(147, 197, 253, 0.24);
+    color: rgb(191 219 254);
+  }
+
+  :global(.dark) .support-ticket .status--waiting_user {
+    background: rgba(245, 158, 11, 0.25);
+    color: rgb(252 211 77);
+  }
+
+  :global(.dark) .support-ticket .status--resolved {
+    background: rgba(34, 197, 94, 0.24);
+    color: rgb(134 239 172);
+  }
+
+  :global(.dark) .support-ticket .status--closed {
+    background: rgba(148, 163, 184, 0.24);
+    color: rgb(203 213 225);
   }
 
   @media (max-width: 720px) {

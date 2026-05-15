@@ -37,15 +37,15 @@
 @custom-variant dark (&:where(.dark, .dark *):not(.light));
 
 @theme inline {
-  --color-immich-primary: rgb(var(--immich-primary));
-  --color-immich-bg: rgb(var(--immich-bg));
-  --color-immich-fg: rgb(var(--immich-fg));
-  --color-immich-gray: rgb(var(--immich-gray));
+  --color-immich-primary: rgb(var(--pizcloud-primary));
+  --color-immich-bg: rgb(var(--pizcloud-bg));
+  --color-immich-fg: rgb(var(--pizcloud-fg));
+  --color-immich-gray: rgb(var(--pizcloud-gray));
 
-  --color-immich-dark-primary: rgb(var(--immich-dark-primary));
-  --color-immich-dark-bg: rgb(var(--immich-dark-bg));
-  --color-immich-dark-fg: rgb(var(--immich-dark-fg));
-  --color-immich-dark-gray: rgb(var(--immich-dark-gray));
+  --color-immich-dark-primary: rgb(var(--pizcloud-dark-primary));
+  --color-immich-dark-bg: rgb(var(--pizcloud-dark-bg));
+  --color-immich-dark-fg: rgb(var(--pizcloud-dark-fg));
+  --color-immich-dark-gray: rgb(var(--pizcloud-dark-gray));
 }
 
 @theme {
@@ -65,15 +65,15 @@
 @layer base {
   :root {
     /* light */
-    --immich-primary: 66 80 175;
-    --immich-bg: 255 255 255;
-    --immich-fg: 0 0 0;
+    --pizcloud-primary: 66 80 175;
+    --pizcloud-bg: 255 255 255;
+    --pizcloud-fg: 0 0 0;
 
     /* dark */
-    --immich-dark-primary: 172 203 250;
-    --immich-dark-bg: 10 10 10;
-    --immich-dark-fg: 229 231 235;
-    --immich-dark-gray: 33 33 33;
+    --pizcloud-dark-primary: 172 203 250;
+    --pizcloud-dark-bg: 10 10 10;
+    --pizcloud-dark-fg: 229 231 235;
+    --pizcloud-dark-gray: 33 33 33;
   }
 
   *,
@@ -81,7 +81,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: rgb(var(--immich-ui-default-border));
+    border-color: rgb(var(--pizcloud-ui-default-border));
   }
 
   button:not(:disabled),
