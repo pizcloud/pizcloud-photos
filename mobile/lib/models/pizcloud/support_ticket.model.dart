@@ -17,7 +17,7 @@ class SupportTicketAttachment {
 
   factory SupportTicketAttachment.fromJson(Map<String, dynamic> json) {
     return SupportTicketAttachment(
-      id: _asString(json['id']) ?? _asString(json['_id']) ?? '',
+      id: _asString(json['id']) ?? _asString(json['_id']) ?? _asString(json['attachmentId']) ?? '',
       fileName: _asString(json['fileName']) ?? _asString(json['filename']) ?? _asString(json['name']) ?? '',
       mimeType: _asString(json['mimeType']) ?? _asString(json['contentType']) ?? '',
       size: _asInt(json['size']) ?? 0,

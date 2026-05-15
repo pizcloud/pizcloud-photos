@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,6 +11,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/models/pizcloud/support_ticket.model.dart';
 import 'package:immich_mobile/services/pizcloud/support_ticket.service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 @RoutePage()
 class SupportTicketDetailPage extends HookConsumerWidget {
@@ -23,6 +29,8 @@ class SupportTicketDetailPage extends HookConsumerWidget {
 
     final messageController = useTextEditingController();
     final replyAttachments = useState<List<PlatformFile>>(<PlatformFile>[]);
+    final refreshingDetailFuture = useRef<Future<SupportTicketDetail?>?>(null);
+    final attachmentActionKeys = useState<Set<String>>(<String>{});
 
     Future<void> load() async {
       loading.value = true;
@@ -37,6 +45,193 @@ class SupportTicketDetailPage extends HookConsumerWidget {
         error.value = 'support_ticket.load_error'.tr();
       } finally {
         loading.value = false;
+      }
+    }
+
+    Future<SupportTicketDetail?> refreshDetailSilently() async {
+      final runningFuture = refreshingDetailFuture.value;
+      if (runningFuture != null) {
+        return runningFuture;
+      }
+
+      final nextFuture = () async {
+        try {
+          final data = await supportTicketService.fetchTicketDetail(ticketId);
+          detail.value = data;
+          return data;
+        } catch (_) {
+          return null;
+        } finally {
+          refreshingDetailFuture.value = null;
+        }
+      }();
+
+      refreshingDetailFuture.value = nextFuture;
+      return nextFuture;
+    }
+
+    SupportTicketAttachment? findAttachmentFromDetail(SupportTicketDetail? source, SupportTicketAttachment target) {
+      if (source == null) {
+        return null;
+      }
+
+      for (final message in source.messages) {
+        for (final attachment in message.attachments) {
+          if (target.id.isNotEmpty && attachment.id == target.id) {
+            return attachment;
+          }
+          if (target.url.isNotEmpty && attachment.url == target.url) {
+            return attachment;
+          }
+          if (attachment.fileName == target.fileName && attachment.size == target.size) {
+            return attachment;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    Future<Uint8List> loadAttachmentBytesWithRetry(SupportTicketAttachment inputAttachment) async {
+      var currentAttachment = inputAttachment;
+
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          return await supportTicketService.fetchAttachmentBytes(currentAttachment.url);
+        } on SupportTicketApiException catch (apiError) {
+          final normalizedCode = (apiError.code ?? apiError.message).trim().toUpperCase();
+          if (attempt == 0 && _isAttachmentUrlExpiredCode(normalizedCode)) {
+            final refreshedDetail = await refreshDetailSilently();
+            final refreshedAttachment = findAttachmentFromDetail(refreshedDetail, currentAttachment);
+            if (refreshedAttachment != null && refreshedAttachment.url.trim().isNotEmpty) {
+              currentAttachment = refreshedAttachment;
+              continue;
+            }
+          }
+          rethrow;
+        }
+      }
+
+      throw const SupportTicketApiException(
+        message: 'Attachment URL expired',
+        code: 'ATTACHMENT_URL_EXPIRED',
+        statusCode: 403,
+      );
+    }
+
+    Future<void> downloadAttachment(SupportTicketAttachment attachment) async {
+      final actionKey = _attachmentIdentity(attachment);
+      if (attachmentActionKeys.value.contains(actionKey)) {
+        return;
+      }
+
+      attachmentActionKeys.value = <String>{...attachmentActionKeys.value, actionKey};
+
+      try {
+        final bytes = await loadAttachmentBytesWithRetry(attachment);
+        final tempDir = await getTemporaryDirectory();
+        final attachmentDir = Directory('${tempDir.path}/support_ticket_downloads');
+        if (!await attachmentDir.exists()) {
+          await attachmentDir.create(recursive: true);
+        }
+
+        final fileName = _resolveAttachmentFileName(attachment.fileName);
+        final file = File('${attachmentDir.path}/${DateTime.now().millisecondsSinceEpoch}_$fileName');
+        await file.writeAsBytes(bytes, flush: true);
+
+        if (!context.mounted) {
+          return;
+        }
+
+        final box = context.findRenderObject() as RenderBox?;
+        final origin = box == null ? null : box.localToGlobal(Offset.zero) & box.size;
+
+        await Share.shareXFiles([XFile(file.path)], subject: fileName, sharePositionOrigin: origin);
+      } on SupportTicketApiException catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('download_error'.tr())));
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('download_error'.tr())));
+        }
+      } finally {
+        final next = <String>{...attachmentActionKeys.value};
+        next.remove(actionKey);
+        attachmentActionKeys.value = next;
+      }
+    }
+
+    Future<void> openAttachmentPreview(SupportTicketAttachment attachment) async {
+      try {
+        final bytes = await loadAttachmentBytesWithRetry(attachment);
+        if (!context.mounted) {
+          return;
+        }
+
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(12),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    color: Theme.of(dialogContext).colorScheme.surfaceContainerHigh,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            attachment.fileName.isEmpty ? 'image'.tr() : attachment.fileName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(dialogContext).textTheme.titleSmall,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'download'.tr(),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            unawaited(downloadAttachment(attachment));
+                          },
+                          icon: const Icon(Icons.download_rounded),
+                        ),
+                        IconButton(
+                          tooltip: 'close'.tr(),
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: InteractiveViewer(
+                      minScale: 0.8,
+                      maxScale: 5,
+                      child: Container(
+                        color: Theme.of(dialogContext).colorScheme.surface,
+                        constraints: const BoxConstraints(minHeight: 220),
+                        alignment: Alignment.center,
+                        child: Image.memory(bytes, fit: BoxFit.contain),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      } on SupportTicketApiException catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('download_error'.tr())));
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('download_error'.tr())));
+        }
       }
     }
 
@@ -222,14 +417,20 @@ class SupportTicketDetailPage extends HookConsumerWidget {
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                       itemCount: detail.value?.messages.length ?? 0,
                       itemBuilder: (context, index) {
-                        final message = detail.value!.messages[index];
-                        final isUser = message.senderType.trim().toLowerCase() == 'user';
+                        final messages = detail.value!.messages;
+                        final message = messages[index];
+                        final normalizedSender = message.senderType.trim().toLowerCase();
+                        final isUser = normalizedSender == 'user';
+                        final nextMessage = index + 1 < messages.length ? messages[index + 1] : null;
+                        final isNextSameSender =
+                            nextMessage != null && nextMessage.senderType.trim().toLowerCase() == normalizedSender;
+                        final bottomSpacing = isNextSameSender ? 14.0 : 10.0;
 
                         return Align(
                           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
                             constraints: const BoxConstraints(maxWidth: 520),
-                            margin: const EdgeInsets.only(bottom: 10),
+                            margin: EdgeInsets.only(bottom: bottomSpacing),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: isUser
@@ -249,7 +450,19 @@ class SupportTicketDetailPage extends HookConsumerWidget {
                                 if (message.attachments.isNotEmpty) ...[
                                   const SizedBox(height: 8),
                                   for (final attachment in message.attachments)
-                                    Text('- ${attachment.fileName}', style: Theme.of(context).textTheme.bodySmall),
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: _SupportTicketAttachmentTile(
+                                        attachment: attachment,
+                                        isImage: _isImageAttachment(attachment),
+                                        isActionLoading: attachmentActionKeys.value.contains(
+                                          _attachmentIdentity(attachment),
+                                        ),
+                                        loadImageBytes: loadAttachmentBytesWithRetry,
+                                        onPreview: () => openAttachmentPreview(attachment),
+                                        onDownload: () => downloadAttachment(attachment),
+                                      ),
+                                    ),
                                 ],
                                 if (message.createdAt != null) ...[
                                   const SizedBox(height: 6),
@@ -336,6 +549,181 @@ class SupportTicketDetailPage extends HookConsumerWidget {
   }
 }
 
+class _SupportTicketAttachmentTile extends StatelessWidget {
+  const _SupportTicketAttachmentTile({
+    required this.attachment,
+    required this.isImage,
+    required this.isActionLoading,
+    required this.loadImageBytes,
+    required this.onPreview,
+    required this.onDownload,
+  });
+
+  final SupportTicketAttachment attachment;
+  final bool isImage;
+  final bool isActionLoading;
+  final Future<Uint8List> Function(SupportTicketAttachment attachment) loadImageBytes;
+  final VoidCallback onPreview;
+  final VoidCallback onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isImage) {
+      return SizedBox(
+        width: 164,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SupportTicketImageThumbnail(
+              key: ValueKey<String>(_attachmentIdentity(attachment)),
+              attachment: attachment,
+              loadBytes: loadImageBytes,
+              onTap: onPreview,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              attachment.fileName.isEmpty ? 'image'.tr() : attachment.fileName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _formatFileSize(attachment.size),
+                    style: Theme.of(context).textTheme.labelSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'download'.tr(),
+                  onPressed: isActionLoading ? null : onDownload,
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: 280,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.insert_drive_file_rounded, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  attachment.fileName.isEmpty ? 'attachment' : attachment.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+                const SizedBox(height: 2),
+                Text(_formatFileSize(attachment.size), style: Theme.of(context).textTheme.labelSmall),
+              ],
+            ),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: 'download'.tr(),
+            onPressed: isActionLoading ? null : onDownload,
+            icon: const Icon(Icons.download_rounded, size: 18),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupportTicketImageThumbnail extends StatefulWidget {
+  const _SupportTicketImageThumbnail({
+    super.key,
+    required this.attachment,
+    required this.loadBytes,
+    required this.onTap,
+  });
+
+  final SupportTicketAttachment attachment;
+  final Future<Uint8List> Function(SupportTicketAttachment attachment) loadBytes;
+  final VoidCallback onTap;
+
+  @override
+  State<_SupportTicketImageThumbnail> createState() => _SupportTicketImageThumbnailState();
+}
+
+class _SupportTicketImageThumbnailState extends State<_SupportTicketImageThumbnail> {
+  late Future<Uint8List> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = widget.loadBytes(widget.attachment);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SupportTicketImageThumbnail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previousKey = _attachmentIdentity(oldWidget.attachment);
+    final nextKey = _attachmentIdentity(widget.attachment);
+    if (previousKey != nextKey || oldWidget.attachment.url != widget.attachment.url) {
+      _future = widget.loadBytes(widget.attachment);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 164,
+          height: 112,
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          child: FutureBuilder<Uint8List>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                );
+              }
+
+              if (snapshot.hasData) {
+                return Image.memory(snapshot.data!, fit: BoxFit.cover);
+              }
+
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.broken_image_outlined),
+                  const SizedBox(height: 4),
+                  Text('retry'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _MetaBadge extends StatelessWidget {
   const _MetaBadge({required this.label});
 
@@ -397,6 +785,79 @@ String _categoryLabel(String value) {
     default:
       return 'support_ticket.category_other';
   }
+}
+
+const Set<String> _imageAttachmentExtensions = <String>{
+  'apng',
+  'avif',
+  'bmp',
+  'gif',
+  'heic',
+  'heif',
+  'jfif',
+  'jpeg',
+  'jpg',
+  'png',
+  'svg',
+  'tif',
+  'tiff',
+  'webp',
+};
+
+bool _isImageAttachment(SupportTicketAttachment attachment) {
+  final mimeType = attachment.mimeType.trim().toLowerCase();
+  if (mimeType.startsWith('image/')) {
+    return true;
+  }
+
+  final fileName = attachment.fileName.trim();
+  final dotIndex = fileName.lastIndexOf('.');
+  if (dotIndex < 0 || dotIndex == fileName.length - 1) {
+    return false;
+  }
+
+  final extension = fileName.substring(dotIndex + 1).toLowerCase();
+  return _imageAttachmentExtensions.contains(extension);
+}
+
+bool _isAttachmentUrlExpiredCode(String code) {
+  return code == 'ATTACHMENT_URL_EXPIRED' || code == 'ATTACHMENT_URL_INVALID';
+}
+
+String _attachmentIdentity(SupportTicketAttachment attachment) {
+  final id = attachment.id.trim();
+  if (id.isNotEmpty) {
+    return 'id:$id';
+  }
+
+  final url = attachment.url.trim();
+  if (url.isNotEmpty) {
+    return 'url:$url';
+  }
+
+  return 'name:${attachment.fileName}:${attachment.size}';
+}
+
+String _resolveAttachmentFileName(String value) {
+  final normalized = value.trim();
+  if (normalized.isEmpty) {
+    return 'attachment.bin';
+  }
+
+  return normalized.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+}
+
+String _formatFileSize(int bytes) {
+  if (bytes < 1024) {
+    return '$bytes B';
+  }
+
+  final kb = bytes / 1024;
+  if (kb < 1024) {
+    return '${kb.toStringAsFixed(1)} KB';
+  }
+
+  return '${(kb / 1024).toStringAsFixed(1)} MB';
 }
 
 String _messageFromErrorCode(String code) {

@@ -1,8 +1,12 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import {
+    fetchSupportTicketAttachmentBlob,
     getSupportTicketDetail,
+    isSupportTicketAttachmentUrlExpiredCode,
+    isSupportTicketImageAttachment,
     replySupportTicket,
+    type SupportTicketAttachment,
     updateSupportTicketStatus,
     type SupportTicketDetail,
     type SupportTicketPriority,
@@ -10,6 +14,7 @@
     SupportTicketApiError,
     SUPPORT_TICKET_ATTACHMENT_MAX_BYTES,
   } from '$lib/services/pizcloud/support-ticket.service';
+  import { downloadBlob } from '$lib/utils/asset-utils';
   import { handleError } from '$lib/utils/handle-error';
   import { toastManager } from '@immich/ui';
   import { onMount } from 'svelte';
@@ -25,6 +30,10 @@
   let actionLoading = $state(false);
   let error = $state('');
   let detail = $state<SupportTicketDetail | null>(null);
+  let attachmentActionKey = $state('');
+  let previewImageUrl = $state('');
+  let previewImageName = $state('');
+  let refreshDetailPromise: Promise<SupportTicketDetail | null> | null = null;
 
   let replyMessage = $state('');
   let replyAttachments = $state.raw<File[]>([]);
@@ -92,6 +101,38 @@
     return $t('support_ticket.load_error');
   };
 
+  const mapAttachmentError = (errorValue: unknown) => {
+    if (errorValue instanceof SupportTicketApiError) {
+      const code = (errorValue.code || '').toUpperCase();
+      if (isSupportTicketAttachmentUrlExpiredCode(code)) {
+        return $t('download_error');
+      }
+    }
+    return $t('download_error');
+  };
+
+  const getAttachmentKey = (attachment: SupportTicketAttachment) => {
+    const id = attachment.id.trim();
+    if (id) {
+      return `id:${id}`;
+    }
+
+    const url = attachment.url.trim();
+    if (url) {
+      return `url:${url}`;
+    }
+
+    return `name:${attachment.fileName}:${attachment.size}`;
+  };
+
+  const closePreview = () => {
+    if (previewImageUrl) {
+      URL.revokeObjectURL(previewImageUrl);
+    }
+    previewImageUrl = '';
+    previewImageName = '';
+  };
+
   const formatDateTime = (value?: string) => {
     if (!value) {
       return '';
@@ -116,6 +157,119 @@
     }
 
     return `${(kb / 1024).toFixed(1)} MB`;
+  };
+
+  const findAttachmentFromDetail = (
+    sourceDetail: SupportTicketDetail | null,
+    target: SupportTicketAttachment,
+  ): SupportTicketAttachment | null => {
+    if (!sourceDetail) {
+      return null;
+    }
+
+    for (const message of sourceDetail.messages) {
+      for (const attachment of message.attachments) {
+        if (target.id && attachment.id === target.id) {
+          return attachment;
+        }
+
+        if (target.url && attachment.url === target.url) {
+          return attachment;
+        }
+
+        if (attachment.fileName === target.fileName && attachment.size === target.size) {
+          return attachment;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const refreshTicketDetailForAttachments = async (): Promise<SupportTicketDetail | null> => {
+    if (refreshDetailPromise) {
+      return refreshDetailPromise;
+    }
+
+    refreshDetailPromise = (async () => {
+      try {
+        const refreshed = await getSupportTicketDetail(ticketId);
+        detail = refreshed;
+        return refreshed;
+      } catch {
+        return null;
+      } finally {
+        refreshDetailPromise = null;
+      }
+    })();
+
+    return refreshDetailPromise;
+  };
+
+  const fetchAttachmentBlobWithRetry = async (inputAttachment: SupportTicketAttachment): Promise<Blob> => {
+    let currentAttachment = inputAttachment;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await fetchSupportTicketAttachmentBlob(currentAttachment.url);
+      } catch (errorValue) {
+        if (attempt === 0 && errorValue instanceof SupportTicketApiError) {
+          const code = (errorValue.code || '').toUpperCase();
+          if (isSupportTicketAttachmentUrlExpiredCode(code)) {
+            const refreshedDetail = await refreshTicketDetailForAttachments();
+            const refreshedAttachment = findAttachmentFromDetail(refreshedDetail, currentAttachment);
+            if (refreshedAttachment?.url) {
+              currentAttachment = refreshedAttachment;
+              continue;
+            }
+          }
+        }
+
+        throw errorValue;
+      }
+    }
+
+    throw new SupportTicketApiError('ATTACHMENT_URL_EXPIRED', 403, 'ATTACHMENT_URL_EXPIRED');
+  };
+
+  const downloadAttachment = async (attachment: SupportTicketAttachment) => {
+    const actionKey = getAttachmentKey(attachment);
+    attachmentActionKey = actionKey;
+
+    try {
+      const blob = await fetchAttachmentBlobWithRetry(attachment);
+      downloadBlob(blob, attachment.fileName || 'attachment');
+    } catch (errorValue) {
+      handleError(errorValue, mapAttachmentError(errorValue), { preferServerMessage: false });
+    } finally {
+      if (attachmentActionKey === actionKey) {
+        attachmentActionKey = '';
+      }
+    }
+  };
+
+  const openAttachmentPreview = async (attachment: SupportTicketAttachment) => {
+    if (!isSupportTicketImageAttachment(attachment)) {
+      await downloadAttachment(attachment);
+      return;
+    }
+
+    const actionKey = getAttachmentKey(attachment);
+    attachmentActionKey = actionKey;
+
+    try {
+      const blob = await fetchAttachmentBlobWithRetry(attachment);
+      const previewUrl = URL.createObjectURL(blob);
+      closePreview();
+      previewImageUrl = previewUrl;
+      previewImageName = attachment.fileName || 'attachment';
+    } catch (errorValue) {
+      handleError(errorValue, mapAttachmentError(errorValue), { preferServerMessage: false });
+    } finally {
+      if (attachmentActionKey === actionKey) {
+        attachmentActionKey = '';
+      }
+    }
   };
 
   const loadDetail = async () => {
@@ -220,6 +374,9 @@
 
   onMount(() => {
     void loadDetail();
+    return () => {
+      closePreview();
+    };
   });
 </script>
 
@@ -281,9 +438,34 @@
               {#if item.attachments.length > 0}
                 <ul class="message-attachments">
                   {#each item.attachments as attachment}
-                    <li>
-                      <span>{attachment.fileName}</span>
-                      <small>{fileSizeLabel(attachment.size)}</small>
+                    <li class="message-attachment-item">
+                      {#if isSupportTicketImageAttachment(attachment)}
+                        <button
+                          type="button"
+                          class="attachment-thumbnail"
+                          onclick={() => void openAttachmentPreview(attachment)}
+                          disabled={attachmentActionKey === getAttachmentKey(attachment)}
+                          aria-label={attachment.fileName || 'attachment'}
+                        >
+                          <img src={attachment.url} alt={attachment.fileName || 'attachment'} loading="lazy" />
+                        </button>
+                      {:else}
+                        <div class="attachment-file-icon" aria-hidden="true">FILE</div>
+                      {/if}
+
+                      <div class="attachment-meta">
+                        <span>{attachment.fileName || 'attachment'}</span>
+                        <small>{fileSizeLabel(attachment.size)}</small>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="attachment-download"
+                        onclick={() => void downloadAttachment(attachment)}
+                        disabled={attachmentActionKey === getAttachmentKey(attachment)}
+                      >
+                        {$t('download')}
+                      </button>
                     </li>
                   {/each}
                 </ul>
@@ -328,6 +510,41 @@
     {/if}
   {/if}
 </section>
+
+{#if previewImageUrl}
+  <div
+    class="support-ticket-detail__preview-backdrop"
+    role="button"
+    tabindex="0"
+    onclick={(event) => {
+      if (event.target === event.currentTarget) {
+        closePreview();
+      }
+    }}
+    onkeydown={(event) => {
+      if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        closePreview();
+      }
+    }}
+  >
+    <div
+      class="support-ticket-detail__preview-dialog"
+      role="dialog"
+      tabindex="0"
+      aria-modal="true"
+      aria-label={previewImageName || 'preview'}
+    >
+      <header>
+        <strong>{previewImageName}</strong>
+        <button type="button" onclick={closePreview} aria-label="close">×</button>
+      </header>
+      <div class="support-ticket-detail__preview-image-wrap">
+        <img src={previewImageUrl} alt={previewImageName || 'preview'} />
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .support-ticket-detail {
@@ -468,18 +685,154 @@
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 0.3rem;
+    gap: 0.45rem;
   }
 
-  .message-attachments li {
-    border: 0;
-    background: transparent;
-    padding: 0;
+  .message-attachments li.message-attachment-item {
+    border: 1px solid var(--std-border);
+    border-radius: 0.65rem;
+    background: var(--std-bg-muted);
+    padding: 0.45rem;
     display: flex;
-    justify-content: space-between;
+    gap: 0.5rem;
     align-items: center;
     font-size: 0.82rem;
     color: var(--std-text-muted);
+  }
+
+  .attachment-thumbnail {
+    border: 1px solid var(--std-border);
+    border-radius: 0.52rem;
+    width: 3.05rem;
+    height: 3.05rem;
+    padding: 0;
+    overflow: hidden;
+    background: var(--std-bg-soft);
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+
+  .attachment-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .attachment-file-icon {
+    width: 3.05rem;
+    height: 3.05rem;
+    border: 1px dashed var(--std-border);
+    border-radius: 0.52rem;
+    display: grid;
+    place-items: center;
+    font-size: 0.64rem;
+    letter-spacing: 0.02em;
+    color: var(--std-text-muted);
+    flex: 0 0 auto;
+  }
+
+  .attachment-meta {
+    min-width: 0;
+    display: grid;
+    gap: 0.18rem;
+    flex: 1;
+  }
+
+  .attachment-meta span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--std-text);
+  }
+
+  .attachment-meta small {
+    color: var(--std-text-muted);
+  }
+
+  .attachment-download {
+    border: 1px solid var(--std-border);
+    border-radius: 999px;
+    background: var(--std-bg-soft);
+    color: var(--std-text);
+    padding: 0.25rem 0.65rem;
+    font-size: 0.76rem;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+
+  .attachment-download:disabled,
+  .attachment-thumbnail:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .support-ticket-detail__preview-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(15, 23, 42, 0.7);
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+  }
+
+  .support-ticket-detail__preview-dialog {
+    width: min(72rem, 100%);
+    max-height: 92vh;
+    background: var(--std-bg);
+    border: 1px solid var(--std-border);
+    border-radius: 0.9rem;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    box-shadow: var(--std-shadow);
+  }
+
+  .support-ticket-detail__preview-dialog header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.62rem 0.85rem;
+    border-bottom: 1px solid var(--std-border);
+  }
+
+  .support-ticket-detail__preview-dialog header strong {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--std-text);
+  }
+
+  .support-ticket-detail__preview-dialog header button {
+    border: 1px solid var(--std-border);
+    background: var(--std-bg-soft);
+    color: var(--std-text);
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1.1rem;
+    flex: 0 0 auto;
+  }
+
+  .support-ticket-detail__preview-image-wrap {
+    background: var(--std-bg-soft);
+    padding: 0.7rem;
+    display: grid;
+    place-items: center;
+    overflow: auto;
+  }
+
+  .support-ticket-detail__preview-image-wrap img {
+    max-width: 100%;
+    max-height: 84vh;
+    object-fit: contain;
+    display: block;
   }
 
   .support-ticket-detail__reply-card {

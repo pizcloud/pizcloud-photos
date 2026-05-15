@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:immich_mobile/models/pizcloud/support_ticket.model.dart';
@@ -104,6 +105,51 @@ class SupportTicketService {
     }
 
     return SupportTicketDetail.fromJson(body);
+  }
+
+  Future<Uint8List> fetchAttachmentBytes(String attachmentUrl) async {
+    final normalizedAttachmentUrl = attachmentUrl.trim();
+    if (normalizedAttachmentUrl.isEmpty) {
+      throw const SupportTicketApiException(message: 'Attachment URL is required');
+    }
+
+    final api = await _pizApiService;
+    final resolvedUri = _resolveAttachmentUri(baseUrl: api.baseUrl, attachmentUrl: normalizedAttachmentUrl);
+    Response<dynamic> response;
+    try {
+      response = await api.client.getUri<dynamic>(
+        resolvedUri,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: const <String, dynamic>{'Accept': '*/*'},
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+    } on DioException catch (error) {
+      final errorResponse = error.response;
+      if (errorResponse != null) {
+        throw _toException(errorResponse, fallbackMessage: 'Failed to download support attachment');
+      }
+      throw SupportTicketApiException(
+        message: error.message ?? 'Failed to download support attachment',
+        statusCode: error.response?.statusCode,
+      );
+    }
+
+    final statusCode = response.statusCode ?? 0;
+    if (statusCode < 200 || statusCode >= 300) {
+      throw _toException(response, fallbackMessage: 'Failed to download support attachment');
+    }
+
+    final data = response.data;
+    if (data is Uint8List) {
+      return data;
+    }
+    if (data is List<int>) {
+      return Uint8List.fromList(data);
+    }
+
+    throw const SupportTicketApiException(message: 'Invalid support attachment payload');
   }
 
   Future<SupportTicketDetail> createTicket({
@@ -296,19 +342,27 @@ class SupportTicketService {
 
   SupportTicketApiException _toException(Response<dynamic> response, {required String fallbackMessage}) {
     final statusCode = response.statusCode;
-    final data = response.data;
+    final payload = _decodeErrorPayload(response.data);
 
-    if (data is Map<String, dynamic>) {
-      final messageRaw = data['message'];
+    if (payload != null) {
+      final codeRaw = payload['code'];
+      final code = codeRaw is String && codeRaw.trim().isNotEmpty ? codeRaw.trim() : null;
+      final messageRaw = payload['message'];
       if (messageRaw is String && messageRaw.trim().isNotEmpty) {
-        return SupportTicketApiException(message: messageRaw, code: messageRaw, statusCode: statusCode);
+        final message = messageRaw.trim();
+        return SupportTicketApiException(message: message, code: code ?? message, statusCode: statusCode);
       }
 
       if (messageRaw is List && messageRaw.isNotEmpty) {
         final first = messageRaw.first;
         if (first is String && first.trim().isNotEmpty) {
-          return SupportTicketApiException(message: first, code: first, statusCode: statusCode);
+          final message = first.trim();
+          return SupportTicketApiException(message: message, code: code ?? message, statusCode: statusCode);
         }
+      }
+
+      if (code != null) {
+        return SupportTicketApiException(message: code, code: code, statusCode: statusCode);
       }
     }
 
@@ -317,3 +371,67 @@ class SupportTicketService {
 }
 
 final supportTicketService = SupportTicketService();
+
+Uri _resolveAttachmentUri({required String baseUrl, required String attachmentUrl}) {
+  final input = attachmentUrl.trim();
+  if (input.isEmpty) {
+    return Uri.parse(baseUrl);
+  }
+
+  final parsedDirect = Uri.tryParse(input);
+  if (parsedDirect != null && parsedDirect.hasScheme && parsedDirect.host.isNotEmpty) {
+    return parsedDirect;
+  }
+
+  final baseUri = Uri.parse(baseUrl);
+  final originUri = Uri(scheme: baseUri.scheme, host: baseUri.host, port: baseUri.hasPort ? baseUri.port : null);
+
+  if (input.startsWith('/')) {
+    return originUri.resolve(input);
+  }
+
+  return baseUri.resolve(input);
+}
+
+Map<String, dynamic>? _decodeErrorPayload(dynamic data) {
+  if (data is Map<String, dynamic>) {
+    return data;
+  }
+
+  if (data is Map) {
+    final payload = <String, dynamic>{};
+    data.forEach((key, value) {
+      payload[key.toString()] = value;
+    });
+    return payload;
+  }
+
+  String? text;
+  if (data is String) {
+    text = data.trim();
+  } else if (data is List<int>) {
+    text = utf8.decode(data, allowMalformed: true).trim();
+  }
+
+  if (text == null || text.isEmpty) {
+    return null;
+  }
+
+  try {
+    final parsed = jsonDecode(text);
+    if (parsed is Map<String, dynamic>) {
+      return parsed;
+    }
+    if (parsed is Map) {
+      final payload = <String, dynamic>{};
+      parsed.forEach((key, value) {
+        payload[key.toString()] = value;
+      });
+      return payload;
+    }
+  } catch (_) {
+    return <String, dynamic>{'message': text};
+  }
+
+  return <String, dynamic>{'message': text};
+}

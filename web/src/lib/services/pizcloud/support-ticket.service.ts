@@ -131,6 +131,32 @@ const asNumber = (value: unknown, fallback = 0) => {
   return fallback;
 };
 
+const getFileExtension = (value: string) => {
+  const normalized = asString(value);
+  const dotIndex = normalized.lastIndexOf('.');
+  if (dotIndex < 0 || dotIndex === normalized.length - 1) {
+    return '';
+  }
+  return normalized.slice(dotIndex + 1).toLowerCase();
+};
+
+const IMAGE_ATTACHMENT_EXTENSIONS = new Set([
+  'apng',
+  'avif',
+  'bmp',
+  'gif',
+  'heic',
+  'heif',
+  'jfif',
+  'jpeg',
+  'jpg',
+  'png',
+  'svg',
+  'tif',
+  'tiff',
+  'webp',
+]);
+
 const normalizeCategory = (value: string): SupportTicketCategory => {
   const candidate = value.toLowerCase();
   switch (candidate) {
@@ -178,7 +204,7 @@ const normalizeAttachment = (input: unknown): SupportTicketAttachment => {
   }
 
   return {
-    id: asString(input.id ?? input._id),
+    id: asString(input.id ?? input._id ?? input.attachmentId),
     fileName: asString(input.fileName ?? input.filename ?? input.name),
     mimeType: asString(input.mimeType ?? input.contentType),
     size: asNumber(input.size, 0),
@@ -250,16 +276,22 @@ const parseErrorBody = async (res: Response) => {
   try {
     const parsed = JSON.parse(text) as unknown;
     if (isObject(parsed)) {
+      const codeRaw = parsed.code;
+      const code = typeof codeRaw === 'string' && codeRaw.trim() ? codeRaw.trim() : undefined;
       const messageRaw = parsed.message;
       if (typeof messageRaw === 'string' && messageRaw.trim()) {
-        return { message: messageRaw.trim(), code: messageRaw.trim() };
+        return { message: messageRaw.trim(), code: code || messageRaw.trim() };
       }
 
       if (Array.isArray(messageRaw) && messageRaw.length > 0) {
         const first = messageRaw[0];
         if (typeof first === 'string' && first.trim()) {
-          return { message: first.trim(), code: first.trim() };
+          return { message: first.trim(), code: code || first.trim() };
         }
+      }
+
+      if (code) {
+        return { message: code, code };
       }
     }
   } catch {
@@ -317,6 +349,68 @@ const requestJson = async <T>(path: string, init?: SupportTicketRequestInit): Pr
   }
 
   return (await response.json()) as T;
+};
+
+const resolveAttachmentUrl = (input: string) => {
+  const normalizedInput = input.trim();
+  if (!normalizedInput) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(normalizedInput)) {
+    return normalizedInput;
+  }
+
+  const baseUrl = normalizeBaseUrl();
+  if (!baseUrl) {
+    return normalizedInput;
+  }
+
+  if (normalizedInput.startsWith('/')) {
+    try {
+      const fallbackOrigin = typeof location !== 'undefined' ? location.origin : 'http://localhost';
+      const origin = new URL(baseUrl, fallbackOrigin).origin;
+      return `${origin}${normalizedInput}`;
+    } catch {
+      return `${baseUrl}${normalizedInput}`;
+    }
+  }
+
+  return `${baseUrl}/${normalizedInput.replace(/^\/+/, '')}`;
+};
+
+export const isSupportTicketImageAttachment = (attachment: Pick<SupportTicketAttachment, 'mimeType' | 'fileName'>) => {
+  const mimeType = asString(attachment.mimeType).toLowerCase();
+  if (mimeType.startsWith('image/')) {
+    return true;
+  }
+
+  return IMAGE_ATTACHMENT_EXTENSIONS.has(getFileExtension(attachment.fileName));
+};
+
+export const isSupportTicketAttachmentUrlExpiredCode = (code?: string) => {
+  const normalized = asString(code).toUpperCase();
+  return normalized === 'ATTACHMENT_URL_EXPIRED' || normalized === 'ATTACHMENT_URL_INVALID';
+};
+
+export const fetchSupportTicketAttachmentBlob = async (attachmentUrl: string): Promise<Blob> => {
+  const resolvedUrl = resolveAttachmentUrl(attachmentUrl);
+  if (!resolvedUrl) {
+    throw new SupportTicketApiError('ATTACHMENT_NOT_FOUND', 400, 'ATTACHMENT_NOT_FOUND');
+  }
+
+  const response = await fetch(resolvedUrl, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { accept: '*/*' },
+  });
+
+  if (!response.ok) {
+    const parsedError = await parseErrorBody(response);
+    throw new SupportTicketApiError(parsedError.message, response.status, parsedError.code);
+  }
+
+  return response.blob();
 };
 
 const validateAttachments = (attachments: File[] = []) => {
