@@ -3,12 +3,12 @@
   import {
     createSupportTicket,
     getSupportTickets,
+    SUPPORT_TICKET_ATTACHMENT_MAX_BYTES,
+    SupportTicketApiError,
     type SupportTicketCategory,
     type SupportTicketPriority,
     type SupportTicketStatus,
     type SupportTicketSummary,
-    SupportTicketApiError,
-    SUPPORT_TICKET_ATTACHMENT_MAX_BYTES,
   } from '$lib/services/pizcloud/support-ticket.service';
   import { handleError } from '$lib/utils/handle-error';
   import { toastManager } from '@immich/ui';
@@ -34,6 +34,8 @@
 
   const categoryOptions: SupportTicketCategory[] = ['bug', 'billing', 'account', 'feature', 'other'];
   const priorityOptions: SupportTicketPriority[] = ['low', 'normal', 'high', 'urgent'];
+  const faqBaseUrl = 'https://pizcloud.com';
+  const faqUrl = `${faqBaseUrl}/en/faq/`;
 
   const statusOptions: Array<'all' | SupportTicketStatus> = [
     'all',
@@ -278,6 +280,11 @@
 <section class="support-ticket">
   <header class="support-ticket__header">
     <h1>{$t('support_ticket.title')}</h1>
+    <div class="faq-link">
+      <a href={faqUrl} class="support-ticket__faq-link" target="_blank" rel="noreferrer">
+        {$t('support_ticket.go_to_faq')}
+      </a>
+    </div>
   </header>
 
   <article class="support-ticket__composer">
@@ -311,11 +318,14 @@
 
     <label class="support-ticket__message-field">
       <span>{$t('support_ticket.message')}</span>
-      <textarea bind:value={message} maxlength="4000" rows="5" placeholder={$t('support_ticket.message_hint')}></textarea>
+      <textarea bind:value={message} maxlength="4000" rows="5" placeholder={$t('support_ticket.message_hint')}
+      ></textarea>
     </label>
 
     <div class="support-ticket__attach-row">
-      <label class="support-ticket__attach-button" for="support-ticket-file-input">{$t('support_ticket.add_attachment')}</label>
+      <label class="support-ticket__attach-button" for="support-ticket-file-input"
+        >{$t('support_ticket.add_attachment')}</label
+      >
       <input id="support-ticket-file-input" type="file" multiple onchange={onSelectFiles} />
       <small>{$t('support_ticket.attachment_limit')}</small>
     </div>
@@ -392,7 +402,9 @@
 
               <div class="support-ticket__ticket-foot">
                 <small>
-                  {$t('support_ticket.updated_at', { values: { date: formatDateTime(ticket.updatedAt || ticket.createdAt) } })}
+                  {$t('support_ticket.updated_at', {
+                    values: { date: formatDateTime(ticket.updatedAt || ticket.createdAt) },
+                  })}
                 </small>
                 {#if ticket.unreadCount > 0}
                   <span class="support-ticket__unread">
@@ -441,6 +453,19 @@
     font-weight: 650;
     color: var(--st-text);
     margin: 0;
+  }
+
+  .faq-link {
+    text-align: end;
+  }
+
+  .support-ticket__faq-link {
+    margin-top: 0.35rem;
+    display: inline-flex;
+    font-size: 0.93rem;
+    color: var(--st-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .support-ticket__composer,

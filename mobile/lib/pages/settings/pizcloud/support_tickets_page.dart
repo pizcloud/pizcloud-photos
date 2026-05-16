@@ -7,6 +7,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/models/pizcloud/support_ticket.model.dart';
 import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/services/pizcloud/support_ticket.service.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const String _faqBaseUrl = 'https://pizcloud.com';
+const String _faqPath = '/en/faq/';
 
 @RoutePage()
 class SupportTicketsPage extends HookConsumerWidget {
@@ -26,6 +30,7 @@ class SupportTicketsPage extends HookConsumerWidget {
     final limit = useState<int>(20);
     final total = useState<int>(0);
     final statusFilter = useState<String>('all');
+    final faqUri = Uri.parse('$_faqBaseUrl$_faqPath');
 
     Future<void> load({int pageNumber = 1, bool isRefresh = false}) async {
       if (isRefresh) {
@@ -83,6 +88,10 @@ class SupportTicketsPage extends HookConsumerWidget {
     }
 
     Future<void> onRefresh() => load(pageNumber: 1, isRefresh: true);
+
+    Future<void> openFaq() async {
+      await launchUrl(faqUri, mode: LaunchMode.externalApplication);
+    }
 
     Widget buildStatusFilter() {
       final filters = <String>['all', 'open', 'in_progress', 'waiting_user', 'resolved', 'closed'];
@@ -158,7 +167,7 @@ class SupportTicketsPage extends HookConsumerWidget {
       return RefreshIndicator(
         onRefresh: onRefresh,
         child: ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
           itemCount: 1 + items.value.length + (hasMore ? 1 : 0),
           itemBuilder: (context, index) {
             if (index == 0) {
@@ -275,7 +284,18 @@ class SupportTicketsPage extends HookConsumerWidget {
 
     return PlatformScaffold(
       appBar: PlatformAppBar(title: Text('support_ticket.title'.tr())),
-      body: buildList(),
+      body: Column(
+        children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 6, 0),
+              child: TextButton(onPressed: openFaq, child: Text('support_ticket.go_to_faq'.tr())),
+            ),
+          ),
+          Expanded(child: buildList()),
+        ],
+      ),
       material: (_, __) => MaterialScaffoldData(
         floatingActionButton: FloatingActionButton.extended(
           onPressed: openCreateTicket,

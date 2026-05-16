@@ -2400,6 +2400,7 @@
     "error_message_required": "Message is required",
     "error_subject_required": "Subject is required",
     "error_ticket_not_found": "Support ticket not found",
+    "go_to_faq": "Go to FAQ",
     "load_error": "Unable to load support tickets",
     "load_more": "Load more tickets",
     "message": "Message",
