@@ -36,6 +36,7 @@ import 'package:immich_mobile/services/background.service.dart';
 import 'package:immich_mobile/services/deep_link.service.dart';
 import 'package:immich_mobile/services/local_notification.service.dart';
 import 'package:immich_mobile/services/pizcloud/push_notification.service.dart'; // pizcloud
+import 'package:immich_mobile/services/pizcloud/support_ticket.service.dart'; // pizcloud
 import 'package:immich_mobile/theme/dynamic_theme.dart';
 import 'package:immich_mobile/theme/theme_data.dart';
 import 'package:immich_mobile/utils/bootstrap.dart';
@@ -185,6 +186,17 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
       return;
     }
 
+    if (_isSupportTicketNotificationType(type)) {
+      final ticketId = _extractTicketIdFromNotification(data);
+      if (ticketId == null) {
+        await _openSupportTicketsFromPush();
+        return;
+      }
+
+      await _openSupportTicketFromPush(ticketId);
+      return;
+    }
+
     if (type == 'album_transfer_ownership') {
       await _openAlbumsFromPush();
       return;
@@ -211,6 +223,10 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
     return type.startsWith('billing_subscription_');
   }
 
+  bool _isSupportTicketNotificationType(String type) {
+    return type == 'support_ticket_admin_reply' || type == 'support_ticket_status_changed';
+  }
+
   String? _extractAlbumIdFromNotification(Map<String, dynamic> data) {
     final rawAlbumId = data['album_id'] ?? data['albumId'];
     if (rawAlbumId == null) {
@@ -223,6 +239,20 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
     }
 
     return albumId;
+  }
+
+  String? _extractTicketIdFromNotification(Map<String, dynamic> data) {
+    final rawTicketId = data['ticket_id'] ?? data['ticketId'];
+    if (rawTicketId == null) {
+      return null;
+    }
+
+    final ticketId = rawTicketId.toString().trim();
+    if (ticketId.isEmpty) {
+      return null;
+    }
+
+    return ticketId;
   }
 
   Future<void> _openAlbumFromPush(String albumId) async {
@@ -272,6 +302,78 @@ class ImmichAppState extends ConsumerState<ImmichApp> with WidgetsBindingObserve
       }
 
       unawaited(ref.read(appRouterProvider).navigate(const BillingRoute()));
+    });
+  }
+
+  Future<void> _openSupportTicketsFromPush() async {
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      unawaited(ref.read(appRouterProvider).navigate(const SupportTicketsRoute()));
+    });
+  }
+
+  Future<void> _openSupportTicketFromPush(String ticketId) async {
+    try {
+      await supportTicketService.fetchTicketDetail(ticketId);
+    } on SupportTicketApiException catch (apiError) {
+      if (_shouldFallbackToTicketList(apiError)) {
+        await _openSupportTicketsFromPush();
+        _showSupportTicketPushNotice(
+          apiError.statusCode == 404 ? 'support_ticket.error_ticket_not_found'.tr() : 'support_ticket.load_error'.tr(),
+        );
+        return;
+      }
+    } catch (_) {
+      // Ignore transient errors and still attempt opening detail route.
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      unawaited(ref.read(appRouterProvider).navigate(SupportTicketDetailRoute(ticketId: ticketId)));
+    });
+  }
+
+  bool _shouldFallbackToTicketList(SupportTicketApiException error) {
+    final statusCode = error.statusCode;
+    if (statusCode == 403 || statusCode == 404) {
+      return true;
+    }
+
+    final normalizedCode = (error.code ?? '').trim().toUpperCase();
+    return normalizedCode == 'FORBIDDEN' ||
+        normalizedCode == 'TICKET_NOT_FOUND' ||
+        normalizedCode == 'SUPPORT_TICKET_NOT_FOUND';
+  }
+
+  void _showSupportTicketPushNotice(String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      final appRouter = ref.read(appRouterProvider);
+      final activeContext = appRouter.navigatorKey.currentContext ?? context;
+      final messenger = ScaffoldMessenger.maybeOf(activeContext);
+      if (messenger == null) {
+        return;
+      }
+
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text(message)));
     });
   }
   // #pizcloud

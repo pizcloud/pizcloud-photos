@@ -6,13 +6,13 @@
     isSupportTicketAttachmentUrlExpiredCode,
     isSupportTicketImageAttachment,
     replySupportTicket,
-    type SupportTicketAttachment,
+    SUPPORT_TICKET_ATTACHMENT_MAX_BYTES,
+    SupportTicketApiError,
     updateSupportTicketStatus,
+    type SupportTicketAttachment,
     type SupportTicketDetail,
     type SupportTicketPriority,
     type SupportTicketStatus,
-    SupportTicketApiError,
-    SUPPORT_TICKET_ATTACHMENT_MAX_BYTES,
   } from '$lib/services/pizcloud/support-ticket.service';
   import { downloadBlob } from '$lib/utils/asset-utils';
   import { handleError } from '$lib/utils/handle-error';
@@ -131,6 +131,17 @@
     }
     previewImageUrl = '';
     previewImageName = '';
+  };
+
+  const onPreviewWindowKeydown = (event: KeyboardEvent) => {
+    if (!previewImageUrl) {
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closePreview();
+    }
   };
 
   const formatDateTime = (value?: string) => {
@@ -378,7 +389,25 @@
       closePreview();
     };
   });
+
+  $effect(() => {
+    if (!previewImageUrl || typeof document === 'undefined') {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  });
 </script>
+
+<svelte:window onkeydown={onPreviewWindowKeydown} />
 
 <section class="support-ticket-detail">
   <div class="support-ticket-detail__back-row">
@@ -408,7 +437,9 @@
 
       <div class="support-ticket-detail__updated-row">
         <small>
-          {$t('support_ticket.updated_at', { values: { date: formatDateTime(detail.ticket.updatedAt || detail.ticket.createdAt) } })}
+          {$t('support_ticket.updated_at', {
+            values: { date: formatDateTime(detail.ticket.updatedAt || detail.ticket.createdAt) },
+          })}
         </small>
 
         <button type="button" onclick={toggleStatus} disabled={actionLoading}>
@@ -429,7 +460,11 @@
           {#each detail.messages as item (item.id)}
             <li class:item--user={item.senderType === 'user'}>
               <div class="message-head">
-                <strong>{item.senderType === 'user' ? $t('support_ticket.sender_you') : $t('support_ticket.sender_support')}</strong>
+                <strong
+                  >{item.senderType === 'user'
+                    ? $t('support_ticket.sender_you')
+                    : $t('support_ticket.sender_support')}</strong
+                >
                 {#if item.createdAt}
                   <small>{formatDateTime(item.createdAt)}</small>
                 {/if}
@@ -535,12 +570,22 @@
       aria-modal="true"
       aria-label={previewImageName || 'preview'}
     >
-      <header>
+      <header class="support-ticket-detail__preview-header">
         <strong>{previewImageName}</strong>
-        <button type="button" onclick={closePreview} aria-label="close">×</button>
+        <button
+          type="button"
+          class="support-ticket-detail__preview-close"
+          onclick={closePreview}
+          aria-label={$t('close')}
+        >
+          <span aria-hidden="true">×</span>
+          <span>{$t('close')}</span>
+        </button>
       </header>
       <div class="support-ticket-detail__preview-image-wrap">
-        <img src={previewImageUrl} alt={previewImageName || 'preview'} />
+        <div class="support-ticket-detail__preview-image-stage">
+          <img src={previewImageUrl} alt={previewImageName || 'preview'} />
+        </div>
       </div>
     </div>
   </div>
@@ -775,12 +820,14 @@
     background: rgba(15, 23, 42, 0.7);
     display: grid;
     place-items: center;
-    padding: 1rem;
+    padding: clamp(0.75rem, 2vw, 1.35rem);
+    backdrop-filter: blur(2px);
   }
 
   .support-ticket-detail__preview-dialog {
     width: min(72rem, 100%);
-    max-height: 92vh;
+    height: min(90vh, 52rem);
+    max-height: 90vh;
     background: var(--std-bg);
     border: 1px solid var(--std-border);
     border-radius: 0.9rem;
@@ -790,47 +837,80 @@
     box-shadow: var(--std-shadow);
   }
 
-  .support-ticket-detail__preview-dialog header {
+  .support-ticket-detail__preview-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.8rem;
-    padding: 0.62rem 0.85rem;
-    border-bottom: 1px solid var(--std-border);
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 23, 42, 0.82);
   }
 
-  .support-ticket-detail__preview-dialog header strong {
+  .support-ticket-detail__preview-header strong {
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--std-text);
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
   }
 
-  .support-ticket-detail__preview-dialog header button {
-    border: 1px solid var(--std-border);
-    background: var(--std-bg-soft);
-    color: var(--std-text);
-    width: 1.9rem;
-    height: 1.9rem;
+  .support-ticket-detail__preview-close {
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    min-height: 2rem;
+    padding: 0.2rem 0.62rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     border-radius: 999px;
     cursor: pointer;
-    line-height: 1;
-    font-size: 1.1rem;
+    line-height: 1.1;
+    font-size: 0.82rem;
+    font-weight: 560;
     flex: 0 0 auto;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .support-ticket-detail__preview-close span[aria-hidden='true'] {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
+  .support-ticket-detail__preview-close:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.62);
   }
 
   .support-ticket-detail__preview-image-wrap {
+    background: var(--std-bg);
+    background-color: #ffffff;
+    padding: clamp(0.55rem, 1.4vw, 0.9rem);
+    display: grid;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .support-ticket-detail__preview-image-stage {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border-radius: 0.7rem;
+    border: 1px solid var(--std-border);
     background: var(--std-bg-soft);
-    padding: 0.7rem;
     display: grid;
     place-items: center;
     overflow: auto;
+    padding: clamp(0.5rem, 1.2vw, 0.8rem);
   }
 
   .support-ticket-detail__preview-image-wrap img {
     max-width: 100%;
-    max-height: 84vh;
+    max-height: 100%;
     object-fit: contain;
     display: block;
   }
@@ -1070,6 +1150,15 @@
     .support-ticket-detail__updated-row {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    .support-ticket-detail__preview-dialog {
+      width: 100%;
+      height: min(86vh, 44rem);
+    }
+
+    .support-ticket-detail__preview-close span:last-child {
+      display: none;
     }
   }
 </style>
