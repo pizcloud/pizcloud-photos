@@ -288,11 +288,24 @@
 
 <style>
   .referral-history {
+    --rw-bg: var(--pizcloud-bg-elevated, #ffffff);
+    --rw-bg-soft: var(--pizcloud-bg-subtle, #f8fafc);
+    --rw-bg-muted: var(--pizcloud-bg-muted, #f1f5f9);
+    --rw-border: var(--pizcloud-border-subtle, #e2e8f0);
+    --rw-text: var(--pizcloud-fg, inherit);
+    --rw-text-muted: var(--pizcloud-fg-muted, #64748b);
+    --rw-accent: var(--pizcloud-accent, #2563eb);
+    --rw-accent-strong: var(--pizcloud-accent-strong, #1d4ed8);
     padding-block: 1.5rem 3rem;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+    color: var(--rw-text);
   }
+
+  /* Legacy style reference before unified light/dark tokens:
+     - chips/buttons used direct var(--pizcloud-accent) and transparent button bg
+     - cards/status blocks only tuned for light surfaces */
 
   .referral-history__back {
     margin-bottom: 0.25rem;
@@ -304,7 +317,7 @@
     gap: 0.35rem;
     font-size: 0.85rem;
     text-decoration: none;
-    color: var(--pizcloud-accent, #2563eb);
+    color: var(--rw-accent);
   }
 
   .referral-history__back-link:hover {
@@ -326,6 +339,7 @@
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
+    color: var(--rw-text);
   }
 
   .referral-history__filters {
@@ -336,17 +350,22 @@
 
   .referral-history__chip {
     border-radius: 999px;
-    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
-    background: var(--pizcloud-bg-subtle, #f8fafc);
+    border: 1px solid var(--rw-border);
+    background: var(--rw-bg-soft);
+    color: var(--rw-text);
     padding: 0.35rem 0.9rem;
     font-size: 0.85rem;
     cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
   }
 
   .referral-history__chip--active {
-    border-color: var(--pizcloud-accent, #2563eb);
+    border-color: var(--rw-accent);
     background: rgba(37, 99, 235, 0.08);
-    color: var(--pizcloud-accent, #2563eb);
+    color: var(--rw-accent);
   }
 
   .referral-history__loading,
@@ -355,6 +374,7 @@
     padding: 2rem 0;
     text-align: center;
     font-size: 0.95rem;
+    color: var(--rw-text-muted);
   }
 
   .referral-history__list {
@@ -366,11 +386,12 @@
   .referral-history__item {
     padding: 0.9rem 1rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
-    background: var(--pizcloud-bg-elevated, #ffffff);
+    border: 1px solid var(--rw-border);
+    background: var(--rw-bg);
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
   }
 
   .referral-history__item-main {
@@ -382,6 +403,7 @@
   .referral-history__amount {
     font-size: 1rem;
     font-weight: 600;
+    color: var(--rw-text);
   }
 
   .referral-history__meta {
@@ -390,7 +412,7 @@
     flex-direction: column;
     gap: 0.1rem;
     font-size: 0.8rem;
-    color: var(--pizcloud-fg-muted, #64748b);
+    color: var(--rw-text-muted);
   }
 
   .referral-history__status-block {
@@ -435,12 +457,12 @@
 
   .referral-history__method {
     font-size: 0.75rem;
-    color: var(--pizcloud-fg-muted, #64748b);
+    color: var(--rw-text-muted);
   }
 
   .referral-history__note {
     font-size: 0.8rem;
-    color: var(--pizcloud-fg-muted, #64748b);
+    color: var(--rw-text-muted);
   }
 
   .referral-history__note--admin {
@@ -460,12 +482,22 @@
 
   .referral-history__btn {
     border-radius: 999px;
-    border: 1px solid var(--pizcloud-accent, #2563eb);
+    border: 1px solid var(--rw-accent);
     padding: 0.45rem 1.1rem;
     font-size: 0.9rem;
-    background: transparent;
-    color: var(--pizcloud-accent, #2563eb);
+    background: var(--rw-bg-soft);
+    color: var(--rw-accent);
     cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .referral-history__btn:hover:not(:disabled) {
+    background: var(--rw-bg-muted);
+    border-color: var(--rw-accent-strong);
+    color: var(--rw-accent-strong);
   }
 
   .referral-history__btn:disabled {
@@ -477,9 +509,54 @@
     width: 24px;
     height: 24px;
     border-radius: 999px;
-    border: 3px solid #e2e8f0;
-    border-top-color: var(--pizcloud-accent, #2563eb);
+    border: 3px solid var(--rw-border);
+    border-top-color: var(--rw-accent);
     animation: spin 0.75s linear infinite;
+  }
+
+  :global(.dark) .referral-history {
+    --rw-bg: var(--pizcloud-dark-surface, rgb(33 33 33));
+    --rw-bg-soft: var(--pizcloud-dark-bg, rgb(10 10 10));
+    --rw-bg-muted: var(--pizcloud-dark-muted, rgba(148, 163, 184, 0.12));
+    --rw-border: var(--pizcloud-dark-border, rgba(148, 163, 184, 0.22));
+    --rw-text: var(--pizcloud-dark-fg, rgb(229 231 235));
+    --rw-text-muted: var(--pizcloud-dark-fg-muted, rgba(229, 231, 235, 0.72));
+    --rw-accent: var(--pizcloud-dark-primary, rgb(172 203 250));
+    --rw-accent-strong: var(--pizcloud-dark-primary-strong, rgba(172, 203, 250, 0.92));
+  }
+
+  :global(.dark) .referral-history .referral-history__item {
+    box-shadow: var(--pizcloud-dark-shadow, 0 10px 22px rgba(0, 0, 0, 0.42));
+  }
+
+  :global(.dark) .referral-history .referral-history__chip--active {
+    background: rgba(172, 203, 250, 0.18);
+    border-color: rgba(172, 203, 250, 0.34);
+    color: rgb(191 219 254);
+  }
+
+  :global(.dark) .referral-history .referral-history__status[data-status='pending'] {
+    background: rgba(245, 158, 11, 0.26);
+    border-color: rgba(245, 158, 11, 0.5);
+    color: rgb(252 211 77);
+  }
+
+  :global(.dark) .referral-history .referral-history__status[data-status='approved'] {
+    background: rgba(147, 197, 253, 0.24);
+    border-color: rgba(147, 197, 253, 0.5);
+    color: rgb(191 219 254);
+  }
+
+  :global(.dark) .referral-history .referral-history__status[data-status='rejected'] {
+    background: rgba(248, 113, 113, 0.22);
+    border-color: rgba(248, 113, 113, 0.48);
+    color: rgb(252 165 165);
+  }
+
+  :global(.dark) .referral-history .referral-history__status[data-status='paid'] {
+    background: rgba(34, 197, 94, 0.24);
+    border-color: rgba(34, 197, 94, 0.5);
+    color: rgb(134 239 172);
   }
 
   @keyframes spin {

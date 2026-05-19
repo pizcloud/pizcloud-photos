@@ -277,11 +277,26 @@
 
 <style>
   .referral-payout {
+    --rp-bg: var(--pizcloud-bg-elevated, #ffffff);
+    --rp-bg-soft: var(--pizcloud-bg-subtle, #f8fafc);
+    --rp-bg-muted: var(--pizcloud-bg-muted, #f1f5f9);
+    --rp-border: var(--pizcloud-border-subtle, #e2e8f0);
+    --rp-text: var(--pizcloud-fg, inherit);
+    --rp-text-muted: var(--pizcloud-fg-muted, #64748b);
+    --rp-accent: var(--pizcloud-accent, #2563eb);
+    --rp-accent-strong: var(--pizcloud-accent-strong, #1d4ed8);
+    --rp-danger: #ef4444;
+    --rp-success: #16a34a;
     padding-block: 1.5rem 3rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    color: var(--rp-text);
   }
+
+  /* Legacy style reference before unified light/dark tokens:
+     - border/background used direct var(--pizcloud-*) per selector
+     - text colors mostly inherited/default */
 
   .referral-payout__back {
     margin-bottom: 0.25rem;
@@ -293,7 +308,7 @@
     gap: 0.35rem;
     font-size: 0.85rem;
     text-decoration: none;
-    color: var(--pizcloud-accent, #2563eb);
+    color: var(--rp-accent);
   }
 
   .referral-payout__back-link:hover {
@@ -315,22 +330,24 @@
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
+    color: var(--rp-text);
   }
 
   .referral-payout__subtitle {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--pizcloud-fg-muted, #64748b);
+    color: var(--rp-text-muted);
   }
 
   .referral-payout__content {
     padding: 1.25rem 1.5rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
-    background: var(--pizcloud-bg-elevated, #ffffff);
+    border: 1px solid var(--rp-border);
+    background: var(--rp-bg);
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
   }
 
   .referral-payout__method-row {
@@ -342,6 +359,7 @@
   .referral-payout__label {
     font-size: 0.9rem;
     font-weight: 500;
+    color: var(--rp-text);
   }
 
   .referral-payout__chips {
@@ -352,17 +370,22 @@
 
   .referral-payout__chip {
     border-radius: 999px;
-    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
-    background: var(--pizcloud-bg-subtle, #f8fafc);
+    border: 1px solid var(--rp-border);
+    background: var(--rp-bg-soft);
+    color: var(--rp-text);
     padding: 0.35rem 0.9rem;
     font-size: 0.85rem;
     cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
   }
 
   .referral-payout__chip--active {
-    border-color: var(--pizcloud-accent, #2563eb);
+    border-color: var(--rp-accent);
     background: rgba(37, 99, 235, 0.08);
-    color: var(--pizcloud-accent, #2563eb);
+    color: var(--rp-accent);
   }
 
   .referral-payout__fields {
@@ -376,25 +399,31 @@
     flex-direction: column;
     gap: 0.25rem;
     font-size: 0.85rem;
+    color: var(--rp-text);
   }
 
   .referral-payout__field input {
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--pizcloud-border-subtle, #e2e8f0);
-    background: var(--pizcloud-bg-subtle, #f8fafc);
+    border: 1px solid var(--rp-border);
+    background: var(--rp-bg-soft);
+    color: var(--rp-text);
     font-size: 0.9rem;
     outline: none;
   }
 
+  .referral-payout__field input::placeholder {
+    color: var(--rp-text-muted);
+  }
+
   .referral-payout__field input:focus {
-    border-color: var(--pizcloud-accent, #2563eb);
+    border-color: var(--rp-accent);
     box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
   }
 
   .referral-payout__error {
     font-size: 0.85rem;
-    color: #ef4444;
+    color: var(--rp-danger);
   }
 
   .referral-payout__actions {
@@ -412,9 +441,14 @@
   }
 
   .referral-payout__btn--primary {
-    background: var(--pizcloud-accent, #2563eb);
+    background: var(--rp-accent);
     color: #fff;
-    border-color: var(--pizcloud-accent, #2563eb);
+    border-color: var(--rp-accent);
+    transition: background-color 0.15s ease;
+  }
+
+  .referral-payout__btn--primary:hover:not(:disabled) {
+    background: var(--rp-accent-strong);
   }
 
   .referral-payout__loading {
@@ -427,14 +461,41 @@
     width: 24px;
     height: 24px;
     border-radius: 999px;
-    border: 3px solid #e2e8f0;
-    border-top-color: var(--pizcloud-accent, #2563eb);
+    border: 3px solid var(--rp-border);
+    border-top-color: var(--rp-accent);
     animation: spin 0.75s linear infinite;
   }
 
   .referral-payout__success {
     font-size: 0.85rem;
-    color: #16a34a;
+    color: var(--rp-success);
+  }
+
+  :global(.dark) .referral-payout {
+    --rp-bg: var(--pizcloud-dark-surface, rgb(33 33 33));
+    --rp-bg-soft: var(--pizcloud-dark-bg, rgb(10 10 10));
+    --rp-bg-muted: var(--pizcloud-dark-muted, rgba(148, 163, 184, 0.12));
+    --rp-border: var(--pizcloud-dark-border, rgba(148, 163, 184, 0.22));
+    --rp-text: var(--pizcloud-dark-fg, rgb(229 231 235));
+    --rp-text-muted: var(--pizcloud-dark-fg-muted, rgba(229, 231, 235, 0.72));
+    --rp-accent: var(--pizcloud-dark-primary, rgb(172 203 250));
+    --rp-accent-strong: var(--pizcloud-dark-primary-strong, rgba(172, 203, 250, 0.92));
+    --rp-danger: rgb(252 165 165);
+    --rp-success: rgb(134 239 172);
+  }
+
+  :global(.dark) .referral-payout .referral-payout__content {
+    box-shadow: var(--pizcloud-dark-shadow, 0 10px 22px rgba(0, 0, 0, 0.42));
+  }
+
+  :global(.dark) .referral-payout .referral-payout__chip--active {
+    background: rgba(172, 203, 250, 0.18);
+    border-color: rgba(172, 203, 250, 0.34);
+    color: rgb(191 219 254);
+  }
+
+  :global(.dark) .referral-payout .referral-payout__btn--primary {
+    color: var(--pizcloud-dark-bg, rgb(10 10 10));
   }
 
   @keyframes spin {
