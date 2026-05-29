@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:immich_mobile/models/pizcloud/payment_history.model.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_persist;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
@@ -57,6 +58,7 @@ class PaymentHistoryService {
         'platform': safePlatform,
         if (safeProductId != null && safeProductId.isNotEmpty) 'productId': safeProductId,
       },
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'billing.payments.list'}),
     );
 
     final statusCode = response.statusCode ?? 0;

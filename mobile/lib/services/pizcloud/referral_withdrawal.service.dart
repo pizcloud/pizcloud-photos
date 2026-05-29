@@ -1,5 +1,6 @@
 // mobile/lib/services/pizcloud/referral_withdrawal.service.dart
 
+import 'package:dio/dio.dart';
 import 'package:immich_mobile/models/pizcloud/referral_withdrawal.model.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
@@ -37,6 +38,7 @@ class ReferralWithdrawalService {
         'limit': limit,
         if (status != null && status.isNotEmpty) 'status': status,
       },
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.withdrawals.list'}),
     );
 
     final statusCode = res.statusCode ?? 0;

@@ -1,6 +1,7 @@
 import { PUBLIC_IMMICH_BUY_HOST, PUBLIC_IMMICH_PAY_HOST } from '$env/static/public';
 import type { ImmichProduct } from '$lib/constants';
 import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
+import { attachClientTelemetryHeaders } from '$lib/telemetry/client-telemetry'; // pizcloud
 import { setServerLicense, setUserLicense, type LicenseResponseDto } from '@immich/sdk';
 import { loadUser } from './auth';
 
@@ -13,7 +14,10 @@ export const activateProduct = async (licenseKey: string, activationKey: string)
 };
 
 export const getActivationKey = async (licenseKey: string): Promise<string> => {
-  const response = await fetch(new URL(`/api/v1/activate/${licenseKey}`, PUBLIC_IMMICH_PAY_HOST).href);
+  const response = await fetch(
+    new URL(`/api/v1/activate/${licenseKey}`, PUBLIC_IMMICH_PAY_HOST).href,
+    attachClientTelemetryHeaders(undefined, 'billing.activation_key.get'),
+  ); // pizcloud
   if (!response.ok) {
     throw new Error('Failed to fetch activation key');
   }

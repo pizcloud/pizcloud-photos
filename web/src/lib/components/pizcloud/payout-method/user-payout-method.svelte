@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+  import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
   import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -46,9 +47,13 @@
     error = '';
 
     try {
-      const res = await fetch(`${baseUrl}/referral/payout-method`, {
-        credentials: 'include',
-      });
+      const res = await fetchWithClientTelemetry(
+        `${baseUrl}/referral/payout-method`,
+        {
+          credentials: 'include',
+        },
+        { eventName: 'referral.payout_method.get' },
+      );
 
       if (!res.ok) {
         loading = false;
@@ -100,20 +105,24 @@
     success = '';
 
     try {
-      const res = await fetch(`${baseUrl}/referral/payout-method`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: userEmail,
-          method,
-          bankName,
-          bankAccountNumber,
-          bankAccountHolderName,
-          paypalEmail,
-          paypalFullName,
-        }),
-      });
+      const res = await fetchWithClientTelemetry(
+        `${baseUrl}/referral/payout-method`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: userEmail,
+            method,
+            bankName,
+            bankAccountNumber,
+            bankAccountHolderName,
+            paypalEmail,
+            paypalFullName,
+          }),
+        },
+        { eventName: 'referral.payout_method.save' },
+      );
 
       if (!res.ok) {
         let code: string | undefined;

@@ -1,4 +1,4 @@
-
+import 'package:dio/dio.dart';
 import 'package:immich_mobile/models/pizcloud/referral_payout_method.model.dart';
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
@@ -24,6 +24,7 @@ class ReferralPayoutMethodService {
     final api = await _pizApiService;
     final res = await api.client.get<dynamic>(
       '/referral/payout-method',
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.payout_method.get'}),
       // queryParameters: {'email': email}, // backend may infer from token; keep commented parity
     );
 
@@ -67,6 +68,7 @@ class ReferralPayoutMethodService {
         'paypalEmail': paypalEmail?.trim(),
         'paypalFullName': paypalFullName?.trim(),
       },
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.payout_method.save'}),
     );
 
     final status = res.statusCode ?? 0;

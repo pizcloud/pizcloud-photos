@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+  import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
   import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -97,9 +98,13 @@
         url.searchParams.set('status', selectedStatus);
       }
 
-      const res = await fetch(url.toString(), {
-        credentials: 'include',
-      });
+      const res = await fetchWithClientTelemetry(
+        url.toString(),
+        {
+          credentials: 'include',
+        },
+        { eventName: 'referral.withdrawals.list' },
+      );
 
       if (!res.ok) {
         error = $t('referral.withdraw_history_load_error');

@@ -6,6 +6,7 @@
   import { eventManager } from '$lib/managers/event-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { serverConfigManager } from '$lib/managers/server-config-manager.svelte';
+  import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
   import { oauth } from '$lib/utils';
   import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { getServerErrorMessage, handleError } from '$lib/utils/handle-error';
@@ -94,10 +95,14 @@
     }
 
     try {
-      const res = await fetch(`${baseUrl}/auth/email-verification-status?email=${encodeURIComponent(email)}`, {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      });
+      const res = await fetchWithClientTelemetry(
+        `${baseUrl}/auth/email-verification-status?email=${encodeURIComponent(email)}`,
+        {
+          method: 'GET',
+          headers: { accept: 'application/json' },
+        },
+        { eventName: 'auth.email_verification.status.get' },
+      );
 
       if (res.ok) {
         const json = await res.json();
@@ -136,11 +141,15 @@
 
       const currentLocale = $locale || 'en';
 
-      const res = await fetch(`${baseUrl}/auth/verify-email`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, lang: currentLocale }),
-      });
+      const res = await fetchWithClientTelemetry(
+        `${baseUrl}/auth/verify-email`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email, lang: currentLocale }),
+        },
+        { eventName: 'auth.email_verification.send' },
+      );
 
       if (res.ok) {
         successMessage = $t('verification_email_resent');

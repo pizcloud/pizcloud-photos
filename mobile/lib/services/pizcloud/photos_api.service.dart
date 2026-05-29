@@ -53,11 +53,18 @@ class PhotosApi {
 
   Future<Response<dynamic>> ssoCallback(String ssoToken) async {
     final client = await _client();
-    return client.get<dynamic>('/sso/callback', queryParameters: {'sso_token': ssoToken, 'continue': ''});
+    return client.get<dynamic>(
+      '/sso/callback',
+      queryParameters: {'sso_token': ssoToken, 'continue': ''},
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'auth.sso.callback'}),
+    );
   }
 
   Future<Response<dynamic>> fetchProfile() async {
     final client = await _client();
-    return client.get<dynamic>('/users/me');
+    return client.get<dynamic>(
+      '/users/me',
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'auth.profile.get'}),
+    );
   }
 }

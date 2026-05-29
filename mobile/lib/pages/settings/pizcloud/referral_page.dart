@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -132,7 +133,10 @@ class ReferralPage extends HookConsumerWidget {
       try {
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final api = await pizPersistApiFuture;
-        final res = await api.client.get<dynamic>('/referral/summary');
+        final res = await api.client.get<dynamic>(
+          '/referral/summary',
+          options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.summary.get'}),
+        );
         final status = res.statusCode ?? 0;
         if (status < 200 || status >= 300) {
           String? messageCode;
@@ -464,6 +468,7 @@ class ReferralPage extends HookConsumerWidget {
                   final res = await api.client.post<dynamic>(
                     '/referral/withdrawals',
                     data: {'email': userEmail, 'amount': amount, 'currency': currentCurrency, 'method': withdrawMethod},
+                    options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.withdrawals.create'}),
                   );
 
                   final status = res.statusCode ?? 0;
@@ -779,10 +784,11 @@ class ReferralPage extends HookConsumerWidget {
                     ).showSnackBar(SnackBar(content: Text('referral.withdraw_missing_email'.tr())));
                     return;
                   }
-                  Navigator.of(
-                    context,
-                  ).push(
-                    platformPageRoute(context: context, builder: (_) => ReferralWithdrawalsPage(userEmail: userEmail!)),
+                  Navigator.of(context).push(
+                    platformPageRoute(
+                      context: context,
+                      builder: (_) => ReferralWithdrawalsPage(userEmail: userEmail!),
+                    ),
                   );
                 },
                 child: Text('referral.withdraw_history_button'.tr()),
@@ -818,7 +824,7 @@ class ReferralPage extends HookConsumerWidget {
                     children: [
                       Text(summaryError.value!, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
                       const SizedBox(height: 12),
-                      _PillButton(label: 'retry'.tr(), onPressed: loadSummary, primary: true),
+                      _PillButton(label: 'retry'.tr(), onPressed: loadSummary, primary: true, isBusy: false),
                     ],
                   ),
                 ),

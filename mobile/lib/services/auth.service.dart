@@ -15,6 +15,7 @@ import 'package:immich_mobile/repositories/auth_api.repository.dart';
 import 'package:immich_mobile/services/api.service.dart';
 import 'package:immich_mobile/services/app_settings.service.dart';
 import 'package:immich_mobile/services/network.service.dart';
+import 'package:immich_mobile/services/telemetry/client_telemetry.service.dart'; // pizcloud
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
 
@@ -240,6 +241,15 @@ class AuthService {
       final req = await client.postUrl(uri);
       req.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8');
       req.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      try {
+        final telemetryHeaders = <String, String>{};
+        await ClientTelemetryService.I.attachHeadersToStringMap(telemetryHeaders, eventName: 'auth.register.submit');
+        telemetryHeaders.forEach((key, value) {
+          req.headers.set(key, value);
+        });
+      } catch (_) {
+        // fail-open
+      } // pizcloud
       req.add(utf8.encode(jsonEncode(payload)));
 
       final res = await req.close();

@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
@@ -109,7 +110,10 @@ class DiscountCodePage extends HookConsumerWidget {
       try {
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final api = await pizPersistApiFuture;
-        final res = await api.client.get<dynamic>('/referral/summary');
+        final res = await api.client.get<dynamic>(
+          '/referral/summary',
+          options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.summary.get'}),
+        );
         final status = res.statusCode ?? 0;
         if (status < 200 || status >= 300) {
           String? messageCode;
@@ -222,7 +226,11 @@ class DiscountCodePage extends HookConsumerWidget {
       try {
         // New Dio-based implementation using PersistCookieJar (sid) + headers
         final api = await pizPersistApiFuture;
-        final res = await api.client.post<dynamic>('/referral/apply-code', data: {'email': userEmail, 'code': code});
+        final res = await api.client.post<dynamic>(
+          '/referral/apply-code',
+          data: {'email': userEmail, 'code': code},
+          options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.apply_code.submit'}),
+        );
 
         final status = res.statusCode ?? 0;
         if (status < 200 || status >= 300) {

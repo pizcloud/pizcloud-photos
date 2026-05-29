@@ -42,6 +42,7 @@ import 'package:openapi/api.dart';
 // import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
+import 'package:immich_mobile/services/telemetry/client_telemetry.service.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -341,7 +342,17 @@ class LoginForm extends HookConsumerWidget {
       try {
         final uri = Uri.parse('$base/auth/email-verification-status').replace(queryParameters: {'email': email});
 
-        final resp = await http.get(uri, headers: const {'Accept': 'application/json'});
+        final headers = <String, String>{'Accept': 'application/json'};
+        try {
+          await ClientTelemetryService.I.attachHeadersToStringMap(
+            headers,
+            eventName: 'auth.email_verification.status.get',
+          );
+        } catch (_) {
+          // fail-open
+        }
+
+        final resp = await http.get(uri, headers: headers);
 
         if (resp.statusCode >= 200 && resp.statusCode < 300) {
           final data = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -423,9 +434,16 @@ class LoginForm extends HookConsumerWidget {
         ].join('-');
 
         final uri = Uri.parse('$base/auth/verify-email');
+        final headers = <String, String>{'Content-Type': 'application/json'};
+        try {
+          await ClientTelemetryService.I.attachHeadersToStringMap(headers, eventName: 'auth.email_verification.send');
+        } catch (_) {
+          // fail-open
+        }
+
         final resp = await http.post(
           uri,
-          headers: const {'Content-Type': 'application/json'},
+          headers: headers,
           body: jsonEncode(<String, String>{'email': email, 'lang': lang}),
         );
 

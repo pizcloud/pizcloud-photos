@@ -1,5 +1,6 @@
 <script lang="ts">
   import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+  import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
   import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -195,12 +196,16 @@
     applyLoading = true;
 
     try {
-      const res = await fetch(`${baseUrl}/referral/apply-code`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: userEmail, code }),
-      });
+      const res = await fetchWithClientTelemetry(
+        `${baseUrl}/referral/apply-code`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email: userEmail, code }),
+        },
+        { eventName: 'referral.apply_code.submit' },
+      );
 
       if (!res.ok) {
         console.error('Failed to apply referral code', res.status, await res.text());
@@ -257,9 +262,13 @@
     }
 
     try {
-      const res = await fetch(`${baseUrl}/referral/payout-method`, {
-        credentials: 'include',
-      });
+      const res = await fetchWithClientTelemetry(
+        `${baseUrl}/referral/payout-method`,
+        {
+          credentials: 'include',
+        },
+        { eventName: 'referral.payout_method.get' },
+      );
 
       if (!res.ok) {
         payoutMethod = null;
@@ -404,17 +413,21 @@
         return;
       }
 
-      const res = await fetch(`${baseUrl}/referral/withdrawals`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: userEmail,
-          amount,
-          currency,
-          method,
-        }),
-      });
+      const res = await fetchWithClientTelemetry(
+        `${baseUrl}/referral/withdrawals`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: userEmail,
+            amount,
+            currency,
+            method,
+          }),
+        },
+        { eventName: 'referral.withdrawals.create' },
+      );
 
       if (!res.ok) {
         let code: string | undefined;

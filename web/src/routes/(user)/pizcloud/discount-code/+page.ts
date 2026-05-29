@@ -1,5 +1,6 @@
 import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
 import { user } from '$lib/stores/user.store';
+import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
 import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
 import { authenticate } from '$lib/utils/auth';
 import { getFormatter } from '$lib/utils/i18n';
@@ -53,13 +54,14 @@ export const load = (async ({ url, fetch }) => {
   if (userEmail) {
     const baseUrl = (getPizcloudApiBaseUrl() || PUBLIC_PIZCLOUD_SERVER_URL || '').replace(/\/+$/, '');
     try {
-      const res = await fetch(
+      const res = await fetchWithClientTelemetry(
         `${baseUrl}/referral/summary`,
         {
           method: 'GET',
           headers: { 'content-type': 'application/json' },
           credentials: 'include',
         },
+        { fetchFn: fetch, eventName: 'referral.summary.get' },
       );
 
       if (res.ok) {

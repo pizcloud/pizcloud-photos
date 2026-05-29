@@ -1,11 +1,13 @@
 // lib/features/billing/entitlement_api_client.dart
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:immich_mobile/domain/models/user.model.dart';
 
 import 'package:immich_mobile/services/pizcloud/auth_header.service.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
+import 'package:immich_mobile/services/telemetry/client_telemetry.service.dart';
 
 // final String pizCloudServerUrl = AppConfig.pizCloudServerUrl.trim(); // deprecated
 
@@ -30,9 +32,19 @@ class EntitlementApiClient {
     return '$base/$path';
   }
 
+  Future<Map<String, String>> _buildTelemetryHeaders(String eventName) async {
+    final headers = <String, String>{...authHeaders.authOnly()};
+    try {
+      await ClientTelemetryService.I.attachHeadersToStringMap(headers, eventName: eventName);
+    } catch (_) {
+      // fail-open
+    }
+    return headers;
+  }
+
   Future<Map<String, dynamic>?> getEntitlements() async {
     final url = _join(photosBaseUrl, 'billing/entitlements');
-    final oHeaders = authHeaders.authOnly();
+    final oHeaders = await _buildTelemetryHeaders('billing.entitlements.get');
     final res = await http.get(Uri.parse(url), headers: oHeaders);
     if (res.statusCode < 200 || res.statusCode >= 300) {
       return null;
@@ -48,7 +60,7 @@ class EntitlementApiClient {
 
   Future<Map<String, dynamic>> getUsage() async {
     final url = _join(photosBaseUrl, 'billing/usage');
-    final oHeaders = authHeaders.authOnly();
+    final oHeaders = await _buildTelemetryHeaders('billing.usage.get');
 
     final res = await http.get(Uri.parse(url), headers: oHeaders);
     if (res.statusCode == 200) {
@@ -63,7 +75,10 @@ class EntitlementApiClient {
   Future<Map<String, dynamic>?> getReferralSummary() async {
     String path = 'referral/summary';
     final api = await _pizApiService;
-    final res = await api.client.get<dynamic>('/$path');
+    final res = await api.client.get<dynamic>(
+      '/$path',
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'referral.summary.get'}),
+    );
 
     final status = res.statusCode ?? 0;
     if (status >= 200 && status < 300) {
@@ -94,6 +109,7 @@ class EntitlementApiClient {
     final res = await api.client.post<dynamic>(
       '/billing/iap/ios/verify',
       data: {'productId': productId, 'receiptData': receiptBase64},
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'billing.iap.ios.verify'}),
     );
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {
@@ -111,6 +127,7 @@ class EntitlementApiClient {
     final res = await api.client.post<dynamic>(
       '/billing/iap/android/verify',
       data: {'productId': productId, 'purchaseToken': purchaseToken, 'packageName': packageName},
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'billing.iap.android.verify'}),
     );
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {
@@ -127,6 +144,7 @@ class EntitlementApiClient {
     final res = await api.client.post<dynamic>(
       '/billing/verify-success',
       data: {'productId': productId, 'platform': platform},
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'billing.iap.verify_success.notify'}),
     );
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {

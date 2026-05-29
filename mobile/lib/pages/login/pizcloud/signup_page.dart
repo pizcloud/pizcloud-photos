@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
+import 'package:immich_mobile/services/telemetry/client_telemetry.service.dart';
 
 @RoutePage()
 class SignupPage extends HookConsumerWidget {
@@ -98,7 +99,14 @@ class SignupPage extends HookConsumerWidget {
           body['email'] = email;
         }
 
-        final res = await http.post(uri, headers: const {'Content-Type': 'application/json'}, body: jsonEncode(body));
+        final headers = <String, String>{'Content-Type': 'application/json'};
+        try {
+          await ClientTelemetryService.I.attachHeadersToStringMap(headers, eventName: 'referral.code.validate');
+        } catch (_) {
+          // fail-open
+        }
+
+        final res = await http.post(uri, headers: headers, body: jsonEncode(body));
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
           if (kDebugMode) {
@@ -168,7 +176,14 @@ class SignupPage extends HookConsumerWidget {
           body['referralCode'] = code;
         }
 
-        final res = await http.post(uri, headers: const {'Content-Type': 'application/json'}, body: jsonEncode(body));
+        final headers = <String, String>{'Content-Type': 'application/json'};
+        try {
+          await ClientTelemetryService.I.attachHeadersToStringMap(headers, eventName: 'auth.register.referral_sync');
+        } catch (_) {
+          // fail-open
+        }
+
+        final res = await http.post(uri, headers: headers, body: jsonEncode(body));
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
           if (kDebugMode) {
@@ -212,9 +227,16 @@ class SignupPage extends HookConsumerWidget {
 
         http.Response response;
         try {
+          final headers = <String, String>{'Content-Type': 'application/json'};
+          try {
+            await ClientTelemetryService.I.attachHeadersToStringMap(headers, eventName: 'auth.email_verification.send');
+          } catch (_) {
+            // fail-open
+          }
+
           response = await http.post(
             uri,
-            headers: const {'Content-Type': 'application/json'},
+            headers: headers,
             body: jsonEncode(<String, String>{'email': email, 'lang': lang}),
           );
         } catch (e) {
