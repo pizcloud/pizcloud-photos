@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/services/telemetry/telemetry_dio_interceptor.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -44,6 +43,7 @@ class ApiPersistCookieJarService {
       if (headers != null && headers.isNotEmpty) {
         existing._dio.options.headers.addAll(headers);
       }
+      attachClientTelemetryDioInterceptor(existing._dio);
       return existing;
     }
 
@@ -59,6 +59,7 @@ class ApiPersistCookieJarService {
           ),
         );
     client.interceptors.add(CookieManager(jar));
+    attachClientTelemetryDioInterceptor(client);
 
     final service = ApiPersistCookieJarService._(baseUrl: normalizedBase, dio: client);
     _instances[normalizedBase] = service;

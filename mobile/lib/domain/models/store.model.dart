@@ -111,7 +111,10 @@ enum StoreKey<T> {
   manualUploadFailedItems<String>._(1017),
 
   // pizcloud manual upload pending items cache (JSON string)
-  manualUploadPendingItems<String>._(1018);
+  manualUploadPendingItems<String>._(1018),
+
+  // pizcloud runtime override for client telemetry (null => follow AppConfig)
+  clientTelemetryEnabled<bool>._(1019);
 
   const StoreKey._(this.id);
   final int id;

@@ -1,4 +1,5 @@
 import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
 import { getApiBaseUrl, getPizcloudApiBaseUrl } from '$lib/utils/api-base';
 
 export type AlbumTransferUser = {
@@ -135,16 +136,20 @@ const normalizePizcloudBaseUrl = () => {
   return (healthBaseUrl || fallbackBaseUrl).replace(/\/+$/, '');
 };
 
-const requestPizcloudNoContent = async (path: string, init?: RequestInit): Promise<void> => {
+const requestPizcloudNoContent = async (path: string, init?: RequestInit, eventName?: string): Promise<void> => {
   const baseUrl = normalizePizcloudBaseUrl();
   if (!baseUrl) {
     throw new Error('Missing pizcloud server url');
   }
 
-  const res = await fetch(`${baseUrl}${path}`, {
-    credentials: 'include',
-    ...init,
-  });
+  const res = await fetchWithClientTelemetry(
+    `${baseUrl}${path}`,
+    {
+      credentials: 'include',
+      ...init,
+    },
+    { eventName },
+  );
 
   if (!res.ok) {
     const text = await res.text();
@@ -152,22 +157,26 @@ const requestPizcloudNoContent = async (path: string, init?: RequestInit): Promi
   }
 };
 
-const request = async (path: string, options: RequestOptions): Promise<Response> => {
+const request = async (path: string, options: RequestOptions, eventName?: string): Promise<Response> => {
   const baseUrl = getApiBaseUrl();
 
-  return fetch(`${baseUrl}${path}`, {
-    method: options.method,
-    credentials: 'include',
-    headers: {
-      accept: 'application/json',
-      ...(options.body ? { 'content-type': 'application/json' } : {}),
+  return fetchWithClientTelemetry(
+    `${baseUrl}${path}`,
+    {
+      method: options.method,
+      credentials: 'include',
+      headers: {
+        accept: 'application/json',
+        ...(options.body ? { 'content-type': 'application/json' } : {}),
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
     },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+    { eventName },
+  );
 };
 
-const requestJson = async <T>(path: string, options: RequestOptions): Promise<T> => {
-  const res = await request(path, options);
+const requestJson = async <T>(path: string, options: RequestOptions, eventName?: string): Promise<T> => {
+  const res = await request(path, options, eventName);
 
   if (!res.ok) {
     const parsed = await parseErrorBody(res);
@@ -178,12 +187,12 @@ const requestJson = async <T>(path: string, options: RequestOptions): Promise<T>
 };
 
 export const getIncomingAlbumTransfers = async (): Promise<AlbumTransferDto[]> => {
-  const data = await requestJson<unknown[]>('/album-transfers/incoming', { method: 'GET' });
+  const data = await requestJson<unknown[]>('/album-transfers/incoming', { method: 'GET' }, 'album.transfer.incoming.list');
   return Array.isArray(data) ? data.map((item) => normalizeTransfer(item)) : [];
 };
 
 export const getAlbumTransfer = async (albumId: string): Promise<AlbumTransferDto | null> => {
-  const res = await request(`/albums/${albumId}/transfer`, { method: 'GET' });
+  const res = await request(`/albums/${albumId}/transfer`, { method: 'GET' }, 'album.transfer.get');
 
   if (res.status === 404) {
     return null;
@@ -210,23 +219,35 @@ export const requestAlbumTransfer = async (albumId: string, toUserId: string): P
   const data = await requestJson<unknown>(`/albums/${albumId}/transfer`, {
     method: 'POST',
     body: { toUserId },
-  });
+  }, 'album.transfer.request');
 
   return normalizeTransfer(data);
 };
 
 export const cancelAlbumTransfer = async (albumId: string): Promise<AlbumTransferDto> => {
-  const data = await requestJson<unknown>(`/albums/${albumId}/transfer/cancel`, { method: 'POST' });
+  const data = await requestJson<unknown>(
+    `/albums/${albumId}/transfer/cancel`,
+    { method: 'POST' },
+    'album.transfer.cancel',
+  );
   return normalizeTransfer(data);
 };
 
 export const acceptAlbumTransfer = async (transferId: string): Promise<AlbumTransferDto> => {
-  const data = await requestJson<unknown>(`/album-transfers/${transferId}/accept`, { method: 'POST' });
+  const data = await requestJson<unknown>(
+    `/album-transfers/${transferId}/accept`,
+    { method: 'POST' },
+    'album.transfer.accept',
+  );
   return normalizeTransfer(data);
 };
 
 export const declineAlbumTransfer = async (transferId: string): Promise<AlbumTransferDto> => {
-  const data = await requestJson<unknown>(`/album-transfers/${transferId}/decline`, { method: 'POST' });
+  const data = await requestJson<unknown>(
+    `/album-transfers/${transferId}/decline`,
+    { method: 'POST' },
+    'album.transfer.decline',
+  );
   return normalizeTransfer(data);
 };
 
@@ -254,7 +275,7 @@ export const sendAlbumTransferOwnershipPushByEmail = async ({
       ...(normalizedTransferId ? { transferId: normalizedTransferId } : {}),
       ...(normalizedAlbumName ? { albumName: normalizedAlbumName } : {}),
     }),
-  });
+  }, 'notifications.album_transfer_ownership.send');
 };
 
 export const sendAlbumTransferOwnershipPushByEmailBestEffort = async (

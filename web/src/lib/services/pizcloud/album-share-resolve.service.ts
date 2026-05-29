@@ -1,3 +1,4 @@
+import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
 import { getApiBaseUrl } from '$lib/utils/api-base';
 
 export type AlbumResolveEmailsResponseDto = {
@@ -10,12 +11,16 @@ export const resolveAlbumShareEmails = async (
   emails: string[],
 ): Promise<AlbumResolveEmailsResponseDto> => {
   const baseUrl = getApiBaseUrl();
-  const res = await fetch(`${baseUrl}/albums/${albumId}/resolve-emails`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ emails }),
-  });
+  const res = await fetchWithClientTelemetry(
+    `${baseUrl}/albums/${albumId}/resolve-emails`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ emails }),
+    },
+    { eventName: 'album.share_emails.resolve' },
+  );
 
   if (!res.ok) {
     const text = await res.text();

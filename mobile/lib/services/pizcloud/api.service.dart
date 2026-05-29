@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/services/telemetry/telemetry_dio_interceptor.dart';
 
 class ApiService {
   static final CookieJar _sharedCookieJar = CookieJar();
@@ -22,6 +21,7 @@ class ApiService {
             ),
           ) {
     _dio.interceptors.add(CookieManager(_sharedCookieJar));
+    attachClientTelemetryDioInterceptor(_dio);
   }
 
   final Dio _dio;

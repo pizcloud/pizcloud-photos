@@ -1,4 +1,5 @@
 import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
 import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
 
 export type SharedEmailDto = {
@@ -13,16 +14,20 @@ const normalizeBaseUrl = () => {
   return (healthBaseUrl || fallbackBaseUrl).replace(/\/+$/, '');
 };
 
-const request = async (path: string, init?: RequestInit) => {
+const request = async (path: string, init?: RequestInit, eventName?: string) => {
   const baseUrl = normalizeBaseUrl();
   if (!baseUrl) {
     throw new Error('Missing pizcloud server url');
   }
 
-  const res = await fetch(`${baseUrl}${path}`, {
-    credentials: 'include',
-    ...init,
-  });
+  const res = await fetchWithClientTelemetry(
+    `${baseUrl}${path}`,
+    {
+      credentials: 'include',
+      ...init,
+    },
+    { eventName },
+  );
 
   if (!res.ok) {
     const text = await res.text();
@@ -32,16 +37,20 @@ const request = async (path: string, init?: RequestInit) => {
   return res.json();
 };
 
-const requestNoContent = async (path: string, init?: RequestInit): Promise<void> => {
+const requestNoContent = async (path: string, init?: RequestInit, eventName?: string): Promise<void> => {
   const baseUrl = normalizeBaseUrl();
   if (!baseUrl) {
     throw new Error('Missing pizcloud server url');
   }
 
-  const res = await fetch(`${baseUrl}${path}`, {
-    credentials: 'include',
-    ...init,
-  });
+  const res = await fetchWithClientTelemetry(
+    `${baseUrl}${path}`,
+    {
+      credentials: 'include',
+      ...init,
+    },
+    { eventName },
+  );
 
   if (!res.ok) {
     const text = await res.text();
@@ -53,7 +62,7 @@ export const getSharedEmails = async (albumId: string): Promise<SharedEmailDto[]
   const data = await request(`/albums/shared-emails`, {
     method: 'GET',
     headers: { accept: 'application/json' },
-  });
+  }, 'album.shared_emails.list');
 
   const items = Array.isArray(data?.items) ? data.items : [];
   return items.map((item: { email?: string; createdAt?: string }) => ({
@@ -67,7 +76,7 @@ export const addSharedEmail = async (albumId: string, email: string): Promise<Sh
     method: 'POST',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({ email }),
-  });
+  }, 'album.shared_emails.add');
 
   const items = Array.isArray(data?.items) ? data.items : [];
   return items.map((item: { email?: string; createdAt?: string }) => ({
@@ -81,7 +90,7 @@ export const removeSharedEmail = async (albumId: string, email: string): Promise
     method: 'DELETE',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({ email }),
-  });
+  }, 'album.shared_emails.remove');
 
   const items = Array.isArray(data?.items) ? data.items : [];
   return items.map((item: { email?: string; createdAt?: string }) => ({
@@ -101,7 +110,7 @@ export const sendAlbumInvitePushByEmails = async (albumId: string, emails: Itera
     method: 'POST',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({ albumId, emails: normalizedEmails }),
-  });
+  }, 'notifications.album_invite.send');
 };
 
 export const sendAlbumInvitePushByEmailsBestEffort = async (albumId: string, emails: Iterable<string>): Promise<void> => {

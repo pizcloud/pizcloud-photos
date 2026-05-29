@@ -6,6 +6,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:http/http.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/services/telemetry/client_telemetry.service.dart'; // pizcloud
+import 'package:immich_mobile/services/telemetry/telemetry_http_client.dart'; // pizcloud
 import 'package:immich_mobile/utils/debug_print.dart';
 import 'package:immich_mobile/utils/url_helper.dart';
 import 'package:immich_mobile/utils/user_agent.dart';
@@ -74,6 +76,7 @@ class ApiService implements Authentication {
 
   setEndpoint(String endpoint) {
     _apiClient = ApiClient(basePath: endpoint, authentication: this);
+    _apiClient.client = TelemetryHttpClient(); // pizcloud
     _setUserAgentHeader();
     if (_accessToken != null) {
       setAccessToken(_accessToken!);
@@ -164,6 +167,11 @@ class ApiService implements Authentication {
     try {
       var headers = {"Accept": "application/json"};
       headers.addAll(getRequestHeaders());
+      try {
+        await ClientTelemetryService.I.attachHeadersToStringMap(headers);
+      } catch (_) {
+        // fail-open
+      } // pizcloud
 
       final res = await client
           .get(Uri.parse("$baseUrl/.well-known/pizcloud"), headers: headers)
@@ -231,11 +239,15 @@ class ApiService implements Authentication {
   }
 
   @override
-  Future<void> applyToParams(List<QueryParam> queryParams, Map<String, String> headerParams) {
-    return Future<void>(() {
-      var headers = ApiService.getRequestHeaders();
-      headerParams.addAll(headers);
-    });
+  Future<void> applyToParams(List<QueryParam> queryParams, Map<String, String> headerParams) async {
+    var headers = ApiService.getRequestHeaders();
+    headerParams.addAll(headers);
+
+    try {
+      await ClientTelemetryService.I.attachHeadersToStringMap(headerParams);
+    } catch (_) {
+      // fail-open
+    } // pizcloud
   }
 
   ApiClient get apiClient => _apiClient;

@@ -1,4 +1,5 @@
 import { PUBLIC_PIZCLOUD_SERVER_URL } from '$env/static/public';
+import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry';
 import { getPizcloudApiBaseUrl } from '$lib/utils/api-base';
 
 export const SUPPORT_TICKET_ATTACHMENT_MAX_BYTES = 8 * 1024 * 1024;
@@ -322,11 +323,18 @@ const request = async (path: string, init?: SupportTicketRequestInit): Promise<R
   };
 
   const doFetch = (withRequestId: boolean) => {
-    return fetch(`${baseUrl}${path}`, {
-      credentials: 'include',
-      ...requestInit,
-      headers: buildHeaders(withRequestId),
-    });
+    return fetchWithClientTelemetry(
+      `${baseUrl}${path}`,
+      {
+        credentials: 'include',
+        ...requestInit,
+        headers: buildHeaders(withRequestId),
+      },
+      {
+        eventName: 'support.ticket.api',
+        disableFallback: true,
+      },
+    );
   };
 
   try {
@@ -399,11 +407,17 @@ export const fetchSupportTicketAttachmentBlob = async (attachmentUrl: string): P
     throw new SupportTicketApiError('ATTACHMENT_NOT_FOUND', 400, 'ATTACHMENT_NOT_FOUND');
   }
 
-  const response = await fetch(resolvedUrl, {
-    method: 'GET',
-    credentials: 'include',
-    headers: { accept: '*/*' },
-  });
+  const response = await fetchWithClientTelemetry(
+    resolvedUrl,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: { accept: '*/*' },
+    },
+    {
+      eventName: 'support.ticket.attachment.download',
+    },
+  );
 
   if (!response.ok) {
     const parsedError = await parseErrorBody(response);
