@@ -306,7 +306,11 @@ const isLikelyBrowserNetworkError = (error: unknown) => {
   return error instanceof TypeError;
 };
 
-const request = async (path: string, init?: SupportTicketRequestInit): Promise<Response> => {
+const request = async (
+  path: string,
+  init?: SupportTicketRequestInit,
+  eventName = 'support.ticket.api',
+): Promise<Response> => {
   const { requestId, includeRequestIdHeader = false, ...requestInit } = init || {};
   const baseUrl = normalizeBaseUrl();
   if (!baseUrl) {
@@ -331,7 +335,7 @@ const request = async (path: string, init?: SupportTicketRequestInit): Promise<R
         headers: buildHeaders(withRequestId),
       },
       {
-        eventName: 'support.ticket.api',
+        eventName,
         disableFallback: true,
       },
     );
@@ -349,8 +353,12 @@ const request = async (path: string, init?: SupportTicketRequestInit): Promise<R
   }
 };
 
-const requestJson = async <T>(path: string, init?: SupportTicketRequestInit): Promise<T> => {
-  const response = await request(path, init);
+const requestJson = async <T>(
+  path: string,
+  init?: SupportTicketRequestInit,
+  eventName = 'support.ticket.api',
+): Promise<T> => {
+  const response = await request(path, init, eventName);
   if (!response.ok) {
     const parsedError = await parseErrorBody(response);
     throw new SupportTicketApiError(parsedError.message, response.status, parsedError.code);
@@ -464,7 +472,7 @@ export const getSupportTickets = async ({
   const payload = await requestJson<{ items?: unknown[]; pagination?: Record<string, unknown> }>(url.pathname + url.search, {
     method: 'GET',
     headers: { accept: 'application/json' },
-  });
+  }, 'support.tickets.list');
 
   const itemsRaw = Array.isArray(payload.items) ? payload.items : [];
   const paginationRaw = isObject(payload.pagination) ? payload.pagination : {};
@@ -488,7 +496,7 @@ export const getSupportTicketDetail = async (ticketId: string): Promise<SupportT
   const payload = await requestJson<Record<string, unknown>>(`/support/tickets/${encodeURIComponent(normalizedTicketId)}`, {
     method: 'GET',
     headers: { accept: 'application/json' },
-  });
+  }, 'support.ticket.detail.get');
 
   const ticketRaw = isObject(payload.ticket) ? payload.ticket : payload;
   const messagesRaw = Array.isArray(payload.messages) ? payload.messages : [];
@@ -529,7 +537,7 @@ export const createSupportTicket = async (input: CreateSupportTicketInput): Prom
     includeRequestIdHeader: true,
     headers: { accept: 'application/json' },
     body: form,
-  });
+  }, 'support.ticket.create');
 
   const ticketRaw = isObject(payload.ticket) ? payload.ticket : payload;
   const messagesRaw = Array.isArray(payload.messages) ? payload.messages : [];
@@ -570,6 +578,7 @@ export const replySupportTicket = async (input: ReplySupportTicketInput): Promis
       headers: { accept: 'application/json' },
       body: form,
     },
+    'support.ticket.reply',
   );
 
   const ticketRaw = isObject(payload.ticket) ? payload.ticket : payload;
@@ -599,5 +608,5 @@ export const updateSupportTicketStatus = async (
       accept: 'application/json',
     },
     body: JSON.stringify({ status }),
-  });
+  }, 'support.ticket.status.update');
 };

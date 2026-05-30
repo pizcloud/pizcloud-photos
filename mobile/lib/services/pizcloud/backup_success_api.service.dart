@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_persist;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
@@ -13,7 +14,10 @@ class BackupSuccessApiService {
 
   static Future<DateTime?> markBackupSuccess() async {
     final api = await _apiFuture();
-    final res = await api.client.post<dynamic>('/notifications/backup-success');
+    final res = await api.client.post<dynamic>(
+      '/notifications/backup-success',
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'notifications.backup_success.mark'}),
+    );
 
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {

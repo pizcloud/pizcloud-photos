@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_persist;
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
@@ -13,13 +14,25 @@ class BackupObservabilityApiService {
 
   static Future<void> upsertDeviceState(Map<String, dynamic> payload) async {
     final api = await _apiFuture();
-    final res = await api.client.put<dynamic>('/backup-observability/device-state', data: payload);
+    final res = await api.client.put<dynamic>(
+      '/backup-observability/device-state',
+      data: payload,
+      options: Options(
+        extra: const <String, dynamic>{'clientEventName': 'notifications.backup_observability.device_state.upsert'},
+      ),
+    );
     _ensureSuccessStatus('upsert backup observability device state', res.statusCode ?? 0);
   }
 
   static Future<String?> startRun(Map<String, dynamic> payload) async {
     final api = await _apiFuture();
-    final res = await api.client.post<dynamic>('/backup-observability/runs', data: payload);
+    final res = await api.client.post<dynamic>(
+      '/backup-observability/runs',
+      data: payload,
+      options: Options(
+        extra: const <String, dynamic>{'clientEventName': 'notifications.backup_observability.run.start'},
+      ),
+    );
     _ensureSuccessStatus('start backup observability run', res.statusCode ?? 0);
 
     final data = res.data;
@@ -34,19 +47,37 @@ class BackupObservabilityApiService {
   static Future<void> finishRun(String runId, Map<String, dynamic> payload) async {
     final api = await _apiFuture();
     final encodedRunId = Uri.encodeComponent(runId);
-    final res = await api.client.patch<dynamic>('/backup-observability/runs/$encodedRunId', data: payload);
+    final res = await api.client.patch<dynamic>(
+      '/backup-observability/runs/$encodedRunId',
+      data: payload,
+      options: Options(
+        extra: const <String, dynamic>{'clientEventName': 'notifications.backup_observability.run.finish'},
+      ),
+    );
     _ensureSuccessStatus('finish backup observability run', res.statusCode ?? 0);
   }
 
   static Future<void> reportEvent(Map<String, dynamic> payload) async {
     final api = await _apiFuture();
-    final res = await api.client.post<dynamic>('/backup-observability/events', data: payload);
+    final res = await api.client.post<dynamic>(
+      '/backup-observability/events',
+      data: payload,
+      options: Options(
+        extra: const <String, dynamic>{'clientEventName': 'notifications.backup_observability.event.report'},
+      ),
+    );
     _ensureSuccessStatus('report backup observability event', res.statusCode ?? 0);
   }
 
   static Future<void> heartbeat(Map<String, dynamic> payload) async {
     final api = await _apiFuture();
-    final res = await api.client.post<dynamic>('/backup-observability/heartbeat', data: payload);
+    final res = await api.client.post<dynamic>(
+      '/backup-observability/heartbeat',
+      data: payload,
+      options: Options(
+        extra: const <String, dynamic>{'clientEventName': 'notifications.backup_observability.heartbeat.send'},
+      ),
+    );
     _ensureSuccessStatus('send backup observability heartbeat', res.statusCode ?? 0);
   }
 

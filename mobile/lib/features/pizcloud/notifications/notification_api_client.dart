@@ -1,5 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_persist;
 
 class NotificationApiClient {
   NotificationApiClient({required this.baseUrl, required this.authToken});
@@ -16,7 +17,7 @@ class NotificationApiClient {
     String? timeZone,
   }) async {
     // New Dio-based implementation using PersistCookieJar (sid) + headers
-    final client = await pizPersist.ApiPersistCookieJarService.instance(
+    final client = await piz_persist.ApiPersistCookieJarService.instance(
       baseUrl: baseUrl,
       // headers: {'Authorization': 'Bearer $authToken', 'Content-Type': 'application/json'},
     );
@@ -34,6 +35,7 @@ class NotificationApiClient {
         if (normalizedTimeZone != null && normalizedTimeZone.isNotEmpty) 'timeZone': normalizedTimeZone,
         if (appVersion != null) 'appVersion': appVersion,
       },
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'notifications.device.register'}),
     );
     final status = res.statusCode ?? 0;
     debugPrint('res.statusCode: $status');
@@ -53,11 +55,14 @@ class NotificationApiClient {
     // }
 
     // New Dio-based implementation using PersistCookieJar (sid) + headers
-    final client = await pizPersist.ApiPersistCookieJarService.instance(
+    final client = await piz_persist.ApiPersistCookieJarService.instance(
       baseUrl: baseUrl,
       // headers: {'Authorization': 'Bearer $authToken'},
     );
-    final res = await client.client.delete<dynamic>('/notifications/devices/$deviceId');
+    final res = await client.client.delete<dynamic>(
+      '/notifications/devices/$deviceId',
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'notifications.device.unregister'}),
+    );
     final status = res.statusCode ?? 0;
     if (status != 200) {
       throw Exception('Failed to unregister device: $status ${res.data}');

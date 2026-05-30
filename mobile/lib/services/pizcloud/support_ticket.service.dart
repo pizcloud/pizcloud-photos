@@ -52,6 +52,7 @@ class SupportTicketService {
         'limit': safeLimit,
         if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
       },
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'support.tickets.list'}),
     );
 
     final statusCode = response.statusCode ?? 0;
@@ -92,7 +93,10 @@ class SupportTicketService {
     }
 
     final api = await _pizApiService;
-    final response = await api.client.get<dynamic>('/support/tickets/${Uri.encodeComponent(normalizedTicketId)}');
+    final response = await api.client.get<dynamic>(
+      '/support/tickets/${Uri.encodeComponent(normalizedTicketId)}',
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'support.ticket.detail.get'}),
+    );
 
     final statusCode = response.statusCode ?? 0;
     if (statusCode < 200 || statusCode >= 300) {
@@ -123,6 +127,7 @@ class SupportTicketService {
           responseType: ResponseType.bytes,
           headers: const <String, dynamic>{'Accept': '*/*'},
           validateStatus: (status) => status != null && status < 500,
+          extra: const <String, dynamic>{'clientEventName': 'support.ticket.attachment.download'},
         ),
       );
     } on DioException catch (error) {
@@ -184,7 +189,10 @@ class SupportTicketService {
     final response = await api.client.post<dynamic>(
       '/support/tickets',
       data: payload,
-      options: Options(contentType: 'multipart/form-data'),
+      options: Options(
+        contentType: 'multipart/form-data',
+        extra: const <String, dynamic>{'clientEventName': 'support.ticket.create'},
+      ),
     );
 
     final statusCode = response.statusCode ?? 0;
@@ -230,7 +238,10 @@ class SupportTicketService {
     final response = await api.client.post<dynamic>(
       '/support/tickets/${Uri.encodeComponent(normalizedTicketId)}/messages',
       data: payload,
-      options: Options(contentType: 'multipart/form-data'),
+      options: Options(
+        contentType: 'multipart/form-data',
+        extra: const <String, dynamic>{'clientEventName': 'support.ticket.reply'},
+      ),
     );
 
     final statusCode = response.statusCode ?? 0;
@@ -258,6 +269,7 @@ class SupportTicketService {
     final response = await api.client.patch<dynamic>(
       '/support/tickets/${Uri.encodeComponent(normalizedTicketId)}/status',
       data: <String, dynamic>{'status': normalizedStatus},
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'support.ticket.status.update'}),
     );
 
     final statusCode = response.statusCode ?? 0;

@@ -37,6 +37,11 @@ class ClientTelemetryService {
   static final ClientTelemetryService I = ClientTelemetryService._();
   static const Uuid _uuid = Uuid();
   static const int _maxStringLength = 512;
+  static const int _maxEventNameLength = 128;
+  static final RegExp _eventNameInvalidCharacters = RegExp(r'[^a-zA-Z0-9._-]');
+  static final RegExp _emailPattern = RegExp(r'\b([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9.-]+\.[A-Za-z]{2,})\b');
+  static final RegExp _bearerTokenPattern = RegExp(r'\b[Bb]earer\s+[A-Za-z0-9\-._~+/]+=*\b');
+  static final RegExp _jwtPattern = RegExp(r'\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b');
 
   String? _sessionId;
   String? _correlationId;
@@ -89,8 +94,8 @@ class ClientTelemetryService {
       _putHeaderIfMissing(headers, 'x-client-app-version', _appVersion);
       _putHeaderIfMissing(headers, 'x-client-build-number', _buildNumber);
 
-      final normalizedEventName = (eventName ?? '').trim();
-      if (normalizedEventName.isNotEmpty) {
+      final normalizedEventName = _normalizeEventName(eventName);
+      if (normalizedEventName != null) {
         _putHeaderIfMissing(headers, 'x-client-event-name', normalizedEventName);
       }
 
@@ -127,7 +132,7 @@ class ClientTelemetryService {
       'transport': transport,
       'method': method.toUpperCase(),
       'path': _toSafePath(uri),
-      'clientEventName': eventName ?? '',
+      'clientEventName': _normalizeEventName(eventName) ?? '',
       ...?meta?.toMap(),
     });
   }
@@ -148,7 +153,7 @@ class ClientTelemetryService {
       'path': _toSafePath(uri),
       'status': status,
       'durationMs': durationMs,
-      'clientEventName': eventName ?? '',
+      'clientEventName': _normalizeEventName(eventName) ?? '',
       ...?meta?.toMap(),
     });
   }
@@ -169,7 +174,7 @@ class ClientTelemetryService {
       'path': _toSafePath(uri),
       'durationMs': durationMs,
       'error': error.toString(),
-      'clientEventName': eventName ?? '',
+      'clientEventName': _normalizeEventName(eventName) ?? '',
       ...?meta?.toMap(),
     });
   }
@@ -180,15 +185,13 @@ class ClientTelemetryService {
     }
 
     if (value is String) {
-      if (_shouldRedactByKey(keyPath)) {
-        return _maskString(value);
+      final redactedValue = _shouldRedactByKey(keyPath) ? _maskString(value) : _redactLooseSensitiveString(value);
+
+      if (redactedValue.length > _maxStringLength) {
+        return '${redactedValue.substring(0, _maxStringLength)}...[truncated]';
       }
 
-      if (value.length > _maxStringLength) {
-        return '${value.substring(0, _maxStringLength)}...[truncated]';
-      }
-
-      return value;
+      return redactedValue;
     }
 
     if (value is num || value is bool) {
@@ -324,6 +327,34 @@ class ClientTelemetryService {
     }
 
     return '${normalized.substring(0, 3)}***${normalized.substring(normalized.length - 2)}';
+  }
+
+  String _redactLooseSensitiveString(String value) {
+    var output = value;
+    output = output.replaceAllMapped(_emailPattern, (match) {
+      final head = match.group(1) ?? '';
+      final tail = match.group(2) ?? '';
+      if (head.isEmpty || tail.isEmpty) {
+        return '***';
+      }
+      return '$head***@$tail';
+    });
+    output = output.replaceAll(_bearerTokenPattern, 'Bearer ***');
+    output = output.replaceAll(_jwtPattern, '***.***.***');
+    return output;
+  }
+
+  String? _normalizeEventName(String? eventName) {
+    final normalized = (eventName ?? '').trim();
+    if (normalized.isEmpty) {
+      return null;
+    }
+
+    final truncated = normalized.length > _maxEventNameLength
+        ? normalized.substring(0, _maxEventNameLength)
+        : normalized;
+    final sanitized = truncated.replaceAll(_eventNameInvalidCharacters, '_').trim();
+    return sanitized.isEmpty ? null : sanitized;
   }
 
   String _ensureHeader(Map<String, dynamic> headers, String key, String Function() fallbackFactory) {

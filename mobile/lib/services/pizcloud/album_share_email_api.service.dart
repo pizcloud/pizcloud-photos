@@ -1,5 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizPersist;
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_persist;
 import 'package:immich_mobile/domain/models/album/pizcloud/shared_email.model.dart';
 import 'package:immich_mobile/services/pizcloud/pizcloud_base_url.service.dart';
 
@@ -7,9 +8,9 @@ class AlbumShareEmailApiService {
   AlbumShareEmailApiService._();
 
   static final PizcloudBaseUrlService _baseUrlService = PizcloudBaseUrlService();
-  static Future<pizPersist.ApiPersistCookieJarService> _apiFuture() async {
+  static Future<piz_persist.ApiPersistCookieJarService> _apiFuture() async {
     final baseUrl = await _baseUrlService.resolveBaseUrl();
-    return pizPersist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
+    return piz_persist.ApiPersistCookieJarService.instance(baseUrl: baseUrl);
   }
 
   static Future<List<SharedEmailDto>> getSharedEmails({required String albumId}) async {
@@ -57,6 +58,7 @@ class AlbumShareEmailApiService {
     final res = await api.client.post<dynamic>(
       '/notifications/album-invite',
       data: {'albumId': albumId, 'emails': normalizedEmails},
+      options: Options(extra: const <String, dynamic>{'clientEventName': 'notifications.album_invite.send'}),
     );
 
     final status = res.statusCode ?? 0;

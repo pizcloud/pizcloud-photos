@@ -1,4 +1,5 @@
 import { PUBLIC_DEFAULT_SERVICE_NAME, PUBLIC_MAIN_DOMAIN } from '$env/static/public';
+import { fetchWithClientTelemetry } from '$lib/telemetry/client-telemetry'; // pizcloud
 import { defaults, setBaseUrl } from '@immich/sdk';
 import { get, writable } from 'svelte/store';
 
@@ -24,6 +25,7 @@ const apiOriginStoreInternal = writable<string>(getDefaultOrigin());
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
 let activeServiceName = '';
 let refreshInFlight: Promise<void> | null = null;
+let sdkRawFetch: Fetch | null = null; // pizcloud
 
 const isBrowser = () => typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
@@ -98,12 +100,21 @@ const applyApiBaseUrl = (baseUrl: string, serviceName?: string) => {
   if (!defaults.fetch) {
     defaults.fetch = fetch;
   }
-  const originalFetch = defaults.fetch;
-  defaults.fetch = (input, init) =>
-    originalFetch(input, {
+  // pizcloud
+  sdkRawFetch ??= defaults.fetch;
+  const originalFetch = sdkRawFetch;
+  defaults.fetch = (input, init) => {
+    const nextInit = {
       ...init,
       credentials: init?.credentials ?? 'include',
+    };
+
+    return fetchWithClientTelemetry(input, nextInit, {
+      fetchFn: originalFetch,
+      eventName: 'internal.photo_api.request',
     });
+  };
+  // #pizcloud
   setBaseUrl(normalized);
 
   apiBaseUrlStore.set(normalized);
@@ -127,7 +138,11 @@ const resolveServiceName = (url: URL) => {
 
 const requestServiceHealth = async (serviceName: string, fetchFn: Fetch) => {
   const url = `${getAccountUrl()}/api/health/service?service=${encodeURIComponent(serviceName)}`;
-  const response = await fetchFn(url, { credentials: 'include' });
+  const response = await fetchWithClientTelemetry(
+    url,
+    { credentials: 'include' },
+    { fetchFn, eventName: 'external.health.service_lookup' },
+  ); // pizcloud
   if (!response.ok) {
     throw new Error(`Account health check failed (${response.status})`);
   }

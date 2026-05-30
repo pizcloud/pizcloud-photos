@@ -20,10 +20,15 @@ const CORRELATION_ID_STORAGE_KEY = 'pizcloud.telemetry.correlation_id';
 const SESSION_ID_STORAGE_KEY = 'pizcloud.telemetry.session_id';
 const DEFAULT_PLATFORM = 'web';
 const UNKNOWN_VALUE = 'unknown';
+const MAX_EVENT_NAME_LENGTH = 128;
 const REQUEST_ID_HEADER = 'x-request-id';
 const CORRELATION_ID_HEADER = 'x-correlation-id';
 const CLIENT_EVENT_ID_HEADER = 'x-client-event-id';
 const CLIENT_SESSION_ID_HEADER = 'x-client-session-id';
+const EVENT_NAME_INVALID_CHARACTERS = /[^a-zA-Z0-9._-]/g;
+const EMAIL_PATTERN = /\b([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@([A-Za-z0-9.-]+\.[A-Za-z]{2,})\b/g;
+const BEARER_TOKEN_PATTERN = /\bBearer\s+[A-Za-z0-9\-._~+/]+=*\b/gi;
+const JWT_PATTERN = /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g;
 
 const isTruthy = (value: string | undefined, fallback: boolean) => {
   if (!value) {
@@ -200,6 +205,17 @@ export const getOrCreateSessionId = () => {
 export const createClientEventId = () => createId('evt');
 export const createRequestId = () => createId('req');
 
+const normalizeEventName = (eventName?: string) => {
+  const normalized = (eventName || '').trim();
+  if (!normalized) {
+    return '';
+  }
+
+  const truncated = normalized.length > MAX_EVENT_NAME_LENGTH ? normalized.slice(0, MAX_EVENT_NAME_LENGTH) : normalized;
+  const sanitized = truncated.replace(EVENT_NAME_INVALID_CHARACTERS, '_');
+  return sanitized.trim();
+};
+
 const redactString = (value: string) => {
   const normalized = value.trim();
   if (!normalized) {
@@ -219,6 +235,13 @@ const redactString = (value: string) => {
   }
 
   return `${normalized.slice(0, 3)}***${normalized.slice(-2)}`;
+};
+
+const redactLooseSensitiveString = (value: string) => {
+  return value
+    .replace(EMAIL_PATTERN, (_value, head: string, tail: string) => `${head}***@${tail}`)
+    .replace(BEARER_TOKEN_PATTERN, 'Bearer ***')
+    .replace(JWT_PATTERN, '***.***.***');
 };
 
 const shouldRedactByKey = (keyPath: string) => {
@@ -241,13 +264,11 @@ export const redactForTelemetry = (value: unknown, keyPath = ''): unknown => {
   }
 
   if (typeof value === 'string') {
-    if (shouldRedactByKey(keyPath)) {
-      return redactString(value);
+    const redacted = shouldRedactByKey(keyPath) ? redactString(value) : redactLooseSensitiveString(value);
+    if (redacted.length > 512) {
+      return `${redacted.slice(0, 512)}...[truncated]`;
     }
-    if (value.length > 512) {
-      return `${value.slice(0, 512)}...[truncated]`;
-    }
-    return value;
+    return redacted;
   }
 
   if (typeof value === 'number' || typeof value === 'boolean') {
@@ -289,8 +310,9 @@ const attachTelemetryHeaders = (headers: Headers, eventName?: string): Telemetry
       }
     }
 
-    if (eventName && !headers.has('x-client-event-name')) {
-      headers.set('x-client-event-name', eventName);
+    const normalizedEventName = normalizeEventName(eventName);
+    if (normalizedEventName && !headers.has('x-client-event-name')) {
+      headers.set('x-client-event-name', normalizedEventName);
     }
 
     return { requestId, correlationId, eventId, sessionId };
@@ -306,7 +328,7 @@ export const attachClientTelemetryHeaders = (init?: RequestInit, eventName?: str
 
   try {
     const headers = new Headers(init?.headers);
-    attachTelemetryHeaders(headers, eventName);
+    attachTelemetryHeaders(headers, normalizeEventName(eventName));
     return {
       ...init,
       headers,
@@ -392,11 +414,13 @@ export const fetchWithClientTelemetry = async (
     return fetchFn(input, init);
   }
 
+  const normalizedEventName = normalizeEventName(options?.eventName);
   const startedAt = Date.now();
-  const telemetryRequest = buildTelemetryRequest(input, init, options?.eventName);
+  const telemetryRequest = buildTelemetryRequest(input, init, normalizedEventName);
   const method =
-    (telemetryRequest.input instanceof Request ? telemetryRequest.input.method : telemetryRequest.init?.method || init?.method) ||
-    'GET';
+    (telemetryRequest.input instanceof Request
+      ? telemetryRequest.input.method
+      : telemetryRequest.init?.method || init?.method) || 'GET';
   const path = toSafePath(telemetryRequest.input);
 
   telemetryLog('info', {
@@ -407,7 +431,7 @@ export const fetchWithClientTelemetry = async (
     correlationId: telemetryRequest.telemetryMeta?.correlationId,
     clientEventId: telemetryRequest.telemetryMeta?.eventId,
     clientSessionId: telemetryRequest.telemetryMeta?.sessionId,
-    clientEventName: options?.eventName || '',
+    clientEventName: normalizedEventName,
   });
 
   try {
@@ -422,7 +446,7 @@ export const fetchWithClientTelemetry = async (
       correlationId: telemetryRequest.telemetryMeta?.correlationId,
       clientEventId: telemetryRequest.telemetryMeta?.eventId,
       clientSessionId: telemetryRequest.telemetryMeta?.sessionId,
-      clientEventName: options?.eventName || '',
+      clientEventName: normalizedEventName,
     });
     return response;
   } catch (error) {
@@ -436,7 +460,7 @@ export const fetchWithClientTelemetry = async (
       correlationId: telemetryRequest.telemetryMeta?.correlationId,
       clientEventId: telemetryRequest.telemetryMeta?.eventId,
       clientSessionId: telemetryRequest.telemetryMeta?.sessionId,
-      clientEventName: options?.eventName || '',
+      clientEventName: normalizedEventName,
     });
 
     if (telemetryRequest.telemetryMeta && !options?.disableFallback && isLikelyClientTransportError(error)) {

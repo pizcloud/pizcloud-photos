@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:immich_mobile/domain/models/album/pizcloud/album_transfer.model.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
@@ -187,6 +188,9 @@ class AlbumTransferApiService {
         if (normalizedTransferId != null && normalizedTransferId.isNotEmpty) 'transferId': normalizedTransferId,
         if (normalizedAlbumName != null && normalizedAlbumName.isNotEmpty) 'albumName': normalizedAlbumName,
       },
+      options: Options(
+        extra: const <String, dynamic>{'clientEventName': 'notifications.album_transfer_ownership.send'},
+      ),
     );
 
     final status = res.statusCode ?? 0;

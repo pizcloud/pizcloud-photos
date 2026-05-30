@@ -8,6 +8,16 @@ class AppConfig {
 
   static const bool showServerLabel = bool.fromEnvironment('PIZCLOUD_SHOW_SERVER_LABEL', defaultValue: false);
 
+  static const bool enableClientTelemetry = bool.fromEnvironment(
+    'PIZCLOUD_CLIENT_TELEMETRY_ENABLED',
+    defaultValue: true,
+  ); // pizcloud
+
+  static const bool enableClientTelemetryConsole = bool.fromEnvironment(
+    'PIZCLOUD_CLIENT_TELEMETRY_CONSOLE_ENABLED',
+    defaultValue: false,
+  ); // pizcloud
+
   static const String serverName = String.fromEnvironment('SERVER_NAME', defaultValue: 'photos');
 
   static const String androidPackageName = String.fromEnvironment(
