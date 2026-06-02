@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -9,7 +12,8 @@ import 'photos_api.service.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
-import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizApiPersist;
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_api_persist;
+import 'package:immich_mobile/services/pizcloud/auth_event.service.dart';
 import 'package:immich_mobile/services/pizcloud/photos_base_url.service.dart';
 
 class LoginWithEmailResult {
@@ -44,49 +48,64 @@ class LoginWithEmailService {
   }
 
   Future<LoginWithEmailResult> authenticate(String email, WidgetRef? ref) async {
-    final authUri = buildAuthUri(email.trim());
-    final callbackUrl = await FlutterWebAuth2.authenticate(
-      url: authUri.toString(),
-      callbackUrlScheme: 'pizcloud',
-      options: const FlutterWebAuth2Options(),
-      // options: const FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags),
-    );
-    final callbackUri = Uri.parse(callbackUrl);
-    final ssoToken = callbackUri.queryParameters['sso_token'];
-    if (ssoToken == null || ssoToken.isEmpty) {
-      throw StateError('Callback is missing sso_token');
+    try {
+      final authUri = buildAuthUri(email.trim());
+      final callbackUrl = await FlutterWebAuth2.authenticate(
+        url: authUri.toString(),
+        callbackUrlScheme: 'pizcloud',
+        options: const FlutterWebAuth2Options(),
+        // options: const FlutterWebAuth2Options(intentFlags: ephemeralIntentFlags),
+      );
+      final callbackUri = Uri.parse(callbackUrl);
+      final ssoToken = callbackUri.queryParameters['sso_token'];
+      if (ssoToken == null || ssoToken.isEmpty) {
+        throw StateError('Callback is missing sso_token');
+      }
+
+      final accountResponse = await _accountApi.verifySSoToken(ssoToken);
+
+      // pizcloud: ensure API base URL is resolved and validated before any API calls.
+      final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
+      if (!apiReady) {
+        throw StateError('Failed to resolve photos API base URL');
+      }
+      final photosResponse = await _photosApi.ssoCallback(ssoToken);
+
+      final accessToken = await _loadAccessTokenFromCookies();
+
+      // final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
+      final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
+      if (!ensured) {
+        throw StateError('Failed to ensure server endpoint');
+      }
+
+      // Ensure saveAuthInfo() binds and validates against the latest endpoint,
+      // not a stale value left in StoreKey.serverEndpoint from a previous login.
+      final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
+
+      await Store.put(StoreKey.pizcloudLoginMethod, 'email');
+      return LoginWithEmailResult(
+        authUri: authUri,
+        callbackUri: callbackUri,
+        ssoToken: ssoToken,
+        accountResponse: accountResponse,
+        photosResponse: photosResponse,
+        authSaved: authSaved,
+      );
+    } catch (error) {
+      if (error is PlatformException && error.code.toLowerCase().contains('cancel')) {
+        rethrow;
+      }
+      unawaited(
+        AuthEventService.reportLoginFailureForError(
+          method: AuthEventMethod.emailSso,
+          error: error,
+          source: 'mobile.email_sso.login',
+          fallbackReasonCode: 'email_sso_failed',
+        ),
+      );
+      rethrow;
     }
-
-    final accountResponse = await _accountApi.verifySSoToken(ssoToken);
-
-    // pizcloud: ensure API base URL is resolved and validated before any API calls.
-    final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
-    if (!apiReady) {
-      throw StateError('Failed to resolve photos API base URL');
-    }
-    final photosResponse = await _photosApi.ssoCallback(ssoToken);
-
-    final accessToken = await _loadAccessTokenFromCookies();
-
-    // final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
-    final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
-    if (!ensured) {
-      throw StateError('Failed to ensure server endpoint');
-    }
-
-    // Ensure saveAuthInfo() binds and validates against the latest endpoint,
-    // not a stale value left in StoreKey.serverEndpoint from a previous login.
-    final authSaved = await _saveAuthInfoIfNeeded(ref, accessToken);
-
-    await Store.put(StoreKey.pizcloudLoginMethod, 'email');
-    return LoginWithEmailResult(
-      authUri: authUri,
-      callbackUri: callbackUri,
-      ssoToken: ssoToken,
-      accountResponse: accountResponse,
-      photosResponse: photosResponse,
-      authSaved: authSaved,
-    );
   }
 
   Future<String> _loadAccessTokenFromCookies() async {
@@ -94,7 +113,7 @@ class LoginWithEmailService {
     final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
     final uri = Uri.parse(base).resolve('sso/callback');
 
-    final cookies = await pizApiPersist.ApiPersistCookieJarService.loadCookiesFor(uri);
+    final cookies = await piz_api_persist.ApiPersistCookieJarService.loadCookiesFor(uri);
 
     final sid = cookies.firstWhere((c) => c.name == 'sid', orElse: () => throw 'No access token cookie').value;
     final accessToken = cookies
@@ -120,7 +139,14 @@ class LoginWithEmailService {
         }
         final refreshedEndpoint = Store.tryGet(StoreKey.serverEndpoint);
         if (refreshedEndpoint != null && refreshedEndpoint.isNotEmpty) {
-          return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken, rememberAccount: true);
+          return await ref
+              .read(authProvider.notifier)
+              .saveAuthInfo(
+                accessToken: accessToken,
+                rememberAccount: true,
+                authEventMethod: AuthEventMethod.emailSso,
+                authEventSource: 'mobile.email_sso.login',
+              );
         }
         debugPrint('Missing server endpoint after re-fetch');
       }
@@ -135,11 +161,18 @@ class LoginWithEmailService {
     }
 
     // Persist the access token so subsequent OpenAPI calls are authenticated
-    return await ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken, rememberAccount: true);
+    return await ref
+        .read(authProvider.notifier)
+        .saveAuthInfo(
+          accessToken: accessToken,
+          rememberAccount: true,
+          authEventMethod: AuthEventMethod.emailSso,
+          authEventSource: 'mobile.email_sso.login',
+        );
   }
 }
 
 Future<void> _persistSid(String baseUrl, String sid) async {
   await Store.put(StoreKey.pizcloudSid, sid);
-  await pizApiPersist.ApiPersistCookieJarService.persistSid(baseUrl, sid);
+  await piz_api_persist.ApiPersistCookieJarService.persistSid(baseUrl, sid);
 }

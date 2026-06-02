@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { reportAuthLoginFailureOnce, reportAuthLoginSuccessOnce } from '$lib/services/pizcloud/auth-event.service'; // pizcloud
 import { purchaseStore } from '$lib/stores/purchase.store';
 import { preferences as preferences$, user as user$ } from '$lib/stores/user.store';
 import { userInteraction } from '$lib/stores/user.svelte';
@@ -14,12 +15,14 @@ export interface AuthOptions {
 }
 
 export const loadUser = async () => {
+  const hadAuthCookie = hasAuthCookie(); // pizcloud
+
   try {
     let user = get(user$);
     let preferences = get(preferences$);
     let serverInfo;
 
-    if ((!user || !preferences) && hasAuthCookie()) {
+    if ((!user || !preferences) && hadAuthCookie) {
       [user, preferences, serverInfo] = await Promise.all([getMyUser(), getMyPreferences(), getAboutInfo()]);
       user$.set(user);
       preferences$.set(preferences);
@@ -29,8 +32,16 @@ export const loadUser = async () => {
         purchaseStore.setPurchaseStatus(true);
       }
     }
+
+    if (hadAuthCookie && user) {
+      reportAuthLoginSuccessOnce({ userId: user.id, source: 'web.load_user' });
+    } // pizcloud
+
     return user;
   } catch {
+    if (hadAuthCookie) {
+      reportAuthLoginFailureOnce({ reasonCode: 'session_bootstrap_failed', source: 'web.load_user' });
+    } // pizcloud
     return null;
   }
 };

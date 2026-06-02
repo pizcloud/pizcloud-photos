@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/constants.dart';
@@ -14,6 +16,7 @@ import 'package:immich_mobile/services/auth.service.dart';
 import 'package:immich_mobile/services/secure_storage.service.dart';
 import 'package:immich_mobile/services/upload.service.dart';
 import 'package:immich_mobile/services/widget.service.dart';
+import 'package:immich_mobile/services/pizcloud/auth_event.service.dart'; // pizcloud
 import 'package:immich_mobile/utils/hash.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi/api.dart';
@@ -80,9 +83,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<LoginResponse> login(String email, String password) async {
-    final response = await _authService.login(email, password);
-    await saveAuthInfo(accessToken: response.accessToken);
-    return response;
+    try {
+      final response = await _authService.login(email, password);
+      await saveAuthInfo(
+        accessToken: response.accessToken,
+        authEventMethod: AuthEventMethod.password, // pizcloud
+        authEventSource: 'mobile.auth_provider.login', // pizcloud
+      );
+      return response;
+    } catch (error) {
+      unawaited(
+        AuthEventService.reportLoginFailureForError(
+          method: AuthEventMethod.password,
+          error: error,
+          source: 'mobile.auth_provider.login',
+          fallbackReasonCode: 'unknown',
+        ),
+      ); // pizcloud
+      rethrow;
+    }
   }
 
   Future<void> logout() async {
@@ -92,6 +111,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       await _authService.logout();
       await _uploadService.cancelBackup();
+      unawaited(AuthEventService.reportLogoutSuccess(source: 'mobile.auth_provider.logout')); // pizcloud
+    } catch (error) {
+      unawaited(
+        AuthEventService.reportLogoutFailureForError(
+          error: error,
+          source: 'mobile.auth_provider.logout',
+          fallbackReasonCode: 'logout_failed',
+        ),
+      ); // pizcloud
+      rethrow;
     } finally {
       await _cleanUp();
     }
@@ -122,7 +151,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> saveAuthInfo({required String accessToken, bool rememberAccount = false}) async {
+  Future<bool> saveAuthInfo({
+    required String accessToken,
+    bool rememberAccount = false,
+    AuthEventMethod? authEventMethod, // pizcloud
+    String? authEventSource, // pizcloud
+  }) async {
     await _apiService.setAccessToken(accessToken);
 
     final serverEndpoint = Store.get(StoreKey.serverEndpoint);
@@ -165,6 +199,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // If the user is null, the login was not successful
     // and we don't have a local copy of the user from a prior successful login
     if (user == null) {
+      if (authEventMethod != null) {
+        unawaited(
+          AuthEventService.reportLoginFailure(
+            method: authEventMethod,
+            reasonCode: 'session_bootstrap_failed',
+            source: authEventSource ?? 'mobile.auth_provider.save_auth_info',
+          ),
+        );
+      } // pizcloud
       return false;
     }
 
@@ -185,7 +228,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
     // pizcloud
     if (rememberAccount) {
-      await SavedLoginAccountsService().addOrUpdateFromUser(user);
+      await const SavedLoginAccountsService().addOrUpdateFromUser(user);
+    }
+
+    if (authEventMethod != null) {
+      unawaited(
+        AuthEventService.reportLoginSuccess(
+          method: authEventMethod,
+          source: authEventSource ?? 'mobile.auth_provider.save_auth_info',
+        ),
+      );
     }
     // #pizcloud
 

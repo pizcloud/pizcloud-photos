@@ -9,8 +9,9 @@ import 'package:immich_mobile/config/app_config.dart';
 import 'package:immich_mobile/providers/auth.provider.dart';
 import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
+import 'package:immich_mobile/services/pizcloud/auth_event.service.dart';
 import 'package:immich_mobile/services/pizcloud/photos_base_url.service.dart';
-import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as pizApiPersist;
+import 'package:immich_mobile/services/pizcloud/api_persist_cookie_jar.service.dart' as piz_api_persist;
 import 'account_api.service.dart';
 import 'photos_api.service.dart';
 
@@ -67,51 +68,76 @@ class GoogleService {
   }
 
   Future<LogInWithGoogleResult> logInWithGoogle({WidgetRef? ref}) async {
-    final account = await signIn();
-    final auth = account.authentication;
-    final idToken = auth.idToken;
-    if (idToken == null || idToken.isEmpty) {
-      throw StateError('Google Sign-In did not return an ID token');
+    try {
+      final account = await signIn();
+      final auth = account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw StateError('Google Sign-In did not return an ID token');
+      }
+
+      final verifyResponse = await _accountApi.verifyIdToken(idToken);
+
+      // pizcloud: ensure API base URL is resolved and validated before any API calls.
+      final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
+      if (!apiReady) {
+        throw StateError('Failed to resolve photos API base URL');
+      }
+
+      final ssoToken = _extractSsoToken(verifyResponse.data);
+      if (ssoToken == null || ssoToken.isEmpty) {
+        throw StateError('sso_token is missing in verifyIdToken response');
+      }
+
+      final photosResponse = await _photosApi.ssoCallback(ssoToken);
+
+      final authTokens = await _loadAuthTokensFromCookies();
+
+      // final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
+      final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
+      if (!ensured) {
+        throw StateError('Failed to ensure server endpoint');
+      }
+
+      // Ensure saveAuthInfo() binds and validates against the latest endpoint,
+      // not a stale value left in StoreKey.serverEndpoint from a previous login.
+      final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
+
+      await Store.put(StoreKey.pizcloudLoginMethod, 'google');
+      return LogInWithGoogleResult(
+        account: account,
+        idToken: idToken,
+        verifyResponse: verifyResponse,
+        ssoToken: ssoToken,
+        photosResponse: photosResponse,
+        sid: authTokens.sid,
+        accessToken: authTokens.accessToken,
+        authSaved: authSaved,
+      );
+    } on GoogleSignInException catch (error) {
+      final code = error.code.name.toLowerCase();
+      if (!code.contains('cancel')) {
+        unawaited(
+          AuthEventService.reportLoginFailureForError(
+            method: AuthEventMethod.googleSso,
+            error: error,
+            source: 'mobile.google_sso.login',
+            fallbackReasonCode: 'google_sso_failed',
+          ),
+        );
+      }
+      rethrow;
+    } catch (error) {
+      unawaited(
+        AuthEventService.reportLoginFailureForError(
+          method: AuthEventMethod.googleSso,
+          error: error,
+          source: 'mobile.google_sso.login',
+          fallbackReasonCode: 'google_sso_failed',
+        ),
+      );
+      rethrow;
     }
-
-    final verifyResponse = await _accountApi.verifyIdToken(idToken);
-
-    // pizcloud: ensure API base URL is resolved and validated before any API calls.
-    final apiReady = await photoBaseUrlService.fetchApiUrl(ref);
-    if (!apiReady) {
-      throw StateError('Failed to resolve photos API base URL');
-    }
-
-    final ssoToken = _extractSsoToken(verifyResponse.data);
-    if (ssoToken == null || ssoToken.isEmpty) {
-      throw StateError('sso_token is missing in verifyIdToken response');
-    }
-
-    final photosResponse = await _photosApi.ssoCallback(ssoToken);
-
-    final authTokens = await _loadAuthTokensFromCookies();
-
-    // final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
-    final ensured = await photoBaseUrlService.ensureServerEndpoint(ref);
-    if (!ensured) {
-      throw StateError('Failed to ensure server endpoint');
-    }
-
-    // Ensure saveAuthInfo() binds and validates against the latest endpoint,
-    // not a stale value left in StoreKey.serverEndpoint from a previous login.
-    final authSaved = await _saveAuthInfoIfNeeded(ref, authTokens.accessToken);
-
-    await Store.put(StoreKey.pizcloudLoginMethod, 'google');
-    return LogInWithGoogleResult(
-      account: account,
-      idToken: idToken,
-      verifyResponse: verifyResponse,
-      ssoToken: ssoToken,
-      photosResponse: photosResponse,
-      sid: authTokens.sid,
-      accessToken: authTokens.accessToken,
-      authSaved: authSaved,
-    );
   }
 
   Future<void> signOut() async {
@@ -137,7 +163,7 @@ class GoogleService {
     final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
     final uri = Uri.parse(base).resolve('sso/callback');
 
-    final cookies = await pizApiPersist.ApiPersistCookieJarService.loadCookiesFor(uri);
+    final cookies = await piz_api_persist.ApiPersistCookieJarService.loadCookiesFor(uri);
 
     final sid = cookies.firstWhere((c) => c.name == 'sid', orElse: () => throw 'No access token cookie').value;
     final accessToken = cookies
@@ -166,7 +192,13 @@ class GoogleService {
         }
         final refreshedEndpoint = Store.tryGet(StoreKey.serverEndpoint);
         if (refreshedEndpoint != null && refreshedEndpoint.isNotEmpty) {
-          return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
+          return ref
+              .read(authProvider.notifier)
+              .saveAuthInfo(
+                accessToken: accessToken,
+                authEventMethod: AuthEventMethod.googleSso,
+                authEventSource: 'mobile.google_sso.login',
+              );
         }
         debugPrint('Missing server endpoint after re-fetch');
       }
@@ -181,7 +213,13 @@ class GoogleService {
       debugPrint('Missing server endpoint before saveAuthInfo');
       return false;
     }
-    return ref.read(authProvider.notifier).saveAuthInfo(accessToken: accessToken);
+    return ref
+        .read(authProvider.notifier)
+        .saveAuthInfo(
+          accessToken: accessToken,
+          authEventMethod: AuthEventMethod.googleSso,
+          authEventSource: 'mobile.google_sso.login',
+        );
   }
 }
 
@@ -218,5 +256,5 @@ class _AuthTokens {
 
 Future<void> _persistSid(String baseUrl, String sid) async {
   await Store.put(StoreKey.pizcloudSid, sid);
-  await pizApiPersist.ApiPersistCookieJarService.persistSid(baseUrl, sid);
+  await piz_api_persist.ApiPersistCookieJarService.persistSid(baseUrl, sid);
 }
